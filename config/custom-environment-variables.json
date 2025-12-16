@@ -1,0 +1,23 @@
+{
+  "services": {
+    "idam": {
+      "authorizationURL": "IDAM_WEB_URL",
+      "tokenURL": "IDAM_API_URL",
+      "clientID": "IDAM_CLIENT_ID",
+      "clientSecret": "IDAM_CLIENT_SECRET",
+      "callbackURL": "OAUTH_CLIENT_REDIRECT",
+      "signOutURL": "IDAM_END_SESSION_URL"
+    },
+    "redis": {
+      "host": "REDIS_HOST",
+      "port": "REDIS_PORT"
+    }
+  },
+  "session": {
+    "secret": "SESSION_SECRET",
+    "maxAge": {
+      "__name": "SESSION_MAX_AGE",
+      "__format": "number"
+    }
+  }
+}

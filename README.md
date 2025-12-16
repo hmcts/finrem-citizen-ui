@@ -1,4 +1,4 @@
-# Express application template
+#TODO: RE-WRITE THE README
 
 ## Purpose
 
@@ -167,3 +167,12 @@ e.g. the ones verifying the state of each service it depends on.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+
+Example login details:
+Login:
+test-cred@hmcts.org
+anything
+Enter case number:
+1234567891234567
+Enter access code:
+ABCDEF23

@@ -14,32 +14,36 @@ export class Helmet {
   }
 
   public enableFor(app: express.Express): void {
-    // include default helmet functions
-    const scriptSrc = [self, googleAnalyticsDomain, "'sha256-+6WnXIl4mbFTCARd8N3COQmT3bJJmo32N8q8ZSQAIcU='"];
-
     if (this.developmentMode) {
-      // Uncaught EvalError: Refused to evaluate a string as JavaScript because 'unsafe-eval'
-      // is not an allowed source of script in the following Content Security Policy directive:
-      // "script-src 'self' *.google-analytics.com 'sha256-+6WnXIl4mbFTCARd8N3COQmT3bJJmo32N8q8ZSQAIcU='".
-      // seems to be related to webpack
-      scriptSrc.push("'unsafe-eval'");
-    }
+      // Disable CSP entirely in development mode for easier local testing
+      app.use(
+        helmet({
+          contentSecurityPolicy: false,
+          referrerPolicy: { policy: 'origin' },
+        })
+      );
+    } else {
+      // Production mode: enable strict CSP
+      const scriptSrc = [self, googleAnalyticsDomain, "'sha256-+6WnXIl4mbFTCARd8N3COQmT3bJJmo32N8q8ZSQAIcU='"];
 
-    app.use(
-      helmet({
-        contentSecurityPolicy: {
-          directives: {
-            connectSrc: [self],
-            defaultSrc: ["'none'"],
-            fontSrc: [self, 'data:'],
-            imgSrc: [self, googleAnalyticsDomain],
-            objectSrc: [self],
-            scriptSrc,
-            styleSrc: [self],
+      app.use(
+        helmet({
+          contentSecurityPolicy: {
+            directives: {
+              connectSrc: [self],
+              defaultSrc: ["'none'"],
+              fontSrc: [self, 'data:'],
+              imgSrc: [self, googleAnalyticsDomain],
+              objectSrc: [self],
+              scriptSrc,
+              styleSrc: [self],
+              manifestSrc: [self],
+              formAction: [self],
+            },
           },
-        },
-        referrerPolicy: { policy: 'origin' },
-      })
-    );
+          referrerPolicy: { policy: 'origin' },
+        })
+      );
+    }
   }
 }

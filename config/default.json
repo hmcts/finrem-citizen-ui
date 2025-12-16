@@ -10,5 +10,26 @@
       "includeSubDomains": true,
       "preload": true
     }
+  },
+  "services": {
+    "idam": {
+      "useMockIdam": true,
+      "authorizationURL": "http://localhost:9002/login",
+      "tokenURL": "http://localhost:5000/o/token",
+      "clientID": "finrem_citizen_ui",
+      "clientSecret": "citizen-ui-secret",
+      "callbackURL": "https://localhost:3100/oauth2/callback",
+      "citizenRole": "citizen",
+      "scope": "&scope=profile%20openid%20roles",
+      "signOutURL": "http://localhost:9002/o/endSession"
+    },
+    "redis": {
+      "host": "localhost",
+      "port": 6379
+    }
+  },
+  "session": {
+    "secret": "local-development-secret-change-in-production",
+    "maxAge": 3600000
   }
 }

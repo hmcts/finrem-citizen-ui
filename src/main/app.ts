@@ -10,8 +10,10 @@ import * as bodyParser from 'body-parser';
 import config = require('config');
 import cookieParser from 'cookie-parser';
 import express from 'express';
+import session from 'express-session';
 import RateLimit from 'express-rate-limit';
 import { glob } from 'glob';
+import { createSessionStore } from './services/sessionService';
 
 const { setupDev } = require('./development');
 
@@ -34,7 +36,7 @@ new PropertiesVolume().enableFor(app);
 new AppInsights().enable();
 new Nunjucks(developmentMode).enableFor(app);
 // secure the application by adding various HTTP headers to its responses
-new Helmet(config.get('security')).enableFor(app);
+new Helmet(developmentMode).enableFor(app);
 
 app.get('/favicon.ico', limiter, (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));
@@ -48,6 +50,32 @@ app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate, no-store');
   next();
 });
+
+// Create Redis session store
+const sessionStore = createSessionStore();
+
+// Read session configuration
+const sessionSecret = config.get<string>('session.secret');
+const sessionMaxAge = config.get<number>('session.maxAge');
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Configure session middleware
+app.use(session({
+  name: 'finrem-session',
+  store: sessionStore,
+  secret: sessionSecret,
+  resave: false,
+  saveUninitialized: false,
+  rolling: true,  // Reset maxAge on every response
+  cookie: {
+    secure: isProduction,  // HTTPS only in production
+    maxAge: sessionMaxAge,
+    httpOnly: true,
+    sameSite: 'lax',
+  },
+}) as unknown as express.RequestHandler);
+
+console.log('Session middleware configured with Redis store');
 
 glob
   .sync(__dirname + '/routes/**/*.+(ts|js)')

@@ -1,14 +1,16 @@
-version: '2'
+version: '3.8'
 
 services:
-  # TODO: change this name to match the name of your app
-  expressjs-template:
-    build:
-      context: .
-      args:
-        - http_proxy
-        - https_proxy
-        - no_proxy
+  redis:
+    image: redis:7-alpine
+    container_name: finrem-citizen-redis
     ports:
-      # TODO: change this mapping to map the port your application listens on
-      - '3100:3100'
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+    driver: local
