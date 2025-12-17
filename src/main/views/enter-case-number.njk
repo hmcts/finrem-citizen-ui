@@ -1,0 +1,72 @@
+{% extends "template.njk" %}
+
+{% block pageTitle %}
+  Enter case number - Dividing your money and property
+{% endblock %}
+
+{% block beforeContent %}
+  <a href="/" class="govuk-back-link">Back</a>
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">Enter case number</h1>
+
+      {% if error %}
+        <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" data-module="govuk-error-summary">
+          <h2 class="govuk-error-summary__title" id="error-summary-title">
+            There is a problem
+          </h2>
+          <div class="govuk-error-summary__body">
+            <ul class="govuk-list govuk-error-summary__list">
+              <li>
+                <a href="#caseNumber">{{ error }}</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      {% endif %}
+
+      <p class="govuk-body">
+        This is your 16 digit reference number, for example 1234-5678-9123-4567
+      </p>
+
+      <form method="POST" action="/enter-case-number" novalidate>
+        <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+          <label class="govuk-label" for="caseNumber">
+            Case number
+          </label>
+          {% if error %}
+            <p id="caseNumber-error" class="govuk-error-message">
+              <span class="govuk-visually-hidden">Error:</span> {{ error }}
+            </p>
+          {% endif %}
+          <input
+            class="govuk-input {% if error %}govuk-input--error{% endif %}"
+            id="caseNumber"
+            name="caseNumber"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            value="{{ caseNumber }}"
+            aria-describedby="{% if error %}caseNumber-error{% endif %}"
+          >
+        </div>
+
+        <button type="submit" class="govuk-button" data-module="govuk-button">
+          Continue
+        </button>
+      </form>
+
+      {% if useMockIdam %}
+        <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+        <p class="govuk-body-s">
+          <strong>MOCK MODE - Development</strong><br>
+          <span class="govuk-hint">For testing, enter any 16-digit case number</span>
+          <span class="govuk-hint">Example: <strong>1234-5678-9123-4567</strong> or <strong>1111222233334444</strong></span>
+        </p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

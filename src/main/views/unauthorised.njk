@@ -1,0 +1,31 @@
+{% extends "template.njk" %}
+
+{% block pageTitle %}
+  Unauthorised - Financial Remedy
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">You cannot access this service</h1>
+
+      <p class="govuk-body">
+        You need a citizen account to use this service.
+      </p>
+
+      <p class="govuk-body">
+        Your account does not have the correct permissions to access the Financial Remedy service.
+      </p>
+
+      <h2 class="govuk-heading-m">If you think this is wrong</h2>
+
+      <p class="govuk-body">
+        Contact the Financial Remedy support team if you believe you should have access to this service.
+      </p>
+
+      <p class="govuk-body">
+        <a href="/" class="govuk-link">Return to start page</a>
+      </p>
+    </div>
+  </div>
+{% endblock %}

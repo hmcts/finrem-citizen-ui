@@ -1,6 +1,7 @@
 {% extends "govuk/template.njk" %}
 
 {% block head %}
+  <script>document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</script>
   {% include "webpack/css.njk" %}
 {% endblock %}
 

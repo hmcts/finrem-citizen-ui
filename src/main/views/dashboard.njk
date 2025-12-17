@@ -1,0 +1,142 @@
+{% extends "template.njk" %}
+
+{% block pageTitle %}
+  Your cases - Financial Remedy
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <h1 class="govuk-heading-xl">Your cases</h1>
+
+      {% if user %}
+        {% if caseData %}
+          <div class="govuk-panel govuk-panel--confirmation">
+            <h2 class="govuk-panel__title">
+              {{ caseData.applicantName }} and {{ caseData.respondentName }}
+            </h2>
+            <div class="govuk-panel__body">
+              Case number: <strong>{{ caseData.caseNumber }}</strong>
+            </div>
+          </div>
+        {% else %}
+          <div class="govuk-panel govuk-panel--confirmation">
+            <h2 class="govuk-panel__title">
+              Welcome back
+            </h2>
+            <div class="govuk-panel__body">
+              {{ user.givenName }} {{ user.familyName }}
+              <br>
+              <strong>{{ user.email }}</strong>
+            </div>
+          </div>
+        {% endif %}
+
+        <h2 class="govuk-heading-m">Your details</h2>
+
+        <dl class="govuk-summary-list">
+          <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">
+              User ID
+            </dt>
+            <dd class="govuk-summary-list__value">
+              {{ user.id }}
+            </dd>
+          </div>
+          <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">
+              Email address
+            </dt>
+            <dd class="govuk-summary-list__value">
+              {{ user.email }}
+            </dd>
+          </div>
+          <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">
+              Roles
+            </dt>
+            <dd class="govuk-summary-list__value">
+              {{ user.roles | join(', ') }}
+            </dd>
+          </div>
+        </dl>
+
+        {% if caseData %}
+          <hr class="govuk-section-break govuk-section-break--xl govuk-section-break--visible">
+
+          <h2 class="govuk-heading-m">Case information</h2>
+
+          <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+              <dt class="govuk-summary-list__key">
+                Case type
+              </dt>
+              <dd class="govuk-summary-list__value">
+                {{ caseData.caseType }}
+              </dd>
+            </div>
+            <div class="govuk-summary-list__row">
+              <dt class="govuk-summary-list__key">
+                Applicant
+              </dt>
+              <dd class="govuk-summary-list__value">
+                {{ caseData.applicantName }}
+              </dd>
+            </div>
+            <div class="govuk-summary-list__row">
+              <dt class="govuk-summary-list__key">
+                Respondent
+              </dt>
+              <dd class="govuk-summary-list__value">
+                {{ caseData.respondentName }}
+              </dd>
+            </div>
+            <div class="govuk-summary-list__row">
+              <dt class="govuk-summary-list__key">
+                Status
+              </dt>
+              <dd class="govuk-summary-list__value">
+                <strong class="govuk-tag govuk-tag--blue">
+                  {{ caseData.caseStatus }}
+                </strong>
+              </dd>
+            </div>
+          </dl>
+
+          <hr class="govuk-section-break govuk-section-break--xl govuk-section-break--visible">
+
+          <h2 class="govuk-heading-m">Latest information</h2>
+
+          <p class="govuk-body">
+            We've sent your consent order to the court, they will review your form.
+          </p>
+
+          <p class="govuk-body">
+            You can check back here to see any new information once we get an update from the court.
+          </p>
+
+        {% else %}
+          <hr class="govuk-section-break govuk-section-break--xl govuk-section-break--visible">
+
+          <h2 class="govuk-heading-m">What happens next</h2>
+
+          <p class="govuk-body">
+            Enter your case number and access code to link your case.
+          </p>
+
+          <p class="govuk-body">
+            <a href="/enter-case-number" class="govuk-link">Enter case details</a>
+          </p>
+        {% endif %}
+
+        <a href="/logout" role="button" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+          Sign out
+        </a>
+      {% else %}
+        <p class="govuk-body">
+          <a href="/login" class="govuk-link">Sign in</a> to view your cases.
+        </p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

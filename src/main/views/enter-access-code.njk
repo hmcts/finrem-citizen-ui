@@ -1,0 +1,72 @@
+{% extends "template.njk" %}
+
+{% block pageTitle %}
+  Enter access code - Dividing your money and property
+{% endblock %}
+
+{% block beforeContent %}
+  <a href="/enter-case-number" class="govuk-back-link">Back</a>
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">Enter access code</h1>
+
+      {% if error %}
+        <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" data-module="govuk-error-summary">
+          <h2 class="govuk-error-summary__title" id="error-summary-title">
+            There is a problem
+          </h2>
+          <div class="govuk-error-summary__body">
+            <ul class="govuk-list govuk-error-summary__list">
+              <li>
+                <a href="#accessCode">{{ error }}</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      {% endif %}
+
+      <p class="govuk-body">
+        This is the 8 digit code on your notice of first appointment that you received by post, for example ABCD-EF23
+      </p>
+
+      <form method="POST" action="/enter-access-code" novalidate>
+        <div class="govuk-form-group {% if error %}govuk-form-group--error{% endif %}">
+          <label class="govuk-label" for="accessCode">
+            Access code
+          </label>
+          {% if error %}
+            <p id="accessCode-error" class="govuk-error-message">
+              <span class="govuk-visually-hidden">Error:</span> {{ error }}
+            </p>
+          {% endif %}
+          <input
+            class="govuk-input govuk-input--width-10 {% if error %}govuk-input--error{% endif %}"
+            id="accessCode"
+            name="accessCode"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            value="{{ accessCode }}"
+            aria-describedby="{% if error %}accessCode-error{% endif %}"
+          >
+        </div>
+
+        <button type="submit" class="govuk-button" data-module="govuk-button">
+          Continue
+        </button>
+      </form>
+
+      {% if useMockIdam %}
+        <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+        <p class="govuk-body-s">
+          <strong>MOCK MODE - Development</strong><br>
+          <span class="govuk-hint">For testing, enter any 8-character access code</span>
+          <span class="govuk-hint">Example: <strong>ABCD-EF23</strong> or <strong>TEST1234</strong></span>
+        </p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

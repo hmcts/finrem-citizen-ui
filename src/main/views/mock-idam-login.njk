@@ -1,0 +1,83 @@
+{% extends "template.njk" %}
+
+{% block pageTitle %}
+  Sign in or create an account - GOV.UK
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">Sign in or create an account</h1>
+
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-one-half">
+          <h2 class="govuk-heading-m">Sign in</h2>
+
+          {% if error %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" data-module="govuk-error-summary">
+              <h2 class="govuk-error-summary__title" id="error-summary-title">
+                There is a problem
+              </h2>
+              <div class="govuk-error-summary__body">
+                <ul class="govuk-list govuk-error-summary__list">
+                  <li>
+                    <a href="#email">{{ error }}</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          {% endif %}
+
+          <form method="POST" action="/mock-idam/authenticate" novalidate>
+            <div class="govuk-form-group">
+              <label class="govuk-label" for="email">
+                Email address
+              </label>
+              <input class="govuk-input" id="email" name="email" type="email" spellcheck="false" autocomplete="email" value="{{ email }}">
+            </div>
+
+            <div class="govuk-form-group">
+              <label class="govuk-label" for="password">
+                Password
+              </label>
+              <input class="govuk-input" id="password" name="password" type="password" autocomplete="current-password">
+            </div>
+
+            <p class="govuk-body">
+              <a href="#" class="govuk-link">Forgotten password?</a>
+            </p>
+
+            <input type="hidden" name="state" value="{{ state }}">
+            <input type="hidden" name="redirect_uri" value="{{ redirect_uri }}">
+            <input type="hidden" name="client_id" value="{{ client_id }}">
+
+            <button type="submit" class="govuk-button" data-module="govuk-button">
+              Sign in
+            </button>
+
+            <p class="govuk-body">
+              <a href="#" class="govuk-link">Cancel</a>
+            </p>
+          </form>
+        </div>
+
+        <div class="govuk-grid-column-one-half">
+          <h2 class="govuk-heading-m">Create an account</h2>
+
+          <p class="govuk-body">
+            You need to <a href="#" class="govuk-link">create an account</a> to use this service.
+          </p>
+        </div>
+      </div>
+
+      <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+
+      <p class="govuk-body-s">
+        <strong>MOCK IDAM - Development Mode</strong><br>
+        <span class="govuk-hint">This is a fake login screen for local development.</span>
+        <span class="govuk-hint">Test credentials: <strong>test-cred@hmcts.org</strong> / any password</span>
+        <span class="govuk-hint">To use real IDAM, set <code>useMockIdam: false</code> in config/default.json</span>
+      </p>
+    </div>
+  </div>
+{% endblock %}
