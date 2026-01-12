@@ -1,0 +1,280 @@
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/task-list/macro.njk" import govukTaskList %}
+
+{% extends "template.njk" %}
+
+{% block content %}
+
+  <div class="govuk-width-container">
+
+    <a href="#" class="govuk-back-link" id="backLink">Back</a>
+
+    <main class="govuk-main-wrapper">
+      <div class="govuk-grid-row">
+
+        {% set hearing_date = "1 March 2026" %}
+
+        <div class="govuk-grid-column-two-thirds">
+          <h1 class="govuk-heading-l">Documents to submit before your hearing on {{ hearing_date }}</h1>
+          <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible govuk-!">
+          <p class="govuk-body">You must complete and submit all of the documnts listed below by the stated dates
+            .Once submitted, the documents will be added to your case, ready for the judge to review at your hearing
+            . The related task on this list will be marked as 'done'.</p>
+          <p class="govuk-body">[If deadline has passed] One or more of your tasks are overdue. You must complete
+            and upload your completed documents as soon as possible. If you do not submit your documents, you may be
+            ordered to pay the other party's legal costs.
+          </p>
+
+          <h2 class="govuk-heading-m">By 11 December 2025</h2>
+
+          {{ govukTaskList({
+            idPrefix: "first-task-list",
+            items: [
+              {
+                title: {
+                text: "Financial statement (Form E, E1 or E2)"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Not started yet",
+                  classes: "govuk-tag--red"
+                }
+              }
+              },
+              {
+                title: {
+                text: "Financial evidence for your Form E"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Not started yet",
+                  classes: "govuk-tag--red"
+                }
+              }
+              }
+            ]
+          }) }}
+          <h2 class="govuk-heading-m">By 1 January 2026</h2>
+          {{ govukTaskList({
+            idPrefix: "second-task-list",
+            items: [
+              {
+                title: {
+                text: "Questionaire"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Not started yet",
+                  classes: "govuk-tag--red"
+                }
+              }
+              },
+              {
+                title: {
+                text: "Property valuation"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Not started yet",
+                  classes: "govuk-tag--red"
+                }
+              }
+              },
+              {
+                title: {
+                text: "Potential borrowing capacity"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Not started yet",
+                  classes: "govuk-tag--red"
+                }
+              }
+              },
+              {
+                title: {
+                text: "Future housing needs"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Not started yet",
+                  classes: "govuk-tag--red"
+                }
+              }
+              },
+              {
+                title: {
+                text: "Chronology"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Not started yet",
+                  classes: "govuk-tag--red"
+                }
+              }
+              },
+              {
+                title: {
+                text: "Statement of issues"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Not started yet",
+                  classes: "govuk-tag--red"
+                }
+              }
+              },
+              {
+                title: {
+                text: "Response to the notice of a first appointment (Form G)"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Not started yet",
+                  classes: "govuk-tag--red"
+                }
+              }
+              }
+            ]
+          }) }}
+
+          <h2 class="govuk-heading-m">By 8 January 2026</h2>
+          {{ govukTaskList({
+            idPrefix: "third-task-list",
+            items: [
+              {
+                title: {
+                text: "Non-court dispute resolution (Form FMS)"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Not started yet",
+                  classes: "govuk-tag--red"
+                }
+              }
+              }
+            ]
+          }) }}
+
+          <h2 class="govuk-heading-m">By 13 January 2026</h2>
+          {{ govukTaskList({
+            idPrefix: "fourth-task-list",
+            items: [
+              {
+                title: {
+                text: "Composite case summary (ES1)"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Not started yet",
+                  classes: "govuk-tag--red"
+                }
+              }
+              },
+              {
+                title: {
+                text: "Composite schedule of assets and income (ES2)"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Not started yet",
+                  classes: "govuk-tag--red"
+                }
+              }
+              },
+              {
+                title: {
+                text: "Statement of costs incurred (Form H)"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Available",
+                  classes: "govuk-tag--blue"
+                }
+              }
+              },
+              {
+                title: {
+                text: "Hearing bundle"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Not started yet",
+                  classes: "govuk-tag--red"
+                }
+              }
+              },
+              {
+                title: {
+                text: "Position statement for the hearing"
+              },
+                href: "#",
+                status: {
+                tag: {
+                  text: "Optional",
+                  classes: "govuk-tag--blue"
+                }
+              }
+              }
+            ]
+          }) }}
+
+        </div>
+
+
+        <div class="govuk-grid-column-one-third">
+
+          <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible govuk-!">
+
+          <h2 class="govuk-heading-m">I want to...</h2>
+          <p class="govuk-body">
+            <a href="/divorce/{{ case.id }}/view" class="govuk-link">View my divorce case(opens in new tab)</a>
+          </p>
+          <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible govuk-!">
+
+          <h2 class="govuk-heading-s">Getting help</h2>
+          <details class="govuk-details">
+            <summary class="govuk-details__summary">
+
+            <span class="govuk-details__summary-text">
+              Contact us for help
+            </span>
+            </summary>
+            <div class="govuk-details__text">
+              <p class="govuk-heading-s">Email</p>
+
+              <p class="govuk-body">
+                <a href="#" class="govuk-link">FRCexample@justice.gov.uk</a>
+              </p>
+
+              <p class="govuk-heading-s">Telephone</p>
+
+              <p class="govuk-body">0300 123 5577<br>Monday to Friday, 8.30am to 5pm.</p>
+
+              <p class="govuk-body">
+                <a href="#" class="govuk-link" rel="noreferrer noopener" target="_blank">Find out about call charges (opens in new tab)</a>
+              </p>
+
+            </div>
+          </details>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+{% endblock %}
