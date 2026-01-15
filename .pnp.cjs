@@ -79,7 +79,7 @@ const RAW_RUNTIME_STATE =
           ["express-nunjucks", "virtual:5c86d93bc614dcc07528a847be8e69a11d4241faf459870c8d05a1091ebe7795b3662598c52ebf26e4b4ca32b1afcdc5b785498f8d4aecbf706a70c82f8b004d#npm:3.1.2"],\
           ["express-rate-limit", "virtual:5c86d93bc614dcc07528a847be8e69a11d4241faf459870c8d05a1091ebe7795b3662598c52ebf26e4b4ca32b1afcdc5b785498f8d4aecbf706a70c82f8b004d#npm:7.5.1"],\
           ["glob", "npm:10.5.0"],\
-          ["govuk-frontend", "npm:5.13.0"],\
+          ["govuk-frontend", "npm:5.14.0"],\
           ["helmet", "npm:8.1.0"],\
           ["html-webpack-plugin", "virtual:5c86d93bc614dcc07528a847be8e69a11d4241faf459870c8d05a1091ebe7795b3662598c52ebf26e4b4ca32b1afcdc5b785498f8d4aecbf706a70c82f8b004d#npm:5.5.1"],\
           ["husky", "npm:8.0.3"],\
@@ -11513,10 +11513,10 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["govuk-frontend", [\
-      ["npm:5.13.0", {\
-        "packageLocation": "./.yarn/cache/govuk-frontend-npm-5.13.0-7f7a232905-6eca01260e.zip/node_modules/govuk-frontend/",\
+      ["npm:5.14.0", {\
+        "packageLocation": "./.yarn/cache/govuk-frontend-npm-5.14.0-921256176a-be321340f4.zip/node_modules/govuk-frontend/",\
         "packageDependencies": [\
-          ["govuk-frontend", "npm:5.13.0"]\
+          ["govuk-frontend", "npm:5.14.0"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -17064,7 +17064,7 @@ const RAW_RUNTIME_STATE =
           ["express-nunjucks", "virtual:5c86d93bc614dcc07528a847be8e69a11d4241faf459870c8d05a1091ebe7795b3662598c52ebf26e4b4ca32b1afcdc5b785498f8d4aecbf706a70c82f8b004d#npm:3.1.2"],\
           ["express-rate-limit", "virtual:5c86d93bc614dcc07528a847be8e69a11d4241faf459870c8d05a1091ebe7795b3662598c52ebf26e4b4ca32b1afcdc5b785498f8d4aecbf706a70c82f8b004d#npm:7.5.1"],\
           ["glob", "npm:10.5.0"],\
-          ["govuk-frontend", "npm:5.13.0"],\
+          ["govuk-frontend", "npm:5.14.0"],\
           ["helmet", "npm:8.1.0"],\
           ["html-webpack-plugin", "virtual:5c86d93bc614dcc07528a847be8e69a11d4241faf459870c8d05a1091ebe7795b3662598c52ebf26e4b4ca32b1afcdc5b785498f8d4aecbf706a70c82f8b004d#npm:5.5.1"],\
           ["husky", "npm:8.0.3"],\
