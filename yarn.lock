@@ -8524,9 +8524,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"html-webpack-plugin@npm:5.5.1":
-  version: 5.5.1
-  resolution: "html-webpack-plugin@npm:5.5.1"
+"html-webpack-plugin@npm:5.6.6":
+  version: 5.6.6
+  resolution: "html-webpack-plugin@npm:5.6.6"
   dependencies:
     "@types/html-minifier-terser": "npm:^6.0.0"
     html-minifier-terser: "npm:^6.0.2"
@@ -8534,8 +8534,14 @@ __metadata:
     pretty-error: "npm:^4.0.0"
     tapable: "npm:^2.0.0"
   peerDependencies:
+    "@rspack/core": 0.x || 1.x
     webpack: ^5.20.0
-  checksum: 10/e34c90fdbb7b75ae9bc4ee40351ff04eb05efeeba569ba3f3519f89c314e4f259d0f2d18eaf4bc38b959d04c62f874b103b62b07643c12c95b0df96296860d55
+  peerDependenciesMeta:
+    "@rspack/core":
+      optional: true
+    webpack:
+      optional: true
+  checksum: 10/819ebee079466029a771236fdadcbcfe0aaf110eac1b74c0983a0318a7f99f3c69adcf1d617e218769a8c8e96ea17de2df30759bd950ec391d0c5676d480894e
   languageName: node
   linkType: hard
 
@@ -13218,7 +13224,7 @@ __metadata:
     glob: "npm:10.5.0"
     govuk-frontend: "npm:^5.9.0"
     helmet: "npm:8.1.0"
-    html-webpack-plugin: "npm:5.5.1"
+    html-webpack-plugin: "npm:5.6.6"
     husky: "npm:8.0.3"
     jest: "npm:^29.4.0"
     jest-html-reporter: "npm:3.10.2"
