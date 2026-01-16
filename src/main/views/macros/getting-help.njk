@@ -1,0 +1,23 @@
+{% macro gettingHelp(email) %}
+
+<h2 class="govuk-heading-s">Getting help</h2>
+<details class="govuk-details">
+  <summary class="govuk-details__summary">
+      <span class="govuk-details__summary-text">
+        Contact us for help
+      </span>
+  </summary>
+  <div class="govuk-details__text">
+    <p class="govuk-heading-s">Email</p>
+    <p class="govuk-body">
+      <a target=_self href="mailto:{{ email }}" class="govuk-link" rel="noopener noreferrer">{{ email }}</a>
+    </p>
+    <p class="govuk-heading-s">Telephone</p>
+    <p class="govuk-body">0300 123 5577<br>Monday to Friday, 8.30am to 5pm.</p>
+    <p class="govuk-body">
+      <a href="https://www.gov.uk/call-charges" class="govuk-link" rel="noreferrer noopener" target="_blank">Find out about call charges (opens in a new tab)</a>
+    </p>
+  </div>
+</details>
+
+{% endmacro %}

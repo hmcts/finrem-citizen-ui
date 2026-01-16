@@ -1,0 +1,28 @@
+{
+  "offset28": [
+    {
+      "text": "Financial statement (Form E)",
+      "href": "/financial-statement",
+      "fileName": "financial_statement_e.pdf"
+    }
+  ],
+  "offset14": [
+    {
+      "text": "Proposals",
+      "href": "/proposals",
+      "fileName": "proposals.pdf"
+    }
+  ],
+  "offset7": [
+    {
+      "text": "Composite case summary(ES1)",
+      "href": "/composite-case-summary",
+      "fileName": "composite_case_summary.pdf"
+    },
+    {
+      "text": "List of key events (chronology)",
+      "href": "/list-of-keys-events",
+      "fileName": "list_of_key_events_chronology.pdf"
+    }
+  ]
+}

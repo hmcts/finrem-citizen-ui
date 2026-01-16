@@ -10,6 +10,8 @@ node_modules/
 *log
 .DS_Store
 
+lib/
+
 src/main/public/img/lib/*
 src/main/public/js/lib/**/*.js
 src/main/public/stylesheets/lib/*
@@ -31,6 +33,7 @@ version
 
 .eslintcache
 
+.yarn/install-state.gz
 .yarn/*
 !.yarn/cache/*
 !.yarn/patches

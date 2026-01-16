@@ -1,1 +1,39 @@
 @import 'govuk-frontend';
+
+.finrem-section-break{
+  height: 4px;
+  background: #1E6FB8;
+  border: none;
+}
+
+.finrem-column-one-third
+{
+  box-sizing: border-box;
+  padding: 90px 15px;
+}
+
+.finrem-signout-style
+{
+  font-size: large;
+  font-weight: bold;
+}
+
+@media (min-width: 40.0625em) {
+  .govuk-header__logo.finrem-header-signout {
+    float: right;
+    padding-top: 10px;
+  }
+}
+
+@media (min-width: 40.0625em) {
+  .govuk-task-list {
+    margin-bottom: 30px;
+    margin-left: 30px;
+  }
+}
+
+@media (min-width: 48.0625em) {
+  .govuk-header__content {
+    width: auto;
+  }
+}

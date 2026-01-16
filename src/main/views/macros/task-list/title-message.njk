@@ -1,0 +1,7 @@
+{% macro titleMessage(firstHearingDate) %}
+
+<h1 class="govuk-heading-l">Documents to submit before your hearing on {{ firstHearingDate | offsetDate(0) }}</h1>
+<hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible govuk-! finrem-section-break">
+<p class="govuk-body">You must complete and submit all the documents listed below by the stated dates. Once submitted, the documents will be added to your case, ready for the judge to review at your hearing. The related task on this list will be marked as 'done'.</p>
+
+{% endmacro %}
