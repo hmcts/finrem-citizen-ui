@@ -4,6 +4,13 @@
   {% include "webpack/css.njk" %}
 {% endblock %}
 
+{% block header %}
+  {{ govukHeader({
+    homepageUrl: "/",
+    serviceName: "Dividing your money and property"
+  }) }}
+{% endblock %}
+
 {% block bodyEnd %}
   {# Run JavaScript at end of the <body>, to avoid blocking the initial render. #}
   {% include "webpack/js.njk" %}
