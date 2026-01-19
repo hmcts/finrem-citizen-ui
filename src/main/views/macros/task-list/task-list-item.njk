@@ -1,0 +1,26 @@
+{% macro taskListItem(text, href, status) %}
+
+<li class="govuk-task-list__item govuk-task-list__item--with-link">
+  <div class="govuk-task-list__name-and-hint">
+    <a class="govuk-link govuk-task-list__link" href={{ href }}>
+      {{ text }}
+    </a>
+  </div>
+  <div class="govuk-task-list__status">
+    {% if status == "Done" %}
+      <strong class="govuk-tag govuk-tag--green">
+        {{ status }}
+      </strong>
+    {% elif status == "Not started yet" %}
+      <strong class="govuk-tag govuk-tag--red">
+        {{ status }}
+      </strong>
+    {% else %}
+      <strong class="govuk-tag govuk-tag--blue">
+        {{ status }}
+      </strong>
+    {% endif %}
+  </div>
+</li>
+
+{% endmacro %}

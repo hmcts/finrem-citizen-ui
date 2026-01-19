@@ -1,0 +1,51 @@
+{% from "./macros/task-list/task-list-item.njk" import taskListItem %}
+{% from "./macros/getting-help.njk" import gettingHelp %}
+{% from "./macros/view-divorce-case.njk" import viewDivorceCase %}
+{% from "./macros/task-list/warning-message.njk" import warningMessage %}
+{% from "./macros/task-list/title-message.njk" import titleMessage %}
+{% from "./macros/back-link.njk" import backLink %}
+
+{% extends "template.njk" %}
+{% block content %}
+  <div class="govuk-width-container">
+    {{ backLink("#") }}
+    <main class="govuk-main-wrapper">
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+
+          {{ titleMessage(firstHearingDate) }}
+          {{ warningMessage(firstHearingDate, documents) }}
+
+          {% if formType == "fasttrack" %}
+            {% set offsets = ["21", "1"] %}
+          {% elif formType == "express" %}
+            {% set offsets = ["28", "14", "7"] %}
+          {% else %}
+            {% set offsets = ["35", "14", "7", "2"] %}
+          {% endif %}
+
+          {% if not formType %}
+            {% set formType = "standard" %}
+          {% endif %}
+
+          {% set formItems = formType | taskListFormItems %}
+
+          {% for offset in offsets %}
+            <h2 class="govuk-heading-m">By {{ firstHearingDate | offsetDate(offset) }}</h2>
+            <ul class="govuk-task-list">
+             {% for item in formItems["offset"+offset] %}
+                {{ taskListItem(item.text, item.href, item.fileName | taskStatus(documents)) }}
+             {% endfor %}
+            </ul>
+          {% endfor %}
+        </div>
+
+        <div class="govuk-grid-column-one-third finrem-column-one-third">
+          {{ viewDivorceCase(caseId) }}
+          {{ gettingHelp(email) }}
+        </div>
+
+      </div>
+    </main>
+  </div>
+{% endblock %}

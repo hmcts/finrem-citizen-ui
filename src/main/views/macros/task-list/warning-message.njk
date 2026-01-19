@@ -1,0 +1,10 @@
+{% macro warningMessage(firstHearingDate, documents) %}
+
+{% if firstHearingDate | taskListWarningMessage(documents) %}
+  <p class="govuk-body" id="task-list-warning-message">One or more of your tasks are overdue. You must complete
+    and upload your completed documents as soon as possible. If you do not submit your documents, you may be
+    ordered to pay the other party's legal costs.
+  </p>
+{% endif %}
+
+{% endmacro %}
