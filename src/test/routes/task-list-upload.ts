@@ -1,7 +1,7 @@
-import { app } from '../../main/app';
-
 import { expect } from 'chai';
 import request from 'supertest';
+
+import { app } from '../../main/app';
 
 describe('GET /task-list-upload-dashboard', function () {
   it('should respond with html and status 200', async function () {

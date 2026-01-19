@@ -1,9 +1,9 @@
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 
-import { app } from '../../main/app';
-
 import supertest from 'supertest';
+
+import { app } from '../../main/app';
 
 const pa11y = require('pa11y');
 
