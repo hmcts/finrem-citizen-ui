@@ -1,0 +1,12 @@
+apiVersion: v2
+appVersion: '1.1'
+description: Helm chart for the HMCTS Financial Remedy Citizen Frontend service
+name: finrem-citizen-ui
+home: https://github.com/hmcts/finrem-citizen-ui
+version: 0.0.1
+maintainers:
+  - name: HMCTS Financial Remedy Citizen UI team
+dependencies:
+  - name: nodejs
+    version: 3.2.0
+    repository: 'oci://hmctspublic.azurecr.io/helm'
