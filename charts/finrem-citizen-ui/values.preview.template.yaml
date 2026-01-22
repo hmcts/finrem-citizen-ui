@@ -6,3 +6,9 @@ nodejs:
   devmemoryRequests: 1Gi
   devcpuLimits: 1
   devmemoryLimits: 1Gi
+  readinessDelay: 45
+  readinessTimeout: 5
+  readinessPeriod: 15
+  livenessDelay: 45
+  livenessTimeout: 5
+  livenessPeriod: 15
