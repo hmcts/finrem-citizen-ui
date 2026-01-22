@@ -2895,7 +2895,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sinonjs/fake-timers@npm:^10.0.2, @sinonjs/fake-timers@npm:^10.2.0":
+"@sinonjs/fake-timers@npm:^10.0.2, @sinonjs/fake-timers@npm:^10.3.0":
   version: 10.3.0
   resolution: "@sinonjs/fake-timers@npm:10.3.0"
   dependencies:
@@ -3095,7 +3095,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/csurf@npm:1.11.5":
+"@types/csurf@npm:^1.9.36":
   version: 1.11.5
   resolution: "@types/csurf@npm:1.11.5"
   dependencies:
@@ -3197,15 +3197,6 @@ __metadata:
   dependencies:
     "@types/node": "npm:*"
   checksum: 10/79d746a8f053954bba36bd3d94a90c78de995d126289d656fb3271dd9f1229d33f678da04d10bce6be440494a5a73438e2e363e92802d16b8315b051036c5256
-  languageName: node
-  linkType: hard
-
-"@types/helmet@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "@types/helmet@npm:4.0.0"
-  dependencies:
-    helmet: "npm:*"
-  checksum: 10/ded60d8d9960edbae4d10603511dca9b9c50a9937f49e0d2b14bc096302e85a038acd443889a132dab60bc950bfd0e47337bdca485d75bbb7b6224f74fc50ab7
   languageName: node
   linkType: hard
 
@@ -4021,7 +4012,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn@npm:8.15.0, acorn@npm:^8.15.0":
+"acorn@npm:8.15.0, acorn@npm:^8.15.0, acorn@npm:^8.9.0":
   version: 8.15.0
   resolution: "acorn@npm:8.15.0"
   bin:
@@ -4030,7 +4021,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn@npm:^8.11.0, acorn@npm:^8.14.0, acorn@npm:^8.4.1, acorn@npm:^8.7.1, acorn@npm:^8.8.2, acorn@npm:^8.9.0":
+"acorn@npm:^8.11.0, acorn@npm:^8.14.0, acorn@npm:^8.4.1, acorn@npm:^8.7.1, acorn@npm:^8.8.2":
   version: 8.14.1
   resolution: "acorn@npm:8.14.1"
   bin:
@@ -6056,7 +6047,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"csurf@npm:1.11.0":
+"csurf@npm:^1.11.0":
   version: 1.11.0
   resolution: "csurf@npm:1.11.0"
   dependencies:
@@ -7188,7 +7179,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:8.57.1":
+"eslint@npm:^8.57.1":
   version: 8.57.1
   resolution: "eslint@npm:8.57.1"
   dependencies:
@@ -7268,11 +7259,11 @@ __metadata:
   linkType: hard
 
 "esquery@npm:^1.4.2":
-  version: 1.6.0
-  resolution: "esquery@npm:1.6.0"
+  version: 1.7.0
+  resolution: "esquery@npm:1.7.0"
   dependencies:
     estraverse: "npm:^5.1.0"
-  checksum: 10/c587fb8ec9ed83f2b1bc97cf2f6854cc30bf784a79d62ba08c6e358bf22280d69aee12827521cf38e69ae9761d23fb7fde593ce315610f85655c139d99b05e5a
+  checksum: 10/4afaf3089367e1f5885caa116ef386dffd8bfd64da21fd3d0e56e938d2667cfb2e5400ab4a825aa70e799bb3741e5b5d63c0b94d86e2d4cf3095c9e64b2f5a15
   languageName: node
   linkType: hard
 
@@ -7736,6 +7727,104 @@ __metadata:
   checksum: 10/4f3bdc30d41778c647e53f4923e72de5e5fb055157031f34501c5b36c2eb59f77b997edf9cb00165c6060cda7eaa2e3da82cb6be2e61d68ad3e07c4bc4cce67e
   languageName: node
   linkType: hard
+
+"finrem-citizen-ui@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "finrem-citizen-ui@workspace:."
+  dependencies:
+    "@babel/core": "npm:^7.26.10"
+    "@babel/eslint-parser": "npm:7.28.6"
+    "@babel/preset-env": "npm:^7.26.9"
+    "@codeceptjs/allure-legacy": "npm:^1.0.2"
+    "@codeceptjs/configure": "npm:^0.10.0"
+    "@hmcts/info-provider": "npm:1.3.0"
+    "@hmcts/nodejs-healthcheck": "npm:1.8.6"
+    "@hmcts/nodejs-logging": "npm:4.0.4"
+    "@hmcts/properties-volume": "npm:0.0.14"
+    "@types/body-parser": "npm:1.19.6"
+    "@types/chai": "npm:^5.2.1"
+    "@types/chai-as-promised": "npm:7.1.8"
+    "@types/config": "npm:3.3.5"
+    "@types/cookie-parser": "npm:1.4.10"
+    "@types/csurf": "npm:^1.9.36"
+    "@types/es6-promisify": "npm:6.0.4"
+    "@types/express": "npm:4.17.25"
+    "@types/glob": "npm:8.1.0"
+    "@types/jest": "npm:^29.5.14"
+    "@types/lodash": "npm:4.17.23"
+    "@types/node": "npm:^22.14.1"
+    "@types/nunjucks": "npm:3.2.6"
+    "@types/pa11y": "npm:^5.3.7"
+    "@types/require-directory": "npm:2.1.7"
+    "@types/serve-favicon": "npm:^2.5.7"
+    "@types/supertest": "npm:^6.0.3"
+    "@typescript-eslint/eslint-plugin": "npm:^6.0.0"
+    "@typescript-eslint/parser": "npm:^6.0.0"
+    applicationinsights: "npm:2.9.8"
+    axios: "npm:1.13.2"
+    axios-debug-log: "npm:1.0.0"
+    babel-loader: "npm:9.2.1"
+    body-parser: "npm:1.20.4"
+    chai: "npm:4.5.0"
+    chai-as-promised: "npm:7.1.2"
+    chokidar: "npm:^4.0.3"
+    codeceptjs: "npm:^3.3.6"
+    config: "npm:3.3.12"
+    cookie-parser: "npm:1.4.7"
+    copy-webpack-plugin: "npm:9.1.0"
+    css-loader: "npm:6.11.0"
+    csurf: "npm:^1.11.0"
+    debug: "npm:4.4.3"
+    eslint: "npm:^8.57.1"
+    eslint-config-prettier: "npm:8.10.2"
+    eslint-plugin-import: "npm:2.32.0"
+    eslint-plugin-jest: "npm:^27.2.1"
+    express: "npm:5.1.0"
+    express-nunjucks: "npm:3.1.2"
+    express-rate-limit: "npm:^7.5.0"
+    glob: "npm:10.5.0"
+    govuk-frontend: "npm:^5.9.0"
+    helmet: "npm:8.1.0"
+    html-webpack-plugin: "npm:5.6.6"
+    husky: "npm:8.0.3"
+    jest: "npm:^29.4.0"
+    jest-html-reporter: "npm:3.10.2"
+    jest-junit: "npm:16.0.0"
+    jquery: "npm:3.7.1"
+    lint-staged: "npm:13.3.0"
+    lodash: "npm:4.17.23"
+    mini-css-extract-plugin: "npm:2.7.6"
+    nock: "npm:13.3.1"
+    nodemon: "npm:2.0.22"
+    nunjucks: "npm:3.2.4"
+    pa11y: "npm:^8.0.0"
+    playwright: "npm:1.56.1"
+    postcss: "npm:^8.4.27"
+    prettier: "npm:2.8.8"
+    request: "npm:2.88.2"
+    require-directory: "npm:2.1.1"
+    sass: "npm:1.77.8"
+    sass-loader: "npm:13.3.3"
+    serve-favicon: "npm:2.5.1"
+    sinon: "npm:16.1.3"
+    sinon-chai: "npm:3.7.0"
+    style-loader: "npm:3.3.4"
+    stylelint: "npm:^16.0.0"
+    stylelint-config-standard: "npm:^36.0.0"
+    stylelint-config-standard-scss: "npm:^13.0.0"
+    superagent: "npm:^10.2.1"
+    supertest: "npm:^7.1.0"
+    ts-jest: "npm:29.1.0"
+    ts-loader: "npm:9.4.3"
+    ts-node: "npm:10.9.2"
+    tsconfig-paths: "npm:4.2.0"
+    typescript: "npm:5.0.4"
+    webpack: "npm:5.94.0"
+    webpack-cli: "npm:5.1.4"
+    webpack-dev-middleware: "npm:6.1.3"
+    webpack-node-externals: "npm:3.0.0"
+  languageName: unknown
+  linkType: soft
 
 "flat-cache@npm:^3.0.4":
   version: 3.2.0
@@ -8437,7 +8526,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"helmet@npm:*, helmet@npm:8.1.0":
+"helmet@npm:8.1.0":
   version: 8.1.0
   resolution: "helmet@npm:8.1.0"
   checksum: 10/262e678d340bb102158f4e6ba1469a7cda1643329a50863f8fe704d5b60d9ebe6ea1e7793ed51224ae464f197dedf2fe8035df278c042e32ebc95b237fa41ad0
@@ -10439,7 +10528,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:4.17.21, lodash@npm:^4.17.11, lodash@npm:^4.17.14, lodash@npm:^4.17.20, lodash@npm:^4.17.21":
+"lodash@npm:4.17.23":
+  version: 4.17.23
+  resolution: "lodash@npm:4.17.23"
+  checksum: 10/82504c88250f58da7a5a4289f57a4f759c44946c005dd232821c7688b5fcfbf4a6268f6a6cdde4b792c91edd2f3b5398c1d2a0998274432cff76def48735e233
+  languageName: node
+  linkType: hard
+
+"lodash@npm:^4.17.11, lodash@npm:^4.17.14, lodash@npm:^4.17.20, lodash@npm:^4.17.21":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: 10/c08619c038846ea6ac754abd6dd29d2568aa705feb69339e836dfa8d8b09abbb2f859371e86863eda41848221f9af43714491467b5b0299122431e202bb0c532
@@ -12213,27 +12309,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"playwright-core@npm:1.46.0":
-  version: 1.46.0
-  resolution: "playwright-core@npm:1.46.0"
+"playwright-core@npm:1.56.1":
+  version: 1.56.1
+  resolution: "playwright-core@npm:1.56.1"
   bin:
     playwright-core: cli.js
-  checksum: 10/1fd237d01380be0d650ae7df73fb796eae9c208e0746bb110db270139f1d2a96bf3b8856c394a48720b30e145614a10f275ab08627d0c95ba2160dc0402a90cb
+  checksum: 10/df785eb3b3a8392b10dcde5f768e09b7fe459a7b06ed81180da69e048f2154b761f86d79572c2b62037a1f18a44e4ace72f5b6547f4f473b4ab13ab1d94007d2
   languageName: node
   linkType: hard
 
-"playwright@npm:1.46.0":
-  version: 1.46.0
-  resolution: "playwright@npm:1.46.0"
+"playwright@npm:1.56.1":
+  version: 1.56.1
+  resolution: "playwright@npm:1.56.1"
   dependencies:
     fsevents: "npm:2.3.2"
-    playwright-core: "npm:1.46.0"
+    playwright-core: "npm:1.56.1"
   dependenciesMeta:
     fsevents:
       optional: true
   bin:
     playwright: cli.js
-  checksum: 10/e06f3b53faaf4edf4fcf636b43004dd0db1e45dbdcb2b59037a9810dfce3a59f0386d4826ba7de42f98fe525539fa20dd8f8c46acd1f8e5c57dcb5c1d8d536ce
+  checksum: 10/f1743f93b26f1d497257771428d93f3c9ed2d75b00d935f0cd1556ff2dc61d47f2df8b381d752fbd2c47082b685f0ffe4cc4b7ba440d7b4ba3a08572aec58fba
   languageName: node
   linkType: hard
 
@@ -13181,105 +13277,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rpe-expressjs-template@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "rpe-expressjs-template@workspace:."
-  dependencies:
-    "@babel/core": "npm:^7.26.10"
-    "@babel/eslint-parser": "npm:7.28.6"
-    "@babel/preset-env": "npm:^7.26.9"
-    "@codeceptjs/allure-legacy": "npm:^1.0.2"
-    "@codeceptjs/configure": "npm:^0.10.0"
-    "@hmcts/info-provider": "npm:1.3.0"
-    "@hmcts/nodejs-healthcheck": "npm:1.8.6"
-    "@hmcts/nodejs-logging": "npm:4.0.4"
-    "@hmcts/properties-volume": "npm:0.0.14"
-    "@types/body-parser": "npm:1.19.6"
-    "@types/chai": "npm:^5.2.1"
-    "@types/chai-as-promised": "npm:7.1.8"
-    "@types/config": "npm:3.3.5"
-    "@types/cookie-parser": "npm:1.4.10"
-    "@types/csurf": "npm:1.11.5"
-    "@types/es6-promisify": "npm:6.0.4"
-    "@types/express": "npm:4.17.25"
-    "@types/glob": "npm:8.1.0"
-    "@types/helmet": "npm:^4.0.0"
-    "@types/jest": "npm:^29.5.14"
-    "@types/lodash": "npm:4.17.23"
-    "@types/node": "npm:^22.14.1"
-    "@types/nunjucks": "npm:3.2.6"
-    "@types/pa11y": "npm:^5.3.7"
-    "@types/require-directory": "npm:2.1.7"
-    "@types/serve-favicon": "npm:^2.5.7"
-    "@types/supertest": "npm:^6.0.3"
-    "@typescript-eslint/eslint-plugin": "npm:^6.0.0"
-    "@typescript-eslint/parser": "npm:^6.0.0"
-    applicationinsights: "npm:2.9.8"
-    axios: "npm:1.13.2"
-    axios-debug-log: "npm:1.0.0"
-    babel-loader: "npm:9.2.1"
-    body-parser: "npm:1.20.4"
-    chai: "npm:4.5.0"
-    chai-as-promised: "npm:7.1.2"
-    chokidar: "npm:^4.0.3"
-    codeceptjs: "npm:^3.3.6"
-    config: "npm:3.3.12"
-    cookie-parser: "npm:1.4.7"
-    copy-webpack-plugin: "npm:9.1.0"
-    css-loader: "npm:6.11.0"
-    csurf: "npm:1.11.0"
-    debug: "npm:4.4.3"
-    eslint: "npm:8.57.1"
-    eslint-config-prettier: "npm:8.10.2"
-    eslint-plugin-import: "npm:2.32.0"
-    eslint-plugin-jest: "npm:^27.2.1"
-    express: "npm:5.1.0"
-    express-nunjucks: "npm:3.1.2"
-    express-rate-limit: "npm:^7.5.0"
-    glob: "npm:10.5.0"
-    govuk-frontend: "npm:^5.9.0"
-    helmet: "npm:8.1.0"
-    html-webpack-plugin: "npm:5.6.6"
-    husky: "npm:8.0.3"
-    jest: "npm:^29.4.0"
-    jest-html-reporter: "npm:3.10.2"
-    jest-junit: "npm:16.0.0"
-    jquery: "npm:3.7.1"
-    lint-staged: "npm:13.3.0"
-    lodash: "npm:4.17.21"
-    mini-css-extract-plugin: "npm:2.7.6"
-    nock: "npm:13.3.1"
-    nodemon: "npm:2.0.22"
-    nunjucks: "npm:3.2.4"
-    pa11y: "npm:^8.0.0"
-    playwright: "npm:1.46.0"
-    postcss: "npm:^8.4.27"
-    prettier: "npm:2.8.8"
-    request: "npm:2.88.2"
-    require-directory: "npm:2.1.1"
-    sass: "npm:1.77.8"
-    sass-loader: "npm:13.3.3"
-    serve-favicon: "npm:2.5.1"
-    sinon: "npm:15.1.0"
-    sinon-chai: "npm:3.7.0"
-    style-loader: "npm:3.3.4"
-    stylelint: "npm:^16.0.0"
-    stylelint-config-standard: "npm:^36.0.0"
-    stylelint-config-standard-scss: "npm:^13.0.0"
-    superagent: "npm:^10.2.1"
-    supertest: "npm:^7.1.0"
-    ts-jest: "npm:29.1.0"
-    ts-loader: "npm:9.4.3"
-    ts-node: "npm:10.9.2"
-    tsconfig-paths: "npm:4.2.0"
-    typescript: "npm:5.0.4"
-    webpack: "npm:5.94.0"
-    webpack-cli: "npm:5.1.4"
-    webpack-dev-middleware: "npm:6.1.3"
-    webpack-node-externals: "npm:3.0.0"
-  languageName: unknown
-  linkType: soft
-
 "run-async@npm:^2.4.0":
   version: 2.4.1
   resolution: "run-async@npm:2.4.1"
@@ -13768,17 +13765,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sinon@npm:15.1.0":
-  version: 15.1.0
-  resolution: "sinon@npm:15.1.0"
+"sinon@npm:16.1.3":
+  version: 16.1.3
+  resolution: "sinon@npm:16.1.3"
   dependencies:
     "@sinonjs/commons": "npm:^3.0.0"
-    "@sinonjs/fake-timers": "npm:^10.2.0"
+    "@sinonjs/fake-timers": "npm:^10.3.0"
     "@sinonjs/samsam": "npm:^8.0.0"
     diff: "npm:^5.1.0"
     nise: "npm:^5.1.4"
     supports-color: "npm:^7.2.0"
-  checksum: 10/5933c0edf6eb2e7f629409c9bfc6fd19ddb2ee75605cb9ecae11ea24a622aaf7f759832e48dc670186f6779ee5f44bee4ffa852a7df0f73976a4a4c421441539
+  checksum: 10/43d40437c3434b1e06c6c7f9f482b4096aaa869dbc486bf511a6319cc6900e1306f6d0bd0395e2278c208f75ed526e340cf1071b41efc6a9e8d9018b152f2326
   languageName: node
   linkType: hard
 

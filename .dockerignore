@@ -6,10 +6,13 @@
 
 !package.json
 !yarn.lock
+
 !version
 !.yarn/**
 !.yarnrc.yml
 !.pnp.cjs
+.yarn/cache
+.yarn/install-state.gz
 
 !tsconfig.json
 !webpack/**

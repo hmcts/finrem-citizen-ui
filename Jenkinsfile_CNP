@@ -3,15 +3,43 @@
 @Library("Infrastructure")
 
 def type = "nodejs"
-def product = "rpe"
-def component = "expressjs-template"
+def product = "finrem"
+def component = "citizen-ui"
 
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
+def secrets = [
+  'finrem-${env}': [
+    secret("idam-secret" ,"OAUTH2_CLIENT_FINREM"),
+    secret("finrem-idam-client-secret", "FINREM_IDAM_CLIENT_SECRET"),
+  ]
+]
+
+static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
+  [ $class: 'AzureKeyVaultSecret',
+    secretType: 'Secret',
+    name: secretName,
+    version: '',
+    envVariable: envVar
+  ]
+}
+
 withPipeline(type, product, component) {
+  loadVaultSecrets(secrets)
   afterSuccess('build') {
     yarnBuilder.yarn('playwright install')
     yarnBuilder.yarn('rebuild puppeteer')
     yarnBuilder.yarn('build')
+  }
+
+  enableAksStagingDeployment()
+  disableLegacyDeployment()
+
+  onMaster() {
+    env.JENKINS_BRANCH = "master"
+  }
+
+  onPR() {
+    env.JENKINS_BRANCH = "preview"
   }
 }
