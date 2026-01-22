@@ -1,0 +1,51 @@
+{
+  "actions": [],
+  "advisories": {
+    "csurf (deprecation)": {
+      "access": "public",
+      "created": null,
+      "cves": [],
+      "cvss": null,
+      "cwe": [],
+      "deleted": null,
+      "findings": [
+        {
+          "paths": [
+            "finrem-citizen-ui@workspace:."
+          ],
+          "version": "1.11.0"
+        }
+      ],
+      "found_by": null,
+      "github_advisory_id": null,
+      "id": "csurf (deprecation)",
+      "metadata": null,
+      "module_name": "csurf",
+      "npm_advisory_id": null,
+      "overview": "This package is archived and no longer maintained. For support, visit https://github.com/expressjs/express/discussions",
+      "patched_versions": null,
+      "recommendation": null,
+      "references": "",
+      "reported_by": null,
+      "severity": "moderate",
+      "title": "This package is archived and no longer maintained. For support, visit https://github.com/expressjs/express/discussions",
+      "updated": null,
+      "url": null,
+      "vulnerable_versions": "1.11.0"
+    }
+  },
+  "metadata": {
+    "dependencies": 1539,
+    "devDependencies": 0,
+    "optionalDependencies": 0,
+    "totalDependencies": 1539,
+    "vulnerabilities": {
+      "critical": 0,
+      "high": 0,
+      "info": 0,
+      "low": 0,
+      "moderate": 1
+    }
+  },
+  "muted": []
+}
