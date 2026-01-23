@@ -1,16 +1,55 @@
 #!groovy
 
 properties([
-// H allow predefined but random minute see https://en.wikipedia.org/wiki/Cron#Non-standard_characters
-pipelineTriggers([cron('H 07 * * 1-5')])
+  // H allow predefined but random minute see https://en.wikipedia.org/wiki/Cron#Non-standard_characters
+  pipelineTriggers([cron('H 16 * * 1-5')]),
+  parameters([
+    string(name: 'TEST_URL', defaultValue: 'https://finrem-citizen-ui.aat.platform.hmcts.net', description: 'The URL you want to run tests against'),
+  ])
 ])
 
 @Library("Infrastructure")
 
 def type = "nodejs"
-def product = "rpe"
-def component = "expressjs-template"
+def product = "finrem"
+def component = "citizen-ui"
+
+// SAUCELABS config - configured on Jenkins
+env.SAUCE_USERNAME = 'username'
+env.SAUCE_ACCESS_KEY = 'privatekey'
+env.SAUCE_TUNNEL_IDENTIFIER = 'reformtunnel'
+
+def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
+
+def secrets = [
+  'finrem-${env}'    :[
+    secret('idam-secret', 'IDAM_SECRET'),
+    secret('playwright-service-url', 'PLAYWRIGHT_SERVICE_URL'),
+    secret('playwright-token', 'PLAYWRIGHT_SERVICE_ACCESS_TOKEN'),
+  ]
+]
+
+def pipelineConf = new AppPipelineConfig()
+pipelineConf.vaultSecrets = secrets
 
 withNightlyPipeline(type, product, component) {
 
+  enableCrossBrowserTest()
+  enableFullFunctionalTest()
+  loadVaultSecrets(secrets)
+  enableFortifyScan()
+  before('crossBrowserTest') {
+    yarnBuilder.smokeTest()
+  }
+
+  afterAlways('crossBrowserTest') {
+    //steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/crossbrowser/reports/**/*'
+  }
+
+  afterAlways('fullFunctionalTest') {
+    //steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/functional/reports/**/*'
+  }
+  afterAlways('fortify-scan') {
+    //steps.archiveArtifacts allowEmptyArchive: true, artifacts: '**/Fortify Scan/**/*'
+  }
 }
