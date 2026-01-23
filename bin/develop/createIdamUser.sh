@@ -9,18 +9,18 @@
 ## Note: an auto-generated password will be output when the script runs.
 ## Create an IDAM user with the role `citizen` or any other role provided in 'roles' option
 
-KEY_VAULT_NAME="pcs-aat"
+KEY_VAULT_NAME="finrem-aat"
 idam_system_user_name=$(az keyvault secret show --name "idam-system-user-name" --vault-name "$KEY_VAULT_NAME" --query "value" -o tsv)
 idam_system_user_password=$(az keyvault secret show --name "idam-system-user-password" --vault-name "$KEY_VAULT_NAME" --query "value" -o tsv)
-pcs_frontend_idam_secret=$(az keyvault secret show --name "pcs-frontend-idam-secret" --vault-name "$KEY_VAULT_NAME" --query "value" -o tsv)
+finrem-citizen-ui-idam-client-secret=$(az keyvault secret show --name "finrem-citizen-ui-idam-client-secret" --vault-name "$KEY_VAULT_NAME" --query "value" -o tsv)
 
 response=$(curl -s --location 'https://idam-api.aat.platform.hmcts.net/o/token' \
            --header 'Content-Type: application/x-www-form-urlencoded' \
            --data-urlencode 'username='${idam_system_user_name}'' \
            --data-urlencode 'password='${idam_system_user_password}'' \
            --data-urlencode 'grant_type=password' \
-           --data-urlencode 'client_id=pcs-frontend' \
-           --data-urlencode 'client_secret='${pcs_frontend_idam_secret}'' \
+           --data-urlencode 'client_id=finrem-citizen-ui' \
+           --data-urlencode 'client_secret='${finrem-citizen-ui-idam-client-secret}'' \
            --data-urlencode 'scope=profile openid roles')
 accessToken=$(echo "$response" | jq -r .access_token)
 
