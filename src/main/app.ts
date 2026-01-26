@@ -1,9 +1,10 @@
+import * as path from 'node:path';
+
 import { SESSION, xuiNode } from '@hmcts/rpx-xui-node-lib';
 import * as bodyParserModule from 'body-parser';
 import * as cookieParserModule from 'cookie-parser';
 import * as expressModule from 'express';
 import * as helmetModule from 'helmet';
-import * as path from 'path';
 
 import { getXuiNodeMiddleware } from './auth';
 import { environmentCheckText, getConfigValue, getEnvironment, showFeature } from './configuration';
@@ -14,17 +15,18 @@ import {
   SESSION_SECRET,
 } from './configuration/references';
 import { Nunjucks } from './modules/nunjucks';
+// eslint-disable-next-line import/order
 import { PropertiesVolume } from './modules/properties-volume';
 
 // Import routes
-import homeRoute from './routes/home';
 import healthRoute from './routes/health';
+import homeRoute from './routes/home';
 import infoRoute from './routes/info';
 import taskListUploadRoute from './routes/task-list-upload';
 
 // Handle both CommonJS and ES module exports
-const express = (expressModule as any).default || expressModule;
-const helmet = (helmetModule as any).default || helmetModule;
+const express = (expressModule).default || expressModule;
+const helmet = (helmetModule).default || helmetModule;
 const bodyParser = (bodyParserModule as any).default || bodyParserModule;
 const cookieParser = (cookieParserModule as any).default || cookieParserModule;
 

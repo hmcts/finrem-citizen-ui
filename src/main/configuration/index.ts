@@ -6,13 +6,13 @@ import { ENVIRONMENT, PROTOCOL } from './references';
 const DEVELOPMENT = 'development';
 const HTTP = 'http';
 
-export const initialiseSecrets = () => {
+export const initialiseSecrets = ():void => {
   propertiesVolume.addTo(config);
 };
 
 initialiseSecrets();
 
-export const getEnvironment = () => process.env.NODE_CONFIG_ENV;
+export const getEnvironment = ():string | undefined => process.env.NODE_CONFIG_ENV;
 
 export const getConfigValue = <T = string>(reference: string): T => config.get(reference);
 
