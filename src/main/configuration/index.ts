@@ -20,7 +20,7 @@ export const hasConfigValue = (reference: string): boolean => config.has(referen
 
 export const showFeature = (feature: string): boolean => config.get(`feature.${feature}`);
 
-export const environmentCheckText = () =>
+export const environmentCheckText = () :string =>
   `NODE_CONFIG_ENV is set as ${process.env.NODE_CONFIG_ENV} therefore we are using the ${config.get(ENVIRONMENT)} config.`;
 
 export const getProtocol = (): string => getEnvironment() === DEVELOPMENT ? HTTP : getConfigValue(PROTOCOL);

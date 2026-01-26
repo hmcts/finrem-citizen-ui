@@ -1,5 +1,5 @@
 import { AUTH, AuthOptions, xuiNode } from '@hmcts/rpx-xui-node-lib';
-import { CookieOptions, NextFunction, Request, Response } from 'express';
+import { CookieOptions, NextFunction, Request, RequestHandler, Response } from 'express';
 
 import { getConfigValue, showFeature } from '../configuration';
 import {
@@ -27,7 +27,7 @@ import {
 const { Logger } = require('@hmcts/nodejs-logging');
 const logger = Logger.getLogger('auth');
 
-export const successCallback = async (req: Request, res: Response, next: NextFunction) => {
+export const successCallback = async (req: Request, res: Response, next: NextFunction) : Promise<void>=> {
   const { accessToken } = (req.session as any).passport.user.tokenset;
   const { userinfo } = (req.session as any).passport.user;
 
@@ -62,7 +62,7 @@ export const successCallback = async (req: Request, res: Response, next: NextFun
 // Register success callback with xuiNode
 xuiNode.on(AUTH.EVENT.AUTHENTICATE_SUCCESS, successCallback);
 
-export const getXuiNodeMiddleware = () => {
+export const getXuiNodeMiddleware = () : RequestHandler => {
   const idamWebUrl = getConfigValue(SERVICES_IDAM_WEB);
   const authorizationUrl = `${idamWebUrl}/login`;
   const secret = getConfigValue(IDAM_SECRET);

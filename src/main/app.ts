@@ -27,8 +27,8 @@ import taskListUploadRoute from './routes/task-list-upload';
 // Handle both CommonJS and ES module exports
 const express = (expressModule).default || expressModule;
 const helmet = (helmetModule).default || helmetModule;
-const bodyParser = (bodyParserModule as any).default || bodyParserModule;
-const cookieParser = (cookieParserModule as any).default || cookieParserModule;
+const bodyParser = (bodyParserModule).default || bodyParserModule;
+const cookieParser = (cookieParserModule).default || cookieParserModule;
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -75,12 +75,12 @@ new Nunjucks(env === 'development').enableFor(app);
 
 // Redis event listeners (if Redis is enabled)
 if (showFeature(FEATURE_REDIS_ENABLED)) {
-  xuiNode.on(SESSION.EVENT.REDIS_CLIENT_READY, (redisClient: any) => {
+  xuiNode.on(SESSION.EVENT.REDIS_CLIENT_READY, (redisClient) => {
     logger.info('Redis client ready');
     app.locals.redisClient = redisClient;
   });
 
-  xuiNode.on(SESSION.EVENT.REDIS_CLIENT_ERROR, (error: any) => {
+  xuiNode.on(SESSION.EVENT.REDIS_CLIENT_ERROR, (error) => {
     logger.error('Redis client error:', error);
   });
 }
@@ -100,7 +100,7 @@ infoRoute(app);
 taskListUploadRoute(app);
 
 // Error handler
-app.use((err: any, req: expressModule.Request, res: expressModule.Response, next: expressModule.NextFunction) => {
+app.use((err: any, req: expressModule.Request, res: expressModule.Response) => {
   logger.error(`Error: ${err.message}`);
   res.status(err.status || 500);
   res.render('error', {
