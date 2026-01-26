@@ -1,11 +1,19 @@
 import globals from "globals";
 import tsParser from "@typescript-eslint/parser";
+import tseslint from "@typescript-eslint/eslint-plugin";
+import importPlugin from "eslint-plugin-import";
+import jestPlugin from "eslint-plugin-jest";
+import js from "@eslint/js";
 
 export default [ 
-    {
+{
  languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
+        parserOptions: {
+          ecmaFeatures: {
+          }
+      },
       globals: {
         ...globals.browser,
         ...globals.node
@@ -13,23 +21,11 @@ export default [
       parser: tsParser,
     },
   files: ["**/*.ts", "**/*.tsx"],
-  plugins: ['@typescript-eslint', 'import', 'jest'],
-  extends: [
-    'eslint:recommended',
-    'plugin:import/errors',
-    'plugin:import/warnings',
-    'plugin:import/typescript',
-    'plugin:jest/recommended',
-    'plugin:@typescript-eslint/eslint-recommended',
-    'plugin:@typescript-eslint/recommended',
-    'prettier',
-  ],
-  parserOptions: {
-    ecmaVersion: 2018,
-    sourceType: 'module',
-    project: './tsconfig.eslint.json',
-  },
-  globals: { Atomics: 'readonly', SharedArrayBuffer: 'readonly' },
+   plugins: {
+      "@typescript-eslint": tseslint,
+      import: importPlugin,
+      jest: jestPlugin,
+    },
   rules: {
     '@typescript-eslint/array-type': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'error',
@@ -103,5 +99,5 @@ export default [
     "**/*.js",
     ".pnp.*"
   ]
-    }
+}
 ]
