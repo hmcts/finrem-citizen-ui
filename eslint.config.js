@@ -1,8 +1,18 @@
-module.exports = {
-  root: true,
-  ignorePatterns: ['src/main/views/govuk/**'],
-  env: { browser: true, es6: true, node: true },
-  parser: '@typescript-eslint/parser',
+import globals from "globals";
+import tsParser from "@typescript-eslint/parser";
+
+export default [ 
+    {
+ languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        ...globals.browser,
+        ...globals.node
+      },
+      parser: tsParser,
+    },
+  files: ["**/*.ts", "**/*.tsx"],
   plugins: ['@typescript-eslint', 'import', 'jest'],
   extends: [
     'eslint:recommended',
@@ -80,4 +90,18 @@ module.exports = {
       },
     ],
   },
-};
+  ignores: [
+    "dist/*",
+    "coverage/*",
+    "**/*.d.ts",
+    "/src/main/public/",
+    "/src/main/types/",
+    "jest.*config.js",
+    ".eslintrc.js",
+    "src/test/*/codecept.conf.js",
+    "src/test/config.ts",
+    "**/*.js",
+    ".pnp.*"
+  ]
+    }
+]
