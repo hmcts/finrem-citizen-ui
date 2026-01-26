@@ -1,11 +1,12 @@
-import globals from "globals";
-import tsParser from "@typescript-eslint/parser";
-import tseslint from "@typescript-eslint/eslint-plugin";
-import importPlugin from "eslint-plugin-import";
-import jestPlugin from "eslint-plugin-jest";
-import js from "@eslint/js";
 
-export default [ 
+const globals = require("globals");
+const tsParser = require("@typescript-eslint/parser");
+const tseslint = require("@typescript-eslint/eslint-plugin");
+const importPlugin = require("eslint-plugin-import");
+const jestPlugin = require("eslint-plugin-jest");
+
+
+module.exports = [ 
 {
  languageOptions: {
       ecmaVersion: "latest",
