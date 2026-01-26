@@ -1,73 +1,110 @@
+import { SESSION, xuiNode } from '@hmcts/rpx-xui-node-lib';
+import * as bodyParserModule from 'body-parser';
+import * as cookieParserModule from 'cookie-parser';
+import * as expressModule from 'express';
+import * as helmetModule from 'helmet';
 import * as path from 'path';
 
-import * as bodyParser from 'body-parser';
-import config = require('config');
-import cookieParser from 'cookie-parser';
-import express from 'express';
-import RateLimit from 'express-rate-limit';
-import { glob } from 'glob';
-
-import { HTTPError } from './HttpError';
-import { AppInsights } from './modules/appinsights';
-import { Helmet } from './modules/helmet';
+import { getXuiNodeMiddleware } from './auth';
+import { environmentCheckText, getConfigValue, getEnvironment, showFeature } from './configuration';
+import {
+  FEATURE_HELMET_ENABLED,
+  FEATURE_REDIS_ENABLED,
+  HELMET,
+  SESSION_SECRET,
+} from './configuration/references';
 import { Nunjucks } from './modules/nunjucks';
 import { PropertiesVolume } from './modules/properties-volume';
 
+// Import routes
+import homeRoute from './routes/home';
+import healthRoute from './routes/health';
+import infoRoute from './routes/info';
+import taskListUploadRoute from './routes/task-list-upload';
+
+// Handle both CommonJS and ES module exports
+const express = (expressModule as any).default || expressModule;
+const helmet = (helmetModule as any).default || helmetModule;
+const bodyParser = (bodyParserModule as any).default || bodyParserModule;
+const cookieParser = (cookieParserModule as any).default || cookieParserModule;
+
 const { Logger } = require('@hmcts/nodejs-logging');
 
-const { setupDev } = require('./development');
-
-const env = process.env.NODE_ENV || 'development';
-const developmentMode = env === 'development';
-
-const limiter = RateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // max 100 requests per windowMs
-});
-
 export const app = express();
-app.locals.ENV = env;
-
 const logger = Logger.getLogger('app');
 
+// Set environment
+const env = process.env.NODE_ENV || 'development';
+app.locals.ENV = env;
+
+// Log environment info
+if (getEnvironment()) {
+  logger.info(environmentCheckText());
+}
+
+// Enable properties volume for secrets
 new PropertiesVolume().enableFor(app);
-new AppInsights().enable();
-new Nunjucks(developmentMode).enableFor(app);
-// secure the application by adding various HTTP headers to its responses
-new Helmet(config.get('security')).enableFor(app);
 
-app.get('/favicon.ico', limiter, (req, res) => {
-  res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));
-});
+// Configure Helmet for security headers
+if (showFeature(FEATURE_HELMET_ENABLED)) {
+  logger.info('Helmet enabled');
+  const helmetConfig = getConfigValue(HELMET);
+  if (helmetConfig && typeof helmetConfig === 'object') {
+    app.use(helmet(helmetConfig));
+  } else {
+    app.use(helmet());
+  }
+  app.use(helmet.hidePoweredBy());
+  app.disable('x-powered-by');
+}
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use((req, res, next) => {
-  res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate, no-store');
-  next();
-});
+// Cookie parser with session secret
+app.use(cookieParser(getConfigValue(SESSION_SECRET)));
 
-glob
-  .sync(__dirname + '/routes/**/*.+(ts|js)')
-  .map(filename => require(filename))
-  .forEach(route => route.default(app));
+// Configure rpx-xui-node-lib middleware (handles session, auth, s2s)
+app.use(getXuiNodeMiddleware());
 
-setupDev(app, developmentMode);
-// returning "not found" page for requests with paths not resolved by the router
-app.use((req, res) => {
-  res.status(404);
-  res.render('not-found');
-});
+// Body parser
+app.use(bodyParser.json({ limit: '5mb' }));
+app.use(bodyParser.urlencoded({ limit: '5mb', extended: true }));
 
-// error handler
-app.use((err: HTTPError, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  logger.error(`${err.stack || err}`);
+// Configure Nunjucks templating
+new Nunjucks(env === 'development').enableFor(app);
 
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = env === 'development' ? err : {};
+// Redis event listeners (if Redis is enabled)
+if (showFeature(FEATURE_REDIS_ENABLED)) {
+  xuiNode.on(SESSION.EVENT.REDIS_CLIENT_READY, (redisClient: any) => {
+    logger.info('Redis client ready');
+    app.locals.redisClient = redisClient;
+  });
+
+  xuiNode.on(SESSION.EVENT.REDIS_CLIENT_ERROR, (error: any) => {
+    logger.error('Redis client error:', error);
+  });
+}
+
+// Static assets
+const publicPath = path.join(__dirname, 'public');
+app.use(expressModule.static(publicPath));
+
+// GOV.UK Frontend assets
+const govukFrontendPath = path.dirname(require.resolve('govuk-frontend/package.json')) + '/dist/govuk';
+app.use('/assets', expressModule.static(govukFrontendPath + '/assets'));
+
+// Setup routes
+homeRoute(app);
+healthRoute(app);
+infoRoute(app);
+taskListUploadRoute(app);
+
+// Error handler
+app.use((err: any, req: expressModule.Request, res: expressModule.Response, next: expressModule.NextFunction) => {
+  logger.error(`Error: ${err.message}`);
   res.status(err.status || 500);
-  res.render('error');
+  res.render('error', {
+    message: err.message,
+    error: env === 'development' ? err : {},
+  });
 });
+
+export default app;
