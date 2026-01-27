@@ -1,25 +1,32 @@
-module.exports = {
-  root: true,
-  ignorePatterns: ['src/main/views/govuk/**'],
-  env: { browser: true, es6: true, node: true },
-  parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint', 'import', 'jest'],
-  extends: [
-    'eslint:recommended',
-    'plugin:import/errors',
-    'plugin:import/warnings',
-    'plugin:import/typescript',
-    'plugin:jest/recommended',
-    'plugin:@typescript-eslint/eslint-recommended',
-    'plugin:@typescript-eslint/recommended',
-    'prettier',
-  ],
-  parserOptions: {
-    ecmaVersion: 2018,
-    sourceType: 'module',
-    project: './tsconfig.eslint.json',
-  },
-  globals: { Atomics: 'readonly', SharedArrayBuffer: 'readonly' },
+
+const globals = require("globals");
+const tsParser = require("@typescript-eslint/parser");
+const tseslint = require("@typescript-eslint/eslint-plugin");
+const importPlugin = require("eslint-plugin-import");
+const jestPlugin = require("eslint-plugin-jest");
+
+
+module.exports = [ 
+{
+ languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+        parserOptions: {
+          ecmaFeatures: {
+          }
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.node
+      },
+      parser: tsParser,
+    },
+  files: ["**/*.ts", "**/*.tsx"],
+   plugins: {
+      "@typescript-eslint": tseslint,
+      import: importPlugin,
+      jest: jestPlugin,
+    },
   rules: {
     '@typescript-eslint/array-type': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'error',
@@ -80,4 +87,18 @@ module.exports = {
       },
     ],
   },
-};
+  ignores: [
+    "dist/*",
+    "coverage/*",
+    "**/*.d.ts",
+    "/src/main/public/",
+    "/src/main/types/",
+    "jest.*config.js",
+    ".eslintrc.js",
+    "src/test/*/codecept.conf.js",
+    "src/test/config.ts",
+    "**/*.js",
+    ".pnp.*"
+  ]
+}
+]
