@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import { SESSION, xuiNode } from '@hmcts/rpx-xui-node-lib';
 import * as bodyParserModule from 'body-parser';
 import * as cookieParserModule from 'cookie-parser';
+import type { ErrorRequestHandler } from 'express';
 import * as expressModule from 'express';
 import * as helmetModule from 'helmet';
 
@@ -100,13 +101,26 @@ infoRoute(app);
 taskListUploadRoute(app);
 
 // Error handler
-app.use((err: any, req: expressModule.Request, res: expressModule.Response) => {
-  logger.error(`Error: ${err.message}`);
-  res.status(err.status || 500);
+type HttpErrorLike = Error & { status?: number };
+
+function isHttpErrorLike(e: unknown): e is HttpErrorLike {
+  return e instanceof Error;
+}
+
+const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
+  const status = isHttpErrorLike(err) && typeof err.status === 'number' ? err.status : 500;
+
+  const message = isHttpErrorLike(err) ? err.message : 'Unexpected error';
+
+  logger.error(`Error: ${message}`);
+
+  res.status(status);
   res.render('error', {
-    message: err.message,
+    message,
     error: env === 'development' ? err : {},
   });
-});
+};
+
+app.use(errorHandler);
 
 export default app;
