@@ -6,7 +6,7 @@ import * as cookieParserModule from 'cookie-parser';
 import * as expressModule from 'express';
 import * as helmetModule from 'helmet';
 
-import { getXuiNodeMiddleware } from './auth';
+import { getFinremMiddleware } from './auth';
 import { environmentCheckText, getConfigValue, getEnvironment, showFeature } from './configuration';
 import {
   FEATURE_HELMET_ENABLED,
@@ -64,7 +64,7 @@ if (showFeature(FEATURE_HELMET_ENABLED)) {
 app.use(cookieParser(getConfigValue(SESSION_SECRET)));
 
 // Configure rpx-xui-node-lib middleware (handles session, auth, s2s)
-app.use(getXuiNodeMiddleware());
+app.use(getFinremMiddleware());
 
 // Body parser
 app.use(bodyParser.json({ limit: '5mb' }));

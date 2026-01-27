@@ -28,7 +28,10 @@ const { Logger } = require('@hmcts/nodejs-logging');
 const logger = Logger.getLogger('auth');
 
 export const successCallback = async (req: Request, res: Response, next: NextFunction) : Promise<void>=> {
+  // TODO: Create typed session interface (tracked in separate ticket)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { accessToken } = (req.session as any).passport.user.tokenset;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { userinfo } = (req.session as any).passport.user;
 
   logger.info('Setting session and cookies after successful authentication');
@@ -43,7 +46,10 @@ export const successCallback = async (req: Request, res: Response, next: NextFun
   res.cookie(getConfigValue(COOKIE_TOKEN), accessToken, cookieOptions);
 
   // Store user info in session
+  // TODO: Create typed session interface (tracked in separate ticket)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!(req.session as any).auth) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (req.session as any).auth = {
       email: userinfo.sub || userinfo.email,
       roles: userinfo.roles,
@@ -53,6 +59,7 @@ export const successCallback = async (req: Request, res: Response, next: NextFun
   }
 
   // Check if this is a token refresh (don't redirect)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!(req as any).isRefresh) {
     return res.redirect('/');
   }
@@ -62,7 +69,7 @@ export const successCallback = async (req: Request, res: Response, next: NextFun
 // Register success callback with xuiNode
 xuiNode.on(AUTH.EVENT.AUTHENTICATE_SUCCESS, successCallback);
 
-export const getXuiNodeMiddleware = () : RequestHandler => {
+export const getFinremMiddleware = () : RequestHandler => {
   const idamWebUrl = getConfigValue(SERVICES_IDAM_WEB);
   const authorizationUrl = `${idamWebUrl}/login`;
   const secret = getConfigValue(IDAM_SECRET);
@@ -140,6 +147,7 @@ export const getXuiNodeMiddleware = () : RequestHandler => {
 
   // Choose between OIDC or OAuth2 based on feature flag
   const type = showFeature(FEATURE_OIDC_ENABLED) ? 'oidc' : 'oauth2';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (nodeLibOptions.auth as any)[type] = options;
 
   logger.info('Configuring XuiNodeLib with authentication options');
