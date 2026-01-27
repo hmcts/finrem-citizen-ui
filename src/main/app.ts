@@ -1,12 +1,13 @@
 import * as path from 'node:path';
 
+
 import { SESSION, xuiNode } from '@hmcts/rpx-xui-node-lib';
 import * as bodyParserModule from 'body-parser';
 import * as cookieParserModule from 'cookie-parser';
-import type { ErrorRequestHandler } from 'express';
 import * as expressModule from 'express';
 import * as helmetModule from 'helmet';
 
+import { HTTPError } from './HttpError';
 import { getFinremMiddleware } from './auth';
 import { environmentCheckText, getConfigValue, getEnvironment, showFeature } from './configuration';
 import {
@@ -101,26 +102,13 @@ infoRoute(app);
 taskListUploadRoute(app);
 
 // Error handler
-type HttpErrorLike = Error & { status?: number };
-
-function isHttpErrorLike(e: unknown): e is HttpErrorLike {
-  return e instanceof Error;
-}
-
-const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
-  const status = isHttpErrorLike(err) && typeof err.status === 'number' ? err.status : 500;
-
-  const message = isHttpErrorLike(err) ? err.message : 'Unexpected error';
-
-  logger.error(`Error: ${message}`);
-
-  res.status(status);
+app.use((err: HTTPError, req: expressModule.Request, res: expressModule.Response) => {
+  logger.error(`Error: ${err.message}`);
+  res.status(err.status || 500);
   res.render('error', {
-    message,
+    message: err.message,
     error: env === 'development' ? err : {},
   });
-};
-
-app.use(errorHandler);
+});
 
 export default app;
