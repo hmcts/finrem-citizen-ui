@@ -5,10 +5,6 @@ properties([
   parameters([
     string(name: 'URL_TO_TEST', defaultValue: 'https://finrem-citizen-ui.aat.platform.hmcts.net',
       description: 'The URL you want to run these tests against'),
-    string(name: 'SecurityRules',
-      defaultValue: 'https://raw.githubusercontent.com/hmcts/security-test-rules/2366efe631a60672ff8d0698bd9cb07f0e878faa/conf/security-rules.conf',
-      description: 'The URL you want to run these tests against'),
-
   ])
 ])
 
@@ -18,14 +14,41 @@ def type = "nodejs"
 def product = "finrem"
 def component = "citizen-ui"
 
+def secrets = [
+  'finrem-${env}': [
+    secret("idam-secret" ,"OAUTH2_CLIENT_FINREM"),
+    secret("finrem-idam-client-secret", "FINREM_IDAM_CLIENT_SECRET"),
+  ]
+]
+
+static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
+  [ $class: 'AzureKeyVaultSecret',
+    secretType: 'Secret',
+    name: secretName,
+    version: '',
+    envVariable: envVar
+  ]
+}
+
 withNightlyPipeline(type, product, component) {
   env.TEST_URL = params.URL_TO_TEST
-  env.Rules = params.SecurityRules
-  enableSecurityScan()
-  enableMutationTest()
-  enableFortifyScan()
+  enableSecurityScan(
+    scanType: "frontend"
+  )
+  enableCrossBrowserTest()
+  enableFullFunctionalTest()
+  loadVaultSecrets(secrets)
 
-  afterSuccess('fortify-scan') {
-    steps.archiveArtifacts allowEmptyArchive: true, artifacts: '**/Fortify Scan/**/*'
+  before('crossBrowserTest') {
+    yarnBuilder.smokeTest()
   }
+
+  afterAlways('crossBrowserTest') {
+    steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/crossbrowser/reports/**/*'
+  }
+
+  afterAlways('fullFunctionalTest') {
+    steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/functional/reports/**/*'
+  }
+
 }
