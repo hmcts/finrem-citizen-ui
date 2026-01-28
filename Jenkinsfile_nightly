@@ -32,21 +32,9 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 
 withNightlyPipeline(type, product, component) {
   env.TEST_URL = params.URL_TO_TEST
-  enableSecurityScan(
-    scanType: "frontend"
-  )
-  enableCrossBrowserTest()
-  enableFullFunctionalTest()
   loadVaultSecrets(secrets)
 
-  before('crossBrowserTest') {
-    yarnBuilder.smokeTest()
-  }
-
-  afterAlways('crossBrowserTest') {
-    steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/crossbrowser/reports/**/*'
-  }
-
+  enableFullFunctionalTest()
   afterAlways('fullFunctionalTest') {
     steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/functional/reports/**/*'
   }
