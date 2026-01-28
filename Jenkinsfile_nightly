@@ -1,10 +1,10 @@
 #!groovy
 
 properties([
-  // H allow predefined but random minute see https://en.wikipedia.org/wiki/Cron#Non-standard_characters
-  pipelineTriggers([cron('H 16 * * 1-5')]),
+  pipelineTriggers([cron('H 11 * * 1-5')]),
   parameters([
-    string(name: 'TEST_URL', defaultValue: 'https://finrem-citizen-ui.aat.platform.hmcts.net', description: 'The URL you want to run tests against'),
+    string(name: 'URL_TO_TEST', defaultValue: 'https://finrem-citizen-ui.aat.platform.hmcts.net',
+      description: 'The URL you want to run these tests against'),
   ])
 ])
 
@@ -14,42 +14,31 @@ def type = "nodejs"
 def product = "finrem"
 def component = "citizen-ui"
 
-// SAUCELABS config - configured on Jenkins
-env.SAUCE_USERNAME = 'username'
-env.SAUCE_ACCESS_KEY = 'privatekey'
-env.SAUCE_TUNNEL_IDENTIFIER = 'reformtunnel'
-
-def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
-
 def secrets = [
-  'finrem-${env}'    :[
-    secret('idam-secret', 'IDAM_SECRET'),
-    secret('playwright-service-url', 'PLAYWRIGHT_SERVICE_URL'),
-    secret('playwright-token', 'PLAYWRIGHT_SERVICE_ACCESS_TOKEN'),
+  'finrem-${env}': [
+    secret("idam-secret" ,"OAUTH2_CLIENT_FINREM"),
+    secret("finrem-idam-client-secret", "FINREM_IDAM_CLIENT_SECRET"),
   ]
 ]
 
-def pipelineConf = new AppPipelineConfig()
-pipelineConf.vaultSecrets = secrets
+static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
+  [ $class: 'AzureKeyVaultSecret',
+    secretType: 'Secret',
+    name: secretName,
+    version: '',
+    envVariable: envVar
+  ]
+}
+
+def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
 withNightlyPipeline(type, product, component) {
-
-  enableCrossBrowserTest()
-  enableFullFunctionalTest()
+  env.TEST_URL = params.URL_TO_TEST
   loadVaultSecrets(secrets)
-  enableFortifyScan()
-  before('crossBrowserTest') {
-    yarnBuilder.smokeTest()
-  }
 
-  afterAlways('crossBrowserTest') {
-    //steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/crossbrowser/reports/**/*'
-  }
-
+  enableFullFunctionalTest(200)
   afterAlways('fullFunctionalTest') {
-    //steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/functional/reports/**/*'
+    steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/functional/reports/**/*'
   }
-  afterAlways('fortify-scan') {
-    //steps.archiveArtifacts allowEmptyArchive: true, artifacts: '**/Fortify Scan/**/*'
-  }
+
 }
