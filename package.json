@@ -128,5 +128,9 @@
     "**/*": "prettier --write --ignore-unknown",
     "**/*.{js,ts}": "eslint --fix"
   },
-  "packageManager": "yarn@4.8.1"
+  "packageManager": "yarn@4.8.1",
+  "resolutions": {
+    "node-gyp": "12.2.0",
+    "superagent": "10.3.0"
+  }
 }
