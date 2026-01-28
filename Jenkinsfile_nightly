@@ -30,6 +30,8 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
   ]
 }
 
+def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
+
 withNightlyPipeline(type, product, component) {
   env.TEST_URL = params.URL_TO_TEST
   loadVaultSecrets(secrets)
