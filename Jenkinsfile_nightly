@@ -29,15 +29,11 @@ def secrets = [
   ]
 ]
 
-def pipelineConf = new AppPipelineConfig()
-pipelineConf.vaultSecrets = secrets
-
 withNightlyPipeline(type, product, component) {
 
   enableCrossBrowserTest()
   enableFullFunctionalTest()
   loadVaultSecrets(secrets)
-  enableFortifyScan()
   before('crossBrowserTest') {
     yarnBuilder.smokeTest()
   }
