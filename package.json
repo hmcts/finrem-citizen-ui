@@ -37,7 +37,7 @@
     "@types/lodash": "4.17.23",
     "@types/nunjucks": "3.2.6",
     "@types/require-directory": "2.1.7",
-    "applicationinsights": "2.9.8",
+    "applicationinsights": "3.13.0",
     "axios": "1.13.4",
     "body-parser": "1.20.4",
     "config": "3.3.12",
