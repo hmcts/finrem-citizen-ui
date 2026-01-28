@@ -82,7 +82,7 @@
     "@typescript-eslint/eslint-plugin": "^8.53.1",
     "@typescript-eslint/parser": "^8.53.1",
     "axios-debug-log": "1.0.0",
-    "babel-loader": "9.2.1",
+    "babel-loader": "10.0.0",
     "chai": "4.5.0",
     "chai-as-promised": "7.1.2",
     "chokidar": "^4.0.3",
