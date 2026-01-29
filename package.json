@@ -40,7 +40,7 @@
     "applicationinsights": "3.13.0",
     "axios": "1.13.4",
     "body-parser": "2.2.2",
-    "config": "3.3.12",
+    "config": "4.2.0",
     "cookie-parser": "1.4.7",
     "express": "^5.2.1",
     "express-http-proxy": "2.1.2",
