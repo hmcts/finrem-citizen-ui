@@ -20,7 +20,8 @@
     "test:smoke": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest -c jest.smoke.config.js",
     "test:functional": "NODE_TLS_REJECT_UNAUTHORIZED=0 yarn playwright install && codeceptjs run --steps",
     "cichecks": "yarn install && yarn build && yarn rebuild puppeteer && yarn lint && yarn test && yarn test:routes && yarn test:a11y",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test:fullfunctional": "./src/test/functionalTests/run-full-functional-tests.sh"
   },
   "dependencies": {
     "@hmcts/info-provider": "1.4.0",
