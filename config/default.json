@@ -1,14 +1,48 @@
 {
-  "useCSRFProtection": true,
-  "appInsights": {
-    "instrumentationKey": false
-  },
-  "security": {
-    "referrerPolicy": "same-origin",
-    "hsts": {
-      "maxAge": 31536000,
-      "includeSubDomains": true,
-      "preload": true
+  "environment": "DEFAULT ENVIRONMENT",
+  "secrets": {
+    "finrem": {
+      "finrem-citizen-s2s-client-secret": "",
+      "finrem-citizen-oauth2-client-secret": "",
+      "finrem-citizen-redis-connection-string": ""
     }
+  },
+  "cookies": {
+    "token": "__auth__",
+    "userId": "__userid__"
+  },
+  "idamClient": "finrem-citizen-ui",
+  "microservice": "finrem_citizen_ui",
+  "now": false,
+  "oauthCallbackUrl": "/oauth2/callback",
+  "iss": "https://forgerock-am.service.core-compute-idam-prod.internal:8443/openam/oauth2/realms/root/realms/hmcts",
+  "loginRoleMatcher": ".*",
+  "protocol": "https",
+  "services": {
+    "idamApi": "https://idam-api.platform.hmcts.net",
+    "idamWeb": "https://hmcts-access.service.gov.uk",
+    "s2s": "http://rpe-service-auth-provider-prod.service.core-compute-prod.internal"
+  },
+  "sessionSecret": ["finrem-citizen-topSecret1", "finrem-citizen-secretSauce"],
+  "feature": {
+    "secureCookieEnabled": true,
+    "helmetEnabled": true,
+    "redisEnabled": false,
+    "oidcEnabled": false
+  },
+  "helmet": {
+    "referrerPolicy": {
+      "policy": "origin"
+    },
+    "frameguard": {
+      "action": "deny"
+    },
+    "hidePoweredBy": {
+      "setTo": "FinRem Citizen UI Server"
+    }
+  },
+  "redis": {
+    "prefix": "finrem-citizen:",
+    "ttl": 86400
   }
 }
