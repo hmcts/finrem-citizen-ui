@@ -36,9 +36,18 @@ withNightlyPipeline(type, product, component) {
   env.TEST_URL = params.URL_TO_TEST
   loadVaultSecrets(secrets)
 
+  // TODO: Enable and implement when these tests are planned and written
+  //  For reference see: nfdiv-frontend application
+  //enableCrossBrowserTest()
+  //enablePerformanceTest()
+  //enableMutationTest()
+
+  // TODO: Implement Full Functional tests, at the movement there are no functional tests are implemented:
+  //  See: src/test/functionalTests/run-full-functional-tests.sh
+  //  For reference see: nfdiv-frontend application
   enableFullFunctionalTest(200)
   afterAlways('fullFunctionalTest') {
     steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/functional/reports/**/*'
   }
-
+  enableSlackNotifications('#finrem-dev')
 }
