@@ -133,7 +133,6 @@ export const getFinremMiddleware = () : RequestHandler => {
     },
   };
 
-  // Build the node lib options
   const nodeLibOptions = {
     auth: {
       s2s: {
@@ -144,8 +143,6 @@ export const getFinremMiddleware = () : RequestHandler => {
     },
     session: showFeature(FEATURE_REDIS_ENABLED) ? redisStoreOptions : fileStoreOptions,
   };
-
-  // Choose between OIDC or OAuth2 based on feature flag
   const type = showFeature(FEATURE_OIDC_ENABLED) ? 'oidc' : 'oauth2';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (nodeLibOptions.auth as any)[type] = options;

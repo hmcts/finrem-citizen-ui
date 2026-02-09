@@ -1,51 +1,93 @@
 #!/usr/bin/env node
-import * as fs from 'fs';
-import * as https from 'https';
-import * as path from 'path';
+import 'dotenv/config';
 
-import { app } from './app';
+import * as fs from 'node:fs';
+import * as http from 'node:http';
+import * as https from 'node:https';
+import * as path from 'node:path';
 
 const { Logger } = require('@hmcts/nodejs-logging');
-
 const logger = Logger.getLogger('server');
 
-let httpsServer: https.Server | null = null;
+function startMockS2SAndApp() {
+  const mockPort = 9000;
 
-// used by shutdownCheck in readinessChecks
-app.locals.shutdown = false;
+  const mockServer = http.createServer((req, res) => {
+    logger.info(`Mock S2S received: ${req.method} ${req.url}`);
 
-// TODO: set the right port for your application
-const port: number = parseInt(process.env.PORT || '3100', 10);
+    if (req.url && req.url.includes('/lease')) {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      // Payload contains {"sub":"finrem_citizen_ui", "exp": 4800000000}
+      const validMockToken =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaW5yZW1fY2l0aXplbl91aSIsImV4cCI6NDgwMDAwMDAwMH0.mock_signature';
+      res.end(validMockToken);
+      return;
+    }
 
-if (app.locals.ENV === 'development') {
-  const sslDirectory = path.join(__dirname, 'resources', 'localhost-ssl');
-  const sslOptions = {
-    cert: fs.readFileSync(path.join(sslDirectory, 'localhost.crt')),
-    key: fs.readFileSync(path.join(sslDirectory, 'localhost.key')),
-  };
-  httpsServer = https.createServer(sslOptions, app);
-  httpsServer.listen(port, () => {
-    logger.info(`Application started: https://localhost:${port}`);
+    if (req.url && req.url.includes('/health')) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'UP' }));
+      return;
+    }
+
+    res.writeHead(404);
+    res.end();
   });
-} else {
-  app.listen(port, () => {
-    logger.info(`Application started: http://localhost:${port}`);
+
+  mockServer.listen(mockPort, '127.0.0.1', () => {
+    logger.info(`Mock S2S Server running on http://127.0.0.1:${mockPort}`);
+    process.env.S2S_SERVICE = `http://127.0.0.1:${mockPort}`;
+    startMainApp();
   });
 }
 
-function gracefulShutdownHandler(signal: string) {
-  logger.info(`⚠️ Caught ${signal}, gracefully shutting down. Setting readiness to DOWN`);
-  // stop the server from accepting new connections
-  app.locals.shutdown = true;
-
-  setTimeout(() => {
-    logger.info('Shutting down application');
-    // Close server if it's running
-    httpsServer?.close(() => {
-      logger.info('HTTPS server closed');
+function startMainApp() {
+  const { app } = require('./app');
+  let httpsServer: https.Server | null = null;
+  app.locals.shutdown = false;
+  const port: number = parseInt(process.env.PORT || '3100', 10);
+  if (app.locals.ENV === 'development') {
+    const sslDirectory = path.join(__dirname, 'resources', 'localhost-ssl');
+    try {
+      const sslOptions = {
+        cert: fs.readFileSync(path.join(sslDirectory, 'localhost.crt')),
+        key: fs.readFileSync(path.join(sslDirectory, 'localhost.key')),
+      };
+      httpsServer = https.createServer(sslOptions, app);
+      httpsServer.listen(port, () => {
+        logger.info(`Application started: https://localhost:${port}`);
+      });
+    } catch (e) {
+      logger.error(`Failed to load SSL keys: ${e}`);
+      logger.error('Starting in HTTP mode as fallback.');
+      app.listen(port, () => {
+        logger.info(`Application started: http://localhost:${port}`);
+      });
+    }
+  } else {
+    app.listen(port, () => {
+      logger.info(`Application started: http://localhost:${port}`);
     });
-  }, 4000);
-}
+  }
+  function gracefulShutdownHandler(signal: string) {
+    logger.info(`Caught ${signal}, gracefully shutting down.`);
+    app.locals.shutdown = true;
 
-process.on('SIGINT', gracefulShutdownHandler);
-process.on('SIGTERM', gracefulShutdownHandler);
+    setTimeout(() => {
+      if (httpsServer) {httpsServer.close();}
+      process.exit(0);
+    }, 4000);
+  }
+
+  process.on('SIGINT', gracefulShutdownHandler);
+  process.on('SIGTERM', gracefulShutdownHandler);
+}
+const env = process.env.NODE_ENV || 'development';
+
+if (env === 'development' || env === 'test') {
+  //console.log(`Starting in ${env} mode with Mock S2S Server`);
+  startMockS2SAndApp();
+} else {
+  //console.log(`Starting in ${env} mode (No Mock)`);
+  startMainApp();
+}

@@ -1,0 +1,32 @@
+{
+  "environment": "NODE_CONFIG_ENV",
+  "services": {
+    "idamApi": "IDAM_API_SERVICE",
+    "idamWeb": "IDAM_WEB_SERVICE",
+    "s2s": "S2S_SERVICE",
+    "iss": "SERVICES_IDAM_ISS_URL"
+  },
+  "sessionSecret": "SESSION_SECRET",
+  "idamClient": "IDAM_CLIENT",
+  "microservice": "MICROSERVICE",
+  "oauthCallbackUrl": "OAUTH_CALLBACK_URL",
+  "protocol": "PROTOCOL",
+  "loginRoleMatcher": "LOGIN_ROLE_MATCHER",
+  "secrets": {
+    "finrem": {
+      "finrem-citizen-s2s-client-secret": "S2S_SECRET",
+      "finrem-citizen-oauth2-client-secret": "IDAM_SECRET",
+      "finrem-citizen-redis-connection-string": "REDISCLOUD_URL"
+    }
+  },
+  "feature": {
+    "helmetEnabled": "FEATURE_HELMET_ENABLED",
+    "redisEnabled": "FEATURE_REDIS_ENABLED",
+    "oidcEnabled": "FEATURE_OIDC_ENABLED",
+    "secureCookieEnabled": "FEATURE_SECURE_COOKIE_ENABLED"
+  },
+  "redis": {
+    "ttl": "REDIS_TTL",
+    "prefix": "REDIS_KEY_PREFIX"
+  }
+}

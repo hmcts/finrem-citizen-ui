@@ -39,6 +39,6 @@ version
 
 # Environment files (contain secrets)
 .env
-.env.local
+.backup.env.local
 .env.*.local
 .sessions/
