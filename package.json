@@ -135,6 +135,11 @@
   "resolutions": {
     "node-gyp": "12.2.0",
     "superagent": "10.3.0",
-    "async": "3.2.6"
+    "async": "3.2.6",
+    "passport": "^0.6.0",
+    "jose": "^4.15.5",
+    "cookie": "^0.7.0",
+    "glob": "^13.0.0",
+    "@hapi/joi": "^17.1.1"
   }
 }
