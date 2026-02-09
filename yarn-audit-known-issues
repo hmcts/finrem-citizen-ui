@@ -1,47 +1,120 @@
-[
-  {
-    "value": "diff",
-    "children": {
-      "ID": 1112489,
-      "Issue": "jsdiff has a Denial of Service vulnerability in parsePatch and applyPatch",
-      "URL": "https://github.com/advisories/GHSA-73rr-hh4g-fpgx",
-      "Severity": "low",
-      "Vulnerable Versions": "<4.0.4",
-      "Tree Versions": [
-        "4.0.2"
-      ],
-      "Dependents": [
-        "ts-node@virtual:22991df8dc7a8a57cec01568e2416eb54714c741a60bd26ee01ad738ce4f922e2963c34d9f2aaea4c6c915163f4ce36a81fe64a904f9eb9968182e8503675b70#npm:10.9.2"
-      ]
+{
+  "advisories": {
+    "1088948": {
+      "id": 1088948,
+      "module_name": "got",
+      "title": "Got allows a redirect to a UNIX socket",
+      "vulnerable_versions": ">= 12.0.0, < 12.1.0",
+      "patched_versions": "12.1.0",
+      "overview": "The got package before 11.8.5 and 12.1.0 for Node.js allows a redirect to a UNIX socket.",
+      "recommendation": "Upgrade to 12.1.0",
+      "references": "",
+      "severity": "moderate",
+      "cwe": [],
+      "url": "https://github.com/advisories/GHSA-pfrx-2q88-qq97"
+    },
+    "glob (deprecation)": {
+      "id": "glob (deprecation)",
+      "module_name": "glob",
+      "title": "Old versions of glob are not supported",
+      "vulnerable_versions": "7.2.3",
+      "patched_versions": null,
+      "overview": "Old versions of glob are not supported, and contain widely publicized security vulnerabilities. Please update.",
+      "recommendation": null,
+      "references": "",
+      "severity": "moderate",
+      "url": null
+    },
+    "csurf (deprecation)": {
+      "id": "csurf (deprecation)",
+      "module_name": "csurf",
+      "title": "This package is archived and no longer maintained",
+      "vulnerable_versions": "1.11.0",
+      "patched_versions": null,
+      "overview": "This package is archived and no longer maintained. For support, visit https://github.com/expressjs/express/discussions",
+      "recommendation": null,
+      "references": "",
+      "severity": "moderate",
+      "url": null
+    },
+    "@hapi/address (deprecation)": {
+      "id": "@hapi/address (deprecation)",
+      "module_name": "@hapi/address",
+      "title": "Moved to 'npm install @sideway/address'",
+      "vulnerable_versions": "4.1.0",
+      "patched_versions": null,
+      "overview": "Moved to 'npm install @sideway/address'",
+      "recommendation": null,
+      "references": "",
+      "severity": "moderate",
+      "url": null
+    },
+    "@hapi/formula (deprecation)": {
+      "id": "@hapi/formula (deprecation)",
+      "module_name": "@hapi/formula",
+      "title": "Moved to 'npm install @sideway/formula'",
+      "vulnerable_versions": "2.0.0",
+      "patched_versions": null,
+      "overview": "Moved to 'npm install @sideway/formula'",
+      "recommendation": null,
+      "references": "",
+      "severity": "moderate",
+      "url": null
+    },
+    "@hapi/joi (deprecation)": {
+      "id": "@hapi/joi (deprecation)",
+      "module_name": "@hapi/joi",
+      "title": "Switch to 'npm install joi'",
+      "vulnerable_versions": "17.1.1",
+      "patched_versions": null,
+      "overview": "Switch to 'npm install joi'",
+      "recommendation": null,
+      "references": "",
+      "severity": "moderate",
+      "url": null
+    },
+    "@otplib/plugin-crypto (deprecation)": {
+      "id": "@otplib/plugin-crypto (deprecation)",
+      "module_name": "@otplib/plugin-crypto",
+      "title": "Please upgrade to v13 of otplib",
+      "vulnerable_versions": "12.0.1",
+      "patched_versions": null,
+      "overview": "Please upgrade to v13 of otplib. Refer to otplib docs for migration paths",
+      "recommendation": null,
+      "references": "",
+      "severity": "moderate",
+      "url": null
+    },
+    "@otplib/plugin-thirty-two (deprecation)": {
+      "id": "@otplib/plugin-thirty-two (deprecation)",
+      "module_name": "@otplib/plugin-thirty-two",
+      "title": "Please upgrade to v13 of otplib",
+      "vulnerable_versions": "12.0.1",
+      "patched_versions": null,
+      "overview": "Please upgrade to v13 of otplib. Refer to otplib docs for migration paths",
+      "recommendation": null,
+      "references": "",
+      "severity": "moderate",
+      "url": null
+    },
+    "@otplib/preset-default (deprecation)": {
+      "id": "@otplib/preset-default (deprecation)",
+      "module_name": "@otplib/preset-default",
+      "title": "Please upgrade to v13 of otplib",
+      "vulnerable_versions": "12.0.1",
+      "patched_versions": null,
+      "overview": "Please upgrade to v13 of otplib. Refer to otplib docs for migration paths",
+      "recommendation": null,
+      "references": "",
+      "severity": "moderate",
+      "url": null
     }
   },
-  {
-    "value": "js-yaml",
-    "children": {
-      "ID": 1109802,
-      "Issue": "js-yaml has prototype pollution in merge (<<)",
-      "URL": "https://github.com/advisories/GHSA-mh29-5h37-fv8m",
-      "Severity": "moderate",
-      "Vulnerable Versions": ">=4.0.0 <4.1.1",
-      "Tree Versions": [
-        "4.1.0"
-      ],
-      "Dependents": [
-        "@hmcts/nodejs-healthcheck@npm:1.8.6"
-      ]
+  "metadata": {
+    "vulnerabilities": {
+      "moderate": 9,
+      "high": 0,
+      "critical": 0
     }
-  },
-  {
-    "id": "1088948",
-    "summary": "Got allows a redirect to a UNIX socket",
-    "module_name": "got",
-    "vulnerable_versions": "<12.1.0",
-    "patched_versions": "12.1.0",
-    "overview": "The got package before 11.8.5 and 12.1.0 for Node.js allows a redirect to a UNIX socket.",
-    "recommendation": "Upgrade to version 12.1.0 or later",
-    "references": "https://github.com/advisories/GHSA-pfrx-2q88-qq97",
-    "cwe": "CWE-918",
-    "url": "https://github.com/advisories/GHSA-pfrx-2q88-qq97",
-    "justification": "Dependency of @hmcts/rpx-xui-node-lib -> openid-client. Cannot upgrade due to breaking changes in Got v12 (ESM). Risk is low as this app does not make arbitrary requests to untrusted UNIX sockets."
   }
-]
+}
