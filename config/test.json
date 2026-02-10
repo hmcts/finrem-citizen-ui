@@ -1,1 +1,17 @@
-{}
+{
+  "secrets": {
+    "finrem": {
+      "finrem-citizen-s2s-client-secret": "test-s2s-secret-for-unit-tests",
+      "finrem-citizen-oauth2-client-secret": "test-idam-secret-for-unit-tests",
+      "finrem-citizen-redis-connection-string": "redis://localhost:6379"
+    }
+  },
+  "helmet": {
+    "referrerPolicy": {
+      "policy": "origin"
+    },
+    "frameguard": {
+      "action": "deny"
+    }
+  }
+}
