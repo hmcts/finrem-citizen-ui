@@ -148,5 +148,4 @@ export const getFinremMiddleware = () : RequestHandler => {
   (nodeLibOptions.auth as any)[type] = options;
 
   logger.info('Configuring XuiNodeLib with authentication options');
-  return xuiNode.configure(nodeLibOptions);
-};
+  return xuiNode.configure(nodeLibOptions) as never;};
