@@ -1,0 +1,15 @@
+curl -L -X POST 'https://idam-testing-support-api.aat.platform.hmcts.net/test/idam/users' \
+-H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJraWQiOiJkQnZ3ZTE5bkFQNjVmVzVGZzB5OUZZUm1Cenc9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJmaW5yZW0tY2l0aXplbi11aSIsImN0cyI6Ik9BVVRIMl9TVEFURUxFU1NfR1JBTlQiLCJhdWRpdFRyYWNraW5nSWQiOiIyNDFjYjc0Ni05YTRlLTQ4ZGMtYWJlNi0wMDdjZThjZjQyNGMtMTQ2NzUyMCIsInN1Ym5hbWUiOiJmaW5yZW0tY2l0aXplbi11aSIsImlzcyI6Imh0dHBzOi8vaG1jdHMtYWNjZXNzLmFhdC5wbGF0Zm9ybS5obWN0cy5uZXQvbyIsInRva2VuTmFtZSI6ImFjY2Vzc190b2tlbiIsInRva2VuX3R5cGUiOiJCZWFyZXIiLCJhdXRoR3JhbnRJZCI6ImJ4YWtOaEN4aENweTllZUxRQjNfY2kwMGFPQSIsImF1ZCI6ImZpbnJlbS1jaXRpemVuLXVpIiwibmJmIjoxNzcwNzMwODgzLCJncmFudF90eXBlIjoiY2xpZW50X2NyZWRlbnRpYWxzIiwic2NvcGUiOlsicHJvZmlsZSIsInJvbGVzIl0sImF1dGhfdGltZSI6MTc3MDczMDg4MywicmVhbG0iOiIvaG1jdHMiLCJleHAiOjE3NzA3NTk2ODMsImlhdCI6MTc3MDczMDg4MywiZXhwaXJlc19pbiI6Mjg4MDAsImp0aSI6IkFqRjU4alVnck8tVFFWcFlxeVU5YzJ0RGktZyJ9.T3gyHhGTU6qWYL-889s9A0C3CjZu3UoQk9S3CA-kfXvIzhMiV21ViQEODhF81G-MKnRbZMExyv8FGTTkNbMPL9mUNFHuz5QIoUAkopRQe_H8EGQmdRAdN2Qj9N_0fw5w0UzPgpCOkX2KnKBM7GbQFHKSZrUMQ6i0X42tXkI9epeHpHhcCfV4qofOnh0f-yLWBF-H2agSuEV1z4hqoOzip34Fn9yS9pJDBpZoI3nj136qHDLxNondEpWkLPZL7VcN8wsHpgF6A01pvNwEiveZWZ3LP5zbpPtJVZkH3DNjCNOjrK1JNwscPjs0DO_JygK-jKYXQh27grKqRtMF1j6qoA' \
+-H 'Content-Type: application/json' \
+--data-raw '{
+    "password": "Pa$$w0rd1",
+    "user": {
+        "id":"2f3b9a1e-7c5d-4a8b-9e2f-6d0c4b8a1f3f",
+        "email":"gergely.kissi@mailinator.com",
+        "forename":"gergely",
+        "surname":"kiss",
+        "roleNames": [
+            "citizen"
+        ]
+    }
+}'

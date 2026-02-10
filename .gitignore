@@ -44,3 +44,4 @@ version
 .backup.env.local
 .env.*.local
 .sessions/
+.env.local
