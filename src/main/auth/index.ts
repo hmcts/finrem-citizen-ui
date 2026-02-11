@@ -4,23 +4,23 @@ import { CookieOptions, NextFunction, Request, RequestHandler, Response } from '
 import { getConfigValue, showFeature } from '../configuration';
 import {
   COOKIE_TOKEN,
-  FEATURE_OIDC_ENABLED,
+  //FEATURE_OIDC_ENABLED,
   FEATURE_REDIS_ENABLED,
   FEATURE_SECURE_COOKIE_ENABLED,
   IDAM_CLIENT,
   IDAM_SECRET,
   LOGIN_ROLE_MATCHER,
-  MICROSERVICE,
+ // MICROSERVICE,
   NOW,
   OAUTH_CALLBACK_URL,
   REDISCLOUD_URL,
   REDIS_KEY_PREFIX,
   REDIS_TTL,
-  S2S_SECRET,
+//  S2S_SECRET,
   SERVICES_IDAM_API_PATH,
   SERVICES_IDAM_ISS_URL,
   SERVICES_IDAM_WEB,
-  SERVICE_S2S_PATH,
+  //SERVICE_S2S_PATH,
   SESSION_SECRET,
 } from '../configuration/references';
 
@@ -30,6 +30,7 @@ const logger = Logger.getLogger('auth');
 export const successCallback = async (req: Request, res: Response, next: NextFunction) : Promise<void>=> {
   // TODO: Create typed session interface (tracked in separate ticket)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  console.log("logged in");
   const { accessToken } = (req.session as any).passport.user.tokenset;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { userinfo } = (req.session as any).passport.user;
@@ -76,7 +77,7 @@ export const getFinremMiddleware = () : RequestHandler => {
   const idamClient = getConfigValue(IDAM_CLIENT);
   const issuerUrl = getConfigValue(SERVICES_IDAM_ISS_URL);
   const idamApiPath = getConfigValue(SERVICES_IDAM_API_PATH);
-  const s2sSecret = getConfigValue(S2S_SECRET);
+ // const s2sSecret = getConfigValue(S2S_SECRET);
   const tokenUrl = `${idamApiPath}/oauth2/token`;
 
   // OAuth2/OIDC configuration options
@@ -135,15 +136,15 @@ export const getFinremMiddleware = () : RequestHandler => {
 
   const nodeLibOptions = {
     auth: {
-      s2s: {
+  /* s2s: {
         microservice: getConfigValue(MICROSERVICE),
         s2sEndpointUrl: `${getConfigValue(SERVICE_S2S_PATH)}/lease`,
         s2sSecret: s2sSecret.trim(),
-      },
+      },*/
     },
     session: showFeature(FEATURE_REDIS_ENABLED) ? redisStoreOptions : fileStoreOptions,
   };
-  const type = showFeature(FEATURE_OIDC_ENABLED) ? 'oidc' : 'oauth2';
+  const type = 'oidc';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (nodeLibOptions.auth as any)[type] = options;
 
