@@ -133,6 +133,7 @@
   "resolutions": {
     "node-gyp": "12.2.0",
     "superagent": "10.3.0",
-    "async": "3.2.6"
+    "async": "3.2.6",
+    "minimatch": "^10.1.2"
   }
 }
