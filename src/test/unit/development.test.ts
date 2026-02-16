@@ -9,7 +9,7 @@ describe('development', () => {
 
   it('should not setup webpack in non-development mode', () => {
     const { setupDev } = require('../../main/development');
-    const app = { use: jest.fn() } as any;
+    const app = { use: jest.fn() } as unknown as { use: jest.Mock };
     setupDev(app, false);
     expect(app.use).not.toHaveBeenCalled();
   });
@@ -24,7 +24,7 @@ describe('development', () => {
     jest.doMock(webpackConfigPath, () => ({ entry: 'test' }));
 
     const { setupDev } = require('../../main/development');
-    const app = { use: jest.fn() } as any;
+    const app = { use: jest.fn() } as unknown as { use: jest.Mock };
     setupDev(app, true);
 
     expect(mockWebpack).toHaveBeenCalled();

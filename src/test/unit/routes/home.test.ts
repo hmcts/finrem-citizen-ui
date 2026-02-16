@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Application, Request, Response } from 'express';
 
 import homeRoute from '../../../main/routes/home';
 
@@ -10,11 +10,10 @@ describe('routes/home', () => {
   let getHandler: (req: Request, res: Response) => void;
 
   beforeEach(() => {
-    const app: any = {
-      get: jest.fn((_path: string, handler: any) => {
-        getHandler = handler;
-      }),
-    };
+    const mockGet = jest.fn((_path: string, handler: (req: Request, res: Response) => void) => {
+      getHandler = handler;
+    });
+    const app = { get: mockGet } as unknown as Application;
     homeRoute(app);
   });
 
@@ -31,7 +30,7 @@ describe('routes/home', () => {
 
   it('should render home when authenticated', () => {
     const authData = { email: 'user@example.com', roles: ['citizen'] };
-    const req = { session: { auth: authData } } as any;
+    const req = { session: { auth: authData } } as unknown as Request;
     const res = { render: jest.fn() } as unknown as Response;
 
     getHandler(req, res);

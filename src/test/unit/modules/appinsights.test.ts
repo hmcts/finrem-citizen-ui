@@ -16,6 +16,11 @@ jest.mock('applicationinsights', () => {
   };
 });
 
+interface MockConfig {
+  get: jest.Mock;
+  _setInstrumentationKey: (key: string) => void;
+}
+
 jest.mock('config', () => {
   let instrumentationKey = '';
   return {
@@ -44,7 +49,7 @@ describe('modules/appinsights', () => {
   });
 
   it('should not setup appInsights when instrumentation key is empty', () => {
-    (config as any)._setInstrumentationKey('');
+    (config as unknown as MockConfig)._setInstrumentationKey('');
     const appInsightsModule = require('applicationinsights');
 
     const ai = new AppInsights();
@@ -54,7 +59,7 @@ describe('modules/appinsights', () => {
   });
 
   it('should setup appInsights when instrumentation key is provided', () => {
-    (config as any)._setInstrumentationKey('test-key');
+    (config as unknown as MockConfig)._setInstrumentationKey('test-key');
     const appInsightsModule = require('applicationinsights');
 
     const ai = new AppInsights();

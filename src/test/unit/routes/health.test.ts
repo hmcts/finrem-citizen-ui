@@ -2,13 +2,16 @@ jest.mock('@hmcts/properties-volume', () => ({
   addTo: jest.fn(),
 }));
 
-let capturedConfig: any;
+interface HealthConfig {
+  checks: Record<string, () => { status: string }>;
+  readinessChecks: Record<string, () => { status: string }>;
+}
 
 jest.mock('@hmcts/nodejs-healthcheck', () => ({
-  addTo: jest.fn((_app: any, config: any) => {
+  addTo: jest.fn((_app: unknown, config: HealthConfig) => {
     capturedConfig = config;
   }),
-  raw: jest.fn((fn: () => any) => fn),
+  raw: jest.fn((fn: () => unknown) => fn),
   up: jest.fn(() => ({ status: 'UP' })),
   down: jest.fn(() => ({ status: 'DOWN' })),
 }));
@@ -16,6 +19,8 @@ jest.mock('@hmcts/nodejs-healthcheck', () => ({
 jest.mock('@hmcts/info-provider', () => ({
   infoRequestHandler: jest.fn(() => jest.fn()),
 }));
+
+let capturedConfig: HealthConfig | null;
 
 describe('routes/health', () => {
   beforeEach(() => {
@@ -41,7 +46,7 @@ describe('routes/health', () => {
     jest.isolateModules(() => {
       require('../../../main/app');
       expect(capturedConfig).toBeDefined();
-      expect(capturedConfig.checks).toHaveProperty('sampleCheck');
+      expect(capturedConfig?.checks).toHaveProperty('sampleCheck');
     });
   });
 
@@ -49,7 +54,7 @@ describe('routes/health', () => {
     jest.isolateModules(() => {
       require('../../../main/app');
       expect(capturedConfig).toBeDefined();
-      expect(capturedConfig.readinessChecks).toHaveProperty('shutdownCheck');
+      expect(capturedConfig?.readinessChecks).toHaveProperty('shutdownCheck');
     });
   });
 
@@ -58,8 +63,8 @@ describe('routes/health', () => {
       const { app } = require('../../../main/app');
       app.locals.shutdown = false;
 
-      const shutdownFn = capturedConfig.readinessChecks.shutdownCheck;
-      const result = shutdownFn();
+      const shutdownFn = capturedConfig?.readinessChecks.shutdownCheck;
+      const result = shutdownFn?.();
       expect(result).toEqual({ status: 'UP' });
     });
   });
@@ -69,8 +74,8 @@ describe('routes/health', () => {
       const { app } = require('../../../main/app');
       app.locals.shutdown = true;
 
-      const shutdownFn = capturedConfig.readinessChecks.shutdownCheck;
-      const result = shutdownFn();
+      const shutdownFn = capturedConfig?.readinessChecks.shutdownCheck;
+      const result = shutdownFn?.();
       expect(result).toEqual({ status: 'DOWN' });
     });
   });
@@ -78,8 +83,8 @@ describe('routes/health', () => {
   it('should have a sampleCheck that returns UP', () => {
     jest.isolateModules(() => {
       require('../../../main/app');
-      const sampleCheckFn = capturedConfig.checks.sampleCheck;
-      const result = sampleCheckFn();
+      const sampleCheckFn = capturedConfig?.checks.sampleCheck;
+      const result = sampleCheckFn?.();
       expect(result).toEqual({ status: 'UP' });
     });
   });

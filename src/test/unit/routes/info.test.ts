@@ -1,12 +1,11 @@
+import { infoRequestHandler } from '@hmcts/info-provider';
 import { Router } from 'express';
+
+import infoRoute from '../../../main/routes/info';
 
 jest.mock('@hmcts/info-provider', () => ({
   infoRequestHandler: jest.fn(() => jest.fn()),
 }));
-
-import { infoRequestHandler } from '@hmcts/info-provider';
-
-import infoRoute from '../../../main/routes/info';
 
 describe('routes/info', () => {
   it('should register a GET /info route', () => {

@@ -7,8 +7,12 @@ jest.mock('@hmcts/properties-volume', () => ({
   addTo: jest.fn(),
 }));
 
+interface MockPropertiesVolume {
+  addTo: jest.Mock;
+}
+
 describe('modules/properties-volume', () => {
-  let propertiesVolume: any;
+  let propertiesVolume: MockPropertiesVolume;
 
   beforeEach(() => {
     propertiesVolume = require('@hmcts/properties-volume');
@@ -34,15 +38,18 @@ describe('modules/properties-volume', () => {
   it('should set appInsights secret when it exists in config', () => {
     const app = { locals: { ENV: 'production' } } as unknown as Application;
 
-    // Temporarily set the secret
     const originalHas = config.has;
     const originalGet = config.get;
     jest.spyOn(config, 'has').mockImplementation((path: string) => {
-      if (path === 'secrets.rpe.AppInsightsInstrumentationKey') return true;
+      if (path === 'secrets.rpe.AppInsightsInstrumentationKey') {
+        return true;
+      }
       return originalHas.call(config, path);
     });
     jest.spyOn(config, 'get').mockImplementation((path: string) => {
-      if (path === 'secrets.rpe.AppInsightsInstrumentationKey') return 'test-instrumentation-key';
+      if (path === 'secrets.rpe.AppInsightsInstrumentationKey') {
+        return 'test-instrumentation-key';
+      }
       return originalGet.call(config, path);
     });
 

@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-import { NextFunction, Request, Response } from 'express';
+import { Application, NextFunction, Request, Response } from 'express';
 
 import taskListUploadRoute from '../../../main/routes/task-list-upload';
 
@@ -10,11 +10,10 @@ describe('routes/task-list-upload', () => {
   let getHandler: (req: Request, res: Response, next: NextFunction) => void;
 
   beforeEach(() => {
-    const app: any = {
-      get: jest.fn((_path: string, handler: any) => {
-        getHandler = handler;
-      }),
-    };
+    const mockGet = jest.fn((_path: string, handler: (req: Request, res: Response, next: NextFunction) => void) => {
+      getHandler = handler;
+    });
+    const app = { get: mockGet } as unknown as Application;
     taskListUploadRoute(app);
   });
 
