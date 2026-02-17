@@ -2,7 +2,7 @@
   "environment": "development",
   "services": {
     "idamApi": "https://idam-api.aat.platform.hmcts.net",
-    "idamWeb": "https://idam-web-public.aat.platform.hmcts.net",
+    "idamWeb": "https://hmcts-access.aat.platform.hmcts.net",
     "s2s": "http://rpe-service-auth-provider-aat.service.core-compute-aat.internal"
   },
   "oauthCallbackUrl": "https://localhost:3100/oauth2/callback",
