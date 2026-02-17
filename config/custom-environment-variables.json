@@ -1,0 +1,59 @@
+{
+  "environment": "NODE_CONFIG_ENV",
+  "cookies": {
+    "token": "COOKIE_TOKEN",
+    "userId": "COOKIE_USER_ID"
+  },
+  "idamClient": "IDAM_CLIENT",
+  "microservice": "MICROSERVICE",
+  "now": {
+    "__name": "NOW",
+    "__format": "json"
+  },
+  "oauthCallbackUrl": "OAUTH_CALLBACK_URL",
+  "iss": "SERVICES_IDAM_ISS_URL",
+  "loginRoleMatcher": "LOGIN_ROLE_MATCHER",
+  "protocol": "PROTOCOL",
+  "services": {
+    "idamApi": "IDAM_API_SERVICE",
+    "idamWeb": "IDAM_WEB_SERVICE",
+    "s2s": "S2S_SERVICE"
+  },
+  "sessionSecret": {
+    "__name": "SESSION_SECRET",
+    "__format": "json"
+  },
+  "secrets": {
+    "finrem": {
+      "finrem-citizen-s2s-client-secret": "S2S_SECRET",
+      "finrem-citizen-oauth2-client-secret": "IDAM_SECRET",
+      "finrem-citizen-redis-connection-string": "REDISCLOUD_URL"
+    }
+  },
+  "feature": {
+    "secureCookieEnabled": {
+      "__name": "FEATURE_SECURE_COOKIE_ENABLED",
+      "__format": "json"
+    },
+    "helmetEnabled": {
+      "__name": "FEATURE_HELMET_ENABLED",
+      "__format": "json"
+    },
+    "redisEnabled": {
+      "__name": "FEATURE_REDIS_ENABLED",
+      "__format": "json"
+    },
+    "oidcEnabled": {
+      "__name": "FEATURE_OIDC_ENABLED",
+      "__format": "json"
+    }
+  },
+  "helmet": {
+    "__name": "HELMET_CONFIG",
+    "__format": "json"
+  },
+  "redis": {
+    "prefix": "REDIS_KEY_PREFIX",
+    "ttl": "REDIS_TTL"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "environment": "development",
+  "services": {
+    "idamApi": "https://idam-api.aat.platform.hmcts.net",
+    "idamWeb": "https://hmcts-access.aat.platform.hmcts.net",
+    "s2s": "http://rpe-service-auth-provider-aat.service.core-compute-aat.internal"
+  },
+  "oauthCallbackUrl": "https://localhost:3100/oauth2/callback",
+  "iss": "https://forgerock-am.service.core-compute-idam-aat.internal:8443/openam/oauth2/hmcts",
+  "protocol": "https",
+  "feature": {
+    "secureCookieEnabled": false,
+    "helmetEnabled": true,
+    "redisEnabled": false,
+    "oidcEnabled": false
+  },
+  "secrets": {
+    "finrem": {
+      "finrem-citizen-s2s-client-secret": "PLACEHOLDER_S2S_SECRET",
+      "finrem-citizen-oauth2-client-secret": "PLACEHOLDER_IDAM_SECRET"
+    }
+  }
+}
