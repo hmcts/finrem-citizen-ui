@@ -10,5 +10,26 @@
       "includeSubDomains": true,
       "preload": true
     }
+  },
+  "oidc": {
+    "issuer": "https://hmcts-access.aat.platform.hmcts.net/o",
+    "clientId": "finrem-citizen-ui",
+    "callbackUrl": "http://localhost:3100/oauth2/callback",
+    "scope": "openid profile roles"
+  },
+  "session": {
+    "cookieName": "finrem_session",
+    "prefix": "finrem-session",
+    "ttlInSeconds": 5400
+  },
+  "features": {
+    "redis": "false"
+  },
+  "secrets": {
+    "finrem": {
+      "idam-secret": "AAAAAAAAAAAA",
+      "session-secret": "finrem-local-dev-secret",
+      "redis-connection-string": "redis://localhost:6379"
+    }
   }
 }

@@ -4,6 +4,32 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   testEnvironment: 'node',
   transform: {
-    '^.+\\.ts?$': 'ts-jest',
+    '^.+\\.ts?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.test.json' }],
+  },
+  collectCoverageFrom: [
+    'src/main/**/*.ts',
+    '!src/main/app.ts',
+    '!src/main/server.ts',
+    '!src/main/development.ts',
+    '!src/main/assets/**',
+    '!src/main/**/*.d.ts',
+    '!src/main/routes/health.ts',
+    '!src/main/routes/info.ts',
+    '!src/main/routes/home.ts',
+    '!src/main/HttpError.ts',
+    '!src/main/middleware/index.ts',
+    '!src/main/modules/appinsights/**',
+    '!src/main/modules/properties-volume/**',
+    '!src/main/modules/helmet/**',
+    '!src/main/modules/nunjucks/**',
+    '!src/main/modules/oidc/config.interface.ts',
+  ],
+  coverageThreshold: {
+    global: {
+      statements: 85,
+      branches: 85,
+      functions: 85,
+      lines: 85,
+    },
   },
 };
