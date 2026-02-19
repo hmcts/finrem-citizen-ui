@@ -8907,7 +8907,7 @@ __metadata:
     express-session: "npm:1.19.0"
     glob: "npm:13.0.5"
     globals: "npm:^17.1.0"
-    govuk-frontend: "npm:^5.9.0"
+    govuk-frontend: "npm:^6.0.0"
     helmet: "npm:8.1.0"
     html-webpack-plugin: "npm:5.6.6"
     husky: "npm:9.1.7"
@@ -9575,10 +9575,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"govuk-frontend@npm:^5.9.0":
-  version: 5.14.0
-  resolution: "govuk-frontend@npm:5.14.0"
-  checksum: 10/be321340f49306e3dada63c67888b7947e36d60dce839c9d7f0c97932cda26a848c1fc664d48bb1d85494b7d28a3e99b2df6391dfc1bcbab905f529a2faa6788
+"govuk-frontend@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "govuk-frontend@npm:6.0.0"
+  checksum: 10/0fd60531ac3dfcdd4d5e374568d9e2c1f0ed4564fda3547833983f54b5671b3d3c1d7636e9bf5439a6759129492abbdc8387dc8999b4e7479caf95719ed68f2b
   languageName: node
   linkType: hard
 
