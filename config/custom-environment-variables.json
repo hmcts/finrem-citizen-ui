@@ -1,0 +1,17 @@
+{
+  "oidc": {
+    "issuer": "OIDC_ISSUER",
+    "clientId": "IDAM_CLIENT",
+    "callbackUrl": "OAUTH_CALLBACK_URL"
+  },
+  "features": {
+    "redis": "FEATURE_REDIS_ENABLED"
+  },
+  "secrets": {
+    "finrem": {
+      "idam-secret": "IDAM_SECRET",
+      "session-secret": "SESSION_SECRET",
+      "redis-connection-string": "REDIS_CONNECTION_STRING"
+    }
+  }
+}

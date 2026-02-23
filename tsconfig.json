@@ -20,5 +20,9 @@
       "routes/*": ["routes/*"]
     }
   },
-  "exclude": ["**/*.test.ts", "**/codecept.conf.ts", "**/__mocks__/*"]
+  "include": ["src/main/**/*"],
+  "exclude": ["**/*.test.ts", "**/codecept.conf.ts", "**/__mocks__/*"],
+  "ts-node": {
+    "files": true
+  }
 }
