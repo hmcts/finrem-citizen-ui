@@ -20,8 +20,7 @@ export class OIDCModule {
   public async setupClient(): Promise<void> {
     this.logger.info('Setting up OIDC client');
     const issuer = new URL(this.oidcConfig.issuer);
-    const clientSecret = config.get<string>('secrets.finrem.idam-secret');
-    this.clientConfig = await oidcClient.discovery(issuer, this.oidcConfig.clientId, clientSecret);
+    this.clientConfig = await oidcClient.discovery(issuer, this.oidcConfig.clientId);
     this.logger.info('OIDC client configured successfully');
   }
 
@@ -33,7 +32,7 @@ export class OIDCModule {
     const forwardedProto = req.headers['x-forwarded-proto'];
     const protocol = typeof forwardedProto === 'string' ? forwardedProto : req.protocol;
     const forwardedHost = req.headers['x-forwarded-host'];
-    const host = typeof forwardedHost === 'string' ? forwardedHost : (req.get('host') ?? 'localhost:3100');
+    const host = typeof forwardedHost === 'string' ? forwardedHost : req.get('host') ?? 'localhost:3100';
     return `${protocol}://${host}${configured}`;
   }
 
@@ -41,7 +40,7 @@ export class OIDCModule {
     const forwardedProto = req.headers['x-forwarded-proto'];
     const protocol = typeof forwardedProto === 'string' ? forwardedProto : req.protocol;
     const forwardedHost = req.headers['x-forwarded-host'];
-    const host = typeof forwardedHost === 'string' ? forwardedHost : (req.get('host') ?? 'localhost:3100');
+    const host = typeof forwardedHost === 'string' ? forwardedHost : req.get('host') ?? 'localhost:3100';
     return new URL(req.originalUrl, `${protocol}://${host}`);
   }
 
