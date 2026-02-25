@@ -34,6 +34,16 @@ describe('oidcMiddleware', () => {
     expect(res.redirect).not.toHaveBeenCalled();
   });
 
+  it('calls next for /login without requiring a session', () => {
+    const req = makeReq({ session: undefined, path: '/login', originalUrl: '/login' });
+    const res = makeRes();
+
+    oidcMiddleware(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(res.redirect).not.toHaveBeenCalled();
+  });
+
   it('stores returnTo and redirects to /login when session exists but no user', () => {
     const session = {} as never;
     const req = makeReq({ session, originalUrl: '/my-page' });
