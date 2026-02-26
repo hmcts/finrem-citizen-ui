@@ -38,3 +38,11 @@ version
 .yarn/install-state.gz
 .yarn/*
 .yarn
+
+# Playwright
+playwright-report/
+.features-gen/
+
+# Allure
+allure-results/
+allure-report/
