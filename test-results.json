@@ -112,7 +112,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 117,
+                      "duration": 113,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
@@ -120,14 +120,14 @@
                       "steps": [
                         {
                           "title": "Given I am on the home page",
-                          "duration": 59
+                          "duration": 58
                         },
                         {
                           "title": "Then I should see correct content",
-                          "duration": 20
+                          "duration": 18
                         }
                       ],
-                      "startTime": "2026-02-26T14:57:28.380Z",
+                      "startTime": "2026-02-26T15:01:51.773Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -156,7 +156,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 844,
+                      "duration": 866,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
@@ -168,14 +168,14 @@
                         },
                         {
                           "title": "When I click on the \"license\" link",
-                          "duration": 231
+                          "duration": 243
                         },
                         {
                           "title": "Then I should be on the \"Open Government Licence for public sector information\" page",
-                          "duration": 536
+                          "duration": 547
                         }
                       ],
-                      "startTime": "2026-02-26T14:57:28.945Z",
+                      "startTime": "2026-02-26T15:01:52.296Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -195,8 +195,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-02-26T14:57:27.961Z",
-    "duration": 1860.366,
+    "startTime": "2026-02-26T15:01:51.345Z",
+    "duration": 1846.0639999999999,
     "expected": 2,
     "skipped": 0,
     "unexpected": 0,
