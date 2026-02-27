@@ -26,8 +26,16 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 
 withPipeline(type, product, component) {
   loadVaultSecrets(secrets)
+
+  before('functionalTests') {
+    yarnBuilder.yarn('playwright install chromium --with-deps')
+  }
+
+  before('e2eTests') {
+    yarnBuilder.yarn('playwright install chromium --with-deps')
+  }
+
   afterSuccess('build') {
-    yarnBuilder.yarn('playwright install')
     yarnBuilder.yarn('rebuild puppeteer')
     yarnBuilder.yarn('build')
   }
