@@ -18,8 +18,8 @@
     "test:routes": "jest -c jest.routes.config.js",
     "test:a11y": "jest --detectOpenHandles -c jest.a11y.config.js --maxWorkers 15",
     "test:smoke": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest -c jest.smoke.config.js",
-    "test:functional": "yarn bddgen && yarn playwright test --project chromium --grep @PR; EXIT_CODE=$?; yarn allure generate allure-results --clean -o allure-report; exit $EXIT_CODE",
-    "test:fullfunctional": "yarn playwright install && yarn playwright test --project chromium; EXIT_CODE=$?; allure generate --clean; exit $EXIT_CODE",
+    "test:functional": "yarn bddgen && yarn playwright test --project chromium --grep @PR; EXIT_CODE=$?; yarn allure generate allure-results --clean -o functional-output/functional/reports/allure; exit $EXIT_CODE",
+    "test:full-functional": "yarn bddgen && yarn playwright test --project chromium; EXIT_CODE=$?; yarn allure generate allure-results --clean -o functional-output/functional/reports/allure; exit $EXIT_CODE",
     "test:fullfunctional:allBrowsers:ui": "yarn bddgen && yarn playwright test --ui",
     "cichecks": "yarn install && yarn build && yarn lint && yarn test && yarn test:routes && yarn test:a11y",
     "prepare": "husky install"

@@ -112,7 +112,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 116,
+                      "duration": 101,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
@@ -120,14 +120,14 @@
                       "steps": [
                         {
                           "title": "Given I am on the home page",
-                          "duration": 60
+                          "duration": 41
                         },
                         {
                           "title": "Then I should see correct content",
-                          "duration": 17
+                          "duration": 21
                         }
                       ],
-                      "startTime": "2026-02-26T15:02:48.328Z",
+                      "startTime": "2026-02-27T15:47:52.163Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -139,54 +139,6 @@
               "file": "src/test/functional/features/homePage.feature.spec.js",
               "line": 6,
               "column": 7
-            },
-            {
-              "title": "User can click license link in footer and it opens in the same tab",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 942,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "steps": [
-                        {
-                          "title": "Given I am on the home page",
-                          "duration": 45
-                        },
-                        {
-                          "title": "When I click on the \"license\" link",
-                          "duration": 200
-                        },
-                        {
-                          "title": "Then I should be on the \"Open Government Licence for public sector information\" page",
-                          "duration": 665
-                        }
-                      ],
-                      "startTime": "2026-02-26T15:02:48.850Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "0b442ac36550c3c3a17d-f47125ee82d9ee24542e",
-              "file": "src/test/functional/features/homePage.feature.spec.js",
-              "line": 11,
-              "column": 7
             }
           ]
         }
@@ -195,9 +147,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-02-26T15:02:47.948Z",
-    "duration": 1873.8,
-    "expected": 2,
+    "startTime": "2026-02-27T15:47:51.770Z",
+    "duration": 974.7560000000001,
+    "expected": 1,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

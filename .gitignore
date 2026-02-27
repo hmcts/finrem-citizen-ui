@@ -49,3 +49,5 @@ allure-report/
 test-results.json
 test-results.json
 test-results/.last-run.json
+test-results.json
+test-results/.last-run.json

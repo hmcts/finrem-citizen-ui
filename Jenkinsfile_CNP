@@ -8,17 +8,6 @@ def component = "citizen-ui"
 
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
-def installBrowsers = {
-    sh 'npx playwright install chromium --with-deps'
-}
-
-def secrets = [
-  'finrem-${env}': [
-    secret("idam-secret" ,"OAUTH2_CLIENT_FINREM"),
-    secret("finrem-idam-client-secret", "FINREM_IDAM_CLIENT_SECRET"),
-  ]
-]
-
 static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
   [ $class: 'AzureKeyVaultSecret',
     secretType: 'Secret',
@@ -28,19 +17,43 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
   ]
 }
 
+def secrets = [
+  'finrem-${env}': [
+    secret("idam-secret" ,"OAUTH2_CLIENT_FINREM"),
+    secret("finrem-idam-client-secret", "FINREM_IDAM_CLIENT_SECRET"),
+  ]
+]
+
 withPipeline(type, product, component) {
   loadVaultSecrets(secrets)
+  enableAksStagingDeployment()
+  disableLegacyDeployment()
 
-  before('build') {
-    installBrowsers()
+  // Install browsers AND generate BDD files before tests start
+  // The framework calls these stages automatically if 'test:functional' exists in package.json
+  before('functionalTest:preview') {
+    sh 'yarn bddgen'
+    sh 'npx playwright install chromium --with-deps'
+  }
+
+  before('functionalTest:aat') {
+    sh 'yarn bddgen'
+    sh 'npx playwright install chromium --with-deps'
   }
 
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
+
+  afterAlways('functionalTest:preview') {
+    steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/functional/reports/**/*'
+  }
+
+  afterAlways('functionalTest:aat') {
+    steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/functional/reports/**/*'
+  }
+
   enableSlackNotifications('#finrem-dev')
-  enableAksStagingDeployment()
-  disableLegacyDeployment()
 
   onMaster() {
     env.JENKINS_BRANCH = "master"

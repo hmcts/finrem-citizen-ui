@@ -14,7 +14,7 @@ export default defineConfig({
     timeout: 5000,
   },
   use: {
-    baseURL: process.env.TEST_URL || 'https://localhost:3100',
+    baseURL: process.env.TEST_URL || 'http://localhost:3100',
     headless: true,
     ignoreHTTPSErrors: true,
   },
