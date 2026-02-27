@@ -49,7 +49,7 @@
     "express-rate-limit": "^8.2.1",
     "express-session": "1.19.0",
     "glob": "13.0.6",
-    "govuk-frontend": "^5.9.0",
+    "govuk-frontend": "^6.0.0",
     "helmet": "8.1.0",
     "jquery": "3.7.1",
     "lodash": "4.17.23",
@@ -142,7 +142,7 @@
     "diff": "8.0.3",
     "qs": "6.15.0",
     "test-exclude": "7.0.1",
-    "minimatch": "10.2.3",
+    "minimatch": "10.2.4",
     "@eslint/eslintrc/ajv": "6.12.6"
   }
 }
