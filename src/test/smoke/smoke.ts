@@ -15,6 +15,7 @@ describe('Smoke Test', () => {
           },
         });
       } catch (error: unknown) {
+        /* eslint-disable no-console */
         console.error(`Failed to fetch ${testUrl}:`);
         if (axios.isAxiosError(error)) {
           console.error(`Error message: ${error.message}`);
