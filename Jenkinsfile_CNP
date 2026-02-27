@@ -8,6 +8,10 @@ def component = "citizen-ui"
 
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
+def installBrowsers = {
+    sh 'npx playwright install chromium --with-deps'
+}
+
 def secrets = [
   'finrem-${env}': [
     secret("idam-secret" ,"OAUTH2_CLIENT_FINREM"),
@@ -28,11 +32,11 @@ withPipeline(type, product, component) {
   loadVaultSecrets(secrets)
 
   before('functionalTests') {
-    yarnBuilder.yarn('playwright install chromium --with-deps')
+    installBrowsers()
   }
 
   before('e2eTests') {
-    yarnBuilder.yarn('playwright install chromium --with-deps')
+    installBrowsers()
   }
 
   afterSuccess('build') {
