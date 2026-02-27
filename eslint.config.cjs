@@ -21,7 +21,7 @@ module.exports = [
       },
       parser: tsParser,
     },
-  files: ["**/*.ts", "**/*.tsx"],
+  files: ["src/**/*.{ts,tsx,js}"],
    plugins: {
       "@typescript-eslint": tseslint,
       import: importPlugin,
@@ -93,11 +93,12 @@ module.exports = [
     "**/*.d.ts",
     "/src/main/public/",
     "/src/main/types/",
+    "src/main/**/*.bundle.js",
+    "src/main/public/**/*",
     "jest.*config.js",
     ".eslintrc.js",
     "src/test/*/codecept.conf.js",
     "src/test/config.ts",
-    "**/*.js",
     ".pnp.*"
   ]
 }
