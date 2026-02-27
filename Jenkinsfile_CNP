@@ -31,16 +31,11 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 withPipeline(type, product, component) {
   loadVaultSecrets(secrets)
 
-  before('functionalTests') {
-    installBrowsers()
-  }
-
-  before('e2eTests') {
+  before('build') {
     installBrowsers()
   }
 
   afterSuccess('build') {
-    yarnBuilder.yarn('rebuild puppeteer')
     yarnBuilder.yarn('build')
   }
   enableSlackNotifications('#finrem-dev')
