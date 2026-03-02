@@ -12,8 +12,8 @@ const bddDir = defineBddConfig({
 export default defineConfig({
   testDir: './',
   testMatch: [
-    bddDir + '/**/*.spec.js', // Include BDD tests
-    'src/test/a11y/*.ts', // Include accessibility tests
+    bddDir + '/**/*.spec.js', // include BDD tests
+    '**/src/test/a11y/*.test.ts', // include AXE tests
   ],
 
   reporter: [['html'], ['json', { outputFile: 'test-results.json' }], ['allure-playwright']],
@@ -27,6 +27,7 @@ export default defineConfig({
     baseURL: testUrl,
     headless: true,
     ignoreHTTPSErrors: true,
+    trace: 'on-first-retry',
   },
 
   // 3. Conditional WebServer
@@ -45,12 +46,10 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
     },
-
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
