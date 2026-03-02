@@ -31,12 +31,25 @@ const limiter = RateLimit({
 export const app = express();
 app.locals.ENV = env;
 
+/**
+ * Must be set before security middleware so Express correctly trusts
+ * X-Forwarded-* headers when running behind ingress / reverse proxy.
+ */
+app.set('trust proxy', true);
+
 const logger = Logger.getLogger('app');
 
 new PropertiesVolume().enableFor(app);
 new AppInsights().enable();
 new Nunjucks(developmentMode).enableFor(app);
-new Helmet(config.get('security')).enableFor(app);
+
+/**
+ * Disable Helmet in test mode so route tests using plain HTTP via supertest
+ * do not get 302 redirected to HTTPS.
+ */
+if (!testMode) {
+  new Helmet(config.get('security')).enableFor(app);
+}
 
 app.get('/favicon.ico', limiter, (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));
@@ -53,20 +66,10 @@ app.use((req, res, next) => {
 
 new Session().enableFor(app);
 
-if (testMode) {
-  app.use((req, _res, next) => {
-    if (!req.session.user) {
-      req.session.user = {
-        idToken: 'test-id-token',
-        accessToken: 'test-access-token',
-        refreshToken: 'test-refresh-token',
-        sub: 'test-user',
-        given_name: 'Test User',
-      };
-    }
-    next();
-  });
-} else {
+/**
+ * Keep OIDC disabled in test mode so unit/route tests don't need live auth setup.
+ */
+if (!testMode) {
   new OIDCModule().enableFor(app);
 }
 
