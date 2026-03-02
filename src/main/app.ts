@@ -21,6 +21,7 @@ const { setupDev } = require('./development');
 
 const env = process.env.NODE_ENV || 'development';
 const developmentMode = env === 'development';
+const testMode = env === 'test';
 
 const limiter = RateLimit({
   windowMs: 15 * 60 * 1000,
@@ -51,7 +52,23 @@ app.use((req, res, next) => {
 });
 
 new Session().enableFor(app);
-new OIDCModule().enableFor(app);
+
+if (testMode) {
+  app.use((req, _res, next) => {
+    if (!req.session.user) {
+      req.session.user = {
+        idToken: 'test-id-token',
+        accessToken: 'test-access-token',
+        refreshToken: 'test-refresh-token',
+        sub: 'test-user',
+        given_name: 'Test User',
+      };
+    }
+    next();
+  });
+} else {
+  new OIDCModule().enableFor(app);
+}
 
 glob
   .sync(__dirname + '/routes/**/*.+(ts|js)')
