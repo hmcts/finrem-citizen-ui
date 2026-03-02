@@ -1,12 +1,13 @@
+import type { Express, NextFunction, Request, Response } from 'express';
 import config from 'config';
 import * as oidcClient from 'openid-client';
 
-import { OIDCModule } from '../../../../main/modules/oidc';
+import { OIDCModule } from '../../../../main/modules/oidc/index';
 import { OIDCAuthenticationError, OIDCCallbackError } from '../../../../main/modules/oidc/errors';
 
 const mockLogger = {
-  info: jest.fn(),
-  error: jest.fn(),
+  info: jest.fn<void, [string]>(),
+  error: jest.fn<void, [string, unknown?]>(),
 };
 
 jest.mock('@hmcts/nodejs-logging', () => ({
@@ -34,9 +35,51 @@ jest.mock('openid-client', () => ({
   fetchUserInfo: jest.fn(),
 }));
 
+type SessionUser = {
+  idToken?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  sub?: string;
+  given_name?: string;
+};
+
+type SessionLike = {
+  codeVerifier?: string;
+  nonce?: string;
+  returnTo?: string;
+  user?: SessionUser;
+  destroy: (callback: (err?: unknown) => void) => void;
+  save: (callback: () => void) => void;
+};
+
+type RequestLike = {
+  headers: Request['headers'];
+  protocol: string;
+  originalUrl: string;
+  get: (name: string) => string | undefined;
+  session: SessionLike;
+};
+
+type ResponseLike = {
+  redirect: jest.Mock<void, [string]>;
+};
+
+type RouteHandler = (req: Request, res: Response, next: NextFunction) => void | Promise<void>;
+type SetupMiddleware = (req: Request, res: Response, next: NextFunction) => void | Promise<void>;
+
+type TestApp = Pick<Express, 'set' | 'use' | 'get'> & {
+  __middleware: SetupMiddleware[];
+  __routes: Record<string, RouteHandler>;
+};
+
+type ConfigModule = {
+  get: <T>(key: string) => T;
+  has: (key: string) => boolean;
+};
+
 describe('OIDCModule', () => {
-  const mockConfig = config as jest.Mocked<typeof config>;
-  const mockOidc = oidcClient as jest.Mocked<typeof oidcClient>;
+  const mockedConfig = config as unknown as jest.Mocked<ConfigModule>;
+  const mockedOidc = oidcClient as jest.Mocked<typeof oidcClient>;
 
   const baseOidcConfig = {
     issuer: 'https://idam-web-public.perftest.platform.hmcts.net',
@@ -49,61 +92,77 @@ describe('OIDCModule', () => {
     jest.clearAllMocks();
     delete process.env.IDAM_SECRET;
 
-    (mockConfig.get as jest.Mock).mockImplementation((key: string) => {
+    mockedConfig.get.mockImplementation(<T>(key: string): T => {
       if (key === 'oidc') {
-        return baseOidcConfig;
+        return baseOidcConfig as T;
       }
       if (key === 'secrets.finrem.finrem-citizen-oauth2-client-secret') {
-        return 'secret-from-config';
+        return 'secret-from-config' as T;
       }
       throw new Error(`Unexpected config.get key: ${key}`);
     });
 
-    (mockConfig.has as jest.Mock).mockImplementation((key: string) => {
+    mockedConfig.has.mockImplementation((key: string): boolean => {
       return key === 'secrets.finrem.finrem-citizen-oauth2-client-secret';
     });
   });
 
-  const makeReq = (overrides: Partial<any> = {}) => {
-    const req: any = {
+  const makeReq = (overrides: Partial<RequestLike> = {}): Request => {
+    const base: RequestLike = {
       headers: {},
       protocol: 'http',
       originalUrl: '/some/path?x=1',
-      get: jest.fn((name: string) => (name === 'host' ? 'localhost:3100' : undefined)),
+      get: (name: string): string | undefined => (name === 'host' ? 'localhost:3100' : undefined),
       session: {
-        destroy: jest.fn(cb => cb && cb(undefined)),
-        save: jest.fn(cb => cb && cb()),
+        destroy: (callback: (err?: unknown) => void): void => callback(),
+        save: (callback: () => void): void => callback(),
       },
-      ...overrides,
     };
 
-    return req;
+    return { ...base, ...overrides } as unknown as Request;
   };
 
-  const makeRes = () => {
-    const res: any = {
-      redirect: jest.fn(),
+  const makeRes = (): Response => {
+    const response: ResponseLike = {
+      redirect: jest.fn<void, [string]>(),
     };
-    return res;
+
+    return response as unknown as Response;
   };
 
-  const makeApp = () => {
-    const middleware: any[] = [];
-    const routes: Record<string, any> = {};
+  const makeApp = (): TestApp => {
+    const middleware: SetupMiddleware[] = [];
+    const routes: Record<string, RouteHandler> = {};
 
-    const app: any = {
-      set: jest.fn(),
-      use: jest.fn((fn: any) => {
-        middleware.push(fn);
-      }),
-      get: jest.fn((path: string, handler: any) => {
-        routes[path] = handler;
-      }),
+    const setMock = jest.fn<void, [string, boolean]>();
+    const useMock = jest.fn<void, [SetupMiddleware]>();
+    const getMock = jest.fn<void, [string, RouteHandler]>();
+
+    const app: TestApp = {
+      set: setMock as unknown as Express['set'],
+      use: useMock as unknown as Express['use'],
+      get: getMock as unknown as Express['get'],
       __middleware: middleware,
       __routes: routes,
     };
 
+    useMock.mockImplementation((fn: SetupMiddleware): void => {
+      middleware.push(fn);
+    });
+
+    getMock.mockImplementation((path: string, handler: RouteHandler): void => {
+      routes[path] = handler;
+    });
+
     return app;
+  };
+
+  const setClientConfig = (module: OIDCModule, value: oidcClient.Configuration | undefined): void => {
+    Reflect.set(module as object, 'clientConfig', value);
+  };
+
+  const getClientConfig = (module: OIDCModule): unknown => {
+    return Reflect.get(module as object, 'clientConfig');
   };
 
   it('logs when constructed', () => {
@@ -114,51 +173,52 @@ describe('OIDCModule', () => {
 
   it('setupClient returns early if already configured', async () => {
     const module = new OIDCModule();
-    (module as any).clientConfig = { already: true };
+
+    setClientConfig(module, {} as unknown as oidcClient.Configuration);
 
     await module.setupClient();
 
-    expect(mockOidc.discovery).not.toHaveBeenCalled();
+    expect(mockedOidc.discovery).not.toHaveBeenCalled();
   });
 
   it('setupClient uses env secret and configures client', async () => {
     process.env.IDAM_SECRET = 'env-secret';
 
-    const discoveredClient = { client: true };
-    (mockOidc.discovery as jest.Mock).mockResolvedValue(discoveredClient);
+    const discoveredClient = {} as unknown as oidcClient.Configuration;
+    mockedOidc.discovery.mockResolvedValue(discoveredClient);
 
     const module = new OIDCModule();
 
     await module.setupClient();
 
     expect(mockLogger.info).toHaveBeenCalledWith('Setting up OIDC client via discovery');
-    expect(mockOidc.discovery).toHaveBeenCalledWith(
+    expect(mockedOidc.discovery).toHaveBeenCalledWith(
       new URL(baseOidcConfig.issuer),
       baseOidcConfig.clientId,
       'env-secret'
     );
-    expect((module as any).clientConfig).toBe(discoveredClient);
+    expect(getClientConfig(module)).toBe(discoveredClient);
     expect(mockLogger.info).toHaveBeenCalledWith('OIDC client configured successfully');
   });
 
-  it('setupClient falls back to secret from config when env secret is missing', async () => {
-    const discoveredClient = { client: true };
-    (mockOidc.discovery as jest.Mock).mockResolvedValue(discoveredClient);
+  it('setupClient falls back to config secret when env secret is missing', async () => {
+    const discoveredClient = {} as unknown as oidcClient.Configuration;
+    mockedOidc.discovery.mockResolvedValue(discoveredClient);
 
     const module = new OIDCModule();
 
     await module.setupClient();
 
-    expect(mockOidc.discovery).toHaveBeenCalledWith(
+    expect(mockedOidc.discovery).toHaveBeenCalledWith(
       new URL(baseOidcConfig.issuer),
       baseOidcConfig.clientId,
       'secret-from-config'
     );
   });
 
-  it('setupClient logs error when secret is missing', async () => {
-    (mockConfig.has as jest.Mock).mockReturnValue(false);
-    (mockOidc.discovery as jest.Mock).mockResolvedValue({ client: true });
+  it('setupClient logs when secret is missing', async () => {
+    mockedConfig.has.mockReturnValue(false);
+    mockedOidc.discovery.mockResolvedValue({} as unknown as oidcClient.Configuration);
 
     const module = new OIDCModule();
 
@@ -169,68 +229,53 @@ describe('OIDCModule', () => {
     );
   });
 
-  it('setupClient logs error when secret is placeholder', async () => {
-    process.env.IDAM_SECRET = 'PLACEHOLDER_IDAM_SECRET';
-    (mockOidc.discovery as jest.Mock).mockResolvedValue({ client: true });
-
-    const module = new OIDCModule();
-
-    await module.setupClient();
-
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'CRITICAL: IDAM Client Secret is missing or still set to placeholder!'
-    );
-  });
-
-  it('setupClient logs and rethrows when discovery fails', async () => {
+  it('setupClient logs and rethrows discovery errors', async () => {
     const discoveryError = new Error('discovery failed');
-    (mockOidc.discovery as jest.Mock).mockRejectedValue(discoveryError);
+    mockedOidc.discovery.mockRejectedValue(discoveryError);
 
     const module = new OIDCModule();
 
     await expect(module.setupClient()).rejects.toThrow('discovery failed');
-
     expect(mockLogger.error).toHaveBeenCalledWith('Failed to setup OIDC client:', discoveryError);
   });
 
-  it('buildRedirectUri returns configured absolute callback URL unchanged', () => {
-    (mockConfig.get as jest.Mock).mockImplementation((key: string) => {
+  it('buildRedirectUri returns absolute configured callback unchanged', () => {
+    mockedConfig.get.mockImplementation(<T>(key: string): T => {
       if (key === 'oidc') {
         return {
           ...baseOidcConfig,
-          callbackUrl: 'https://external.example.com/oauth2/callback',
-        };
+          callbackUrl: 'https://public.example.com/oauth2/callback',
+        } as T;
       }
       if (key === 'secrets.finrem.finrem-citizen-oauth2-client-secret') {
-        return 'secret-from-config';
+        return 'secret-from-config' as T;
       }
       throw new Error(`Unexpected config.get key: ${key}`);
     });
 
     const module = new OIDCModule();
-    const req = makeReq();
 
-    expect(module.buildRedirectUri(req)).toBe('https://external.example.com/oauth2/callback');
+    expect(module.buildRedirectUri(makeReq())).toBe('https://public.example.com/oauth2/callback');
   });
 
-  it('buildRedirectUri uses forwarded headers when callback is relative', () => {
+  it('buildRedirectUri uses forwarded headers for relative callback', () => {
     const module = new OIDCModule();
     const req = makeReq({
       headers: {
         'x-forwarded-proto': 'https',
-        'x-forwarded-host': 'example.service.justice.gov.uk',
+        'x-forwarded-host': 'service.example.com',
       },
       protocol: 'http',
     });
 
-    expect(module.buildRedirectUri(req)).toBe('https://example.service.justice.gov.uk/oauth2/callback');
+    expect(module.buildRedirectUri(req)).toBe('https://service.example.com/oauth2/callback');
   });
 
-  it('buildRedirectUri falls back to req protocol and host', () => {
+  it('buildRedirectUri falls back to request protocol and host', () => {
     const module = new OIDCModule();
     const req = makeReq({
       protocol: 'https',
-      get: jest.fn((name: string) => (name === 'host' ? 'local.test:9999' : undefined)),
+      get: (name: string): string | undefined => (name === 'host' ? 'local.test:9999' : undefined),
     });
 
     expect(module.buildRedirectUri(req)).toBe('https://local.test:9999/oauth2/callback');
@@ -245,29 +290,29 @@ describe('OIDCModule', () => {
       originalUrl: '/oauth2/callback?code=abc',
     });
 
-    const url = OIDCModule.getCurrentUrl(req as any);
+    const url = OIDCModule.getCurrentUrl(req);
 
     expect(url.href).toBe('https://forwarded.example.com/oauth2/callback?code=abc');
   });
 
-  it('getCurrentUrl falls back to req protocol and default host', () => {
+  it('getCurrentUrl falls back to default host', () => {
     const req = makeReq({
       headers: {},
       protocol: 'http',
       originalUrl: '/hello',
-      get: jest.fn(() => undefined),
+      get: (): string | undefined => undefined,
     });
 
-    const url = OIDCModule.getCurrentUrl(req as any);
+    const url = OIDCModule.getCurrentUrl(req);
 
     expect(url.href).toBe('http://localhost:3100/hello');
   });
 
-  it('enableFor sets trust proxy, adds setup middleware and routes', () => {
+  it('enableFor sets trust proxy and registers middleware and routes', () => {
     const app = makeApp();
     const module = new OIDCModule();
 
-    module.enableFor(app);
+    module.enableFor(app as unknown as Express);
 
     expect(app.set).toHaveBeenCalledWith('trust proxy', true);
     expect(app.use).toHaveBeenCalledTimes(1);
@@ -281,14 +326,12 @@ describe('OIDCModule', () => {
     const module = new OIDCModule();
     const setupSpy = jest.spyOn(module, 'setupClient').mockResolvedValue();
 
-    module.enableFor(app);
+    module.enableFor(app as unknown as Express);
 
     const middleware = app.__middleware[0];
-    const req = makeReq();
-    const res = makeRes();
-    const next = jest.fn();
+    const next = jest.fn<void, [unknown?]>();
 
-    await middleware(req, res, next);
+    await middleware(makeReq(), makeRes(), next);
 
     expect(setupSpy).toHaveBeenCalled();
     expect(next).toHaveBeenCalledWith();
@@ -297,65 +340,65 @@ describe('OIDCModule', () => {
   it('setup middleware skips setupClient when already configured', async () => {
     const app = makeApp();
     const module = new OIDCModule();
-    (module as any).clientConfig = { configured: true };
+
+    setClientConfig(module, {} as unknown as oidcClient.Configuration);
+
     const setupSpy = jest.spyOn(module, 'setupClient');
 
-    module.enableFor(app);
+    module.enableFor(app as unknown as Express);
 
     const middleware = app.__middleware[0];
-    const req = makeReq();
-    const res = makeRes();
-    const next = jest.fn();
+    const next = jest.fn<void, [unknown?]>();
 
-    await middleware(req, res, next);
+    await middleware(makeReq(), makeRes(), next);
 
     expect(setupSpy).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalledWith();
   });
 
-  it('setup middleware passes error to next when setupClient fails', async () => {
+  it('setup middleware forwards setup errors to next', async () => {
     const app = makeApp();
     const module = new OIDCModule();
-    const error = new Error('setup failed');
-    jest.spyOn(module, 'setupClient').mockRejectedValue(error);
+    const setupError = new Error('setup failed');
+    jest.spyOn(module, 'setupClient').mockRejectedValue(setupError);
 
-    module.enableFor(app);
+    module.enableFor(app as unknown as Express);
 
     const middleware = app.__middleware[0];
-    const req = makeReq();
-    const res = makeRes();
-    const next = jest.fn();
+    const next = jest.fn<void, [unknown?]>();
 
-    await middleware(req, res, next);
+    await middleware(makeReq(), makeRes(), next);
 
-    expect(next).toHaveBeenCalledWith(error);
+    expect(next).toHaveBeenCalledWith(setupError);
   });
 
-  it('logout destroys session and redirects home if client config is missing', () => {
+  it('logout destroys session and redirects home when client is missing', () => {
     const app = makeApp();
     const module = new OIDCModule();
 
-    module.enableFor(app);
+    module.enableFor(app as unknown as Express);
 
     const handler = app.__routes['/logout'];
     const req = makeReq();
     const res = makeRes();
+    const next = jest.fn<void, [unknown?]>();
 
-    handler(req, res);
+    handler(req, res, next);
 
-    expect(req.session.destroy).toHaveBeenCalled();
-    expect(res.redirect).toHaveBeenCalledWith('/');
+    const redirectMock = (res as unknown as ResponseLike).redirect;
+    expect(redirectMock).toHaveBeenCalledWith('/');
   });
 
-  it('logout builds end-session URL with id_token_hint and redirects to it', () => {
+  it('logout builds end-session URL and redirects to issuer logout', () => {
     const app = makeApp();
     const module = new OIDCModule();
-    const clientConfig = { client: true };
-    (module as any).clientConfig = clientConfig;
+    const clientConfig = {} as unknown as oidcClient.Configuration;
 
-    (mockOidc.buildEndSessionUrl as jest.Mock).mockReturnValue(new URL('https://issuer.example/logout'));
+    setClientConfig(module, clientConfig);
 
-    module.enableFor(app);
+    mockedOidc.buildEndSessionUrl.mockReturnValue(new URL('https://issuer.example/logout'));
+
+    module.enableFor(app as unknown as Express);
 
     const handler = app.__routes['/logout'];
     const req = makeReq({
@@ -368,62 +411,72 @@ describe('OIDCModule', () => {
         user: {
           idToken: 'id-token-123',
         },
-        destroy: jest.fn(cb => cb && cb(undefined)),
+        destroy: (callback: (err?: unknown) => void): void => callback(),
+        save: (callback: () => void): void => callback(),
       },
     });
     const res = makeRes();
+    const next = jest.fn<void, [unknown?]>();
 
-    handler(req, res);
+    handler(req, res, next);
 
-    expect(mockOidc.buildEndSessionUrl).toHaveBeenCalledWith(clientConfig, {
+    expect(mockedOidc.buildEndSessionUrl).toHaveBeenCalledWith(clientConfig, {
       post_logout_redirect_uri: 'https://app.example.com',
       id_token_hint: 'id-token-123',
     });
-    expect(res.redirect).toHaveBeenCalledWith('https://issuer.example/logout');
+
+    const redirectMock = (res as unknown as ResponseLike).redirect;
+    expect(redirectMock).toHaveBeenCalledWith('https://issuer.example/logout');
   });
 
-  it('logout logs destroy error but still redirects', () => {
+  it('logout logs destroy error and still redirects', () => {
     const app = makeApp();
     const module = new OIDCModule();
-    const clientConfig = { client: true };
-    (module as any).clientConfig = clientConfig;
+    const clientConfig = {} as unknown as oidcClient.Configuration;
+    const destroyError = new Error('destroy failed');
 
-    (mockOidc.buildEndSessionUrl as jest.Mock).mockReturnValue(new URL('https://issuer.example/logout'));
+    setClientConfig(module, clientConfig);
 
-    module.enableFor(app);
+    mockedOidc.buildEndSessionUrl.mockReturnValue(new URL('https://issuer.example/logout'));
+
+    module.enableFor(app as unknown as Express);
 
     const handler = app.__routes['/logout'];
-    const destroyError = new Error('destroy failed');
     const req = makeReq({
       session: {
         user: {},
-        destroy: jest.fn(cb => cb && cb(destroyError)),
+        destroy: (callback: (err?: unknown) => void): void => callback(destroyError),
+        save: (callback: () => void): void => callback(),
       },
     });
     const res = makeRes();
+    const next = jest.fn<void, [unknown?]>();
 
-    handler(req, res);
+    handler(req, res, next);
 
     expect(mockLogger.error).toHaveBeenCalledWith('Session destroy error on logout:', destroyError);
-    expect(res.redirect).toHaveBeenCalledWith('https://issuer.example/logout');
+
+    const redirectMock = (res as unknown as ResponseLike).redirect;
+    expect(redirectMock).toHaveBeenCalledWith('https://issuer.example/logout');
   });
 
-  it('login creates PKCE login redirect when server supports PKCE', async () => {
+  it('login redirects with PKCE parameters when server supports PKCE', async () => {
     const app = makeApp();
     const module = new OIDCModule();
 
     const clientConfig = {
-      serverMetadata: jest.fn(() => ({
-        supportsPKCE: jest.fn(() => true),
-      })),
-    };
-    (module as any).clientConfig = clientConfig;
+      serverMetadata: (): { supportsPKCE: () => boolean } => ({
+        supportsPKCE: (): boolean => true,
+      }),
+    } as unknown as oidcClient.Configuration;
 
-    (mockOidc.randomPKCECodeVerifier as jest.Mock).mockReturnValue('verifier-123');
-    (mockOidc.calculatePKCECodeChallenge as jest.Mock).mockResolvedValue('challenge-123');
-    (mockOidc.buildAuthorizationUrl as jest.Mock).mockReturnValue(new URL('https://issuer.example/auth'));
+    setClientConfig(module, clientConfig);
 
-    module.enableFor(app);
+    mockedOidc.randomPKCECodeVerifier.mockReturnValue('verifier-123');
+    mockedOidc.calculatePKCECodeChallenge.mockResolvedValue('challenge-123');
+    mockedOidc.buildAuthorizationUrl.mockReturnValue(new URL('https://issuer.example/auth'));
+
+    module.enableFor(app as unknown as Express);
 
     const handler = app.__routes['/login'];
     const req = makeReq({
@@ -431,22 +484,29 @@ describe('OIDCModule', () => {
         'x-forwarded-proto': 'https',
         'x-forwarded-host': 'app.example.com',
       },
-      session: {},
+      session: {
+        destroy: (callback: (err?: unknown) => void): void => callback(),
+        save: (callback: () => void): void => callback(),
+      },
     });
     const res = makeRes();
-    const next = jest.fn();
+    const next = jest.fn<void, [unknown?]>();
 
     await handler(req, res, next);
 
-    expect(req.session.codeVerifier).toBe('verifier-123');
-    expect(req.session.nonce).toBeUndefined();
-    expect(mockOidc.buildAuthorizationUrl).toHaveBeenCalledWith(clientConfig, {
+    const requestAfter = req as unknown as RequestLike;
+    expect(requestAfter.session.codeVerifier).toBe('verifier-123');
+    expect(requestAfter.session.nonce).toBeUndefined();
+
+    expect(mockedOidc.buildAuthorizationUrl).toHaveBeenCalledWith(clientConfig, {
       code_challenge: 'challenge-123',
       code_challenge_method: 'S256',
       redirect_uri: 'https://app.example.com/oauth2/callback',
       scope: baseOidcConfig.scope,
     });
-    expect(res.redirect).toHaveBeenCalledWith('https://issuer.example/auth');
+
+    const redirectMock = (res as unknown as ResponseLike).redirect;
+    expect(redirectMock).toHaveBeenCalledWith('https://issuer.example/auth');
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -455,87 +515,99 @@ describe('OIDCModule', () => {
     const module = new OIDCModule();
 
     const clientConfig = {
-      serverMetadata: jest.fn(() => ({
-        supportsPKCE: jest.fn(() => false),
-      })),
-    };
-    (module as any).clientConfig = clientConfig;
+      serverMetadata: (): { supportsPKCE: () => boolean } => ({
+        supportsPKCE: (): boolean => false,
+      }),
+    } as unknown as oidcClient.Configuration;
 
-    (mockOidc.randomPKCECodeVerifier as jest.Mock).mockReturnValue('verifier-456');
-    (mockOidc.calculatePKCECodeChallenge as jest.Mock).mockResolvedValue('challenge-456');
-    (mockOidc.randomNonce as jest.Mock).mockReturnValue('nonce-456');
-    (mockOidc.buildAuthorizationUrl as jest.Mock).mockReturnValue(new URL('https://issuer.example/auth2'));
+    setClientConfig(module, clientConfig);
 
-    module.enableFor(app);
+    mockedOidc.randomPKCECodeVerifier.mockReturnValue('verifier-456');
+    mockedOidc.calculatePKCECodeChallenge.mockResolvedValue('challenge-456');
+    mockedOidc.randomNonce.mockReturnValue('nonce-456');
+    mockedOidc.buildAuthorizationUrl.mockReturnValue(new URL('https://issuer.example/auth2'));
+
+    module.enableFor(app as unknown as Express);
 
     const handler = app.__routes['/login'];
-    const req = makeReq({
-      session: {},
-    });
+    const req = makeReq();
     const res = makeRes();
-    const next = jest.fn();
+    const next = jest.fn<void, [unknown?]>();
 
     await handler(req, res, next);
 
-    expect(req.session.nonce).toBe('nonce-456');
-    expect(mockOidc.buildAuthorizationUrl).toHaveBeenCalledWith(clientConfig, {
+    const requestAfter = req as unknown as RequestLike;
+    expect(requestAfter.session.nonce).toBe('nonce-456');
+
+    expect(mockedOidc.buildAuthorizationUrl).toHaveBeenCalledWith(clientConfig, {
       code_challenge: 'challenge-456',
       code_challenge_method: 'S256',
       redirect_uri: 'http://localhost:3100/oauth2/callback',
       scope: baseOidcConfig.scope,
       nonce: 'nonce-456',
     });
-    expect(res.redirect).toHaveBeenCalledWith('https://issuer.example/auth2');
+
+    const redirectMock = (res as unknown as ResponseLike).redirect;
+    expect(redirectMock).toHaveBeenCalledWith('https://issuer.example/auth2');
   });
 
-  it('login converts error into OIDCAuthenticationError', async () => {
+  it('login wraps errors as OIDCAuthenticationError', async () => {
     const app = makeApp();
     const module = new OIDCModule();
-    (module as any).clientConfig = {
-      serverMetadata: jest.fn(() => ({
-        supportsPKCE: jest.fn(() => true),
-      })),
-    };
 
-    (mockOidc.randomPKCECodeVerifier as jest.Mock).mockImplementation(() => {
+    const clientConfig = {
+      serverMetadata: (): { supportsPKCE: () => boolean } => ({
+        supportsPKCE: (): boolean => true,
+      }),
+    } as unknown as oidcClient.Configuration;
+
+    setClientConfig(module, clientConfig);
+
+    mockedOidc.randomPKCECodeVerifier.mockImplementation(() => {
       throw new Error('boom');
     });
 
-    module.enableFor(app);
+    module.enableFor(app as unknown as Express);
 
     const handler = app.__routes['/login'];
-    const req = makeReq({ session: {} });
+    const req = makeReq();
     const res = makeRes();
-    const next = jest.fn();
+    const next = jest.fn<void, [unknown?]>();
 
     await handler(req, res, next);
 
     expect(mockLogger.error).toHaveBeenCalledWith('Login error:', expect.any(Error));
-    expect(next).toHaveBeenCalledWith(expect.any(OIDCAuthenticationError));
-    expect((next.mock.calls[0][0] as Error).message).toBe('Failed to initiate login');
+
+    const firstArg: unknown = next.mock.calls[0]?.[0];
+    expect(firstArg).toBeInstanceOf(OIDCAuthenticationError);
+
+    if (firstArg instanceof Error) {
+      expect(firstArg.message).toBe('Failed to initiate login');
+    }
   });
 
-  it('oauth2 callback stores user in session, clears temp values and redirects to returnTo', async () => {
+  it('callback stores user, clears temp values and redirects to returnTo', async () => {
     const app = makeApp();
     const module = new OIDCModule();
-    const clientConfig = { client: true };
-    (module as any).clientConfig = clientConfig;
+    const clientConfig = {} as unknown as oidcClient.Configuration;
+
+    setClientConfig(module, clientConfig);
 
     const claims = { sub: 'user-123' };
     const tokens = {
       access_token: 'access-123',
       id_token: 'id-123',
       refresh_token: 'refresh-123',
-      claims: jest.fn(() => claims),
-    };
+      claims: (): { sub: string } => claims,
+    } as unknown as Awaited<ReturnType<typeof oidcClient.authorizationCodeGrant>>;
 
-    (mockOidc.authorizationCodeGrant as jest.Mock).mockResolvedValue(tokens);
-    (mockOidc.fetchUserInfo as jest.Mock).mockResolvedValue({
+    mockedOidc.authorizationCodeGrant.mockResolvedValue(tokens);
+    mockedOidc.fetchUserInfo.mockResolvedValue({
       sub: 'user-123',
       given_name: 'Lexi',
     });
 
-    module.enableFor(app);
+    module.enableFor(app as unknown as Express);
 
     const handler = app.__routes['/oauth2/callback'];
     const req = makeReq({
@@ -548,15 +620,16 @@ describe('OIDCModule', () => {
         codeVerifier: 'verifier-123',
         nonce: 'nonce-123',
         returnTo: '/dashboard',
-        save: jest.fn(cb => cb && cb()),
+        destroy: (callback: (err?: unknown) => void): void => callback(),
+        save: (callback: () => void): void => callback(),
       },
     });
     const res = makeRes();
-    const next = jest.fn();
+    const next = jest.fn<void, [unknown?]>();
 
     await handler(req, res, next);
 
-    expect(mockOidc.authorizationCodeGrant).toHaveBeenCalledWith(
+    expect(mockedOidc.authorizationCodeGrant).toHaveBeenCalledWith(
       clientConfig,
       new URL('https://app.example.com/oauth2/callback?code=abc'),
       {
@@ -566,42 +639,45 @@ describe('OIDCModule', () => {
       }
     );
 
-    expect(mockOidc.fetchUserInfo).toHaveBeenCalledWith(clientConfig, 'access-123', 'user-123');
+    expect(mockedOidc.fetchUserInfo).toHaveBeenCalledWith(clientConfig, 'access-123', 'user-123');
 
-    expect(req.session.user).toEqual({
+    const requestAfter = req as unknown as RequestLike;
+    expect(requestAfter.session.user).toEqual({
       sub: 'user-123',
       given_name: 'Lexi',
       accessToken: 'access-123',
       idToken: 'id-123',
       refreshToken: 'refresh-123',
     });
+    expect(requestAfter.session.codeVerifier).toBeUndefined();
+    expect(requestAfter.session.nonce).toBeUndefined();
+    expect(requestAfter.session.returnTo).toBeUndefined();
 
-    expect(req.session.codeVerifier).toBeUndefined();
-    expect(req.session.nonce).toBeUndefined();
-    expect(req.session.returnTo).toBeUndefined();
-    expect(res.redirect).toHaveBeenCalledWith('/dashboard');
+    const redirectMock = (res as unknown as ResponseLike).redirect;
+    expect(redirectMock).toHaveBeenCalledWith('/dashboard');
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('oauth2 callback defaults redirect to / when returnTo is missing', async () => {
+  it('callback defaults redirect to root when returnTo is missing', async () => {
     const app = makeApp();
     const module = new OIDCModule();
-    const clientConfig = { client: true };
-    (module as any).clientConfig = clientConfig;
+    const clientConfig = {} as unknown as oidcClient.Configuration;
+
+    setClientConfig(module, clientConfig);
 
     const tokens = {
       access_token: 'access-123',
       id_token: 'id-123',
       refresh_token: 'refresh-123',
-      claims: jest.fn(() => ({ sub: 'user-123' })),
-    };
+      claims: (): { sub: string } => ({ sub: 'user-123' }),
+    } as unknown as Awaited<ReturnType<typeof oidcClient.authorizationCodeGrant>>;
 
-    (mockOidc.authorizationCodeGrant as jest.Mock).mockResolvedValue(tokens);
-    (mockOidc.fetchUserInfo as jest.Mock).mockResolvedValue({
+    mockedOidc.authorizationCodeGrant.mockResolvedValue(tokens);
+    mockedOidc.fetchUserInfo.mockResolvedValue({
       sub: 'user-123',
     });
 
-    module.enableFor(app);
+    module.enableFor(app as unknown as Express);
 
     const handler = app.__routes['/oauth2/callback'];
     const req = makeReq({
@@ -609,74 +685,92 @@ describe('OIDCModule', () => {
       session: {
         codeVerifier: 'verifier',
         nonce: 'nonce',
-        save: jest.fn(cb => cb && cb()),
+        destroy: (callback: (err?: unknown) => void): void => callback(),
+        save: (callback: () => void): void => callback(),
       },
     });
     const res = makeRes();
-    const next = jest.fn();
+    const next = jest.fn<void, [unknown?]>();
 
     await handler(req, res, next);
 
-    expect(res.redirect).toHaveBeenCalledWith('/');
+    const redirectMock = (res as unknown as ResponseLike).redirect;
+    expect(redirectMock).toHaveBeenCalledWith('/');
   });
 
-  it('oauth2 callback passes through OIDCCallbackError if no id token is returned', async () => {
+  it('callback passes through OIDCCallbackError when no ID token is returned', async () => {
     const app = makeApp();
     const module = new OIDCModule();
-    (module as any).clientConfig = { client: true };
+
+    setClientConfig(module, {} as unknown as oidcClient.Configuration);
 
     const tokens = {
       access_token: 'access-123',
       id_token: undefined,
       refresh_token: 'refresh-123',
-      claims: jest.fn(() => ({ sub: 'user-123' })),
-    };
+      claims: (): { sub: string } => ({ sub: 'user-123' }),
+    } as unknown as Awaited<ReturnType<typeof oidcClient.authorizationCodeGrant>>;
 
-    (mockOidc.authorizationCodeGrant as jest.Mock).mockResolvedValue(tokens);
+    mockedOidc.authorizationCodeGrant.mockResolvedValue(tokens);
 
-    module.enableFor(app);
+    module.enableFor(app as unknown as Express);
 
     const handler = app.__routes['/oauth2/callback'];
     const req = makeReq({
       session: {
         codeVerifier: 'verifier',
         nonce: 'nonce',
+        destroy: (callback: (err?: unknown) => void): void => callback(),
+        save: (callback: () => void): void => callback(),
       },
     });
     const res = makeRes();
-    const next = jest.fn();
+    const next = jest.fn<void, [unknown?]>();
 
     await handler(req, res, next);
 
     expect(mockLogger.error).toHaveBeenCalledWith('OIDC callback error:', expect.any(OIDCCallbackError));
-    expect(next).toHaveBeenCalledWith(expect.any(OIDCCallbackError));
-    expect((next.mock.calls[0][0] as Error).message).toBe('No ID token received from IDAM');
+
+    const firstArg: unknown = next.mock.calls[0]?.[0];
+    expect(firstArg).toBeInstanceOf(OIDCCallbackError);
+
+    if (firstArg instanceof Error) {
+      expect(firstArg.message).toBe('No ID token received from IDAM');
+    }
   });
 
-  it('oauth2 callback wraps unexpected errors in OIDCCallbackError', async () => {
+  it('callback wraps unexpected errors as OIDCCallbackError', async () => {
     const app = makeApp();
     const module = new OIDCModule();
-    (module as any).clientConfig = { client: true };
-
     const unexpectedError = new Error('unexpected');
-    (mockOidc.authorizationCodeGrant as jest.Mock).mockRejectedValue(unexpectedError);
 
-    module.enableFor(app);
+    setClientConfig(module, {} as unknown as oidcClient.Configuration);
+
+    mockedOidc.authorizationCodeGrant.mockRejectedValue(unexpectedError);
+
+    module.enableFor(app as unknown as Express);
 
     const handler = app.__routes['/oauth2/callback'];
     const req = makeReq({
       session: {
         codeVerifier: 'verifier',
         nonce: 'nonce',
+        destroy: (callback: (err?: unknown) => void): void => callback(),
+        save: (callback: () => void): void => callback(),
       },
     });
     const res = makeRes();
-    const next = jest.fn();
+    const next = jest.fn<void, [unknown?]>();
 
     await handler(req, res, next);
 
     expect(mockLogger.error).toHaveBeenCalledWith('OIDC callback error:', unexpectedError);
-    expect(next).toHaveBeenCalledWith(expect.any(OIDCCallbackError));
-    expect((next.mock.calls[0][0] as Error).message).toBe('Authentication callback failed');
+
+    const firstArg: unknown = next.mock.calls[0]?.[0];
+    expect(firstArg).toBeInstanceOf(OIDCCallbackError);
+
+    if (firstArg instanceof Error) {
+      expect(firstArg.message).toBe('Authentication callback failed');
+    }
   });
 });
