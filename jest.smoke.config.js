@@ -1,14 +1,14 @@
 module.exports = {
   roots: ['<rootDir>/src/test/smoke'],
   testRegex: '(/src/test/.*|\\.test)\\.(ts|js)$',
-  testEnvironment: 'node',
   testRunner: 'jest-circus/runner',
+  testEnvironment: 'node',
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
-  moduleFileExtensions: ['ts', 'js', 'json'],
   reporters: [
     'default',
+    'jest-allure2-reporter',
     [
       'jest-html-reporter',
       {
