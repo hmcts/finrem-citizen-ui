@@ -12,9 +12,10 @@ const bddDir = defineBddConfig({
 export default defineConfig({
   testDir: './',
   testMatch: [
-    `${bddDir}/**/*.spec.js`, // BDD generated files
-    'src/test/a11y/*.ts', // Accessibility tests
+    bddDir + '/**/*.spec.js', // Include BDD tests
+    'src/test/a11y/*.ts', // Include accessibility tests
   ],
+
   reporter: [['html'], ['json', { outputFile: 'test-results.json' }], ['allure-playwright']],
   timeout: 30 * 1000,
   expect: {
