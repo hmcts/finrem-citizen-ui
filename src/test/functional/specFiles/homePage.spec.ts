@@ -1,14 +1,16 @@
-import { expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
-import { test } from '../fixtures/fixtures';
+import { HomePage } from '../pom/homePage.page';
 
 test.describe('HomePage', () => {
-  test('User sees correct content on the home page @PR', async ({ homePage }) => {
+  test('User sees correct content on the home page @PR', async ({ page }) => {
+    const homePage = new HomePage(page);
     await homePage.goto();
     await homePage.verifyCorrectContent();
   });
 
-  test('User can click license link in footer and it opens in the same tab', async ({ page, homePage }) => {
+  test('User can click license link in footer and it opens in the same tab', async ({ page }) => {
+    const homePage = new HomePage(page);
     await homePage.goto();
     await homePage.clickLicenceLink();
 

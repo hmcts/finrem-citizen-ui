@@ -5,7 +5,7 @@ const testUrl = process.env.TEST_URL || 'http://localhost:3100';
 
 export default defineConfig({
   testDir: './src/test',
-  testMatch: ['a11y/*.test.ts', 'functional/*.spec.ts'],
+  testMatch: ['a11y/*.test.ts', 'functional/**/*.spec.ts'],
 
   reporter: [['html'], ['json', { outputFile: 'test-results.json' }], ['allure-playwright']],
   timeout: 30 * 1000,
