@@ -5,7 +5,14 @@ module.exports = {
   testRunner: 'jest-circus/runner',
   transform: {
     '^.+\\.ts$': 'ts-jest',
+    '^.+\\.m?js$': [
+      'babel-jest',
+      {
+        presets: [['@babel/preset-env', { targets: { node: 'current' }, modules: 'commonjs' }]],
+      },
+    ],
   },
+  transformIgnorePatterns: ['/node_modules/(?!(openid-client|oauth4webapi)/)'],
   moduleFileExtensions: ['ts', 'js', 'json'],
   reporters: [
     'default',
