@@ -32,8 +32,8 @@ Located in `./bin/init.sh`. Simply run and follow the explanation how to execute
 
 Running the application requires the following tools to be installed in your environment:
 
-- [Node.js](https://nodejs.org/) v12.0.0 or later
-- [yarn](https://yarnpkg.com/)
+- [Node.js](https://nodejs.org/) v22.22.0 or later (Updated for Node 22 migration)
+- [yarn](https://yarnpkg.com/) v4.x
 - [Docker](https://www.docker.com)
 
 ### Running the application
@@ -91,6 +91,24 @@ Running the linting with auto fix:
 yarn lint --fix
 ```
 
+### Functional Testing (BDD)
+
+This project uses [Playwright-BDD](https://github.com/vitalets/playwright-bdd), which allows writing tests in Gherkin (Cucumber) format.
+
+#### Folder Structure
+
+- `src/test/functional/features/*.feature`: Gherkin feature files.
+- `src/test/steps/*.steps.ts`: Step definitions mapping Gherkin to Playwright code.
+- `.features-gen/`: **(Do not edit)** Contains the auto-generated test files created by `bddgen`.
+
+#### How it works
+
+1. Edit or create a `.feature` file.
+2. Run `yarn bddgen` to sync the features with the test runner.
+3. Run `yarn test:functional` to execute the tests.
+
+> **Note:** If you run the test scripts via `yarn`, `bddgen` is automatically executed as a pre-step. If you use the Playwright VS Code extension, you may need to run `yarn bddgen` manually if your changes aren't appearing.
+
 ### Running the tests
 
 This template app uses [Jest](https://jestjs.io//) as the test engine. You can run unit tests by executing
@@ -100,13 +118,19 @@ the following command:
 yarn test
 ```
 
-Here's how to run functional tests (the template contains just one sample test):
+Here's how to run functional tests (tests with @PR tag applied to them)
 
 ```bash
-yarn test:routes
+yarn test:functional
 ```
 
-Running accessibility tests:
+Here's how to run full unctional tests (entire functional suite)
+
+```bash
+yarn test:full-functional
+```
+
+Heres how to run accessibility tests, Accessibility tests use Playwright and Axe-core. They are located in 'src/test/a11y/a11y.test.ts'
 
 ```bash
 yarn test:a11y
