@@ -6,6 +6,8 @@ module.exports = {
   transform: {
     '^.+\\.ts?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.test.json' }],
   },
+  transformIgnorePatterns: ['/node_modules/(?!(openid-client|oauth4webapi)/)'],
+
   collectCoverageFrom: [
     'src/main/**/*.ts',
     '!src/main/app.ts',
