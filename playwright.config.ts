@@ -1,6 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 import { defineBddConfig } from 'playwright-bdd';
 
+// 1. Determine the target URL
+const testUrl = process.env.TEST_URL || 'http://localhost:3100';
+
 const bddDir = defineBddConfig({
   paths: ['src/test/functional/features/*.feature'],
   require: ['src/test/steps/*.steps.ts', 'src/test/fixtures/fixtures.ts'],
@@ -17,13 +20,25 @@ export default defineConfig({
   expect: {
     timeout: 5000,
   },
+
+  // 2. Use the dynamic URL
   use: {
-    baseURL: process.env.TEST_URL || 'http://localhost:3100',
+    baseURL: testUrl,
     headless: true,
     ignoreHTTPSErrors: true,
   },
 
-  /* Configure projects for major browsers */
+  // 3. Conditional WebServer
+  // Only start the local app if the URL contains 'localhost'
+  webServer: testUrl.includes('localhost')
+    ? {
+        command: 'NODE_OPTIONS="--openssl-legacy-provider" yarn start',
+        url: testUrl,
+        reuseExistingServer: !process.env.CI,
+        timeout: 120 * 1000,
+      }
+    : undefined,
+
   projects: [
     {
       name: 'chromium',
