@@ -91,7 +91,7 @@ function ensurePageCallWillSucceed(url: string): Promise<void> {
 function runPally(url: string): Promise<Pa11yResult> {
   const fullUrl = `http://localhost:${port}${url}`;
   return pa11y(fullUrl, {
-    hideElements: '.govuk-footer__licence-logo, .govuk-header__logotype-crown',
+    hideElements: '.govuk-footer__licence-logo, .govuk-header__logotype-crown, .govuk-footer__crown',
     timeout: 120000,
     chromeLaunchConfig: { args: ['--no-sandbox', '--disable-setuid-sandbox'] },
   });
