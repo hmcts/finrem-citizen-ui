@@ -91,27 +91,25 @@ Running the linting with auto fix:
 yarn lint --fix
 ```
 
-### Functional Testing (BDD)
+### Functional Testing
 
-This project uses [Playwright-BDD](https://github.com/vitalets/playwright-bdd), which allows writing tests in Gherkin (Cucumber) format.
+This project uses native [Playwright](https://playwright.dev/) for functional testing.
 
 #### Folder Structure
 
-- `src/test/functional/features/*.feature`: Gherkin feature files.
-- `src/test/steps/*.steps.ts`: Step definitions mapping Gherkin to Playwright code.
-- `.features-gen/`: **(Do not edit)** Contains the auto-generated test files created by `bddgen`.
+- `src/test/functional/*.spec.ts`: Playwright test files.
+- `src/test/functional/pom/*.page.ts`: Page Object Models used by the tests.
+- `src/test/fixtures/fixtures.ts`: Custom test fixtures.
 
 #### How it works
 
-1. Edit or create a `.feature` file.
-2. Run `yarn bddgen` to sync the features with the test runner.
-3. Run `yarn test:functional` to execute the tests.
-
-> **Note:** If you run the test scripts via `yarn`, `bddgen` is automatically executed as a pre-step. If you use the Playwright VS Code extension, you may need to run `yarn bddgen` manually if your changes aren't appearing.
+1.  Create or edit a `.spec.ts` file in `src/test/functional`.
+2.  Use the Page Object Model pattern to interact with pages.
+3.  Run `yarn test:functional` or `yarn test:full-functional` to execute the tests.
 
 ### Running the tests
 
-This template app uses [Jest](https://jestjs.io//) as the test engine. You can run unit tests by executing
+This template app uses [Jest](https://jestjs.io//) as the test engine for unit tests. You can run unit tests by executing
 the following command:
 
 ```bash
@@ -124,19 +122,19 @@ Here's how to run functional tests (tests with @PR tag applied to them)
 yarn test:functional
 ```
 
-Here's how to run full unctional tests (entire functional suite)
+Here's how to run the full functional test suite:
 
 ```bash
 yarn test:full-functional
 ```
 
-Heres how to run accessibility tests, Accessibility tests use Playwright and Axe-core. They are located in 'src/test/a11y/a11y.test.ts'
+Here's how to run accessibility tests. Accessibility tests use Playwright and Axe-core. They are located in `src/test/a11y/a11y.test.ts`.
 
 ```bash
 yarn test:a11y
 ```
 
-Make sure all the paths in your application are covered by accessibility tests (see [a11y.ts](src/test/a11y/a11y.ts)).
+Make sure all the paths in your application are covered by accessibility tests (see [a11y.test.ts](src/test/a11y/a11y.test.ts)).
 
 ### Security
 

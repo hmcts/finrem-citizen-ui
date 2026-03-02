@@ -1,4 +1,4 @@
-import { test as base } from 'playwright-bdd';
+import { test as base } from '@playwright/test';
 
 import { HomePage } from '../functional/pom/homePage.page';
 

@@ -1,0 +1,24 @@
+import { expect } from '@playwright/test';
+
+import { test } from '../fixtures/fixtures';
+
+test.describe('HomePage', () => {
+  test('User sees correct content on the home page @PR', async ({ homePage }) => {
+    await homePage.goto();
+    await homePage.verifyCorrectContent();
+  });
+
+  test('User can click license link in footer and it opens in the same tab', async ({ page, homePage }) => {
+    await homePage.goto();
+    await homePage.clickLicenceLink();
+
+    const expectedTitle = 'Open Government Licence for public sector information';
+    const urlSnippet = 'nationalarchives.gov.uk/doc/open-government-licence/version/3/';
+
+    await page.waitForURL(new RegExp(urlSnippet));
+    await expect(page).toHaveURL(new RegExp(urlSnippet));
+
+    const heading = page.getByRole('heading', { name: expectedTitle, exact: false, level: 1 });
+    await expect(heading).toBeAttached();
+  });
+});

@@ -30,20 +30,10 @@ withPipeline(type, product, component) {
   afterSuccess('build') {
     yarnBuilder.yarn('playwright install chromium')
     yarnBuilder.yarn('build')
-    yarnBuilder.yarn('bddgen') 
   }
 
   before('functionalTests') {
-    // Ensure BDD files are ready before tests start
-    yarnBuilder.yarn('bddgen')
-    
-    if (env.JENKINS_BRANCH == "preview") {
-      // PR Stage: Runs 'yarn test:functional' (filtered by @PR)
-      env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
-    } else {
-      // Master Stage: Runs 'yarn test:full-functional' (all tests)
-      env.FUNCTIONAL_TESTS_COMMAND = "test:full-functional"
-    }
+    env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
   }
 
   // Always run accessibility tests after the main functional suite
