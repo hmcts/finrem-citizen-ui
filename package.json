@@ -21,7 +21,7 @@
     "test:functional": "yarn bddgen && yarn playwright test --project chromium --grep @PR; EXIT_CODE=$?; yarn allure generate allure-results --clean -o functional-output/functional/reports/allure; exit $EXIT_CODE",
     "test:full-functional": "yarn bddgen && yarn playwright test --project chromium; EXIT_CODE=$?; yarn allure generate allure-results --clean -o functional-output/functional/reports/allure; exit $EXIT_CODE",
     "test:fullfunctional:allBrowsers:ui": "yarn bddgen && yarn playwright test --ui",
-    "cichecks": "yarn install && yarn build && yarn rebuild puppeteer && yarn lint && yarn test && yarn test:routes && yarn test:a11y",
+    "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes && npx playwright install chromium --with-deps && yarn bddgen && yarn test:a11y",
     "prepare": "husky",
     "test:fullfunctional": "./src/test/functionalTests/run-full-functional-tests.sh"
   },
