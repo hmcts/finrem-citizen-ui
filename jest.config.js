@@ -13,7 +13,7 @@ module.exports = {
     ],
   },
   transformIgnorePatterns: ['/node_modules/(?!(openid-client|oauth4webapi|jose)/)'],
-
+  setupFilesAfterEnv: ['<rootDir>/src/test/jest.setup.ts'],
   collectCoverageFrom: [
     'src/main/**/*.ts',
     '!src/main/app.ts',
