@@ -11,15 +11,13 @@ const assets = path.resolve(root, 'assets');
 const images = path.resolve(assets, 'images');
 const fonts = path.resolve(assets, 'fonts');
 
-const copyGovukTemplateAssets = new CopyWebpackPlugin({
-  patterns: [
-    { from: images, to: 'assets/images' },
-    { from: fonts, to: 'assets/fonts' },
-    { from: `${root}/template.njk`, to: '../views/govuk' },
-    { from: `${root}/components`, to: '../views/govuk/components' },
-    { from: `${root}/macros`, to: '../views/govuk/macros' },
-  ],
-});
+const copyGovukTemplateAssets = new CopyWebpackPlugin([
+  { from: images, to: 'assets/images' },
+  { from: fonts, to: 'assets/fonts' },
+  { from: `${root}/template.njk`, to: '../views/govuk' },
+  { from: `${root}/components`, to: '../views/govuk/components' },
+  { from: `${root}/macros`, to: '../views/govuk/macros' },
+]);
 
 module.exports = {
   paths: { template: root, components, sass, javascript, assets },
