@@ -20,8 +20,24 @@ beforeAll(() => {
   }
 });
 
-afterAll(() => {
-  return server.close();
+afterAll(async () => {
+  if (!server?.listening) {
+    return;
+  }
+
+  if ('closeAllConnections' in server && typeof server.closeAllConnections === 'function') {
+    server.closeAllConnections();
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    server.close(err => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
 });
 
 class Pa11yResult {
@@ -53,8 +69,9 @@ class PallyIssue {
 }
 
 function ensurePageCallWillSucceed(url: string): Promise<void> {
-  return supertest(app)
+  return supertest(server)
     .get(url)
+    .set('Connection', 'close')
     .then((res: supertest.Response) => {
       if (res.status >= 400) {
         throw new Error(`Call to ${url} failed with status: ${res.status}`);
