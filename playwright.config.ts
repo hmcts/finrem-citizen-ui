@@ -1,13 +1,17 @@
 import { defineConfig, devices } from '@playwright/test';
 import { defineBddConfig } from 'playwright-bdd';
 
-const testDir = defineBddConfig({
+const bddDir = defineBddConfig({
   paths: ['src/test/functional/features/*.feature'],
   require: ['src/test/steps/*.steps.ts', 'src/test/fixtures/fixtures.ts'],
 });
 
 export default defineConfig({
-  testDir,
+  testDir: './',
+  testMatch: [
+    `${bddDir}/**/*.spec.js`, // BDD generated files
+    'src/test/a11y/*.ts', // Accessibility tests
+  ],
   reporter: [['html'], ['json', { outputFile: 'test-results.json' }], ['allure-playwright']],
   timeout: 30 * 1000,
   expect: {

@@ -38,3 +38,7 @@ version
 .yarn/install-state.gz
 .yarn/*
 .yarn
+.features-gen/src/test/functional/features/homePage.feature.spec.js
+playwright-report/index.html
+test-results.json
+test-results/.last-run.json

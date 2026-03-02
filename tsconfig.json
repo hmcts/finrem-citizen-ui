@@ -3,6 +3,7 @@
     "outDir": "./src/",
     "module": "commonjs",
     "esModuleInterop": true,
+    "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2020",
     "strict": true,
