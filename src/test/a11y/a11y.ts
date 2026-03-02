@@ -1,16 +1,25 @@
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 
+import type { Express } from 'express';
 import supertest from 'supertest';
-
-import { app } from '../../main/app';
 
 const pa11y = require('pa11y');
 
+jest.mock('../../main/modules/oidc', () => ({
+  OIDCModule: class {
+    enableFor(): void {
+      // Prevent outbound OIDC discovery calls in test runtime.
+    }
+  },
+}));
+
+let app: Express;
 let server: Server;
 let port: number;
 
 beforeAll(() => {
+  app = require('../../main/app').app as Express;
   server = app.listen(0);
   const address = server.address();
   if (address && typeof address !== 'string') {
