@@ -5,6 +5,12 @@ module.exports = {
   testEnvironment: 'node',
   transform: {
     '^.+\\.ts?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.test.json' }],
+    '^.+\\.m?js$': [
+      'babel-jest',
+      {
+        presets: [['@babel/preset-env', { targets: { node: 'current' }, modules: 'commonjs' }]],
+      },
+    ],
   },
   transformIgnorePatterns: ['/node_modules/(?!(openid-client|oauth4webapi)/)'],
 
