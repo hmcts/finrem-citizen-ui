@@ -12,16 +12,36 @@ export class OIDCModule {
   private readonly logger = Logger.getLogger('oidc');
 
   constructor() {
-    this.setupClient().catch((err: unknown) => {
-      this.logger.error('Failed to setup OIDC client on startup:', err);
-    });
+    this.logger.info('OIDCModule instance created');
   }
 
   public async setupClient(): Promise<void> {
-    this.logger.info('Setting up OIDC client');
-    const issuer = new URL(this.oidcConfig.issuer);
-    this.clientConfig = await oidcClient.discovery(issuer, this.oidcConfig.clientId);
-    this.logger.info('OIDC client configured successfully');
+    // Prevent redundant discovery calls if already configured
+    if (this.clientConfig) {
+      return;
+    }
+
+    let clientSecret = process.env.IDAM_SECRET;
+    if (!clientSecret && config.has('secrets.finrem.finrem-citizen-oauth2-client-secret')) {
+      clientSecret = config.get<string>('secrets.finrem.finrem-citizen-oauth2-client-secret');
+    }
+
+    if (!clientSecret || clientSecret === 'PLACEHOLDER_IDAM_SECRET') {
+      this.logger.error('CRITICAL: IDAM Client Secret is missing or still set to placeholder!');
+    }
+
+    try {
+      this.logger.info('Setting up OIDC client via discovery');
+      const issuer = new URL(this.oidcConfig.issuer);
+
+      // Await discovery - this is the async operation that was causing the issue
+      this.clientConfig = await oidcClient.discovery(issuer, this.oidcConfig.clientId, clientSecret);
+
+      this.logger.info('OIDC client configured successfully');
+    } catch (err: unknown) {
+      this.logger.error('Failed to setup OIDC client:', err);
+      throw err; // Propagate error so the app knows initialization failed
+    }
   }
 
   public buildRedirectUri(req: Request): string {
@@ -47,6 +67,17 @@ export class OIDCModule {
   public enableFor(app: Express): void {
     app.set('trust proxy', true);
 
+    app.use(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      try {
+        if (!this.clientConfig) {
+          await this.setupClient();
+        }
+        next();
+      } catch (err: unknown) {
+        next(err);
+      }
+    });
+
     app.get('/logout', (req: Request, res: Response): void => {
       if (!this.clientConfig) {
         req.session.destroy(() => res.redirect('/'));
@@ -64,18 +95,6 @@ export class OIDCModule {
         }
         res.redirect(logoutUrl.href);
       });
-    });
-
-    app.use(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-      if (!this.clientConfig) {
-        try {
-          await this.setupClient();
-        } catch (err: unknown) {
-          next(err);
-          return;
-        }
-      }
-      next();
     });
 
     app.get('/login', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
