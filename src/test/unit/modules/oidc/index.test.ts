@@ -1,9 +1,9 @@
-import type { Express, NextFunction, Request, Response } from 'express';
 import config from 'config';
+import type { Express, NextFunction, Request, Response } from 'express';
 import * as oidcClient from 'openid-client';
 
-import { OIDCModule } from '../../../../main/modules/oidc/index';
 import { OIDCAuthenticationError, OIDCCallbackError } from '../../../../main/modules/oidc/errors';
+import { OIDCModule } from '../../../../main/modules/oidc/index';
 
 const mockLogger = {
   info: jest.fn<void, [string]>(),
