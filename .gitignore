@@ -43,3 +43,6 @@ playwright-report/index.html
 test-results.json
 test-results/.last-run.json
 allure-results/*.json
+allure-results/junit-playwright.xml
+allure-results/junit-smoke.xml
+junit.xml

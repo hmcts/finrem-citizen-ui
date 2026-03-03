@@ -9,9 +9,8 @@ export default defineConfig({
 
   reporter: [
     ['html'],
-    ['json', { outputFile: 'test-results.json' }],
-    ['allure-playwright'],
-    ['junit', { outputFile: 'junit-results.xml' }],
+    ['allure-playwright', { resultsDir: 'allure-results' }],
+    ['junit', { outputFile: 'allure-results/junit-playwright.xml' }],
   ],
   timeout: 30 * 1000,
   expect: {

@@ -9,7 +9,7 @@ module.exports = {
   reporters: [
     'default',
     'jest-allure2-reporter',
-    ['jest-junit', { outputDirectory: '.', outputName: 'junit-smoke.xml' }],
+    'jest-junit',
     [
       'jest-html-reporter',
       {
