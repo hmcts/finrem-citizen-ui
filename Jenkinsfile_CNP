@@ -45,7 +45,7 @@ withPipeline(type, product, component) {
   }
 
 afterAlways('smokeTest') {
-    junit testResults: 'smoke-output/smoke-junit.xml', allowEmptyResults: true
+    junit testResults: 'smoke-output/smoke--test-results.xml', allowEmptyResults: true
     archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
     
     allure([
@@ -58,7 +58,7 @@ afterAlways('smokeTest') {
   }
 
   afterAlways('functionalTests') {
-     junit testResults: 'functional-output/junit.xml', allowEmptyResults: true
+     junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
      
      allure([
         includeProperties: false,

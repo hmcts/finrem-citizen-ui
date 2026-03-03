@@ -12,14 +12,14 @@ module.exports = {
       'jest-junit',
       {
         outputDirectory: 'smoke-output',
-        outputName: 'smoke-junit.xml',
+        outputName: 'smoke--test-results.xml',
       },
     ],
     [
       'jest-html-reporter',
       {
         pageTitle: 'Smoke Test Report',
-        outputPath: 'smoke-output/test-report.html',
+        outputPath: 'smoke-output/smoke-test-report.html',
         includeFailureMsg: true,
       },
     ],
