@@ -39,12 +39,11 @@ withPipeline(type, product, component) {
       reportBuildPolicy: 'ALWAYS',
       results: [[path: '**/allure-results']]
     ])
-    sh 'find . -name "*.xml"'
     junit testResults: '**/junit.xml, **/*.xml', allowEmptyResults: true
   }
   
   before('tests') {
-    yarnBuilder.yarn('playwright install chromium --with-deps')
+   sh "yarn playwright install chromium --with-deps"
   }
 
   before('functionalTests') {
