@@ -36,7 +36,6 @@ withPipeline(type, product, component) {
   
  before('tests') {
     sh "rm -rf smoke-output functional-output allure-results allure-results-smoke"
-    sh "PLAYWRIGHT_BROWSERS_PATH=${env.WORKSPACE}/pw-browsers npx playwright install chromium --with-deps"
   }
 
   before('functionalTests') {
@@ -44,7 +43,12 @@ withPipeline(type, product, component) {
   }
 
   afterSuccess('functionalTests') {
-    withEnv(["PLAYWRIGHT_BROWSERS_PATH=${env.WORKSPACE}/pw-browsers"]) {
+    def pwPath = "${env.WORKSPACE}/pw-browsers"
+    
+    withEnv(["PLAYWRIGHT_BROWSERS_PATH=${pwPath}"]) {
+      sh "npx playwright install chromium --with-deps"
+      
+      // Run the accessibility tests
       yarnBuilder.yarn('test:a11y')
     }
   }
