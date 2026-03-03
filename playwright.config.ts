@@ -7,7 +7,12 @@ export default defineConfig({
   testDir: './src/test',
   testMatch: ['a11y/*.test.ts', 'functional/**/*.spec.ts'],
 
-  reporter: [['html'], ['json', { outputFile: 'test-results.json' }], ['allure-playwright']],
+  reporter: [
+    ['html'],
+    ['json', { outputFile: 'test-results.json' }],
+    ['allure-playwright'],
+    ['junit', { outputFile: 'junit-results.xml' }],
+  ],
   timeout: 30 * 1000,
   expect: {
     timeout: 5000,

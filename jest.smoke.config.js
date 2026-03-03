@@ -9,11 +9,12 @@ module.exports = {
   reporters: [
     'default',
     'jest-allure2-reporter',
+    ['jest-junit', { outputDirectory: '.', outputName: 'junit-smoke.xml' }],
     [
       'jest-html-reporter',
       {
         pageTitle: 'Smoke Test Report',
-        outputPath: '<rootDir>/smoke-output/reports/test-report.html',
+        outputPath: 'smoke-output/reports/test-report.html',
         includeFailureMsg: true,
       },
     ],

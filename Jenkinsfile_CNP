@@ -31,12 +31,22 @@ withPipeline(type, product, component) {
     yarnBuilder.yarn('playwright install chromium')
     yarnBuilder.yarn('build')
   }
+// Ensure Smoke Test results are captured even if they fail
+  afterAlways('smokeTest') {
+    allure([
+      includeProperties: false,
+      jdk: '',
+      properties: [],
+      reportBuildPolicy: 'ALWAYS',
+      results: [[path: '**/allure-results']]
+    ])
+    junit testResults: '**/*.xml', allowEmptyResults: true
+  }
 
   before('functionalTests') {
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
   }
 
-  // Always run accessibility tests after the main functional suite
   afterSuccess('functionalTests') {
      yarnBuilder.yarn('test:a11y')
   }
@@ -47,8 +57,14 @@ withPipeline(type, product, component) {
         jdk: '',
         properties: [],
         reportBuildPolicy: 'ALWAYS',
-        results: [[path: 'allure-results']]
+        results: [[path: '**/allure-results']] 
      ])
+     
+     junit testResults: '**/*.xml', allowEmptyResults: true
+     
+     archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
+     archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
+     archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
   }
 
   enableSlackNotifications('#finrem-dev')
