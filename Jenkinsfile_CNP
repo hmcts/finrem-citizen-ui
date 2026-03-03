@@ -24,31 +24,27 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
   ]
 }
 
-withPipeline(type, product, component) {
-  loadVaultSecrets(secrets)
-
-  // Set the Playwright path once globally for all stages
-  env.PLAYWRIGHT_BROWSERS_PATH = "${env.WORKSPACE}/pw-browsers"
+  withPipeline(type, product, component) {
+    loadVaultSecrets(secrets)
 
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
   
- before('tests') {
+  before('tests') {
     sh "rm -rf smoke-output functional-output allure-results allure-results-smoke"
+    sh "npx playwright install chromium --with-deps"
   }
 
   before('functionalTests') {
-    sh "npx playwright install chromium --with-deps"
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
+    sh "npx playwright install chromium --with-deps"
   }
 
-afterSuccess('functionalTests') {
-    withEnv(["PLAYWRIGHT_BROWSERS_PATH=${env.WORKSPACE}/pw-browsers"]) {
-      sh "npx playwright install chromium --with-deps"
-      yarnBuilder.yarn('test:a11y')
-    }
-}
+  afterSuccess('functionalTests') {
+    sh "npx playwright install chromium --with-deps"
+    yarnBuilder.yarn('test:a11y')
+  }
 
   afterAlways('smokeTest') {
     junit testResults: 'smoke-output/smoke--test-results.xml', allowEmptyResults: true
@@ -65,7 +61,6 @@ afterSuccess('functionalTests') {
 
   afterAlways('functionalTests') {
      junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
-     
      allure([
         includeProperties: false,
         jdk: '',
@@ -73,7 +68,6 @@ afterSuccess('functionalTests') {
         reportBuildPolicy: 'ALWAYS',
         results: [[path: 'allure-results']] 
      ])
-     
      archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
   }
 
@@ -89,4 +83,4 @@ afterSuccess('functionalTests') {
     env.JENKINS_BRANCH = "preview"
     env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
   }
-}
+} 
