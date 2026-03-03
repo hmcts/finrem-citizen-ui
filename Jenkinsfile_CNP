@@ -40,6 +40,7 @@ withPipeline(type, product, component) {
       results: [[path: '**/allure-results']]
     ])
     junit testResults: '**/junit.xml, **/*.xml', allowEmptyResults: true
+    archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
   }
   
   before('tests') {
@@ -65,9 +66,7 @@ withPipeline(type, product, component) {
 
      junit testResults: '**/*.xml', allowEmptyResults: true
      
-     archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
-     archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
-     archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
+     archiveArtifacts artifacts: 'functional-output/**, allure-results/**', allowEmptyArchive: true
   }
 
   enableSlackNotifications('#finrem-dev')
