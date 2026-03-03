@@ -42,19 +42,16 @@ withNightlyPipeline(type, product, component) {
   //enablePerformanceTest()
   //enableMutationTest()
 
-  // 1. Install playwright browsers on the agent
   afterSuccess('build') {
-    yarnBuilder.yarn('playwright install chromium')
+    yarnBuilder.yarn('build')
   }
 
-  // 2. Point the "Full Functional" stage to Playwright script
   before('fullFunctionalTest') {
     env.FULL_FUNCTIONAL_TESTS_COMMAND = "test:full-functional"
   }
 
   enableFullFunctionalTest(200)
 
-  // 3. Capture Allure and Artifacts
   afterAlways('fullFunctionalTest') {
     allure([
       includeProperties: false,
@@ -63,12 +60,12 @@ withNightlyPipeline(type, product, component) {
       reportBuildPolicy: 'ALWAYS',
       results: [[path: 'allure-results']]
     ])
-    // Archive the HTML files as backup artifacts
     steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/functional/reports/**/*'
   }
 
   // 4. Ensure A11y also runs nightly
   afterSuccess('fullFunctionalTest') {
+    yarnBuilder.yarn('playwright install chromium')
     yarnBuilder.yarn('test:a11y')
   }
 

@@ -28,7 +28,6 @@ withPipeline(type, product, component) {
   loadVaultSecrets(secrets)
 
   afterSuccess('build') {
-    yarnBuilder.yarn('playwright install chromium')
     yarnBuilder.yarn('build')
   }
 
