@@ -27,13 +27,16 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 withPipeline(type, product, component) {
   loadVaultSecrets(secrets)
 
+  // Set the Playwright path once globally for all stages
+  env.PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}/pw-browsers"
+
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
   
   before('tests') {
-   sh "rm -rf smoke-output functional-output allure-results allure-results-smoke"
-   sh "yarn playwright install chromium --with-deps"
+    sh "rm -rf smoke-output functional-output allure-results allure-results-smoke"
+    sh "npx playwright install chromium --with-deps"
   }
 
   before('functionalTests') {
@@ -41,10 +44,10 @@ withPipeline(type, product, component) {
   }
 
   afterSuccess('functionalTests') {
-     yarnBuilder.yarn('test:a11y')
+    yarnBuilder.yarn('test:a11y')
   }
 
-afterAlways('smokeTest') {
+  afterAlways('smokeTest') {
     junit testResults: 'smoke-output/smoke--test-results.xml', allowEmptyResults: true
     archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
     
@@ -70,6 +73,7 @@ afterAlways('smokeTest') {
      
      archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
   }
+
   enableSlackNotifications('#finrem-dev')
   enableAksStagingDeployment()
   disableLegacyDeployment()
@@ -80,7 +84,6 @@ afterAlways('smokeTest') {
 
   onPR() {
     env.JENKINS_BRANCH = "preview"
-    // Forces the functional test stage to run on every PR commit
     env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
   }
 }
