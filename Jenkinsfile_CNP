@@ -41,10 +41,13 @@ withPipeline(type, product, component) {
     ])
     sh 'find . -name "*.xml"'
     junit testResults: '**/junit.xml, **/*.xml', allowEmptyResults: true
-}
+  }
+  
+  before('tests') {
+    yarnBuilder.yarn('playwright install chromium --with-deps')
+  }
 
   before('functionalTests') {
-    yarnBuilder.yarn('playwright install chromium --with-deps')
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
   }
 
