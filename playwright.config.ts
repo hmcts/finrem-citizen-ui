@@ -8,9 +8,9 @@ export default defineConfig({
   testMatch: ['a11y/*.test.ts', 'functional/**/*.spec.ts'],
 
   reporter: [
-    ['html', { outputFolder: 'functional-output/report', open: 'never' }],
+    ['html', { outputFolder: 'functional-output/html' }],
     ['allure-playwright', { resultsDir: 'allure-results' }],
-    ['junit', { outputFile: 'functional-output/functional-results.xml' }],
+    ['junit', { outputFile: 'functional-output/junit.xml' }],
   ],
   timeout: 30 * 1000,
   expect: {
