@@ -9,13 +9,15 @@ describe('Smoke Test', () => {
   describe('Home page loads', () => {
     test('with correct content', async () => {
       try {
-        await axios.get(testUrl, {
+        const response = await axios.get(testUrl, {
           headers: {
             'Accept-Encoding': 'gzip',
           },
+          maxRedirects: 0,
+          validateStatus: status => status === 200 || status === 302,
         });
 
-        expect(1).to.equal(1);
+        expect(response.status).to.be.oneOf([200, 302]);
       } catch {
         fail('Application did not respond successfully');
       }
