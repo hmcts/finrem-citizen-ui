@@ -42,7 +42,7 @@ withPipeline(type, product, component) {
     sh 'find . -name "*.xml"'
     junit testResults: '**/junit.xml, **/*.xml', allowEmptyResults: true
   }
-  
+
   before('tests') {
     yarnBuilder.yarn('playwright install chromium --with-deps')
   }
@@ -64,12 +64,12 @@ withPipeline(type, product, component) {
         results: [[path: '**/allure-results']] 
      ])
 
-     sh 'find . -name "*.xml"'
-     junit testResults: '**/*.xml', allowEmptyResults: true
+    junit testResults: '**/functional-results.xml, **/smoke-results.xml', allowEmptyResults: true
      
-     archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
-     archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
-     archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
+     archiveArtifacts artifacts: 'functional-output/report/index.html', fingerprint: true, allowEmptyArchive: true
+     archiveArtifacts artifacts: 'allure-results/smoke-report.html', fingerprint: true, allowEmptyArchive: true
+     archiveArtifacts artifacts: 'allure-results/*.xml', allowEmptyArchive: true
+     archiveArtifacts artifacts: 'pods-logs-*/**', allowEmptyArchive: true
   }
 
   enableSlackNotifications('#finrem-dev')
