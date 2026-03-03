@@ -28,7 +28,7 @@ withPipeline(type, product, component) {
   loadVaultSecrets(secrets)
 
   // Set the Playwright path once globally for all stages
-  env.PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}/pw-browsers"
+  env.PLAYWRIGHT_BROWSERS_PATH = "${env.WORKSPACE}/pw-browsers"
 
   afterSuccess('build') {
     yarnBuilder.yarn('build')
