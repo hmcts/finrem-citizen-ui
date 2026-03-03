@@ -39,19 +39,16 @@ withPipeline(type, product, component) {
   }
 
   before('functionalTests') {
+    sh "npx playwright install chromium --with-deps"
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
   }
 
-  afterSuccess('functionalTests') {
-    def pwPath = "${env.WORKSPACE}/pw-browsers"
-    
-    withEnv(["PLAYWRIGHT_BROWSERS_PATH=${pwPath}"]) {
+afterSuccess('functionalTests') {
+    withEnv(["PLAYWRIGHT_BROWSERS_PATH=${env.WORKSPACE}/pw-browsers"]) {
       sh "npx playwright install chromium --with-deps"
-      
-      // Run the accessibility tests
       yarnBuilder.yarn('test:a11y')
     }
-  }
+}
 
   afterAlways('smokeTest') {
     junit testResults: 'smoke-output/smoke--test-results.xml', allowEmptyResults: true
