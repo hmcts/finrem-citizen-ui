@@ -30,20 +30,9 @@ withPipeline(type, product, component) {
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
-
-  afterAlways('smokeTest') {
-    allure([
-      includeProperties: false,
-      jdk: '',
-      properties: [],
-      reportBuildPolicy: 'ALWAYS',
-      results: [[path: '**/allure-results']]
-    ])
-    junit testResults: '**/junit.xml, **/*.xml', allowEmptyResults: true
-    archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
-  }
   
   before('tests') {
+   sh "rm -rf smoke-output functional-output allure-results allure-results-smoke"
    sh "yarn playwright install chromium --with-deps"
   }
 
@@ -55,20 +44,32 @@ withPipeline(type, product, component) {
      yarnBuilder.yarn('test:a11y')
   }
 
+afterAlways('smokeTest') {
+    junit testResults: 'smoke-output/smoke-junit.xml', allowEmptyResults: true
+    archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
+    
+    allure([
+      includeProperties: false,
+      jdk: '',
+      properties: [],
+      reportBuildPolicy: 'ALWAYS',
+      results: [[path: 'allure-results-smoke']]
+    ])
+  }
+
   afterAlways('functionalTests') {
+     junit testResults: 'functional-output/junit.xml', allowEmptyResults: true
+     
      allure([
         includeProperties: false,
         jdk: '',
         properties: [],
         reportBuildPolicy: 'ALWAYS',
-        results: [[path: '**/allure-results']] 
+        results: [[path: 'allure-results']] 
      ])
-
-     junit testResults: '**/*.xml', allowEmptyResults: true
      
-     archiveArtifacts artifacts: 'functional-output/**, allure-results/**', allowEmptyArchive: true
+     archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
   }
-
   enableSlackNotifications('#finrem-dev')
   enableAksStagingDeployment()
   disableLegacyDeployment()

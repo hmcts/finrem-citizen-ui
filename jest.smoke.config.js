@@ -8,15 +8,22 @@ module.exports = {
   },
   reporters: [
     'default',
-    'jest-allure2-reporter',
-    'jest-junit',
+    [
+      'jest-junit',
+      {
+        outputDirectory: 'smoke-output',
+        outputName: 'smoke-junit.xml',
+      },
+    ],
     [
       'jest-html-reporter',
       {
         pageTitle: 'Smoke Test Report',
-        outputPath: 'smoke-output/reports/test-report.html',
+        outputPath: 'smoke-output/test-report.html',
         includeFailureMsg: true,
       },
     ],
+    // Separate Allure folder for smoke
+    ['jest-allure2-reporter', { resultsDir: 'allure-results-smoke' }],
   ],
 };
