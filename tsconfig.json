@@ -15,11 +15,13 @@
     "useUnknownInCatchVariables": false,
     "skipLibCheck": true,
     "lib": ["es2020", "dom", "dom.iterable"],
+    "types": ["node", "jest"],
     "baseUrl": "src/main",
     "paths": {
       "router/*": ["router/*"],
       "routes/*": ["routes/*"]
     }
   },
-  "exclude": ["**/*.test.ts", "**/codecept.conf.ts", "**/__mocks__/*"]
+  "include": ["src/main/**/*.ts", "src/test/**/*.ts"],
+  "exclude": ["node_modules", "**/codecept.conf.ts", "**/__mocks__/*"]
 }
