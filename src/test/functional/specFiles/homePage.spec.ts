@@ -15,7 +15,7 @@ test.describe('HomePage', () => {
     await homePage.clickLicenceLink();
 
     const expectedTitle = 'Open Government Licence for public sector information';
-    const urlSnippet = 'nationalarchives.gov.uk/doc/open-government-licence/version/3/';
+    const urlSnippet = 'nationalarchives\\.gov\\.uk/doc/open-government-licence/version/3/';
 
     await page.waitForURL(new RegExp(urlSnippet));
     await expect(page).toHaveURL(new RegExp(urlSnippet));
