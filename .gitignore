@@ -1,49 +1,51 @@
+# Environments & Dependencies
 .env
 .env.local
 node_modules/
+lib/
+.yarn/
+.yarn/*
+!.yarn/releases/
+!.yarn/plugins/
+
+# Build & Compiled Assets
+dist/
+public/
 .nyc_output
 .sass-cache
 *.css
+.eslintcache
+node-rpm-packaging/
+version
 
+# IDE & OS Files
 .idea/
 *.iml
-
 *swp
 *log
 .DS_Store
+.project
+.settings/
 
-lib/
+# Testing & Reporting (Playwright/Allure/Jest)
+allure-results/
+allure-report/
+allure-results-smoke/
+playwright-report/
+test-results/
+test-results.json
+coverage/
+smoke-output/
+functional-output/
+mochawesome-report/
+junit*.xml
 
+# Project Specific Paths
 src/main/public/img/lib/*
 src/main/public/js/lib/**/*.js
 src/main/public/stylesheets/lib/*
 src/main/resources/localhost-ssl
-
-node-rpm-packaging/
-mochawesome-report/
-npm-debug.log.*
-
-.project
-.settings/
-dist/
-public/
 src/main/views/govuk
-coverage/
-smoke-output/
-functional-output/
-version
 
-.eslintcache
-
-.yarn/install-state.gz
-.yarn/*
-.yarn
-.features-gen/src/test/functional/features/*.js
-playwright-report/index.html
-test-results.json
-test-results/.*
-allure-results/*
-allure-results/junit-playwright.xml
-allure-results/junit-smoke.xml
-junit*.xml
-allure-results-smoke/*
+# Misc
+npm-debug.log.*
