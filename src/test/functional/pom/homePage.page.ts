@@ -1,12 +1,12 @@
-import { Page, expect } from '@playwright/test';
+import { Locator, Page, expect } from '@playwright/test';
 
 export class HomePage {
-  private readonly heading;
-  private readonly headerLogo;
-  private readonly footer;
-  private readonly licenceLink;
+  private readonly heading: Locator;
+  private readonly headerLogo: Locator;
+  private readonly footer: Locator;
+  private readonly licenceLink: Locator;
 
-  constructor(private page: Page) {
+  constructor(private readonly page: Page) {
     this.heading = this.page.locator('h1.govuk-heading-xl');
     this.headerLogo = this.page.locator('div.govuk-header__logo');
     this.footer = this.page.locator('footer');
@@ -29,15 +29,11 @@ export class HomePage {
   }
 
   async clickLinkByText(linkText: string): Promise<void> {
-    // Added return type
     await this.page.getByRole('link', { name: linkText, exact: false }).click();
   }
 
-  /**
-   * Verifies that the current page's URL contains a specific path/substring.
-   * @param path The substring expected in the URL.
-   */
   async verifyCurrentPageUrlContains(path: string): Promise<void> {
-    await expect(this.page).toHaveURL(new RegExp(path));
+    const escapedPath = path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    await expect(this.page).toHaveURL(new RegExp(escapedPath));
   }
 }
