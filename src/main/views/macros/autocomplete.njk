@@ -1,0 +1,19 @@
+{% macro autocomplete(id, name, label, apiUrl="/autocomplete", eventName="autocomplete:selected", hint="", labelClass="") %}
+<div class="govuk-form-group">
+  <label class="govuk-label {{ labelClass }}" for="{{ id }}">{{ label }}</label>
+  {% if hint %}
+  <div id="{{ id }}-hint" class="govuk-hint">{{ hint }}</div>
+  {% endif %}
+  <div 
+    class="finrem-autocomplete" 
+    data-autocomplete 
+    data-url="{{ apiUrl }}" 
+    data-event="{{ eventName }}"
+    data-input-id="{{ id }}"
+    data-input-name="{{ name }}"
+    {% if hint %}aria-describedby="{{ id }}-hint"{% endif %}
+  >
+    <div id="{{ id }}-container"></div>
+  </div>
+</div>
+{% endmacro %}

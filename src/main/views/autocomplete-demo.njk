@@ -1,0 +1,25 @@
+{% extends "template.njk" %}
+
+{% from "macros/autocomplete.njk" import autocomplete %}
+
+{% block content %}
+  <h1 class="govuk-heading-xl">Autocomplete Component Demo</h1>
+
+  <form>
+    {{ autocomplete(
+      id="document-type",
+      name="documentType",
+      label="What do you want to upload?",
+      apiUrl="/autocomplete",
+      eventName="document:selected",
+      labelClass="govuk-label--m"
+    ) }}
+
+    <button type="button" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+      Add document
+    </button>
+
+    <h2 class="govuk-heading-l" style="margin-top: 40px;">Documents</h2>
+    <p class="govuk-body">No documents added yet.</p>
+  </form>
+{% endblock %}

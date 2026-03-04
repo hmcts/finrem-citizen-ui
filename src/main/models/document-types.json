@@ -1,0 +1,77 @@
+[
+  {
+    "label": "Certificate of Suitability of Litigation Friend: Form FP9",
+    "value": "certificate-of-suitability-fp9",
+    "aliases": ["FP9", "litigation friend", "suitability certificate", "form FP9"]
+  },
+  {
+    "label": "Divorce case documents (such as conditional order, final order, decree nisi or decree absolute)",
+    "value": "divorce-case-documents",
+    "aliases": ["conditional order", "final order", "decree nisi", "decree absolute", "divorce papers", "divorce certificate", "marriage dissolution"]
+  },
+  {
+    "label": "Potential borrowing capacity / mortgage capacities",
+    "value": "borrowing-capacity",
+    "aliases": ["mortgage capacity", "borrowing power", "lending capacity", "mortgage affordability", "how much can I borrow"]
+  },
+  {
+    "label": "Hearing bundle",
+    "value": "hearing-bundle",
+    "aliases": ["court bundle", "trial bundle", "bundle of documents", "hearing documents"]
+  },
+  {
+    "label": "FDR bundle",
+    "value": "fdr-bundle",
+    "aliases": ["financial dispute resolution", "FDR documents", "FDR hearing"]
+  },
+  {
+    "label": "Availability",
+    "value": "availability",
+    "aliases": ["available dates", "diary", "schedule", "when I'm free", "court dates"]
+  },
+  {
+    "label": "Bank statements",
+    "value": "bank-statements",
+    "aliases": ["Barclays", "HSBC", "Lloyds", "NatWest", "Santander", "Halifax", "Nationwide", "bank account", "current account", "savings account", "bank records", "transaction history"]
+  },
+  {
+    "label": "Mortgage balance",
+    "value": "mortgage-balance",
+    "aliases": ["mortgage statement", "outstanding mortgage", "mortgage redemption", "how much I owe", "mortgage amount", "home loan"]
+  },
+  {
+    "label": "Business accounts",
+    "value": "business-accounts",
+    "aliases": ["company accounts", "self-employed accounts", "trading accounts", "business financials", "profit and loss", "balance sheet", "limited company"]
+  },
+  {
+    "label": "Pension valuations",
+    "value": "pension-valuations",
+    "aliases": ["pension statement", "CETV", "cash equivalent transfer value", "retirement fund", "pension pot", "workplace pension", "private pension"]
+  },
+  {
+    "label": "Property valuations",
+    "value": "property-valuations",
+    "aliases": ["house valuation", "home value", "estate agent valuation", "property value", "house price", "market value"]
+  },
+  {
+    "label": "Pay slips",
+    "value": "pay-slips",
+    "aliases": ["payslips", "wage slips", "salary slips", "pay stubs", "earnings", "income proof"]
+  },
+  {
+    "label": "P60",
+    "value": "p60",
+    "aliases": ["end of year certificate", "tax certificate", "annual earnings", "PAYE"]
+  },
+  {
+    "label": "Tax returns",
+    "value": "tax-returns",
+    "aliases": ["self assessment", "SA302", "tax calculation", "HMRC", "income tax"]
+  },
+  {
+    "label": "Other document",
+    "value": "other-document",
+    "aliases": []
+  }
+]
