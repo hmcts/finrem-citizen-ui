@@ -1,23 +1,24 @@
+import { describe, expect, it } from '@jest/globals';
+
 import nunjucksEnv from '../../nunjucks';
 
-const { expect } = require('chai');
-
-describe('Task list warning message component tests', function () {
-  it('should show warning message', function () {
+describe('Task list warning message component tests', () => {
+  it('should show warning message', () => {
     const component =
       '{% from "macros/task-list/warning-message.njk" import warningMessage %}{{ warningMessage("2026-01-22", []) }}';
     const output = nunjucksEnv.renderString(component).trim();
 
-    expect(output).to.not.be.empty;
-    expect(output).contains('id="task-list-warning-message"');
-    expect(output).contains(
+    expect(output.length).toBeGreaterThan(0);
+
+    expect(output).toContain('id="task-list-warning-message"');
+    expect(output).toContain(
       'One or more of your tasks are overdue. You must complete\n' +
         '    and upload your completed documents as soon as possible. If you do not submit your documents, you may be\n' +
         "    ordered to pay the other party's legal costs."
     );
   });
 
-  it('should not show warning message', function () {
+  it('should not show warning message', () => {
     const component =
       '{% from "macros/task-list/warning-message.njk" import warningMessage %}{{ warningMessage("2026-01-22", "[\n' +
       "      'financial_statement_e_e1_e2.pdf',\n" +
@@ -38,6 +39,6 @@ describe('Task list warning message component tests', function () {
       '    ]") }}';
     const output = nunjucksEnv.renderString(component).trim();
 
-    expect(output).to.be.empty;
+    expect(output).toBe('');
   });
 });

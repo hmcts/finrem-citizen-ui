@@ -1,15 +1,14 @@
-import { expect } from 'chai';
+import { describe, expect, test } from '@jest/globals';
 import request from 'supertest';
 
 import { app } from '../../main/app';
 
- 
 describe('Home page', () => {
   describe('on GET', () => {
     test('should return sample home page', async () => {
-      await request(app)
-        .get('/')
-        .expect(res => expect(res.status).to.equal(200));
+      const res = await request(app).get('/').expect(200);
+
+      expect(res.status).toBe(200);
     });
   });
 });
