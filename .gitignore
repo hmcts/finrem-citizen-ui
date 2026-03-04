@@ -45,5 +45,5 @@ test-results/.*
 allure-results/*
 allure-results/junit-playwright.xml
 allure-results/junit-smoke.xml
-junit.xml
+junit*.xml
 allure-results-smoke/*
