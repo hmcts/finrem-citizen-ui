@@ -1,4 +1,7 @@
 nodejs:
+  environment:
+    OIDC_REDIRECT_URI: 'https://${SERVICE_FQDN}/oauth2/callback'
+
   # Don't modify below here
   image: ${IMAGE_NAME}
   ingressHost: ${SERVICE_FQDN}
