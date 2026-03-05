@@ -6,7 +6,7 @@ import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
 import { UserDetails } from '../controller/AppRequest';
 
 import { CaseAssignedUserRole } from './case-roles';
-import { FinremCaseData, State } from './definition';
+import {FinremCaseData, State} from './definition';
 
 export class CaseApiClient {
   readonly maxRetries: number = 3;
@@ -26,6 +26,19 @@ export class CaseApiClient {
     }
   }
 
+  public async getCaseById(caseId: string): Promise<FinremCaseData> {
+    try {
+      console.log("calling ccd::")
+      const response = await this.server.get<CcdV1Response>(`/cases/${caseId}`);
+      console.log("response from ccd::", response)
+      return response.data.case_data ;
+    } catch (err) {
+      console.log("error:::::::", err?.data)
+      this.logError(err);
+      throw new Error('Case could not be retrieved.');
+    }
+  }
+
   private logError(error: AxiosError) {
     if (error.response) {
       this.logger.error(`API Error ${error.config?.method} ${error.config?.url} ${error.response.status}`);
@@ -39,12 +52,13 @@ export class CaseApiClient {
 }
 
 export const getCaseApiClient = (userDetails: UserDetails, logger: LoggerInstance): CaseApiClient => {
+  const serviceAuthToken = getServiceAuthToken();
   return new CaseApiClient(
     axios.create({
       baseURL: config.get('services.case.url'),
       headers: {
         Authorization: 'Bearer ' + userDetails.accessToken,
-        ServiceAuthorization: getServiceAuthToken(),
+        ServiceAuthorization: serviceAuthToken,
         experimental: 'true',
         Accept: '*/*',
         'Content-Type': 'application/json',
@@ -60,3 +74,4 @@ export interface CcdV1Response {
   created_date: string;
   case_data: FinremCaseData;
 }
+

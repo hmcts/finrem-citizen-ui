@@ -89,6 +89,7 @@ const createIdamToken = (params: Record<string, string>): Promise<AxiosResponse<
   } else {
     throw new Error('Missing data for createIdamToken.');
   }
+  console.log("tokenUrl::",tokenUrl)
   return axios.post(tokenUrl, data, { headers });
 };
 
@@ -96,25 +97,19 @@ export const getIdamToken = async (
   params: Record<string, string>,
   cacheKey: string
 ): Promise<AxiosResponse<OidcResponse>> => {
-  let response: AxiosResponse<OidcResponse> | undefined;
-
+  let response: AxiosResponse<OidcResponse>;
   const isCachingEnabled = String(config.get('services.idam.caching')) === 'true';
-
-  if (isCachingEnabled && idamTokenCache.get(cacheKey)) {
+  if (isCachingEnabled && idamTokenCache.get(cacheKey) as AxiosResponse<OidcResponse>) {
     response = idamTokenCache.get(cacheKey) as AxiosResponse<OidcResponse>;
   } else if (isCachingEnabled) {
     logger.info('Generating access token and then caching it');
-
     response = await createIdamToken(params);
-
     idamTokenCache.set(cacheKey, {
-      ...response,
-      data: {
-        id_token: response.data.id_token,
-        access_token: response.data.access_token,
-      },
+      data: { id_token: response.data.id_token, access_token: response.data.access_token },
     });
+  } else {
+    response = await createIdamToken(params);
   }
 
-  return response!;
+  return response;
 };

@@ -52,4 +52,10 @@ export interface UploadedFile {
   name: string;
 }
 
+export interface CaseWithId extends Case {
+  id: string;
+  state: State;
+}
+
 export type AnyObject = Record<string, unknown>;
+
