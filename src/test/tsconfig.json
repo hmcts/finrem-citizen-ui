@@ -1,13 +1,13 @@
 {
-  "ts-node": {
-    "files": true
-  },
   "compilerOptions": {
-    "target": "es2018",
-    "lib": ["es2018", "DOM"],
+    "target": "ESNext",
+    "module": "CommonJS",
     "esModuleInterop": true,
-    "module": "commonjs",
-    "strictNullChecks": true,
-    "types": ["codeceptjs"]
-  }
+    "strict": true,
+    "skipLibCheck": true,
+    "lib": ["esnext", "dom"],
+    "types": ["@playwright/test"]
+  },
+  "include": ["**/*.ts", "**/*.js"],
+  "exclude": ["node_modules"]
 }

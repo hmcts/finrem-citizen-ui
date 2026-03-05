@@ -1,7 +1,5 @@
-import { fail } from 'assert';
-
+import { describe, expect, test } from '@jest/globals';
 import axios, { AxiosResponse } from 'axios';
-import { expect } from 'chai';
 
 const testUrl = process.env.TEST_URL || 'http://localhost:3100';
 
@@ -14,9 +12,10 @@ describe('Smoke Test', () => {
             'Accept-Encoding': 'gzip',
           },
         });
-        expect(response.data).includes('<h1 class="govuk-heading-xl">Default page template</h1>');
-      } catch {
-        fail('Heading not present and/or correct');
+
+        expect(response.data).toContain('<h1 class="govuk-heading-xl">Default page template</h1>');
+      } catch (error) {
+        throw new Error(`Smoke test failed: Heading not present or server unreachable. ${(error as Error).message}`);
       }
     });
   });

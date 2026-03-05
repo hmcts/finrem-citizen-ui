@@ -24,13 +24,53 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
   ]
 }
 
-withPipeline(type, product, component) {
-  loadVaultSecrets(secrets)
+  withPipeline(type, product, component) {
+    loadVaultSecrets(secrets)
+
   afterSuccess('build') {
-    yarnBuilder.yarn('playwright install')
-    yarnBuilder.yarn('rebuild puppeteer')
     yarnBuilder.yarn('build')
   }
+  
+  before('tests') {
+    sh "rm -rf smoke-output functional-output allure-results allure-results-smoke"
+    sh "npx playwright install chromium --with-deps"
+  }
+
+  before('functionalTests') {
+    env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
+    sh "npx playwright install chromium --with-deps"
+  }
+
+  afterSuccess('functionalTests') {
+    sh "npx playwright install chromium --with-deps"
+    yarnBuilder.yarn('test:a11y')
+  }
+
+  afterAlways('smokeTest') {
+    junit testResults: 'smoke-output/smoke--test-results.xml', allowEmptyResults: true
+    archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
+    
+    allure([
+      includeProperties: false,
+      jdk: '',
+      properties: [],
+      reportBuildPolicy: 'ALWAYS',
+      results: [[path: 'allure-results-smoke']]
+    ])
+  }
+
+  afterAlways('functionalTests') {
+     junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
+     allure([
+        includeProperties: false,
+        jdk: '',
+        properties: [],
+        reportBuildPolicy: 'ALWAYS',
+        results: [[path: 'allure-results']] 
+     ])
+     archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
+  }
+
   enableSlackNotifications('#finrem-dev')
   enableAksStagingDeployment()
   disableLegacyDeployment()
@@ -41,5 +81,6 @@ withPipeline(type, product, component) {
 
   onPR() {
     env.JENKINS_BRANCH = "preview"
+    env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
   }
-}
+} 

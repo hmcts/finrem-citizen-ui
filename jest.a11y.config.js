@@ -4,6 +4,9 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   testEnvironment: 'node',
   transform: {
-    '^.+\\.ts?$': 'ts-jest',
+    '^.+\\.ts?$': ['ts-jest', { useESM: true }],
   },
+  extensionsToTreatAsEsm: ['.ts'],
+  transformIgnorePatterns: [],
+  testPathIgnorePatterns: ['/node_modules/', 'a11y.ts', 'a11y.test.ts'],
 };

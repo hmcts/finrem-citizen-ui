@@ -1,7 +1,8 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { taskListFormItems } from '../../../../main/functions/task-list/task-list-form-items';
 
 describe('taskListFormItems tests', () => {
-
   it('should be defined fasttrack form items', () => {
     const fasttrack = taskListFormItems('fasttrack');
     expect(fasttrack).toBeDefined();
@@ -16,5 +17,4 @@ describe('taskListFormItems tests', () => {
     const standard = taskListFormItems('undefined');
     expect(standard).toBeDefined();
   });
-
 });

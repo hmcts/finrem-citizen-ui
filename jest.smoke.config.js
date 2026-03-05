@@ -1,21 +1,29 @@
 module.exports = {
   roots: ['<rootDir>/src/test/smoke'],
   testRegex: '(/src/test/.*|\\.test)\\.(ts|js)$',
-  testEnvironment: 'node',
   testRunner: 'jest-circus/runner',
+  testEnvironment: 'node',
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
-  moduleFileExtensions: ['ts', 'js', 'json'],
   reporters: [
     'default',
+    [
+      'jest-junit',
+      {
+        outputDirectory: 'smoke-output',
+        outputName: 'smoke--test-results.xml',
+      },
+    ],
     [
       'jest-html-reporter',
       {
         pageTitle: 'Smoke Test Report',
-        outputPath: '<rootDir>/smoke-output/reports/test-report.html',
+        outputPath: 'smoke-output/smoke-test-report.html',
         includeFailureMsg: true,
       },
     ],
+    // Separate Allure folder for smoke
+    ['jest-allure2-reporter', { resultsDir: 'allure-results-smoke' }],
   ],
 };
