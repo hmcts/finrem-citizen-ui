@@ -11,7 +11,9 @@
     "baseUrl": ".",
     "paths": {
       "router/*": ["src/main/router/*"],
-      "routes/*": ["src/main/routes/*"]
+      "routes/*": ["src/main/routes/*"],
+      "@pom/*": ["src/test/functional/pom/*"],
+      "@helpers/*": ["src/test/functional/utils/helpers/*"]
     }
   },
   "include": ["src/**/*.ts", "playwright.config.ts"]

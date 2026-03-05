@@ -1,12 +1,12 @@
 import { Locator, Page, expect } from '@playwright/test';
 
 export class HomePage {
-  private readonly heading: Locator;
-  private readonly headerLogo: Locator;
-  private readonly footer: Locator;
-  private readonly licenceLink: Locator;
+  readonly heading: Locator;
+  readonly headerLogo: Locator;
+  readonly footer: Locator;
+  readonly licenceLink: Locator;
 
-  constructor(private readonly page: Page) {
+  constructor(readonly page: Page) {
     this.heading = this.page.locator('h1.govuk-heading-xl');
     this.headerLogo = this.page.locator('div.govuk-header__logo');
     this.footer = this.page.locator('footer');
