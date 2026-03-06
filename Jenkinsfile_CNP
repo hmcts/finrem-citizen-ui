@@ -32,17 +32,17 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
   }
   
   before('tests') {
-    sh "rm -rf smoke-output functional-output allure-results allure-results-smoke"
-    sh "npx playwright install chromium --with-deps"
+    sh 'rm -rf smoke-output functional-output allure-results allure-results-smoke'
+    sh 'npx playwright install chromium --with-deps'
   }
 
   before('functionalTests') {
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
-    sh "npx playwright install chromium --with-deps"
+    sh 'npx playwright install chromium --with-deps'
   }
 
   afterSuccess('functionalTests') {
-    sh "npx playwright install chromium --with-deps"
+    sh 'npx playwright install chromium --with-deps'
     yarnBuilder.yarn('test:a11y')
   }
 
