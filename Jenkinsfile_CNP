@@ -27,6 +27,17 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 withPipeline(type, product, component) {
   loadVaultSecrets(secrets)
 
+  // Define how to calculate the URL once to avoid repetition/bugs
+  def getTargetUrl = {
+    if (env.RUNNING_ENV == "aat") {
+      return "https://manage-case.aat.platform.hmcts.net"
+    } else {
+      // Fallback for PRs or if RUNNING_ENV isn't set yet
+      def prEnv = env.RUNNING_ENV ?: "pr-${env.CHANGE_ID}"
+      return "https://finrem-citizen-ui-${prEnv}.preview.platform.hmcts.net"
+    }
+  }
+
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
@@ -40,12 +51,10 @@ withPipeline(type, product, component) {
     env.TEST_RESULTS_DIR = "smoke-output"
     env.ALLURE_RESULTS_DIR = "allure-results-smoke"
     
-    // In Playwright config we use TEST_URL or derived from RUNNING_ENV
-    // This helper determines the URL exactly like playwright.config.mts does
-    def targetUrl = env.RUNNING_ENV == "aat" ? "https://manage-case.aat.platform.hmcts.net" : "https://finrem-citizen-ui-${env.RUNNING_ENV}.preview.platform.hmcts.net"
+    env.TEST_URL = getTargetUrl()
     
-    // DNS Check: Wait for the URL to be live before starting
-    sh "timeout 300s bash -c 'until curl -sIk ${targetUrl} > /dev/null; do echo \"Waiting for ${targetUrl}... \"; sleep 10; done'"
+    echo "Checking health for Smoke Tests: ${env.TEST_URL}"
+    sh "timeout 300s bash -c 'until [ \"\$(curl -s -L -o /dev/null -w \"%{http_code}\" -k ${env.TEST_URL})\" -lt 400 ]; do echo \"Waiting for ${env.TEST_URL}... \"; sleep 10; done'"
     
     sh 'npx playwright install chromium --with-deps'
   }
@@ -61,6 +70,12 @@ withPipeline(type, product, component) {
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
     env.TEST_RESULTS_DIR = "functional-output"
     env.ALLURE_RESULTS_DIR = "allure-results"
+    
+    env.TEST_URL = getTargetUrl()
+
+    echo "Checking health for Functional Tests: ${env.TEST_URL}"
+    sh "timeout 300s bash -c 'until [ \"\$(curl -s -L -o /dev/null -w \"%{http_code}\" -k ${env.TEST_URL})\" -lt 400 ]; do echo \"Waiting for ${env.TEST_URL}... \"; sleep 10; done'"
+    
     sh 'npx playwright install chromium --with-deps'
   }
 
