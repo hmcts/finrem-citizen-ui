@@ -52,17 +52,17 @@ withPipeline(type, product, component) {
   }
 
   // --- UNIT TESTS & BUILD ---
-  // withPipeline runs unit tests first. We only build if they pass.
-  afterSuccess('build') {
-    yarnBuilder.yarn('build')
-  }
-  
+  // Runs against local code before deployment
   before('tests') {
     sh 'rm -rf smoke-output functional-output allure-results allure-results-smoke'
   }
 
+  afterSuccess('build') {
+    yarnBuilder.yarn('build')
+  }
+
   // --- SMOKE TESTS ---
-  // Runs immediately after deployment to AKS
+  // This is the first stage that runs AFTER deployment to AKS Staging/Preview
   before('smokeTest') {
     env.TEST_RESULTS_DIR = "smoke-output"
     env.ALLURE_RESULTS_DIR = "allure-results-smoke"
