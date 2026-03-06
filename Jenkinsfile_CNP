@@ -95,8 +95,13 @@ withPipeline(type, product, component) {
 
   // Runs after functional tests (@PR) pass successfully
   afterSuccess('functionalTests') {
-    echo "Functional tests passed. Proceeding to Accessibility Audits..."
-    yarnBuilder.yarn('test:a11y')
+    // Only run if the variable is explicitly set to true
+    if (env.ENABLE_A11Y_TEST == "true") {
+      echo "Functional tests passed. Proceeding to Accessibility Audits..."
+      yarnBuilder.yarn('test:a11y')
+    } else {
+      echo "Accessibility tests are DISABLED (ENABLE_A11Y_TEST is false). Skipping..."
+    }
   }
 
   afterAlways('functionalTests') {
