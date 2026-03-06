@@ -1,6 +1,6 @@
 module.exports = {
-  roots: ['<rootDir>/src/main'],
-  testRegex: '(/src/test/.*|\\.(test|spec))\\.(ts|js)$',
+  roots: ['<rootDir>/src/main', '<rootDir>/src/test/unit'],
+  testRegex: 'src/test/unit/.*\\.(test|spec)\\.(ts|js)$',
   moduleFileExtensions: ['ts', 'js', 'json'],
   testEnvironment: 'node',
   transform: {
