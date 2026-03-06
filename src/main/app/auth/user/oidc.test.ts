@@ -1,15 +1,15 @@
 import axios, { AxiosRequestHeaders, AxiosResponse, AxiosStatic } from 'axios';
 import jwt from 'jsonwebtoken';
 
-import { APPLICANT_2_SIGN_IN_URL, CALLBACK_URL, SIGN_IN_URL } from '../../steps/urls';
-import { OidcResponse, getRedirectUrl, getSystemUser, getUserDetails } from '../auth/user/oidc';
+import { APPLICANT_2_SIGN_IN_URL, CALLBACK_URL, SIGN_IN_URL } from '../../../steps/urls';
+import { OidcResponse, getRedirectUrl, getSystemUser, getUserDetails } from './oidc';
 
 const config = require('config');
 
 jest.mock('axios');
 jest.mock('config');
 
-const mockedConfig = config as jest.Mocked<typeof config>;
+const mockedConfig = config.get as jest.MockedFunction<typeof config.get>;
 const mockedAxios = axios as jest.Mocked<AxiosStatic>;
 
 const mockSecret = 'mock-secret';
@@ -29,6 +29,7 @@ const mockSystemPayload = {
   roles: ['caseworker-divorce-systemupdate', 'caseworker-caa', 'caseworker', 'caseworker-divorce'],
 };
 // Generate a mock JWT for testing
+//
 const mockToken = jwt.sign(mockPayload, mockSecret, { expiresIn: '1h' });
 const mockSystemToken = jwt.sign(mockSystemPayload, mockSecret, { expiresIn: '1h' });
 

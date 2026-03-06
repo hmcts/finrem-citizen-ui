@@ -31,7 +31,7 @@ export const getUserDetails = async (
   const params = { callbackUrl, code };
 
   const response: AxiosResponse<OidcResponse> = await getIdamToken(params, params.code);
-  const jwt = jwtDecode(response.data.id_token) as IdTokenJwtPayload;
+  const jwt = jwtDecode<IdTokenJwtPayload>(response.data.id_token);
 
   return {
     accessToken: response.data.access_token,
@@ -50,7 +50,7 @@ export const getSystemUser = async (): Promise<UserDetails> => {
 
   const response: AxiosResponse<OidcResponse> = await getIdamToken(params, params.username);
 
-  const jwt = jwtDecode(response.data.id_token) as IdTokenJwtPayload;
+  const jwt = jwtDecode<IdTokenJwtPayload>(response.data.id_token);
 
   return {
     accessToken: response.data.access_token,
