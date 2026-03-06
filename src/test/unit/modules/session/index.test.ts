@@ -7,11 +7,13 @@ jest.mock('@hmcts/nodejs-logging', () => ({
 }));
 
 jest.mock('connect-redis', () => {
-  return jest.fn().mockImplementation(() => ({
-    get: jest.fn(),
-    set: jest.fn(),
-    destroy: jest.fn(),
-  }));
+  return jest.fn().mockReturnValue(
+    class MockRedisStore {
+      get = jest.fn();
+      set = jest.fn();
+      destroy = jest.fn();
+    }
+  );
 });
 
 jest.mock('ioredis', () => ({
