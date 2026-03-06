@@ -25,6 +25,9 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
+  // Disable the library's automatic a11y trigger during the 'Test' stage
+  env.ENABLE_A11Y_TEST = "false"
+  
   // Ensure the default 'Test' stage only runs unit tests
   env.TEST_COMMAND = "test:unit"
   
@@ -93,7 +96,6 @@ withPipeline(type, product, component) {
   // Runs after functional tests (@PR) pass successfully
   afterSuccess('functionalTests') {
     echo "Functional tests passed. Proceeding to Accessibility Audits..."
-    // This runs the full a11y suite from src/test/a11y without needing @PR tags
     yarnBuilder.yarn('test:a11y')
   }
 

@@ -1,7 +1,7 @@
 #!groovy
 
 properties([
-  // Runs at 23:45  PM, Monday to Friday
+  // Runs at 23:45 PM, Monday to Friday
   pipelineTriggers([cron('45 23 * * 1-5')]),
   parameters([
     string(name: 'URL_TO_TEST', defaultValue: 'https://finrem-citizen-ui.aat.platform.hmcts.net',
@@ -34,6 +34,12 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
 withNightlyPipeline(type, product, component) {
+  // Disable the library's automatic a11y trigger during the early test stage
+  env.ENABLE_A11Y_TEST = "false"
+  
+  // Ensure the default 'Test' stage only runs unit tests
+  env.TEST_COMMAND = "test:unit"
+
   // Sync Jenkins Parameter to the Env Var Playwright is looking for
   env.TEST_URL = params.URL_TO_TEST
   env.RUNNING_ENV = "aat"
@@ -52,18 +58,15 @@ withNightlyPipeline(type, product, component) {
   }
 
   before('fullFunctionalTest') {
-    // Point to playwright command in package.json
     env.FULL_FUNCTIONAL_TESTS_COMMAND = "test:functional"
     
-    // 2. Set the directory for the Playwright Config logic
+    // Set the directory for the Playwright Config logic
     env.TEST_RESULTS_DIR = "functional-output"
     env.ALLURE_RESULTS_DIR = "allure-results"
     
-    // 3. Install browser once
     sh 'npx playwright install chromium --with-deps'
   }
 
-  // Set parallelism (20 is safe for AAT; 200 may cause IDAM rate-limiting)
   enableFullFunctionalTest(20)
 
   afterAlways('fullFunctionalTest') {
@@ -82,6 +85,7 @@ withNightlyPipeline(type, product, component) {
   }
 
   afterSuccess('fullFunctionalTest') {
+    echo "Functional tests passed. Proceeding to Accessibility Audits..."
     sh 'npx playwright install chromium --with-deps'
     yarnBuilder.yarn('test:a11y')
   }
