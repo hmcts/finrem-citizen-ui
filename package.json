@@ -121,11 +121,6 @@
     "webpack-dev-middleware": "6.1.3",
     "webpack-node-externals": "3.0.0"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown",
     "**/*.{js,ts}": "eslint --fix"

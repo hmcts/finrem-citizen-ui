@@ -1,5 +1,5 @@
 import { CommonConfig, ProjectsConfig } from '@hmcts/playwright-common';
-import { defineConfig, type ReporterDescription } from '@playwright/test';
+import { ReporterDescription, defineConfig } from '@playwright/test';
 import * as dotenv from 'dotenv';
 
 /**
@@ -32,13 +32,15 @@ const getBaseUrl = (): string => {
 
 const finalBaseUrl = getBaseUrl();
 
-// 1. Check we have already logged the process and aren't in a worker
+/// 1. Check we have already logged the process and aren't in a worker
 if (!process.env.ALREADY_LOGGED && process.env.PW_WORKER_INDEX === undefined) {
+  /* eslint-disable no-console */
   console.log('-------------------------------------------------------');
   console.log(`🌍 TARGET URL:  ${finalBaseUrl}`);
   console.log(`📂 RESULTS DIR: ${resultsDir}`);
   console.log(`🤖 ENVIRONMENT: ${process.env.RUNNING_ENV || 'Not Set'}`);
   console.log('-------------------------------------------------------');
+  /* eslint-enable no-console */
 
   process.env.ALREADY_LOGGED = 'true';
 }
