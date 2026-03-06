@@ -49,4 +49,4 @@ src/main/views/govuk
 
 # Misc
 npm-debug.log.*
-aat.env
+*.env

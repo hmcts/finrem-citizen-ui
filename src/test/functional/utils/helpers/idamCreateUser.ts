@@ -30,12 +30,19 @@ export class IdamApiService {
   }
 
   private async getAccessToken(apiContext: APIRequestContext): Promise<string> {
+    const clientSecret = process.env.IDAM_CITIZEN_CLIENT_SECRET;
+    const clientId = 'finrem-citizen-ui';
+
+    if (!clientSecret) {
+      throw new Error('MISSING CONFIG: IDAM_CITIZEN_CLIENT_SECRET is not defined in the environment.');
+    }
+
     const response = await apiContext.post(this.tokenUrl, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       form: {
         grant_type: 'client_credentials',
-        client_id: 'finrem-citizen-ui',
-        client_secret: '1tCA59sk1N8aytRa99sXTEHSXTHG8YHNdOCZCI6DTc2jfU9WbXjb7nB3JGYVYAno',
+        client_id: clientId,
+        client_secret: clientSecret,
         scope: 'profile roles',
       },
     });

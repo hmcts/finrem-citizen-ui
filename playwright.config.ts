@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+
 // 1. Determine the target URL
 const testUrl = process.env.TEST_URL || 'http://localhost:3100';
 
