@@ -1,4 +1,5 @@
 const path = require('path');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const sourcePath = path.resolve(__dirname, 'src/main/assets/js');
 const govukFrontend = require(path.resolve(__dirname, 'webpack/govukFrontend'));
@@ -10,7 +11,7 @@ const fileNameSuffix = devMode ? '-dev' : '.[contenthash]';
 const filename = `[name]${fileNameSuffix}.js`;
 
 module.exports = {
-  plugins: [...govukFrontend.plugins, ...scss.plugins, ...HtmlWebpack.plugins],
+  plugins: [...govukFrontend.plugins, ...scss.plugins, ...HtmlWebpack.plugins, new ForkTsCheckerWebpackPlugin()],
   entry: path.resolve(sourcePath, 'index.ts'),
   mode: devMode ? 'development' : 'production',
   context: __dirname,
@@ -23,8 +24,7 @@ module.exports = {
         use: {
           loader: 'ts-loader',
           options: {
-            // This forces ts-loader to emit JS even if there are
-            // type errors elsewhere in the project
+            // Keep speed high by transpiling only
             transpileOnly: true,
           },
         },
@@ -33,7 +33,6 @@ module.exports = {
   },
   resolve: {
     extensions: ['.ts', '.js'],
-    // Ensures Webpack looks in the correct node_modules
     modules: [path.resolve(__dirname, 'node_modules'), 'node_modules'],
   },
   output: {

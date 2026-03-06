@@ -39,6 +39,14 @@ withPipeline(type, product, component) {
   before('smokeTest') {
     env.TEST_RESULTS_DIR = "smoke-output"
     env.ALLURE_RESULTS_DIR = "allure-results-smoke"
+    
+    // In Playwright config we use TEST_URL or derived from RUNNING_ENV
+    // This helper determines the URL exactly like playwright.config.mts does
+    def targetUrl = env.RUNNING_ENV == "aat" ? "https://manage-case.aat.platform.hmcts.net" : "https://finrem-citizen-ui-${env.RUNNING_ENV}.preview.platform.hmcts.net"
+    
+    // DNS Check: Wait for the URL to be live before starting
+    sh "timeout 300s bash -c 'until curl -sIk ${targetUrl} > /dev/null; do echo \"Waiting for ${targetUrl}... \"; sleep 10; done'"
+    
     sh 'npx playwright install chromium --with-deps'
   }
 
@@ -57,7 +65,6 @@ withPipeline(type, product, component) {
   }
 
   afterSuccess('functionalTests') {
-    sh 'npx playwright install chromium --with-deps'
     yarnBuilder.yarn('test:a11y')
   }
 
@@ -76,7 +83,6 @@ withPipeline(type, product, component) {
   }
 
   onPR() {
-    // Jenkins provides CHANGE_ID for PRs
     env.RUNNING_ENV = "pr-${env.CHANGE_ID}" 
     env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
   }
