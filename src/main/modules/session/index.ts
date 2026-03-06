@@ -1,10 +1,11 @@
 import { Logger } from '@hmcts/nodejs-logging';
 import config from 'config';
-import RedisStore from 'connect-redis';
+import connectRedis = require('connect-redis');
 import type { Express } from 'express';
 import session = require('express-session');
 import { Redis } from 'ioredis';
 
+const RedisStore = connectRedis(session);
 const logger = Logger.getLogger('session');
 
 export function parseSessionSecret(raw: string): string | string[] {
