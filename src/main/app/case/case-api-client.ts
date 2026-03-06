@@ -29,9 +29,9 @@ export class CaseApiClient {
   public async getCaseById(caseId: string): Promise<FinremCaseData> {
     try {
       const response = await this.server.get<CcdV1Response>(`/cases/${caseId}`);
-      return response.data.case_data ;
+      return response.data.case_data;
     } catch (err) {
-      this.logError(err);
+      this.logError(err as AxiosError);
       throw new Error('Case could not be retrieved.');
     }
   }
