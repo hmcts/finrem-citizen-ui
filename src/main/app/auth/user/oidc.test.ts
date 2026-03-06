@@ -2,6 +2,7 @@ import axios, { AxiosRequestHeaders, AxiosResponse, AxiosStatic } from 'axios';
 import jwt from 'jsonwebtoken';
 
 import { APPLICANT_2_SIGN_IN_URL, CALLBACK_URL, SIGN_IN_URL } from '../../../steps/urls';
+
 import { OidcResponse, getRedirectUrl, getSystemUser, getUserDetails } from './oidc';
 
 const config = require('config');
