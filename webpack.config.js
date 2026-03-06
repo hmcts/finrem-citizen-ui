@@ -13,18 +13,28 @@ module.exports = {
   plugins: [...govukFrontend.plugins, ...scss.plugins, ...HtmlWebpack.plugins],
   entry: path.resolve(sourcePath, 'index.ts'),
   mode: devMode ? 'development' : 'production',
+  context: __dirname,
   module: {
     rules: [
       ...scss.rules,
       {
         test: /\.ts$/,
-        use: 'ts-loader',
         exclude: /node_modules/,
+        use: {
+          loader: 'ts-loader',
+          options: {
+            // This forces ts-loader to emit JS even if there are
+            // type errors elsewhere in the project
+            transpileOnly: true,
+          },
+        },
       },
     ],
   },
   resolve: {
     extensions: ['.ts', '.js'],
+    // Ensures Webpack looks in the correct node_modules
+    modules: [path.resolve(__dirname, 'node_modules'), 'node_modules'],
   },
   output: {
     path: path.resolve(__dirname, 'src/main/public/'),

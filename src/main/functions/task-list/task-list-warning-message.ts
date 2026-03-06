@@ -1,23 +1,27 @@
 const jsonData = require('../../views/config/task-list/standard-form-c-items.json');
 
+interface TaskItem {
+  required?: boolean;
+  fileName: string;
+}
+
 export const taskListWarningMessage: (firstHearingDate: string, documents: string[]) => boolean = (
   firstHearingDate: string,
   documents: string[]
 ) => {
   const hearingDate = new Date(firstHearingDate);
   const currentDate = new Date();
-  // Calculate difference in milliseconds
+
   const diffInMs = hearingDate.getTime() - currentDate.getTime();
-  // Convert to days
   const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
-  // Define the order of checks
-  const checkGroups = [];
+  // FIX: Explicitly type the array so it isn't 'never[]'
+  const checkGroups: TaskItem[] = [];
 
   if (diffInDays >= 35) {
     return false;
   }
-  // Add groups cumulatively based on how close the date is
+
   if (diffInDays < 35) {
     checkGroups.push(...jsonData.offset35);
   }
@@ -31,8 +35,8 @@ export const taskListWarningMessage: (firstHearingDate: string, documents: strin
     checkGroups.push(...jsonData.offset2);
   }
 
-  // Check if ALL tasks in the combined list are completed
-  return !checkGroups.every(task => {
+  return !checkGroups.every((task: TaskItem) => {
+    // TypeScript now knows 'required' and 'fileName' exist
     if (typeof task.required === 'undefined' || task.required === true) {
       return documents.includes(task.fileName);
     } else {

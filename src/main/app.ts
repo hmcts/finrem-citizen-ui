@@ -1,7 +1,6 @@
 import * as path from 'path';
 
 import * as bodyParser from 'body-parser';
-import config = require('config');
 import cookieParser from 'cookie-parser';
 import express, { NextFunction, Request, Response } from 'express';
 import RateLimit from 'express-rate-limit';
@@ -15,7 +14,6 @@ import { PropertiesVolume } from './modules/properties-volume';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 const glob = require('glob');
-
 
 const { setupDev } = require('./development');
 
@@ -35,9 +33,7 @@ const logger = Logger.getLogger('app');
 new PropertiesVolume().enableFor(app);
 new AppInsights().enable();
 new Nunjucks(developmentMode).enableFor(app);
-// secure the application by adding various HTTP headers to its responses
-new Helmet(config.get('security')).enableFor(app);
-
+new Helmet(developmentMode).enableFor(app);
 app.get('/favicon.ico', limiter, (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));
 });
@@ -45,7 +41,9 @@ app.get('/favicon.ico', limiter, (req, res) => {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(express.static(path.resolve(__dirname, 'public')));
+
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate, no-store');
   next();
@@ -57,17 +55,14 @@ glob
   .forEach((route: { default: (app: Express) => void }) => route.default(app));
 
 setupDev(app, developmentMode);
-// returning "not found" page for requests with paths not resolved by the router
+
 app.use((req, res) => {
   res.status(404);
   res.render('not-found');
 });
 
-// error handler
 app.use((err: HTTPError, req: Request, res: Response, _next: NextFunction) => {
   logger.error(`${err.stack || err}`);
-
-  // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = env === 'development' ? err : {};
   res.status(err.status || 500);

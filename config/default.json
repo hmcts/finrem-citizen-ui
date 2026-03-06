@@ -9,6 +9,16 @@
       "maxAge": 31536000,
       "includeSubDomains": true,
       "preload": true
+    },
+    "contentSecurityPolicy": {
+      "directives": {
+        "defaultSrc": ["'self'"],
+        "scriptSrc": ["'self'", "'unsafe-inline'"],
+        "styleSrc": ["'self'", "'unsafe-inline'"],
+        "imgSrc": ["'self'", "data:"],
+        "objectSrc": ["'none'"],
+        "connectSrc": ["'self'"]
+      }
     }
   }
 }
