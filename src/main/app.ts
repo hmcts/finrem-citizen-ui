@@ -3,9 +3,9 @@ import * as path from 'path';
 import * as bodyParser from 'body-parser';
 import config = require('config');
 import cookieParser from 'cookie-parser';
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import RateLimit from 'express-rate-limit';
-import { glob } from 'glob';
+import { Express } from 'express-serve-static-core';
 
 import { HTTPError } from './HttpError';
 import { AppInsights } from './modules/appinsights';
@@ -14,6 +14,8 @@ import { Nunjucks } from './modules/nunjucks';
 import { PropertiesVolume } from './modules/properties-volume';
 
 const { Logger } = require('@hmcts/nodejs-logging');
+const glob = require('glob');
+
 
 const { setupDev } = require('./development');
 
@@ -51,8 +53,8 @@ app.use((req, res, next) => {
 
 glob
   .sync(__dirname + '/routes/**/*.+(ts|js)')
-  .map(filename => require(filename))
-  .forEach(route => route.default(app));
+  .map((filename: string) => require(filename))
+  .forEach((route: { default: (app: Express) => void }) => route.default(app));
 
 setupDev(app, developmentMode);
 // returning "not found" page for requests with paths not resolved by the router
@@ -62,7 +64,7 @@ app.use((req, res) => {
 });
 
 // error handler
-app.use((err: HTTPError, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: HTTPError, req: Request, res: Response, _next: NextFunction) => {
   logger.error(`${err.stack || err}`);
 
   // set locals, only providing error in development

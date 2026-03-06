@@ -1,15 +1,16 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { taskListWarningMessage } from '../../../../main/functions/task-list/task-list-warning-message';
 
 describe('taskListWarningMessage tests', () => {
-  function firstHearingDate(offset: number) {
+  function firstHearingDate(offset: number): string {
     const d = new Date();
     d.setDate(d.getDate() + offset);
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
 
-    const formatted = `${yyyy}-${mm}-${dd}`;
-    return formatted;
+    return `${yyyy}-${mm}-${dd}`;
   }
 
   it('should return false: no warning message expected', () => {
@@ -54,10 +55,9 @@ describe('taskListWarningMessage tests', () => {
       'composite_case_summary_es1.pdf',
       'composite_schedule_of_assets_and_income_es2.pdf',
       'statement_of_costs_incurred_h.pdf',
-      'hearing_bundle.pdf'
+      'hearing_bundle.pdf',
     ];
     const warningMessage = taskListWarningMessage(firstHearingDate(1), documents);
     expect(warningMessage).toBe(false);
   });
-
 });
