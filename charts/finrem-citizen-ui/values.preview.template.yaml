@@ -1,6 +1,6 @@
 nodejs:
   environment:
-    OIDC_REDIRECT_URI: 'https://${SERVICE_FQDN}/oauth2/callback'
+    OAUTH_CALLBACK_URL: 'https://${SERVICE_FQDN}/oauth2/callback'
     IDAM_CLIENT_ID: finrem-citizen-ui
 
     # AAT IDAM even in preview

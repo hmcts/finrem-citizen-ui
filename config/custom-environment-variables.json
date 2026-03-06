@@ -1,7 +1,7 @@
 {
   "oidc": {
     "issuer": "OIDC_ISSUER",
-    "clientId": "IDAM_CLIENT",
+    "clientId": "IDAM_CLIENT_ID",
     "callbackUrl": "OAUTH_CALLBACK_URL"
   },
   "features": {
