@@ -13,7 +13,7 @@
     "useDefineForClassFields": false,
     "noEmit": true,
     "allowJs": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "baseUrl": ".",
     "paths": {
       "router/*": ["src/main/router/*"],
