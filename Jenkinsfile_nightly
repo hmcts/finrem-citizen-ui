@@ -42,12 +42,35 @@ withNightlyPipeline(type, product, component) {
   //enablePerformanceTest()
   //enableMutationTest()
 
-  // TODO: Implement Full Functional tests, at the movement there are no functional tests are implemented:
-  //  See: src/test/functionalTests/run-full-functional-tests.sh
-  //  For reference see: nfdiv-frontend application
-  enableFullFunctionalTest(200)
-  afterAlways('fullFunctionalTest') {
-    steps.archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/functional/reports/**/*'
+  afterSuccess('build') {
+    yarnBuilder.yarn('build')
   }
+
+  before('fullFunctionalTest') {
+    env.FULL_FUNCTIONAL_TESTS_COMMAND = "test:full-functional"
+  }
+
+  enableFullFunctionalTest(200)
+
+  afterAlways('fullFunctionalTest') {
+    junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
+    
+    archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
+
+    allure([
+      includeProperties: false,
+      jdk: '',
+      properties: [],
+      reportBuildPolicy: 'ALWAYS',
+      results: [[path: 'allure-results']]
+    ])
+}
+
+  // 4. Ensure A11y also runs nightly
+  afterSuccess('fullFunctionalTest') {
+    yarnBuilder.yarn('playwright install chromium')
+    yarnBuilder.yarn('test:a11y')
+  }
+
   enableSlackNotifications('#finrem-dev')
 }
