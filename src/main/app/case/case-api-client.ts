@@ -6,7 +6,7 @@ import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
 import { UserDetails } from '../controller/AppRequest';
 
 import { CaseAssignedUserRole } from './case-roles';
-import {FinremCaseData, State} from './definition';
+import { FinremCaseData, State } from './definition';
 
 export class CaseApiClient {
   readonly maxRetries: number = 3;

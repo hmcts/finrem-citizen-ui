@@ -3,7 +3,7 @@ import { LoggerInstance } from 'winston';
 import { UserDetails } from '../controller/AppRequest';
 
 import { CaseApiClient, getCaseApiClient } from './case-api-client';
-import {CaseRole, FinremCaseData} from './definition';
+import { CaseRole, FinremCaseData } from './definition';
 
 export class CaseApi {
   readonly maxRetries: number = 3;

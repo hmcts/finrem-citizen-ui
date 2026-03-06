@@ -16,16 +16,10 @@ export const getTokenFromApi = (): void => {
   const oneTimePassword = authenticator.generate(secret);
   const body = { microservice, oneTimePassword };
 
-console.log("microservice name::", microservice)
-  console.log("secret name::", secret)
   axios
     .post(url, body)
-    .then(response => {
-      token = response.data;
-      console.log('Token:', token); // 👈 console log added here
-    })
-    .catch(err => console.log(err.response?.status, err.response?.data));
-
+    .then(response => (token = response.data))
+    .catch(err => logger.error(err.response?.status, err.response?.data));
 };
 
 export const initAuthToken = (): void => {

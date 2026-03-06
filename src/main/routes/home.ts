@@ -1,7 +1,8 @@
 import { Application } from 'express';
-import { getSystemUser } from '../app/auth/user/oidc';
 import { LoggerInstance } from 'winston';
-import {getCaseApi} from "../app/case/case-api";
+
+import { getSystemUser } from '../app/auth/user/oidc';
+import { getCaseApi } from '../app/case/case-api';
 
 import { oidcMiddleware } from '../middleware';
 
@@ -18,7 +19,7 @@ export default function (app: Application): void {
     const systemUser = await getSystemUser();
 
     const caseworkerUserApi = getCaseApi(systemUser, logger);
-    const caseData = await caseworkerUserApi.getCaseById("1734026863049975");
+    const caseData = await caseworkerUserApi.getCaseById('1734026863049975');
     res.json(caseData);
 
   });

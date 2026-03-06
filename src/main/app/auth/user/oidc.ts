@@ -89,7 +89,6 @@ const createIdamToken = (params: Record<string, string>): Promise<AxiosResponse<
   } else {
     throw new Error('Missing data for createIdamToken.');
   }
-  console.log("tokenUrl::",tokenUrl)
   return axios.post(tokenUrl, data, { headers });
 };
 

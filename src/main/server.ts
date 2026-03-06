@@ -6,7 +6,7 @@ import * as path from 'path';
 import config from 'config';
 
 import { app } from './app';
-import {AuthProvider} from "./modules/auth-provider";
+import { AuthProvider } from './modules/auth-provider';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
