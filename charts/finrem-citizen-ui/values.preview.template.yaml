@@ -40,6 +40,8 @@ nodejs:
       secrets:
         - name: AppInsightsInstrumentationKey-Preview
           alias: AppInsightsInstrumentationKey
+        - finrem-system-update-username
+        - finrem-system-update-password
         - idam-systemupdate-username
         - idam-systemupdate-password
         - finrem-citizen-ui-idam-client-secret
@@ -48,11 +50,8 @@ nodejs:
 idam-pr:
   enabled: true
   redirect_uris:
-    divorce:
+    finrem:
       - https://${SERVICE_FQDN}/oauth2/callback
-      - https://civil-${SERVICE_FQDN}/oauth2/callback
-      - https://${SERVICE_FQDN}/oauth2/callback-applicant2
-      - https://civil-${SERVICE_FQDN}/oauth2/callback-applicant2
 redis:
   enabled: true
   architecture: standalone
