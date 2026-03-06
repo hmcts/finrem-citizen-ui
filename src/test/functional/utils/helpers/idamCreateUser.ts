@@ -5,8 +5,8 @@ import { APIRequestContext, request } from '@playwright/test';
 import { UserCredentials } from '../../../functional/pom/idamPage.page';
 
 export class IdamApiService {
-  private readonly tokenUrl = 'https://idam-web-public.aat.platform.hmcts.net/o/token';
-  private readonly testSupportUrl = 'https://idam-testing-support-api.aat.platform.hmcts.net/test/idam/users';
+  private readonly createTokenEndpoint = 'https://idam-web-public.aat.platform.hmcts.net/o/token';
+  private readonly createUserEndpoint = 'https://idam-testing-support-api.aat.platform.hmcts.net/test/idam/users';
 
   async createCitizenUser(): Promise<UserCredentials> {
     const apiContext = await request.newContext();
@@ -37,7 +37,7 @@ export class IdamApiService {
       throw new Error('MISSING CONFIG: IDAM_CITIZEN_CLIENT_SECRET is not defined in the environment.');
     }
 
-    const response = await apiContext.post(this.tokenUrl, {
+    const response = await apiContext.post(this.createTokenEndpoint, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       form: {
         grant_type: 'client_credentials',
@@ -63,7 +63,7 @@ export class IdamApiService {
     first: string,
     last: string
   ) {
-    const response = await apiContext.post(this.testSupportUrl, {
+    const response = await apiContext.post(this.createUserEndpoint, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
