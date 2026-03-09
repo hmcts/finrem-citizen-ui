@@ -6,8 +6,8 @@
     "node": ">=22.22.0"
   },
   "scripts": {
-    "start": "NODE_ENV=production tsx src/main/server.ts",
-    "start:dev": "nodemon --exec tsx src/main/server.ts",
+    "start": "NODE_ENV=production ts-node -r tsconfig-paths/register src/main/server.ts",
+    "start:dev": "nodemon --config nodemon.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "build": "yarn webpack --config webpack.config.js",
@@ -117,7 +117,6 @@
     "supertest": "^7.1.0",
     "ts-jest": "29.1.0",
     "ts-loader": "9.5.4",
-    "tsx": "^4.21.0",
     "webpack": "5.105.4",
     "webpack-cli": "5.1.4",
     "webpack-dev-middleware": "6.1.3",
