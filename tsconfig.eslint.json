@@ -1,11 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "types": ["node", "@playwright/test"]
+    "allowJs": true,
+    "noEmit": true
   },
-  "include": ["src/main/**/*.ts", "src/test/**/*.ts", "playwright.config.mts"],
-  "exclude": ["node_modules"]
+  "include": ["src/main/**/*.ts", "src/test/**/*.ts", "playwright.config.mts"]
 }
