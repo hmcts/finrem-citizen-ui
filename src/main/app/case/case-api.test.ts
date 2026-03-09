@@ -2,6 +2,7 @@ import { UserDetails } from '../controller/AppRequest';
 
 import { CaseApi, getCaseApi } from './case-api';
 import * as caseApiClient from './case-api-client';
+import { CaseRole } from './definition';
 
 jest.mock('axios');
 
@@ -47,4 +48,22 @@ describe('getCaseApi', () => {
   test('should create a CaseApi', () => {
     expect(getCaseApi(userDetails, {} as never)).toBeInstanceOf(CaseApi);
   });
+});
+
+test('Should call addCaseUserRoles with assignments', async () => {
+  const mockApiClient = {
+    getCaseById: jest.fn(),
+    addCaseUserRoles: jest.fn(),
+  };
+
+  const api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient);
+
+  const assignments = [{ case_id: '1234', user_id: 'user1', case_role: CaseRole.APPLICANT }];
+
+  mockApiClient.addCaseUserRoles.mockResolvedValue(undefined);
+
+  await api.addUsersToCase(assignments);
+
+  expect(mockApiClient.addCaseUserRoles).toHaveBeenCalledTimes(1);
+  expect(mockApiClient.addCaseUserRoles).toHaveBeenCalledWith(assignments);
 });

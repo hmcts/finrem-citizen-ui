@@ -1,9 +1,12 @@
 import axios from 'axios';
+import type { AxiosInstance } from 'axios';
 import { LoggerInstance } from 'winston';
 
 import { UserDetails } from '../controller/AppRequest';
 
 import { CaseApiClient, getCaseApiClient } from './case-api-client';
+import { CaseAssignedUserRole } from './case-roles';
+import { CaseRole } from './definition';
 
 jest.mock('axios');
 
@@ -73,5 +76,73 @@ describe('CaseApi', () => {
 describe('getCaseApiClient', () => {
   test('should create a CaseApiClient', () => {
     expect(getCaseApiClient(userDetails, {} as never)).toBeInstanceOf(CaseApiClient);
+  });
+});
+
+describe('CaseApi.addCaseUserRoles', () => {
+  let mockAxios: jest.Mocked<Pick<typeof axios, 'post' | 'get'>>;
+  let mockLogger: LoggerInstance;
+  let api: CaseApiClient;
+
+  beforeEach(() => {
+    mockAxios = {
+      post: jest.fn(),
+      get: jest.fn(),
+    } as unknown as jest.Mocked<Pick<typeof axios, 'post' | 'get'>>;
+
+    mockLogger = {
+      error: jest.fn().mockImplementation((msg: string) => msg),
+      info: jest.fn().mockImplementation((msg: string) => msg),
+    } as unknown as LoggerInstance;
+
+    api = new CaseApiClient(mockAxios as unknown as AxiosInstance, mockLogger);
+  });
+
+  test('should POST assignments to /case-users successfully', async () => {
+    const assignments: CaseAssignedUserRole[] = [
+      {
+        case_id: '123',
+        user_id: 'user1',
+        case_role: CaseRole.RESPONDENT,
+      },
+    ];
+
+    mockAxios.post.mockResolvedValue({ status: 200 });
+
+    await expect(api.addCaseUserRoles(assignments)).resolves.not.toThrow();
+
+    expect(mockAxios.post).toHaveBeenCalledWith('/case-users', {
+      case_users: assignments,
+    });
+  });
+
+  test('should log error + response and throw when API returns error.response', async () => {
+    const assignments: CaseAssignedUserRole[] = [
+      {
+        case_id: '123',
+        user_id: 'user1',
+        case_role: CaseRole.APPLICANT,
+      },
+    ];
+
+    const axiosError = {
+      isAxiosError: true,
+      message: 'Boom',
+      config: { method: 'post', url: '/case-users' },
+      response: {
+        status: 500,
+        data: { error: 'Internal error' },
+      },
+    };
+
+    mockAxios.post.mockRejectedValue(axiosError);
+
+    await expect(api.addCaseUserRoles(assignments)).rejects.toThrow('Case user roles could not be added.');
+
+    expect(mockLogger.error).toHaveBeenCalledWith('API Error post /case-users 500');
+
+    expect(mockLogger.info).toHaveBeenCalledWith('Response: ', {
+      error: 'Internal error',
+    });
   });
 });
