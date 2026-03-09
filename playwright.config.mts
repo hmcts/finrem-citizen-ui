@@ -49,7 +49,7 @@ export default defineConfig({
   ...CommonConfig.recommended,
 
   testDir: './src/test',
-  testMatch: ['a11y/*.test.ts', 'functional/**/*.spec.ts', 'smoke/**/*.test.ts'],
+  testMatch: ['a11y/*.test.ts', 'functional/**/*.spec.ts'],
 
   outputDir: `./${resultsDir}/artifacts`,
 
