@@ -111,7 +111,7 @@
     "raw-loader": "4.0.2",
     "sass": "1.77.8",
     "sass-loader": "16.0.7",
-    "style-loader": "3.3.4",
+    "style-loader": "4.0.0",
     "supertest": "^7.1.0",
     "ts-jest": "29.1.0",
     "ts-loader": "9.5.4",
