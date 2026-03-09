@@ -16,7 +16,6 @@ export class OIDCModule {
   }
 
   public async setupClient(): Promise<void> {
-    // Prevent redundant discovery calls if already configured
     if (this.clientConfig) {
       return;
     }
@@ -34,13 +33,12 @@ export class OIDCModule {
       this.logger.info('Setting up OIDC client via discovery');
       const issuer = new URL(this.oidcConfig.issuer);
 
-      // Await discovery - this is the async operation that was causing the issue
       this.clientConfig = await oidcClient.discovery(issuer, this.oidcConfig.clientId, clientSecret);
 
       this.logger.info('OIDC client configured successfully');
     } catch (err: unknown) {
       this.logger.error('Failed to setup OIDC client:', err);
-      throw err; // Propagate error so the app knows initialization failed
+      throw err;
     }
   }
 

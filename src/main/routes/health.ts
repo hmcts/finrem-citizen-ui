@@ -11,7 +11,7 @@ function shutdownCheck(): boolean {
 export default function (app: Application): void {
   const healthCheckConfig = {
     checks: {
-      // TODO: replace this sample check with proper checks for your application
+      // TODO: replace this sample check with proper checks
       sampleCheck: healthcheck.raw(() => healthcheck.up()),
     },
     readinessChecks: {

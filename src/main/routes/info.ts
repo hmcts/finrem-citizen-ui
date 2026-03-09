@@ -13,7 +13,7 @@ export default function (app: Router): void {
         uptime: process.uptime(),
       },
       info: {
-        // TODO: add downstream info endpoints if your app has any
+        // TODO: add downstream info endpoints
       },
     })
   );
