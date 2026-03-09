@@ -5,6 +5,8 @@ test.describe('Accessibility Tests', () => {
     const { AxeUtils } = await import('@hmcts/playwright-common');
 
     await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
     const axeUtils = new AxeUtils(page);
     await axeUtils.audit();
   });
