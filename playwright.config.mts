@@ -1,11 +1,10 @@
 import { CommonConfig, ProjectsConfig } from '@hmcts/playwright-common';
 import { ReporterDescription, defineConfig } from '@playwright/test';
-import * as dotenv from 'dotenv';
+import 'dotenv/config';
 
 /**
  * 1. Environment Loading
  */
-dotenv.config();
 
 /**
  * 2. Dynamic Results Directory
