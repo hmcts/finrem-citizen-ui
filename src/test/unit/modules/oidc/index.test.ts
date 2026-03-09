@@ -90,20 +90,21 @@ describe('OIDCModule', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    delete process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET;
     delete process.env.IDAM_SECRET;
 
     mockedConfig.get.mockImplementation(<T>(key: string): T => {
       if (key === 'oidc') {
         return baseOidcConfig as T;
       }
-      if (key === 'secrets.finrem.finrem-citizen-oauth2-client-secret') {
+      if (key === 'secrets.finrem.finrem-citizen-ui-idam-client-secret') {
         return 'secret-from-config' as T;
       }
       throw new Error(`Unexpected config.get key: ${key}`);
     });
 
     mockedConfig.has.mockImplementation((key: string): boolean => {
-      return key === 'secrets.finrem.finrem-citizen-oauth2-client-secret';
+      return key === 'secrets.finrem.finrem-citizen-ui-idam-client-secret';
     });
   });
 
@@ -182,7 +183,9 @@ describe('OIDCModule', () => {
   });
 
   it('setupClient uses env secret and configures client', async () => {
-    process.env.IDAM_SECRET = 'env-secret';
+    // If the app checks FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET or IDAM_SECRET, we set both to be safe
+    process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET = 'finrem-citizen-ui-idam-client-secret';
+    process.env.IDAM_SECRET = 'finrem-citizen-ui-idam-client-secret';
 
     const discoveredClient = {} as unknown as oidcClient.Configuration;
     mockedOidc.discovery.mockResolvedValue(discoveredClient);
@@ -195,7 +198,7 @@ describe('OIDCModule', () => {
     expect(mockedOidc.discovery).toHaveBeenCalledWith(
       new URL(baseOidcConfig.issuer),
       baseOidcConfig.clientId,
-      'env-secret'
+      'finrem-citizen-ui-idam-client-secret'
     );
     expect(getClientConfig(module)).toBe(discoveredClient);
     expect(mockLogger.info).toHaveBeenCalledWith('OIDC client configured successfully');
@@ -247,7 +250,7 @@ describe('OIDCModule', () => {
           callbackUrl: 'https://public.example.com/oauth2/callback',
         } as T;
       }
-      if (key === 'secrets.finrem.finrem-citizen-oauth2-client-secret') {
+      if (key === 'secrets.finrem.finrem-citizen-ui-idam-client-secret') {
         return 'secret-from-config' as T;
       }
       throw new Error(`Unexpected config.get key: ${key}`);

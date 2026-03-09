@@ -28,7 +28,7 @@
   },
   "secrets": {
     "finrem": {
-      "idam-secret": "AAAAAAAAAAAA",
+      "finrem-citizen-ui-idam-client-secret": "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET",
       "session-secret": "finrem-local-dev-secret",
       "redis-connection-string": "redis://localhost:6379"
     }

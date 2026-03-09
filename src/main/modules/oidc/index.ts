@@ -21,12 +21,12 @@ export class OIDCModule {
       return;
     }
 
-    let clientSecret = process.env.IDAM_SECRET;
-    if (!clientSecret && config.has('secrets.finrem.finrem-citizen-oauth2-client-secret')) {
-      clientSecret = config.get<string>('secrets.finrem.finrem-citizen-oauth2-client-secret');
+    let clientSecret = process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET;
+    if (!clientSecret && config.has('secrets.finrem.finrem-citizen-ui-idam-client-secret')) {
+      clientSecret = config.get<string>('secrets.finrem.finrem-citizen-ui-idam-client-secret');
     }
 
-    if (!clientSecret || clientSecret === 'PLACEHOLDER_IDAM_SECRET') {
+    if (!clientSecret || clientSecret === 'PLACEHOLDER_IDAM_SECRET' || clientSecret === 'AAAAAAAAAAAA') {
       this.logger.error('CRITICAL: IDAM Client Secret is missing or still set to placeholder!');
     }
 

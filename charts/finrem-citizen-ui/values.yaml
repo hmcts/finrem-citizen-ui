@@ -15,10 +15,8 @@ nodejs:
       secrets:
         - name: app-insights-connection-string
           alias: app-insights-connection-string
-        - name: idam-secret
-          alias: OAUTH2_CLIENT_FINREM
         - name: finrem-citizen-ui-idam-client-secret
-          alias: FINREM_IDAM_CLIENT_SECRET
+          alias: FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET
 
   autoscaling:
     enabled: true

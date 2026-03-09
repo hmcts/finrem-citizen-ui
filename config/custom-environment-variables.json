@@ -9,7 +9,7 @@
   },
   "secrets": {
     "finrem": {
-      "idam-secret": "IDAM_SECRET",
+      "finrem-citizen-ui-idam-client-secret": "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET",
       "session-secret": "SESSION_SECRET",
       "redis-connection-string": "REDIS_CONNECTION_STRING"
     }
