@@ -38,8 +38,6 @@ nodejs:
     finrem:
       resourceGroup: finrem
       secrets:
-        - name: AppInsightsInstrumentationKey-Preview
-          alias: AppInsightsInstrumentationKey
         - finrem-system-update-username
         - finrem-system-update-password
         - idam-systemupdate-username
