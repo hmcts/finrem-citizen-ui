@@ -18,7 +18,7 @@ interface CaseNumberError {
   caseNumber?: string;
 }
 
-function validateCaseNumber(caseNumber: string | undefined): CaseNumberError | null {
+export function validateCaseNumber(caseNumber: string | undefined): CaseNumberError | null {
   const errors: CaseNumberError = {};
 
   // Required validation
@@ -62,7 +62,7 @@ async function userHasLinkedCase(req: Request): Promise<boolean> {
   }
 }
 
-export default (app: Application): void => {
+export default function setupEnterCaseNumberRoute(app: Application): void {
   app.get('/enter-case-number', async (req: Request, res: Response) => {
     // Skip logic: if user already has linked case, redirect to dashboard
     if (await userHasLinkedCase(req)) {

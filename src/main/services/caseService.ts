@@ -11,7 +11,7 @@ interface UserCaseResponse {
 }
 
 class CaseService {
-  private client: AxiosInstance;
+  private readonly client: AxiosInstance;
 
   constructor() {
     const baseURL = config.get<string>('services.case.url');
