@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { randomInt, randomUUID } from 'crypto';
 
 import { APIRequestContext, request } from '@playwright/test';
 
@@ -14,9 +14,9 @@ export class IdamApiService {
     const firstNames = ['James', 'Emma', 'Oliver', 'Sophia', 'Liam', 'Ava', 'Noah'];
     const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia'];
 
-    const first = firstNames[Math.floor(Math.random() * firstNames.length)];
-    const last = lastNames[Math.floor(Math.random() * lastNames.length)];
-    const randomNum = Math.floor(Math.random() * 9000) + 1000;
+    const first = firstNames[randomInt(firstNames.length)];
+    const last = lastNames[randomInt(lastNames.length)];
+    const randomNum = randomInt(1000, 10000);
 
     const user: UserCredentials = {
       username: `${first.toLowerCase()}${last.toLowerCase()}${randomNum}@mailinator.com`,
