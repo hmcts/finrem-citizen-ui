@@ -25,15 +25,14 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
-  // Disable the library's automatic a11y trigger during the 'Test' stage
+  // 1. Keep A11Y disabled by default for standard library stages
   env.ENABLE_A11Y_TEST = "false"
   
-  // Ensure the default 'Test' stage only runs unit tests
-  env.TEST_COMMAND = "test:unit"
+  // 2. Ensure Unit Test stage ONLY runs unit tests and ignores the a11y folder
+  env.TEST_COMMAND = "test:unit --testPathIgnorePatterns=src/test/a11y"
   
   loadVaultSecrets(secrets)
 
-  // Helper to ensure we are testing the correct environment
   def getTargetUrl = {
     if (env.RUNNING_ENV == "aat") {
       return "https://manage-case.aat.platform.hmcts.net"
@@ -43,7 +42,6 @@ withPipeline(type, product, component) {
     }
   }
 
-  // Specific health check that waits for a successful 200/302 response
   def waitForAppReady = { url ->
     echo "Checking health for: ${url}"
     sh """
@@ -60,21 +58,18 @@ withPipeline(type, product, component) {
   // --- UNIT TESTS & BUILD ---
   before('tests') {
     sh 'rm -rf smoke-output functional-output allure-results allure-results-smoke'
-    sh 'npx playwright install chromium --with-deps'
   }
 
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
 
-  // --- SMOKE TESTS ---
+  // --- SMOKE TESTS (JEST) ---
   before('smokeTest') {
     env.TEST_RESULTS_DIR = "smoke-output"
     env.ALLURE_RESULTS_DIR = "allure-results-smoke"
     env.TEST_URL = getTargetUrl()
-    
     waitForAppReady(env.TEST_URL)
-    sh 'npx playwright install chromium --with-deps'
   }
 
   afterAlways('smokeTest') {
@@ -83,20 +78,21 @@ withPipeline(type, product, component) {
     allure([results: [[path: 'allure-results-smoke']]])
   }
 
-  // --- FUNCTIONAL & ACCESSIBILITY TESTS ---
+  // --- FUNCTIONAL TESTS (PLAYWRIGHT) ---
   before('functionalTests') {
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
     env.TEST_RESULTS_DIR = "functional-output"
     env.ALLURE_RESULTS_DIR = "allure-results"
     env.TEST_URL = getTargetUrl()
-
+    
     waitForAppReady(env.TEST_URL)
+    
+    echo "Installing Playwright for Functional Tests..."
     sh 'npx playwright install chromium --with-deps'
   }
 
-  // Runs after functional tests (@PR) pass successfully
+  // --- ACCESSIBILITY TESTS (PLAYWRIGHT) ---
   afterSuccess('functionalTests') {
-    // Only run if the variable is explicitly set to true
     if (env.ENABLE_A11Y_TEST == "true") {
       echo "Functional tests passed. Proceeding to Accessibility Audits..."
       yarnBuilder.yarn('test:a11y')
