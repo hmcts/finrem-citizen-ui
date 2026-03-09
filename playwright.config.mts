@@ -34,7 +34,7 @@ if (!process.env.ALREADY_LOGGED && !process.env.PW_WORKER_INDEX) {
 export default defineConfig({
   ...CommonConfig.recommended,
   // Point to E2E-specific config
-  tsconfig: './tsconfig.e2e.json',
+  tsconfig: './tsconfig.playwright.json',
 
   testDir: './src/test',
   testMatch: ['a11y/*.test.ts', 'functional/**/*.spec.ts'],
