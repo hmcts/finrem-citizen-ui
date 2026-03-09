@@ -1,19 +1,12 @@
 {
   "compilerOptions": {
-    "module": "ES2022",
+    "target": "ES2022", // Modern JS for Node 22
+    "module": "CommonJS", // Matches standard HMCTS patterns
     "moduleResolution": "node",
-    "target": "ES2022",
-    "resolveJsonModule": true,
-    "allowImportingTsExtensions": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "strict": true,
+    "allowJs": true, // Changed to true for better flexibility
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    "useDefineForClassFields": false,
-    "noEmit": true,
-    "allowJs": true,
-    "noImplicitAny": true,
     "baseUrl": ".",
     "paths": {
       "router/*": ["src/main/router/*"],
@@ -21,5 +14,5 @@
     },
     "types": ["node", "@playwright/test"]
   },
-  "include": ["src/**/*.ts", "playwright.config.mts"]
+  "include": ["src/**/*.ts", "playwright.config.ts"]
 }
