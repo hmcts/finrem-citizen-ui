@@ -1,3 +1,5 @@
+// Main TypeScript configuration for the backend code, excluding tests to prevent type conflicts and ensure clean separation of concerns
+// / src/main
 {
   "compilerOptions": {
     "target": "ES2020",
@@ -7,14 +9,13 @@
     "allowJs": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["node", "@playwright/test"],
+    "types": ["node"],
     "baseUrl": ".",
     "paths": {
       "router/*": ["src/main/router/*"],
-      "routes/*": ["src/main/routes/*"],
-      "@pom/*": ["src/test/functional/pom/*"],
-      "@helpers/*": ["src/test/functional/utils/helpers/*"]
+      "routes/*": ["src/main/routes/*"]
     }
   },
-  "include": ["src/**/*.ts", "playwright.config.ts"]
+  "include": ["src/main/**/*.ts"], // 🎯 Target only backend source
+  "exclude": ["node_modules", "src/test/**/*"] // 🛡️ Explicitly ignore tests
 }
