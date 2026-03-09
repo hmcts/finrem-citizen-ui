@@ -12,35 +12,41 @@ dotenv.config();
 /**
  * 2. Enhanced HMCTS URL Logic
  */
-const RUNNING_ENV = process.env.RUNNING_ENV || 'aat';
 const resultsDir = process.env.TEST_RESULTS_DIR || 'functional-output';
 
 const getBaseUrl = (): string => {
-  // Priority 1: Explicitly defined TEST_URL (e.g., localhost:3000 or a specific URL)
+  // Priority 1: Explicitly defined TEST_URL (e.g., localhost:3100)
   if (process.env.TEST_URL) {
     return process.env.TEST_URL;
   }
 
-  // Priority 2: Preview/PR Environments (requires .preview subdomain)
-  if (RUNNING_ENV.startsWith('pr-')) {
-    return `https://finrem-citizen-ui-${RUNNING_ENV}.preview.platform.hmcts.net`;
+  const env = process.env.RUNNING_ENV || 'aat';
+
+  // Priority 2: Preview/PR Environments
+  if (env.startsWith('pr-')) {
+    return `https://finrem-citizen-ui-${env}.preview.platform.hmcts.net`;
   }
 
   // Priority 3: Standard AAT/Demo Environments
-  return `https://manage-case.${RUNNING_ENV}.platform.hmcts.net`;
+  return `https://manage-case.${env}.platform.hmcts.net`;
 };
 
 const finalBaseUrl = getBaseUrl();
 
 /**
- *  Logging
+ * 3. Correct the Environment Label for Logging
+ */
+const displayEnv = process.env.TEST_URL?.includes('localhost') ? 'local' : process.env.RUNNING_ENV || 'aat';
+
+/**
+ * Logging
  */
 if (!process.env.ALREADY_LOGGED && process.env.PW_WORKER_INDEX === undefined) {
   /* eslint-disable no-console */
   console.log('-------------------------------------------------------');
   console.log(`🌍 TARGET URL:  ${finalBaseUrl}`);
   console.log(`📂 RESULTS DIR: ${resultsDir}`);
-  console.log(`🤖 ENVIRONMENT: ${RUNNING_ENV}`);
+  console.log(`🤖 ENVIRONMENT: ${displayEnv}`);
   console.log('-------------------------------------------------------');
   /* eslint-enable no-console */
 
@@ -54,7 +60,7 @@ export default defineConfig({
   testDir: './src/test',
   testMatch: ['a11y/*.test.ts', 'functional/**/*.spec.ts'],
 
-  /* 3. Reporting: reporters + local artifacts */
+  /* 4. Reporting: reporters + local artifacts */
   reporter: [
     ...((CommonConfig.recommended.reporter as ReporterDescription[]) || []),
     ['html', { outputFolder: 'functional-output/functional-test-report' }],
@@ -69,7 +75,7 @@ export default defineConfig({
     ignoreHTTPSErrors: true,
   },
 
-  /* 4. WebServer: Standard logic for localhost testing */
+  /* 5. WebServer: Standard logic for localhost testing */
   webServer: finalBaseUrl.includes('localhost')
     ? {
         command: 'NODE_OPTIONS="--openssl-legacy-provider" yarn start',
@@ -79,7 +85,7 @@ export default defineConfig({
       }
     : undefined,
 
-  /* 5. Projects: Standardized HMCTS browser engines */
+  /* 6. Projects: Standardized HMCTS browser engines */
   projects: [
     {
       name: 'chromium',
