@@ -3,16 +3,24 @@ import jwt from 'jsonwebtoken';
 
 import { APPLICANT_2_SIGN_IN_URL, CALLBACK_URL, SIGN_IN_URL } from '../../../steps/urls';
 
-import { OidcResponse, getRedirectUrl, getSystemUser, getUserDetails } from './oidc';
+import { OidcResponse, getRedirectUrl, getSystemUser, getUserDetails, idamTokenCache } from './oidc';
 
-const config = require('config');
+jest.mock('config', () => {
+  const get = jest.fn();
+  return {
+    __esModule: true,
+    default: { get },
+    get,
+  };
+});
 
+const { get: mockedConfigGet } = require('config');
+
+// axios mock
 jest.mock('axios');
-jest.mock('config');
-
-const mockedConfig = config.get as jest.MockedFunction<typeof config.get>;
 const mockedAxios = axios as jest.Mocked<AxiosStatic>;
 
+// --- test tokens ---
 const mockSecret = 'mock-secret';
 const mockPayload = {
   uid: '123',
@@ -29,23 +37,35 @@ const mockSystemPayload = {
   name: 'System',
   roles: ['caseworker-divorce-systemupdate', 'caseworker-caa', 'caseworker', 'caseworker-divorce'],
 };
-// Generate a mock JWT for testing
-//
+
 const mockToken = jwt.sign(mockPayload, mockSecret, { expiresIn: '1h' });
 const mockSystemToken = jwt.sign(mockSystemPayload, mockSecret, { expiresIn: '1h' });
 
+beforeEach(() => {
+  jest.clearAllMocks();
+  idamTokenCache.flushAll();
+
+  const values: Record<string, string> = {
+    'services.idam.clientID': 'divorce',
+    'services.idam.authorizationURL': 'https://idam-web-public.aat.platform.hmcts.net/login',
+    'services.idam.systemUsername': 'system.user@hmcts.net',
+    'services.idam.systemPassword': 'Passw0rd!',
+    'services.idam.clientSecret': 'super-secret',
+    'services.idam.tokenURL': 'https://idam-api/token',
+    'services.idam.caching': 'true',
+  };
+
+  mockedConfigGet.mockImplementation((key: string) => values[key]);
+});
+
 describe('getRedirectUrl', () => {
   test('should create a valid URL to redirect to the login screen', () => {
-    mockedConfig.get.mockReturnValueOnce('divorce');
-    mockedConfig.get.mockReturnValueOnce('https://idam-web-public.aat.platform.hmcts.net/login');
     expect(getRedirectUrl('http://localhost', SIGN_IN_URL)).toBe(
       'https://idam-web-public.aat.platform.hmcts.net/login?client_id=divorce&response_type=code&redirect_uri=http://localhost/oauth2/callback'
     );
   });
 
   test('should create a valid URL to redirect to applicant2 login screen', () => {
-    mockedConfig.get.mockReturnValueOnce('divorce');
-    mockedConfig.get.mockReturnValueOnce('https://idam-web-public.aat.platform.hmcts.net/login');
     expect(getRedirectUrl('http://localhost', APPLICANT_2_SIGN_IN_URL)).toBe(
       'https://idam-web-public.aat.platform.hmcts.net/login?client_id=divorce&response_type=code&redirect_uri=http://localhost/oauth2/callback-applicant2'
     );
@@ -86,19 +106,12 @@ describe('getSystemUser', () => {
       id_token: mockSystemToken,
       access_token: 'systemUserTestToken',
     },
-    statusText: 'wsssw',
-    headers: { test: 'now' },
+    statusText: 'OK',
+    headers: {},
     config: { headers: [] as unknown as AxiosRequestHeaders },
   };
 
-  const expectedGetSystemUserResponse: {
-    givenName: undefined;
-    familyName: undefined;
-    roles: string[];
-    id: string;
-    accessToken: string;
-    email: string;
-  } = {
+  const expectedGetSystemUserResponse = {
     email: 'user-email',
     accessToken: 'systemUserTestToken',
     id: '456',
@@ -108,9 +121,6 @@ describe('getSystemUser', () => {
   };
 
   test('Cache enabled', async () => {
-    mockedConfig.get.mockReturnValueOnce('divorce');
-    mockedConfig.get.mockReturnValueOnce('https://idam-web-public.aat.platform.hmcts.net/login');
-    mockedConfig.get.mockReturnValueOnce('true');
     mockedAxios.post.mockResolvedValue(accessTokenResponse);
 
     const result = await getSystemUser();
@@ -118,9 +128,20 @@ describe('getSystemUser', () => {
   });
 
   test('Cache disabled', async () => {
-    mockedConfig.get.mockReturnValueOnce('divorce');
-    mockedConfig.get.mockReturnValueOnce('https://idam-web-public.aat.platform.hmcts.net/loginwddwdw');
-    mockedConfig.get.mockReturnValue('false');
+    mockedConfigGet.mockImplementation((key: string) => {
+      if (key === 'services.idam.caching') {return 'false';}
+      if (key === 'services.idam.authorizationURL') {
+        return 'https://idam-web-public.aat.platform.hmcts.net/loginwddwdw';
+      }
+      return {
+        'services.idam.clientID': 'divorce',
+        'services.idam.systemUsername': 'system.user@hmcts.net',
+        'services.idam.systemPassword': 'Passw0rd!',
+        'services.idam.clientSecret': 'super-secret',
+        'services.idam.tokenURL': 'https://idam-api/token',
+      }[key];
+    });
+
     mockedAxios.post.mockResolvedValue(accessTokenResponse);
 
     const result = await getSystemUser();
