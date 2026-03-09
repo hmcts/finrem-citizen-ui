@@ -1,6 +1,6 @@
 import { CommonConfig, ProjectsConfig } from '@hmcts/playwright-common';
 import { type ReporterDescription, defineConfig } from '@playwright/test';
-import * as dotenv from 'dotenv';
+import dotenv from 'dotenv';
 
 /**
  * 1. Environment Loading

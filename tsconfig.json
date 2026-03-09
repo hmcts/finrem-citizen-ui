@@ -4,7 +4,7 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "strict": true,
-    "allowJs": false,
+    "allowJs": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "types": ["node", "@playwright/test"],
@@ -16,5 +16,5 @@
       "@helpers/*": ["src/test/functional/utils/helpers/*"]
     }
   },
-  "include": ["src/**/*.ts", "playwright.config.mts"]
+  "include": ["src/**/*.ts", "playwright.config.ts"]
 }
