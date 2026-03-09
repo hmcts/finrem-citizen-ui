@@ -7,7 +7,11 @@
 {% block header %}
   {{ govukHeader({
     homepageUrl: "/",
-    serviceName: "Dividing your money and property"
+    containerClasses: "govuk-width-container"
+  }) }}
+  {{ govukServiceNavigation({
+    serviceName: "Dividing your money and property",
+    serviceUrl: "/"
   }) }}
 {% endblock %}
 
