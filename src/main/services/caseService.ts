@@ -1,6 +1,10 @@
 import axios, { AxiosInstance } from 'axios';
 import config from 'config';
 
+const { Logger } = require('@hmcts/nodejs-logging');
+
+const logger = Logger.getLogger('caseService');
+
 interface UserCaseResponse {
   hasLinkedCase: boolean;
   caseId?: string;
@@ -29,7 +33,7 @@ class CaseService {
       );
       return response.data.hasLinkedCase;
     } catch (error) {
-      console.error('Error checking linked case:', error);
+      logger.error('Error checking linked case:', error);
       // Return false on error to allow user to proceed with entering case number
       return false;
     }
@@ -43,7 +47,7 @@ class CaseService {
       });
       return response.data.valid;
     } catch (error) {
-      console.error('Error validating case number:', error);
+      logger.error('Error validating case number:', error);
       throw error;
     }
   }
