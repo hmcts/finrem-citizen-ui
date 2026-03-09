@@ -1,7 +1,6 @@
 import { fail } from 'assert';
 
 import axios from 'axios';
-import { expect } from 'chai';
 
 const testUrl = process.env.TEST_URL || 'http://localhost:3100';
 
@@ -17,7 +16,8 @@ describe('Smoke Test', () => {
           validateStatus: status => status === 200 || status === 302,
         });
 
-        expect(response.status).to.be.oneOf([200, 302]);
+        // Replaced Chai's 'to.be.oneOf' with Jest's native 'toContain'
+        expect([200, 302]).toContain(response.status);
       } catch {
         fail('Application did not respond successfully');
       }
