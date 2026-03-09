@@ -16,7 +16,7 @@ nodejs:
         - name: app-insights-connection-string
           alias: app-insights-connection-string
         - name: finrem-citizen-ui-idam-client-secret
-          alias: FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET
+          alias: finrem-citizen-ui-idam-client-secret
 
   autoscaling:
     enabled: true
