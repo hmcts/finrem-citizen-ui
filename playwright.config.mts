@@ -1,6 +1,7 @@
-import { CommonConfig, ProjectsConfig } from '@hmcts/playwright-common';
 import { type ReporterDescription, defineConfig } from '@playwright/test';
 import dotenv from 'dotenv';
+
+const { CommonConfig, ProjectsConfig } = await import('@hmcts/playwright-common');
 
 dotenv.config();
 
@@ -32,7 +33,7 @@ if (!process.env.ALREADY_LOGGED && !process.env.PW_WORKER_INDEX) {
 
 export default defineConfig({
   ...CommonConfig.recommended,
-  // Point to your new E2E-specific config
+  // Point to E2E-specific config
   tsconfig: './tsconfig.e2e.json',
 
   testDir: './src/test',

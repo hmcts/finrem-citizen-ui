@@ -18,5 +18,5 @@
       "@helpers/*": ["src/test/functional/utils/helpers/*"]
     }
   },
-  "include": ["src/test/functional/**/*.ts", "src/test/a11y/**/*.ts", "playwright.config.ts"]
+  "include": ["src/test/functional/**/*.ts", "src/test/a11y/**/*.ts", "playwright.config.mts"]
 }

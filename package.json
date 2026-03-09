@@ -16,10 +16,10 @@
     "test:unit": "jest",
     "test:coverage": "jest --coverage",
     "test:routes": "jest -c jest.routes.config.js",
-    "test:a11y": "npx playwright install chromium --with-deps && playwright test src/test/a11y --config playwright.config.ts --project chromium",
+    "test:a11y": "npx playwright install chromium --with-deps && playwright test src/test/a11y --config playwright.config.mts --project chromium",
     "test:smoke": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --config jest.smoke.config.js",
-    "test:functional": "playwright test --config playwright.config.ts --project chromium --grep @PR",
-    "test:full-functional": "playwright test --config playwright.config.ts --retries=2",
+    "test:functional": "playwright test --config playwright.config.mts --project chromium --grep @PR",
+    "test:full-functional": "playwright test --config playwright.config.mts --retries=2",
     "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes && npx playwright install chromium --with-deps && yarn test:a11y",
     "prepare": "husky"
