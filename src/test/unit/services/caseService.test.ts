@@ -9,14 +9,4 @@ describe('CaseService', () => {
       expect(typeof result).toBe('boolean');
     });
   });
-
-  describe('validateCaseNumber', () => {
-    it('should handle API errors', async () => {
-      try {
-        await caseService.validateCaseNumber('1234567890123456', 'test-user-id');
-      } catch (error) {
-        expect(error).toBeDefined();
-      }
-    });
-  });
 });

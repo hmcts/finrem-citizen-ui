@@ -38,19 +38,6 @@ class CaseService {
       return false;
     }
   }
-
-  async validateCaseNumber(caseNumber: string, userId: string): Promise<boolean> {
-    try {
-      const response = await this.client.post('/validate-case', {
-        caseNumber,
-        userId,
-      });
-      return response.data.valid;
-    } catch (error) {
-      logger.error('Error validating case number:', error);
-      throw error;
-    }
-  }
 }
 
 export default new CaseService();

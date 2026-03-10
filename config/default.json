@@ -16,7 +16,7 @@
   },
   "services": {
     "case": {
-      "url": "http://localhost:4000/api",
+      "url": "http://localhost:9000/citizen",
       "timeout": 10000
     }
   }
