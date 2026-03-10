@@ -3,7 +3,6 @@ import config from 'config';
 import { jwtDecode } from 'jwt-decode';
 import NodeCache from 'node-cache';
 
-
 import { APPLICANT_2_CALLBACK_URL, CALLBACK_URL, PageLink, SIGN_IN_URL } from '../../../steps/urls';
 import { UserDetails } from '../../controller/AppRequest';
 
@@ -46,6 +45,8 @@ export const getUserDetails = async (
 export const getSystemUser = async (): Promise<UserDetails> => {
   const username: string = config.get('services.idam.systemUsername');
   const password: string = config.get('services.idam.systemPassword');
+  console.log('systemUsername:', username);
+  console.log('systemPassword:', password);
   const params = { username, password };
 
   const response: AxiosResponse<OidcResponse> = await getIdamToken(params, params.username);
@@ -77,8 +78,11 @@ export interface OidcResponse {
 
 const createIdamToken = (params: Record<string, string>): Promise<AxiosResponse<OidcResponse>> => {
   const id: string = config.get('services.idam.clientID');
+  console.log('clientID:', id);
   const secret: string = config.get('services.idam.clientSecret');
+  console.log('clientSecret:', secret);
   const tokenUrl: string = config.get('services.idam.tokenURL');
+  console.log('tokenUrl:', tokenUrl);
   const headers = { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' };
 
   let data = '';
@@ -98,7 +102,7 @@ export const getIdamToken = async (
 ): Promise<AxiosResponse<OidcResponse>> => {
   let response: AxiosResponse<OidcResponse>;
   const isCachingEnabled = String(config.get('services.idam.caching')) === 'true';
-  if (isCachingEnabled && idamTokenCache.get(cacheKey) as AxiosResponse<OidcResponse>) {
+  if (isCachingEnabled && (idamTokenCache.get(cacheKey) as AxiosResponse<OidcResponse>)) {
     response = idamTokenCache.get(cacheKey) as AxiosResponse<OidcResponse>;
   } else if (isCachingEnabled) {
     logger.info('Generating access token and then caching it');

@@ -11,7 +11,7 @@ export default function (app: Application): void {
     res.render('home');
   });
 
-  app.get('/case/:caseReference', async(req, res) => {
+  app.get('/case/:caseReference', async (req, res) => {
     ///const { caseReference } = req.params;
 
     const logger: LoggerInstance = console as unknown as LoggerInstance;
@@ -20,7 +20,7 @@ export default function (app: Application): void {
 
     const caseworkerUserApi = getCaseApi(systemUser, logger);
     const caseData = await caseworkerUserApi.getCaseById('1734026863049975');
+    console.log('caseApi:::', caseData);
     res.json(caseData);
-
   });
 }
