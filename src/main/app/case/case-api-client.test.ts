@@ -40,7 +40,7 @@ describe('CaseApi', () => {
   test('Should return case for caseId passed', async () => {
     mockedAxios.get.mockResolvedValue({
       data: {
-        case_data: {
+        data: {
           id: '1234',
           accessCode: 'NFSDCLV3',
         },
