@@ -1,13 +1,13 @@
 import { Logger } from '@hmcts/nodejs-logging';
 import config from 'config';
 import type { Express, NextFunction, Request, Response } from 'express';
-import * as oidcClient from 'openid-client';
+import type * as OidcClientType from 'openid-client';
 
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
 
 export class OIDCModule {
-  private clientConfig: oidcClient.Configuration | undefined;
+  private clientConfig: OidcClientType.Configuration | undefined;
   private readonly oidcConfig: OIDCConfig = config.get<OIDCConfig>('oidc');
   private readonly logger = Logger.getLogger('oidc');
 
@@ -19,6 +19,9 @@ export class OIDCModule {
     if (this.clientConfig) {
       return;
     }
+
+    // DYNAMIC IMPORT HERE
+    const oidcClient = await import('openid-client');
 
     let clientSecret = process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET;
     if (!clientSecret && config.has('secrets.finrem.finrem-citizen-ui-idam-client-secret')) {
@@ -50,7 +53,7 @@ export class OIDCModule {
     const forwardedProto = req.headers['x-forwarded-proto'];
     const protocol = typeof forwardedProto === 'string' ? forwardedProto : req.protocol;
     const forwardedHost = req.headers['x-forwarded-host'];
-    const host = typeof forwardedHost === 'string' ? forwardedHost : req.get('host') ?? 'localhost:3100';
+    const host = typeof forwardedHost === 'string' ? forwardedHost : (req.get('host') ?? 'localhost:3100');
     return `${protocol}://${host}${configured}`;
   }
 
@@ -58,7 +61,7 @@ export class OIDCModule {
     const forwardedProto = req.headers['x-forwarded-proto'];
     const protocol = typeof forwardedProto === 'string' ? forwardedProto : req.protocol;
     const forwardedHost = req.headers['x-forwarded-host'];
-    const host = typeof forwardedHost === 'string' ? forwardedHost : req.get('host') ?? 'localhost:3100';
+    const host = typeof forwardedHost === 'string' ? forwardedHost : (req.get('host') ?? 'localhost:3100');
     return new URL(req.originalUrl, `${protocol}://${host}`);
   }
 
@@ -76,7 +79,9 @@ export class OIDCModule {
       }
     });
 
-    app.get('/logout', (req: Request, res: Response): void => {
+    app.get('/logout', async (req: Request, res: Response): Promise<void> => {
+      const oidcClient = await import('openid-client'); // DYNAMIC IMPORT
+
       if (!this.clientConfig) {
         req.session.destroy(() => res.redirect('/'));
         return;
@@ -97,6 +102,8 @@ export class OIDCModule {
 
     app.get('/login', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
+        const oidcClient = await import('openid-client'); // DYNAMIC IMPORT
+
         const codeVerifier = oidcClient.randomPKCECodeVerifier();
         req.session.codeVerifier = codeVerifier;
         const codeChallenge = await oidcClient.calculatePKCECodeChallenge(codeVerifier);
@@ -124,6 +131,8 @@ export class OIDCModule {
 
     app.get('/oauth2/callback', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
+        const oidcClient = await import('openid-client'); // DYNAMIC IMPORT
+
         const { codeVerifier, nonce } = req.session;
         const callbackUrl = OIDCModule.getCurrentUrl(req);
 

@@ -375,7 +375,7 @@ describe('OIDCModule', () => {
     expect(next).toHaveBeenCalledWith(setupError);
   });
 
-  it('logout destroys session and redirects home when client is missing', () => {
+  it('logout destroys session and redirects home when client is missing', async () => {
     const app = makeApp();
     const module = new OIDCModule();
 
@@ -386,13 +386,13 @@ describe('OIDCModule', () => {
     const res = makeRes();
     const next = jest.fn<void, [unknown?]>();
 
-    handler(req, res, next);
+    await handler(req, res, next); // <--- ADDED AWAIT HERE
 
     const redirectMock = (res as unknown as ResponseLike).redirect;
     expect(redirectMock).toHaveBeenCalledWith('/');
   });
 
-  it('logout builds end-session URL and redirects to issuer logout', () => {
+  it('logout builds end-session URL and redirects to issuer logout', async () => {
     const app = makeApp();
     const module = new OIDCModule();
     const clientConfig = {} as unknown as oidcClient.Configuration;
@@ -421,7 +421,7 @@ describe('OIDCModule', () => {
     const res = makeRes();
     const next = jest.fn<void, [unknown?]>();
 
-    handler(req, res, next);
+    await handler(req, res, next); // <--- ADDED AWAIT HERE
 
     expect(mockedOidc.buildEndSessionUrl).toHaveBeenCalledWith(clientConfig, {
       post_logout_redirect_uri: 'https://app.example.com',
@@ -432,7 +432,7 @@ describe('OIDCModule', () => {
     expect(redirectMock).toHaveBeenCalledWith('https://issuer.example/logout');
   });
 
-  it('logout logs destroy error and still redirects', () => {
+  it('logout logs destroy error and still redirects', async () => {
     const app = makeApp();
     const module = new OIDCModule();
     const clientConfig = {} as unknown as oidcClient.Configuration;
@@ -455,7 +455,7 @@ describe('OIDCModule', () => {
     const res = makeRes();
     const next = jest.fn<void, [unknown?]>();
 
-    handler(req, res, next);
+    await handler(req, res, next); // <--- ADDED AWAIT HERE
 
     expect(mockLogger.error).toHaveBeenCalledWith('Session destroy error on logout:', destroyError);
 
