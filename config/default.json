@@ -27,7 +27,8 @@
       "secret": "IPLOE65ZAKMB2KWX"
     },
     "case": {
-      "url": "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
+      // "url": "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
+      "url": "https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net"
       // "url": "http://localhost:4452"
       // "url": "https://nfdiv-case-api-pr-4188.preview.platform.hmcts.net" #uncomment to run against pr
     }
