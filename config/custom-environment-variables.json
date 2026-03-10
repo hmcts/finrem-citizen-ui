@@ -7,6 +7,11 @@
   "features": {
     "redis": "FEATURE_REDIS_ENABLED"
   },
+  "session": {
+    "prefix": "SESSION_PREFIX",
+    "ttlInSeconds": "SESSION_TTL"
+  },
+  "use-ssl": "USE_SSL",
   "secrets": {
     "finrem": {
       "finrem-citizen-ui-idam-client-secret": "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET",
