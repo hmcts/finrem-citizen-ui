@@ -4,12 +4,6 @@
     "clientId": "IDAM_CLIENT_ID",
     "callbackUrl": "OAUTH_CALLBACK_URL"
   },
-  "session": {
-    "cookieName": "finrem_session",
-    "prefix": "finrem-session",
-    "ttlInSeconds": 5400
-  },
-  "use-ssl": false,
   "secrets": {
     "finrem": {
       "finrem-citizen-ui-idam-client-secret": "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET",
