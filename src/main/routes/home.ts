@@ -12,14 +12,14 @@ export default function (app: Application): void {
   });
 
   app.get('/case/:caseReference', async (req, res) => {
-    ///const { caseReference } = req.params;
+    const { caseReference } = req.params;
 
     const logger: LoggerInstance = console as unknown as LoggerInstance;
 
     const systemUser = await getSystemUser();
 
     const caseworkerUserApi = getCaseApi(systemUser, logger);
-    const caseData = await caseworkerUserApi.getCaseById('1734026863049975');
+    const caseData = await caseworkerUserApi.getCaseById(caseReference);
     console.log('caseApi:::', caseData);
     res.json(caseData);
   });
