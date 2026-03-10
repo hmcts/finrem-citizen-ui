@@ -45,15 +45,27 @@ describe('oidcMiddleware', () => {
   });
 
   it('stores returnTo and redirects to /login when session exists but no user', () => {
-    const session = {} as never;
-    const req = makeReq({ session, originalUrl: '/my-page' });
-    const res = makeRes();
+    const req = {
+      path: '/protected',
+      originalUrl: '/protected?query=1',
+      session: {
+        user: undefined,
+        save: jest.fn(callback => callback()),
+      },
+    } as unknown as Request;
+
+    const res = {
+      redirect: jest.fn(),
+    } as unknown as Response;
+
+    next = jest.fn() as NextFunction;
 
     oidcMiddleware(req, res, next);
 
-    expect((session as Record<string, string>)['returnTo']).toBe('/my-page');
-    expect(res.redirect).toHaveBeenCalledWith('/login');
     expect(next).not.toHaveBeenCalled();
+    expect(req.session!.returnTo).toBe('/protected?query=1');
+    expect(req.session!.save).toHaveBeenCalled(); // Verify save was called
+    expect(res.redirect).toHaveBeenCalledWith('/login');
   });
 
   it('redirects to /login without setting returnTo when session is falsy', () => {

@@ -5,7 +5,8 @@ const PUBLIC_PREFIXES = ['/health'];
 
 export const oidcMiddleware: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
   const requestPath = req.path || req.originalUrl;
-  const isPublicPath = PUBLIC_PATHS.includes(requestPath) || PUBLIC_PREFIXES.some(prefix => requestPath.startsWith(prefix));
+  const isPublicPath =
+    PUBLIC_PATHS.includes(requestPath) || PUBLIC_PREFIXES.some(prefix => requestPath.startsWith(prefix));
 
   if (isPublicPath) {
     return next();
@@ -17,6 +18,10 @@ export const oidcMiddleware: RequestHandler = (req: Request, res: Response, next
 
   if (req.session) {
     req.session.returnTo = req.originalUrl;
+    req.session.save(() => {
+      res.redirect('/login');
+    });
+  } else {
+    res.redirect('/login');
   }
-  res.redirect('/login');
 };
