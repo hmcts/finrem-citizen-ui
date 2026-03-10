@@ -18,7 +18,7 @@ module.exports = [
       },
       parser: tsParser,
     },
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.mts'],
     plugins: {
       '@typescript-eslint': tseslint,
       import: importPlugin,
@@ -86,7 +86,7 @@ module.exports = [
 
   // Specific Override for Playwright & Test files
   {
-    files: ['src/test/**/*.ts', 'playwright.config.ts'],
+    files: ['**/*.spec.ts', '**/*.test.ts', '**/playwright/**/*.mts'],
     rules: {
       'no-console': 'off', // Disable the warning for tests and config
     },
