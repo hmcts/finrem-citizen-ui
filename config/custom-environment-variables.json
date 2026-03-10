@@ -4,6 +4,9 @@
     "clientId": "IDAM_CLIENT_ID",
     "callbackUrl": "OAUTH_CALLBACK_URL"
   },
+  "features": {
+    "redis": "FEATURE_REDIS_ENABLED"
+  },
   "secrets": {
     "finrem": {
       "finrem-citizen-ui-idam-client-secret": "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET",
