@@ -6,12 +6,15 @@ import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
 import { UserDetails } from '../controller/AppRequest';
 
 import { CaseAssignedUserRole } from './case-roles';
-import { FinremCaseData, State } from './definition';
+import { FinremCaseData, FinremCaseDetails } from './definition';
 
 export class CaseApiClient {
   readonly maxRetries: number = 3;
 
-  constructor(private readonly server: AxiosInstance, private readonly logger: LoggerInstance) {}
+  constructor(
+    private readonly server: AxiosInstance,
+    private readonly logger: LoggerInstance
+  ) {}
 
   public async addCaseUserRoles(assignments: CaseAssignedUserRole[]): Promise<void> {
     try {
@@ -28,8 +31,8 @@ export class CaseApiClient {
 
   public async getCaseById(caseId: string): Promise<FinremCaseData> {
     try {
-      const response = await this.server.get<CcdV1Response>(`/cases/${caseId}`);
-      return response.data.case_data;
+      const response = await this.server.get<FinremCaseDetails>(`/cases/${caseId}`);
+      return response.data.data;
     } catch (err) {
       this.logError(err as AxiosError);
       throw new Error('Case could not be retrieved.');
@@ -64,11 +67,3 @@ export const getCaseApiClient = (userDetails: UserDetails, logger: LoggerInstanc
     logger
   );
 };
-
-export interface CcdV1Response {
-  id: string;
-  state: State;
-  created_date: string;
-  case_data: FinremCaseData;
-}
-
