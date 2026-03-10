@@ -23,9 +23,6 @@
     "ttlInSeconds": 5400
   },
   "use-ssl": false,
-  "features": {
-    "redis": "false"
-  },
   "secrets": {
     "finrem": {
       "finrem-citizen-ui-idam-client-secret": "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET",

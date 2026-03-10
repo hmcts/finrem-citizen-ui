@@ -6,6 +6,13 @@ import type * as OidcClientType from 'openid-client';
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
 
+const getOidcClient = async (): Promise<typeof OidcClientType> => {
+  if (process.env.JEST_WORKER_ID !== undefined || typeof jest !== 'undefined') {
+    return require('openid-client');
+  }
+  return new Function("return import('openid-client')")();
+};
+
 export class OIDCModule {
   private clientConfig: OidcClientType.Configuration | undefined;
   private readonly oidcConfig: OIDCConfig = config.get<OIDCConfig>('oidc');
@@ -20,8 +27,7 @@ export class OIDCModule {
       return;
     }
 
-    // DYNAMIC IMPORT HERE
-    const oidcClient = await import('openid-client');
+    const oidcClient = await getOidcClient();
 
     let clientSecret = process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET;
     if (!clientSecret && config.has('secrets.finrem.finrem-citizen-ui-idam-client-secret')) {
@@ -80,7 +86,7 @@ export class OIDCModule {
     });
 
     app.get('/logout', async (req: Request, res: Response): Promise<void> => {
-      const oidcClient = await import('openid-client'); // DYNAMIC IMPORT
+      const oidcClient = await getOidcClient();
 
       if (!this.clientConfig) {
         req.session.destroy(() => res.redirect('/'));
@@ -102,7 +108,7 @@ export class OIDCModule {
 
     app.get('/login', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
-        const oidcClient = await import('openid-client'); // DYNAMIC IMPORT
+        const oidcClient = await getOidcClient();
 
         const codeVerifier = oidcClient.randomPKCECodeVerifier();
         req.session.codeVerifier = codeVerifier;
@@ -131,7 +137,7 @@ export class OIDCModule {
 
     app.get('/oauth2/callback', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
-        const oidcClient = await import('openid-client'); // DYNAMIC IMPORT
+        const oidcClient = await getOidcClient();
 
         const { codeVerifier, nonce } = req.session;
         const callbackUrl = OIDCModule.getCurrentUrl(req);
