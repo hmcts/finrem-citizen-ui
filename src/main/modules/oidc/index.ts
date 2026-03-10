@@ -7,8 +7,8 @@ import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
 
 const getOidcClient = async (): Promise<typeof OidcClientType> => {
-  if (process.env.JEST_WORKER_ID !== undefined || typeof jest !== 'undefined') {
-    return require('openid-client');
+  if (process.env.JEST_WORKER_ID !== undefined || process.env.NODE_ENV === 'test') {
+    return import('openid-client');
   }
   return new Function("return import('openid-client')")();
 };
@@ -30,6 +30,7 @@ export class OIDCModule {
     const oidcClient = await getOidcClient();
 
     let clientSecret = process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET;
+
     if (!clientSecret && config.has('secrets.finrem.finrem-citizen-ui-idam-client-secret')) {
       clientSecret = config.get<string>('secrets.finrem.finrem-citizen-ui-idam-client-secret');
     }
@@ -151,8 +152,11 @@ export class OIDCModule {
         const { access_token, id_token, refresh_token } = tokens;
         const claims = tokens.claims();
 
+        // FIX: Directly return with next() instead of throwing locally
         if (!id_token || !claims) {
-          throw new OIDCCallbackError('No ID token received from IDAM');
+          const err = new OIDCCallbackError('No ID token received from IDAM');
+          this.logger.error('OIDC callback error:', err);
+          return next(err);
         }
 
         const userInfo = await oidcClient.fetchUserInfo(this.clientConfig!, access_token, claims.sub);
@@ -173,7 +177,7 @@ export class OIDCModule {
         });
       } catch (err: unknown) {
         this.logger.error('OIDC callback error:', err);
-        next(err instanceof OIDCCallbackError ? err : new OIDCCallbackError('Authentication callback failed'));
+        next(new OIDCCallbackError('Authentication callback failed'));
       }
     });
   }

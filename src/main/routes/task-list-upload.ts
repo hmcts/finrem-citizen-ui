@@ -5,7 +5,7 @@ import { Application } from 'express';
 
 import { oidcMiddleware } from '../middleware';
 
-export default (app: Application): void => {
+const taskListUpload = (app: Application): void => {
   app.get('/task-list-upload-dashboard', oidcMiddleware, (req, res, next) => {
     try {
       const filePath = path.join(__dirname, '../models/tasklist.json');
@@ -13,7 +13,7 @@ export default (app: Application): void => {
       res.render('task-list-upload-dashboard', JSON.parse(data));
     } catch (err) {
       next(err);
-      res.render('error', {});
     }
   });
 };
+export default taskListUpload;
