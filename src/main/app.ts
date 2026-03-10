@@ -31,6 +31,9 @@ const limiter = RateLimit({
 export const app = express();
 app.locals.ENV = env;
 
+// Trust proxy - required for sessions to work correctly behind load balancers
+app.set('trust proxy', 1);
+
 const logger = Logger.getLogger('app');
 
 new PropertiesVolume().enableFor(app);

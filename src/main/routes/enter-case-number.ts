@@ -2,6 +2,10 @@ import { Application, Request, Response } from 'express';
 
 import 'express-session';
 
+const { Logger } = require('@hmcts/nodejs-logging');
+
+const logger = Logger.getLogger('enter-case-number');
+
 declare module 'express-session' {
   interface SessionData {
     caseNumber?: string;
@@ -68,7 +72,10 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
       req.session.caseNumberErrors = errors;
       req.session.tempCaseNumber = caseNumber || '';
       
-      req.session.save(() => {
+      req.session.save((err) => {
+        if (err) {
+          logger.error('Session save error:', err);
+        }
         res.redirect('/enter-case-number');
       });
       return;
@@ -77,7 +84,10 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
     // Save the validated case number to session
     req.session.caseNumber = caseNumber.trim();
 
-    req.session.save(() => {
+    req.session.save((err) => {
+      if (err) {
+        logger.error('Session save error:', err);
+      }
       // Redirect to next step in the journey
       res.redirect('/enter-access-code');
     });
