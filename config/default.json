@@ -13,11 +13,5 @@
   },
   "session": {
     "secret": "change-this-secret-in-production"
-  },
-  "services": {
-    "case": {
-      "url": "http://localhost:9000/citizen",
-      "timeout": 10000
-    }
   }
 }

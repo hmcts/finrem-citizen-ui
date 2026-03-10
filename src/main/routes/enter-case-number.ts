@@ -2,15 +2,11 @@ import { Application, Request, Response } from 'express';
 
 import 'express-session';
 
-import caseService from '../services/caseService';
-
 declare module 'express-session' {
   interface SessionData {
     caseNumber?: string;
-    hasLinkedCase?: boolean;
     caseNumberErrors?: CaseNumberError;
     tempCaseNumber?: string;
-    userId?: string;
   }
 }
 
@@ -45,30 +41,8 @@ export function validateCaseNumber(caseNumber: string | undefined): CaseNumberEr
   return null;
 }
 
-async function userHasLinkedCase(req: Request): Promise<boolean> {
-  // Check if user ID exists in session (set after authentication)
-  const userId = req.session.userId;
-  
-  if (!userId) {
-    return false;
-  }
-
-  // Call backend service to check if user has a linked case
-  try {
-    return await caseService.checkUserHasLinkedCase(userId);
-  } catch {
-    // On error, allow user to proceed with entering case number
-    return false;
-  }
-}
-
 export default function setupEnterCaseNumberRoute(app: Application): void {
-  app.get('/enter-case-number', async (req: Request, res: Response) => {
-    // Skip logic: if user already has linked case, redirect to dashboard
-    if (await userHasLinkedCase(req)) {
-      return res.redirect('/dashboard');
-    }
-
+  app.get('/enter-case-number', (req: Request, res: Response) => {
     // Retrieve any errors from session (set by POST handler)
     const errors = req.session.caseNumberErrors;
     delete req.session.caseNumberErrors;
