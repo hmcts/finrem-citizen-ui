@@ -19,6 +19,9 @@
       "redis-connection-string": "REDIS_CONNECTION_STRING"
     }
   },
+  "appInsights": {
+    "instrumentationKey": "APPINSIGHTS_KEY"
+  },
   "services": {
     "idam": {
       "clientID": "IDAM_CLIENT_ID",
