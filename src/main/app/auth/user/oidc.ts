@@ -46,7 +46,6 @@ export const getSystemUser = async (): Promise<UserDetails> => {
   const username: string = config.get('services.idam.systemUsername');
   const password: string = config.get('services.idam.systemPassword');
   console.log('systemUsername:', username);
-  console.log('systemPassword:', password);
   const params = { username, password };
 
   const response: AxiosResponse<OidcResponse> = await getIdamToken(params, params.username);
