@@ -5,7 +5,9 @@ node_modules/
 lib/
 .yarn/
 .yarn/*
+!.yarn/
 !.yarn/releases/
+!.yarn/releases/*
 !.yarn/plugins/
 
 # Build & Compiled Assets
@@ -49,5 +51,3 @@ src/main/views/govuk
 
 # Misc
 npm-debug.log.*
-*.env
-env.local
