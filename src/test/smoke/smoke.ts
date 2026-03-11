@@ -1,21 +1,22 @@
-import axios from 'axios';
+import { describe, expect, test } from '@jest/globals';
+import axios, { AxiosResponse } from 'axios';
 
 const testUrl = process.env.TEST_URL || 'http://localhost:3100';
 
 describe('Smoke Test', () => {
   describe('Home page loads', () => {
     test('with correct content', async () => {
-      // If axios.get fails (e.g., DNS error, 502 gateway),
-      // Jest will automatically catch it, fail the test, and print the real error.
-      const response = await axios.get(testUrl, {
-        headers: {
-          'Accept-Encoding': 'gzip',
-        },
-        maxRedirects: 0,
-        validateStatus: status => status === 200 || status === 302,
-      });
+      try {
+        const response: AxiosResponse = await axios.get(testUrl, {
+          headers: {
+            'Accept-Encoding': 'gzip',
+          },
+        });
 
-      expect([200, 302]).toContain(response.status);
+        expect(response.data).toContain('<h1 class="govuk-heading-xl">Default page template</h1>');
+      } catch (error) {
+        throw new Error(`Smoke test failed: Heading not present or server unreachable. ${(error as Error).message}`);
+      }
     });
   });
 });

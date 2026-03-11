@@ -1,13 +1,14 @@
+import { describe, expect, test } from '@jest/globals';
 import request from 'supertest';
 
 import { app } from '../../main/app';
 
 describe('Home page', () => {
   describe('on GET', () => {
-    test('should respond', async () => {
-      const response = await request(app).get('/');
-      // Use Jest's native syntax instead of Chai
-      expect([200, 302]).toContain(response.status);
+    test('should return sample home page', async () => {
+      const res = await request(app).get('/').expect(200);
+
+      expect(res.status).toBe(200);
     });
   });
 });

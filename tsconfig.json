@@ -1,28 +1,18 @@
 {
   "compilerOptions": {
-    "outDir": "./src/",
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "target": "ES2020",
-    "strict": true,
-    "noImplicitAny": true,
-    "noImplicitThis": false,
+    "module": "CommonJS",
     "moduleResolution": "node",
-    "noUnusedLocals": true,
-    "experimentalDecorators": true,
-    "useUnknownInCatchVariables": false,
+    "strict": true,
+    "allowJs": false,
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    "lib": ["es2020", "dom", "dom.iterable"],
-    "baseUrl": "src/main",
+    "types": ["node", "@playwright/test"],
+    "baseUrl": ".",
     "paths": {
-      "router/*": ["router/*"],
-      "routes/*": ["routes/*"]
+      "router/*": ["src/main/router/*"],
+      "routes/*": ["src/main/routes/*"]
     }
   },
-  "include": ["src/main/**/*"],
-  "exclude": ["**/*.test.ts", "**/codecept.conf.ts", "**/__mocks__/*"],
-  "ts-node": {
-    "files": true
-  }
+  "include": ["src/**/*.ts", "playwright.config.ts"]
 }

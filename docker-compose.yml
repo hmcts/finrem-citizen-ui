@@ -1,7 +1,8 @@
 version: '2'
 
 services:
-  finrem-citizen-ui:
+  # TODO: change this name to match the name of your app
+  expressjs-template:
     build:
       context: .
       args:
@@ -9,11 +10,5 @@ services:
         - https_proxy
         - no_proxy
     ports:
+      # TODO: change this mapping to map the port your application listens on
       - '3100:3100'
-    depends_on:
-      - redis
-
-  redis:
-      image: redis:7-alpine
-      ports:
-          - '6379:6379'
