@@ -18,7 +18,6 @@
     "scope": "openid profile roles"
   },
   "session": {
-    "secret": "change-this-secret-in-production",
     "cookieName": "finrem_session",
     "prefix": "finrem-session",
     "ttlInSeconds": 5400

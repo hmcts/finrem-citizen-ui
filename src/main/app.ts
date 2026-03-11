@@ -30,9 +30,6 @@ const limiter = RateLimit({
 export const app = express();
 app.locals.ENV = env;
 
-// Trust proxy - required for sessions to work correctly behind load balancers
-app.set('trust proxy', 1);
-
 const logger = Logger.getLogger('app');
 
 new PropertiesVolume().enableFor(app);
@@ -53,8 +50,6 @@ app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate, no-store');
   next();
 });
-
-new Session().enableFor(app);
 new OIDCModule().enableFor(app);
 
 glob
