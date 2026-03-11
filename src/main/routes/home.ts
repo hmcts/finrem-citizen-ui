@@ -26,7 +26,7 @@ export default function (app: Application): void {
     res.json(caseData);
   });
 
-  app.get('/case/:caseReference/:userId/:caseRole', async (req, _res) => {
+  app.get('/case/:caseReference/:userId/:caseRole', async (req, res) => {
     const assignments: CaseAssignedUserRole[] = [
       {
         case_id: req.params.caseReference,
@@ -36,9 +36,26 @@ export default function (app: Application): void {
     ];
     const logger: LoggerInstance = console as unknown as LoggerInstance;
 
-    const systemUser = await getSystemUser();
+    try {
+      const systemUser = await getSystemUser();
+      const caseworkerUserApi = getCaseApi(systemUser, logger);
 
-    const caseworkerUserApi = getCaseApi(systemUser, logger);
-    await caseworkerUserApi.addUsersToCase(assignments);
+      await caseworkerUserApi.addUsersToCase(assignments);
+
+      return res.status(200).json({
+        success: true,
+        message: 'User successfully added to case.',
+        data: assignments,
+      });
+    } catch (error) {
+      const err = error as Error;
+      logger.error('Error adding user to case', { error: err.message });
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to add user to case.',
+        error: err.message,
+      });
+    }
   });
 }
