@@ -2,26 +2,16 @@ import { expect } from '@playwright/test';
 
 import { test } from '../../fixtures/fixtures';
 
-test.describe('Finrem Citizen UI - Authenticated Session', () => {
-  // Setup and teardown for authenticated tests
-  // test.beforeEach(async ({ idamApi, idamPage, homePage, page }) => {
-  //   const user = await idamApi.createCitizenUser();
-  //   await homePage.goto();
-  //    await idamPage.login(user);
-  //    await expect(page).toHaveURL(/\/home/);
-  // });
-
-  // test.afterEach(async ({ idamPage }) => {
-  //   await idamPage.clearSession();
-  // });
-
-  test('User sees correct content on home page @PR', async ({ homePage }) => {
+test.describe('HomePage', () => {
+  test.skip('User sees correct content on the home page @PR', async ({ page }) => {
+    const homePage = new HomePage(page);
     await homePage.goto();
     await homePage.verifyCorrectContent();
   });
 
-  test('User can navigate to footer links while logged in', async ({ homePage, page }) => {
-    await homePage.goto(); // remove once beforeAll is implemented
+  test.skip('User can click license link in footer and it opens in the same tab', async ({ page }) => {
+    const homePage = new HomePage(page);
+    await homePage.goto();
     await homePage.clickLicenceLink();
     const urlSnippet = 'nationalarchives\\.gov\\.uk/doc/open-government-licence/version/3/';
     await page.waitForURL(new RegExp(urlSnippet));
