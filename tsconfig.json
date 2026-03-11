@@ -7,8 +7,10 @@
     "allowJs": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "lib": ["es2020", "dom", "dom.iterable"],
+    "baseUrl": "src/main",
     "types": ["node", "@playwright/test"],
-    "baseUrl": ".",
     "paths": {
       "router/*": ["src/main/router/*"],
       "routes/*": ["src/main/routes/*"]

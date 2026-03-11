@@ -1,0 +1,18 @@
+// Autocomplete component styles
+// Uses accessible-autocomplete with GOV.UK styling
+
+@import '~accessible-autocomplete/dist/accessible-autocomplete.min.css';
+
+.finrem-autocomplete {
+  position: relative;
+}
+
+// Minimal overrides - let accessible-autocomplete handle most styling
+.autocomplete__input {
+  @extend .govuk-input;
+  margin-bottom: 0;
+}
+
+.autocomplete__dropdown-arrow-down {
+  display: none;
+}

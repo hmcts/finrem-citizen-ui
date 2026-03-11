@@ -38,6 +38,7 @@
     "@types/lodash": "4.17.24",
     "@types/nunjucks": "3.2.6",
     "@types/require-directory": "2.1.7",
+    "accessible-autocomplete": "^3.0.1",
     "applicationinsights": "3.14.0",
     "axios": "1.13.6",
     "body-parser": "2.2.2",
