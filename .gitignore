@@ -5,7 +5,9 @@ node_modules/
 lib/
 .yarn/
 .yarn/*
+!.yarn/
 !.yarn/releases/
+!.yarn/releases/*
 !.yarn/plugins/
 
 # Build & Compiled Assets
