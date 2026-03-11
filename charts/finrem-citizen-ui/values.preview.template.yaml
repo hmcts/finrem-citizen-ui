@@ -30,3 +30,8 @@ nodejs:
           alias: finrem-citizen-ui-idam-client-secret
         - name: app-insights-connection-string
           alias: app-insights-connection-string
+  redis:
+    image:
+      registry: hmctspublic.azurecr.io
+      repository: imported/bitnami/redis
+    enabled: true
