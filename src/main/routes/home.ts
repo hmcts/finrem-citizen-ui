@@ -5,7 +5,6 @@ import { getSystemUser } from '../app/auth/user/oidc';
 import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { CaseRole } from '../app/case/definition';
-
 import { oidcMiddleware } from '../middleware';
 
 export default function (app: Application): void {
