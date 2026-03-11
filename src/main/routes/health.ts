@@ -8,10 +8,9 @@ function shutdownCheck(): boolean {
   return myApp.locals.shutdown;
 }
 
-export default function (app: Application): void {
+export default function health(app: Application): void {
   const healthCheckConfig = {
     checks: {
-      // TODO: replace this sample check with proper checks for your application
       sampleCheck: healthcheck.raw(() => healthcheck.up()),
     },
     readinessChecks: {

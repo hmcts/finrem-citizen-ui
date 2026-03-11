@@ -1,0 +1,1 @@
+export { oidcMiddleware } from './oidc';
