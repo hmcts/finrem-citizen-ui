@@ -143,7 +143,7 @@
     "tar": "^7.5.10",
     "diff": "8.0.3",
     "qs": "6.15.0",
-    "test-exclude": "7.0.2",
+    "test-exclude": "8.0.0",
     "minimatch": "10.2.4",
     "@eslint/eslintrc/ajv": "6.14.0"
   }
