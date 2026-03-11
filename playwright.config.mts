@@ -1,5 +1,3 @@
-import path from 'path';
-
 import { type ReporterDescription, defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 
@@ -8,9 +6,8 @@ const { CommonConfig, ProjectsConfig } = await import('@hmcts/playwright-common'
 
 dotenv.config();
 
-// 1. Determine Paths, Target URL and Results Directory
+// 1. Determine Target URL and Results Directory
 const resultsDir = process.env.TEST_RESULTS_DIR || 'functional-output';
-const authFile = path.join(process.cwd(), 'test/.auth/user.json');
 
 const getBaseUrl = (): string => {
   if (process.env.TEST_URL) {
@@ -34,7 +31,6 @@ if (!process.env.ALREADY_LOGGED && !process.env.PW_WORKER_INDEX) {
   console.log(`🌍 TARGET URL:  ${finalBaseUrl}`);
   console.log(`📂 RESULTS DIR: ${resultsDir}`);
   console.log(`🤖 ENVIRONMENT: ${displayEnv}`);
-  console.log(`🔑 AUTH FILE:  ${authFile}`);
   console.log('-------------------------------------------------------');
   process.env.ALREADY_LOGGED = 'true';
 }
@@ -43,20 +39,20 @@ if (!process.env.ALREADY_LOGGED && !process.env.PW_WORKER_INDEX) {
 export default defineConfig({
   ...CommonConfig.recommended,
 
-  // Link to test-specific tsconfig
+  // Link to your test-specific tsconfig
   tsconfig: 'src/test/tsconfig.json',
 
   testDir: './src/test',
-  testMatch: ['**/*.auth.setup.ts', 'a11y/*.test.ts', 'functional/**/*.spec.ts'],
+  testMatch: ['a11y/*.test.ts', 'functional/**/*.spec.ts'],
 
   reporter: [
     ...((CommonConfig.recommended.reporter as ReporterDescription[]) || []),
     ['html', { outputFolder: `${resultsDir}/functional-test-report` }],
     ['allure-playwright', { resultsDir: 'allure-results' }],
-    ['junit', { outputFile: `${resultsDir}/functional-test-results.xml` }],
+    ['junit', { outputFile: `${resultsDir}/functional-test-results.xml' ` }],
   ] as ReporterDescription[],
 
-  timeout: 60 * 1000,
+  timeout: 30 * 1000,
   expect: {
     timeout: 5000,
   },
@@ -72,11 +68,13 @@ export default defineConfig({
   webServer: isLocal
     ? {
         command: 'NODE_OPTIONS="--openssl-legacy-provider" yarn start',
+        // Combined health check endpoint from Main branch
         url: `${finalBaseUrl}/health`,
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
+        // Injected Fallback Variables from Main branch
         env: {
-          IDAM_SECRET: process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET || 'dummy-secret-for-playwright-tests',
+          IDAM_SECRET: process.env.IDAM_SECRET || 'dummy-secret-for-playwright-tests',
           SESSION_SECRET: process.env.SESSION_SECRET || 'dummy-session-secret',
           PORT: '3100',
         },
@@ -84,39 +82,20 @@ export default defineConfig({
     : undefined,
 
   projects: [
-    // --- AUTH SETUP PROJECT ---
-    {
-      name: 'setup',
-      testMatch: /.*\.auth\.setup\.ts/,
-    },
-
-    // --- BROWSER PROJECTS ---
     {
       name: 'chromium',
       ...ProjectsConfig.chromium,
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: authFile,
-      },
-      dependencies: ['setup'],
+      use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'firefox',
       ...ProjectsConfig.firefox,
-      use: {
-        ...devices['Desktop Firefox'],
-        storageState: authFile,
-      },
-      dependencies: ['setup'],
+      use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
       ...ProjectsConfig.webkit,
-      use: {
-        ...devices['Desktop Safari'],
-        storageState: authFile,
-      },
-      dependencies: ['setup'],
+      use: { ...devices['Desktop Safari'] },
     },
   ],
 });
