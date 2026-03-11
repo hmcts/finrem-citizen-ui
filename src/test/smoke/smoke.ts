@@ -13,7 +13,7 @@ describe('Smoke Test', () => {
           },
         });
 
-        expect(response.data).toContain('<h1 class="govuk-heading-xl">Default page template</h1>');
+        expect(response.data).toContain('<h1 class="govuk-heading-l">Enter case number</h1>');
       } catch (error) {
         throw new Error(`Smoke test failed: Heading not present or server unreachable. ${(error as Error).message}`);
       }
