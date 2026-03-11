@@ -84,6 +84,9 @@ describe('getUserDetails', () => {
     const result = await getUserDetails('http://localhost', '123', CALLBACK_URL);
     expect(result).toStrictEqual({
       accessToken: 'token',
+      idToken: mockToken,
+      refreshToken: undefined,
+      sub: 'test@test.com',
       email: 'test@test.com',
       givenName: 'John',
       familyName: 'Dorian',
@@ -114,6 +117,9 @@ describe('getSystemUser', () => {
   const expectedGetSystemUserResponse = {
     email: 'user-email',
     accessToken: 'systemUserTestToken',
+    idToken: mockSystemToken,
+    refreshToken: undefined,
+    sub: 'user-email',
     id: '456',
     givenName: undefined,
     familyName: undefined,
@@ -129,7 +135,9 @@ describe('getSystemUser', () => {
 
   test('Cache disabled', async () => {
     mockedConfigGet.mockImplementation((key: string) => {
-      if (key === 'services.idam.caching') {return 'false';}
+      if (key === 'services.idam.caching') {
+        return 'false';
+      }
       if (key === 'services.idam.authorizationURL') {
         return 'https://idam-web-public.aat.platform.hmcts.net/loginwddwdw';
       }

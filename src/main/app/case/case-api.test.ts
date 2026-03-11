@@ -8,6 +8,9 @@ jest.mock('axios');
 
 const userDetails: UserDetails = {
   accessToken: '123',
+  idToken: '',
+  refreshToken: undefined,
+  sub: '',
   email: 'billy@bob.com',
   givenName: 'billy',
   familyName: 'bob',
