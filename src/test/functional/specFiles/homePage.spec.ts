@@ -1,4 +1,5 @@
 import { expect } from '@playwright/test';
+import { HomePage } from '@pom/homePage.page';
 
 import { test } from '../../fixtures/fixtures';
 
