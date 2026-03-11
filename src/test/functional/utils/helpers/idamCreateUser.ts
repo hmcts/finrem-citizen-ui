@@ -5,10 +5,12 @@ import { APIRequestContext, request } from '@playwright/test';
 import { UserCredentials } from '../../../functional/pom/idamPage.page';
 
 export class IdamApiService {
-  private readonly idamWebUrl = process.env.IDAM_WEB_URL;
-  private readonly idamTestApiUrl = process.env.IDAM_TESTING_SUPPORT_API_URL;
-  private readonly createTokenEndpoint = `${this.idamWebUrl}/o/token`;
-  private readonly createUserEndpoint = `${this.idamTestApiUrl}/test/idam/users`;
+  private readonly createTokenEndpoint = 'https://idam-web-public.aat.platform.hmcts.net/o/token';
+  private readonly createUserEndpoint = 'https://idam-testing-support-api.aat.platform.hmcts.net/test/idam/users';
+  // private readonly idamWebUrl = process.env.IDAM_WEB_URL;
+  // private readonly idamTestApiUrl = process.env.IDAM_TESTING_SUPPORT_API_URL;
+  // private readonly createTokenEndpoint = `${this.idamWebUrl}/o/token`;
+  // private readonly createUserEndpoint = `${this.idamTestApiUrl}/test/idam/users`;
 
   async createCitizenUser(): Promise<UserCredentials> {
     const apiContext = await request.newContext();
