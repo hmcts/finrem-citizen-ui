@@ -21,7 +21,7 @@
     "test:smoke": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --config jest.smoke.config.js",
     "test:functional": "playwright test --config playwright.config.mts --project chromium --grep @PR",
     "test:full-functional": "playwright test --config playwright.config.mts --retries=2",
-    "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
+    "test:fullfunctional:allBrowsers:ui": "playwright test --config playwright.config.mts --ui",
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes && npx playwright install chromium --with-deps && yarn test:a11y",
     "prepare": "husky"
   },
