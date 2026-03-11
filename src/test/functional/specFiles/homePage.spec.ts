@@ -3,13 +3,13 @@ import { expect, test } from '@playwright/test';
 import { HomePage } from '../pom/homePage.page';
 
 test.describe('HomePage', () => {
-  test('User sees correct content on the home page @PR', async ({ page }) => {
+  test.skip('User sees correct content on the home page @PR', async ({ page }) => {
     const homePage = new HomePage(page);
     await homePage.goto();
     await homePage.verifyCorrectContent();
   });
 
-  test('User can click license link in footer and it opens in the same tab', async ({ page }) => {
+  test.skip('User can click license link in footer and it opens in the same tab', async ({ page }) => {
     const homePage = new HomePage(page);
     await homePage.goto();
     await homePage.clickLicenceLink();

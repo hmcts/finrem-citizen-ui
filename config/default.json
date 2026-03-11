@@ -11,7 +11,27 @@
       "preload": true
     }
   },
+  "oidc": {
+    "issuer": "https://hmcts-access.aat.platform.hmcts.net/o",
+    "clientId": "finrem-citizen-ui",
+    "callbackUrl": "http://localhost:3100/oauth2/callback",
+    "scope": "openid profile roles"
+  },
   "session": {
-    "secret": "change-this-secret-in-production"
+    "secret": "change-this-secret-in-production",
+    "cookieName": "finrem_session",
+    "prefix": "finrem-session",
+    "ttlInSeconds": 5400
+  },
+  "use-ssl": false,
+  "features": {
+    "redis": "false"
+  },
+  "secrets": {
+    "finrem": {
+      "finrem-citizen-ui-idam-client-secret": "AAAAAAAAAAAA",
+      "session-secret": "finrem-local-dev-secret",
+      "redis-connection-string": "redis://localhost:6379"
+    }
   }
 }
