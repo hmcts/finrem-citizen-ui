@@ -44,12 +44,13 @@ app.get('/favicon.ico', limiter, (req, res) => {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-new Session().enableFor(app);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate, no-store');
   next();
 });
+
+new Session().enableFor(app);
 new OIDCModule().enableFor(app);
 
 glob
