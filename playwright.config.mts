@@ -25,6 +25,7 @@ const isLocal = finalBaseUrl.includes('localhost');
 const displayEnv = isLocal ? 'local' : process.env.RUNNING_ENV || 'aat';
 
 // 2. Logging for clarity
+/* eslint-disable no-console */
 if (!process.env.ALREADY_LOGGED && !process.env.PW_WORKER_INDEX) {
   console.log('-------------------------------------------------------');
   console.log(`🌍 TARGET URL:  ${finalBaseUrl}`);
@@ -33,6 +34,7 @@ if (!process.env.ALREADY_LOGGED && !process.env.PW_WORKER_INDEX) {
   console.log('-------------------------------------------------------');
   process.env.ALREADY_LOGGED = 'true';
 }
+/* eslint-enable no-console */
 
 export default defineConfig({
   ...CommonConfig.recommended,
