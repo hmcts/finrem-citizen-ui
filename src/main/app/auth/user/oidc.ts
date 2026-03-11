@@ -34,6 +34,10 @@ export const getUserDetails = async (
 
   return {
     accessToken: response.data.access_token,
+
+    idToken: response.data.id_token,
+    refreshToken: undefined,
+    sub: jwt.sub,
     id: jwt.uid,
     email: jwt.sub,
     givenName: jwt.given_name,
@@ -53,6 +57,9 @@ export const getSystemUser = async (): Promise<UserDetails> => {
 
   return {
     accessToken: response.data.access_token,
+    idToken: response.data.id_token,
+    refreshToken: undefined,
+    sub: jwt.sub,
     id: jwt.uid,
     email: jwt.sub,
     givenName: jwt.given_name,

@@ -40,10 +40,10 @@ nodejs:
       secrets:
         - finrem-system-update-username
         - finrem-system-update-password
-        - idam-systemupdate-username
-        - idam-systemupdate-password
         - finrem-citizen-ui-idam-client-secret
-        - app-insights-connection-string
+        - finrem-citizen-s2s-client-secret
+        - name: app-insights-connection-string
+        - alias: app-insights-connection-string
 
 idam-pr:
   enabled: true

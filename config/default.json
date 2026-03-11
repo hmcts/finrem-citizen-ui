@@ -23,8 +23,8 @@
     },
     "authProvider": {
       "url": "http://rpe-service-auth-provider-aat.service.core-compute-aat.internal",
-      "microservice": "finrem_case_orchestration",
-      "secret": "IPLOE65ZAKMB2KWX"
+      "microservice": "finrem_citizen_ui",
+      "secret": "NEED TO INSERT SECRET"
     },
     "case": {
       // "url": "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
