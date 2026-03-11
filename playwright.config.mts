@@ -1,10 +1,12 @@
-import { type ReporterDescription, defineConfig } from '@playwright/test';
+import { type ReporterDescription, defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 
+// Import HMCTS common configs
 const { CommonConfig, ProjectsConfig } = await import('@hmcts/playwright-common');
 
 dotenv.config();
 
+// 1. Determine Target URL and Results Directory
 const resultsDir = process.env.TEST_RESULTS_DIR || 'functional-output';
 
 const getBaseUrl = (): string => {
@@ -19,9 +21,10 @@ const getBaseUrl = (): string => {
 };
 
 const finalBaseUrl = getBaseUrl();
-const displayEnv = process.env.TEST_URL?.includes('localhost') ? 'local' : process.env.RUNNING_ENV || 'aat';
+const isLocal = finalBaseUrl.includes('localhost');
+const displayEnv = isLocal ? 'local' : process.env.RUNNING_ENV || 'aat';
 
-// Log once at the start of the test run
+// 2. Logging for clarity
 if (!process.env.ALREADY_LOGGED && !process.env.PW_WORKER_INDEX) {
   console.log('-------------------------------------------------------');
   console.log(`🌍 TARGET URL:  ${finalBaseUrl}`);
@@ -33,17 +36,24 @@ if (!process.env.ALREADY_LOGGED && !process.env.PW_WORKER_INDEX) {
 
 export default defineConfig({
   ...CommonConfig.recommended,
-  tsconfig: './src/test/tsconfig.json',
+
+  // Link to your test-specific tsconfig
+  tsconfig: 'src/test/tsconfig.json',
 
   testDir: './src/test',
   testMatch: ['a11y/*.test.ts', 'functional/**/*.spec.ts'],
 
   reporter: [
     ...((CommonConfig.recommended.reporter as ReporterDescription[]) || []),
-    ['html', { outputFolder: 'functional-output/functional-test-report' }],
+    ['html', { outputFolder: `${resultsDir}/functional-test-report` }],
     ['allure-playwright', { resultsDir: 'allure-results' }],
-    ['junit', { outputFile: 'functional-output/functional-test-results.xml' }],
+    ['junit', { outputFile: `${resultsDir}/functional-test-results.xml' ` }],
   ] as ReporterDescription[],
+
+  timeout: 30 * 1000,
+  expect: {
+    timeout: 5000,
+  },
 
   use: {
     ...CommonConfig.recommended.use,
@@ -52,18 +62,38 @@ export default defineConfig({
     ignoreHTTPSErrors: true,
   },
 
-  webServer: finalBaseUrl.includes('localhost')
+  // 3. Merged WebServer logic (Local development support)
+  webServer: isLocal
     ? {
         command: 'NODE_OPTIONS="--openssl-legacy-provider" yarn start',
-        url: finalBaseUrl,
+        // Combined health check endpoint from Main branch
+        url: `${finalBaseUrl}/health`,
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
+        // Injected Fallback Variables from Main branch
+        env: {
+          IDAM_SECRET: process.env.IDAM_SECRET || 'dummy-secret-for-playwright-tests',
+          SESSION_SECRET: process.env.SESSION_SECRET || 'dummy-session-secret',
+          PORT: '3100',
+        },
       }
     : undefined,
 
   projects: [
-    { name: 'chromium', ...ProjectsConfig.chromium },
-    { name: 'firefox', ...ProjectsConfig.firefox },
-    { name: 'webkit', ...ProjectsConfig.webkit },
+    {
+      name: 'chromium',
+      ...ProjectsConfig.chromium,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      ...ProjectsConfig.firefox,
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      ...ProjectsConfig.webkit,
+      use: { ...devices['Desktop Safari'] },
+    },
   ],
 });
