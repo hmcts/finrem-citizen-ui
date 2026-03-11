@@ -1,23 +1,31 @@
-jest.mock('axios');
-jest.mock('@hmcts/nodejs-logging');
+const logger = {
+  info: jest.fn(),
+  error: jest.fn(),
+};
+jest.mock('@hmcts/nodejs-logging', () => ({
+  Logger: {
+    getLogger: jest.fn(() => logger),
+  },
+}));
+
+jest.mock('axios', () => ({
+  __esModule: true,
+  default: {
+    post: jest.fn(),
+  },
+}));
+
 jest.useFakeTimers({ legacyFakeTimers: true });
 
 import axios, { AxiosStatic } from 'axios';
 
 import { getServiceAuthToken, initAuthToken } from './get-service-auth-token';
 
-const { Logger } = require('@hmcts/nodejs-logging');
-const logger = {
-  info: jest.fn(),
-  error: jest.fn(),
-};
-Logger.getLogger.mockReturnValue(logger);
-
-const mockedAxios = axios as jest.Mocked<AxiosStatic>;
+const mockedAxios = axios as unknown as jest.Mocked<AxiosStatic>;
 
 describe('initAuthToken', () => {
   test('Should set an interval to start fetching a token', () => {
-    mockedAxios.post.mockResolvedValue('token');
+    (mockedAxios.post as jest.Mock).mockResolvedValue('token');
 
     initAuthToken();
     expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -30,7 +38,9 @@ describe('initAuthToken', () => {
   });
 
   test('Should log errors', () => {
-    mockedAxios.post.mockRejectedValue({ response: { status: 500, data: 'Error' } });
+    (mockedAxios.post as jest.Mock).mockRejectedValue({
+      response: { status: 500, data: 'Error' },
+    });
 
     initAuthToken();
     return new Promise<void>(resolve => {
@@ -44,7 +54,7 @@ describe('initAuthToken', () => {
 
 describe('getServiceAuthToken', () => {
   test('Should return a token', async () => {
-    mockedAxios.post.mockResolvedValue({ data: 'token' });
+    (mockedAxios.post as jest.Mock).mockResolvedValue({ data: 'token' });
 
     initAuthToken();
 
