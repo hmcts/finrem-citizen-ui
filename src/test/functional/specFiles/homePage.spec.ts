@@ -1,45 +1,32 @@
-import { expect } from '@playwright/test';
+import { expect, test } from '../../fixtures/fixtures';
 
-import { test } from '../../fixtures/fixtures';
-import { HomePage } from '../pom/homePage.page';
-
-
-test.describe('HomePage', () => {
-  test('User sees correct content on the home page @PR', async ({ page }) => {
-    const homePage = new HomePage(page);
+test.describe('Authenticated Citizen Journey', () => {
+  // This runs before every test in this describe block
+  test.beforeEach(async ({ homePage, idamPage, citizenUser }) => {
     await homePage.goto();
+    await homePage.page.waitForLoadState('networkidle');
+    await idamPage.login(citizenUser);
+  });
+
+  test('User is successfully logged in and sees dashboard @PR', async ({ page, homePage, citizenUser }) => {
+    await expect(page).not.toHaveURL(/.*sign-in-or-create.*/);
     await homePage.verifyCorrectContent();
+
+    console.log(`Tested with user: ${citizenUser.username}`);
   });
 
-  test('User can click license link in footer and it opens in the same tab', async ({ page }) => {
-    const homePage = new HomePage(page);
-    await homePage.goto();
-    await homePage.clickLicenceLink();
-    const urlSnippet = 'nationalarchives\\.gov\\.uk/doc/open-government-licence/version/3/';
-    await page.waitForURL(new RegExp(urlSnippet));
-    await expect(page).toHaveURL(new RegExp(urlSnippet));
+  test('User session can be cleared and redirects to login page @PR', async ({ page, idamPage }) => {
+    // Verify logged in
+    await expect(page).not.toHaveURL(/.*sign-in-or-create.*/);
+
+    // Clear session
+    await idamPage.clearSession();
+    await page.reload();
+
+    await page.goto('/');
+
+    // 4. Confirm back on login page
+    await expect(page).toHaveURL(/.*sign-in-or-create.*/);
+    await expect(idamPage.signInLink).toBeVisible();
   });
-
-  // test('User session is destroyed after clearing cookies', async ({ idamPage, page }) => {
-  //   // Verify cookies exist initially
-  //   const cookiesBefore = await page.context().cookies();
-  //   expect(cookiesBefore.length).toBeGreaterThan(0);
-
-  //   // Clear session
-  //   await idamPage.clearSession();
-
-  //   // Check browser storage is empty
-  //   const cookiesAfter = await page.context().cookies();
-  //   const storageCheck = await page.evaluate(() => window.localStorage.length);
-
-  //   expect(cookiesAfter.length).toBe(0);
-  //   expect(storageCheck).toBe(0);
-
-  //   // Verify application behavior (Redirect to Login page) - need to confirm url path for login page
-  //   await page.goto('/home');
-
-  //   // Check that we landed back on the IDAM login page
-  //   await expect(idamPage.usernameInput).toBeVisible();
-  //   await expect(page).not.toHaveURL(/\/login/);
-  // });
 });

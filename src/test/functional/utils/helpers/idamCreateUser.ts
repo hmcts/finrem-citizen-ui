@@ -30,11 +30,11 @@ export class IdamApiService {
   }
 
   private async getAccessToken(apiContext: APIRequestContext): Promise<string> {
-    const clientSecret = process.env.IDAM_CITIZEN_CLIENT_SECRET;
+    const clientSecret = process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET;
     const clientId = 'finrem-citizen-ui';
 
     if (!clientSecret) {
-      throw new Error('MISSING CONFIG: IDAM_CITIZEN_CLIENT_SECRET is not defined in the environment.');
+      throw new Error('MISSING CONFIG: FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET is not defined in the environment.');
     }
 
     const response = await apiContext.post(this.createTokenEndpoint, {

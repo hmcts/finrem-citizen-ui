@@ -6,25 +6,58 @@ export interface UserCredentials {
 }
 
 export class IdamPage {
-  readonly usernameInput: Locator;
+  readonly signInLink: Locator;
+  readonly emailInput: Locator;
   readonly passwordInput: Locator;
-  readonly submitBtn: Locator;
+  readonly continueBtn: Locator;
 
   constructor(public readonly page: Page) {
-    this.usernameInput = this.page.locator('#username');
+    this.signInLink = this.page.getByRole('button', { name: 'Sign in', exact: true });
+    this.emailInput = this.page.locator('#email');
     this.passwordInput = this.page.locator('#password');
-    this.submitBtn = this.page.locator('button[type="submit"]');
+    this.continueBtn = this.page.locator('button[type="submit"]', { hasText: 'Continue' });
   }
 
+  /**
+   * multi-step login flow:
+   * Landing page -> Email -> Password
+   */
   async login(user: UserCredentials): Promise<void> {
-    await this.usernameInput.fill(user.username);
+    // Landing Page
+    await this.signInLink.click();
+
+    // Enter Email
+    await this.emailInput.waitFor({ state: 'visible' });
+    await this.emailInput.fill(user.username);
+    await this.continueBtn.click();
+
+    // Enter Password and Capture Response
+    await this.passwordInput.waitFor({ state: 'visible' });
     await this.passwordInput.fill(user.password);
-    await this.submitBtn.click();
-    await expect(this.usernameInput).not.toBeVisible();
+
+    // Catch successful auth response
+    const responsePromise = this.page.waitForResponse(
+      res => res.status() === 200 && !res.url().includes('sign-in-or-create'),
+      { timeout: 20000 }
+    );
+
+    await this.continueBtn.click();
+
+    // Wait for the 200 OK response to be confirmed
+    await responsePromise;
+
+    // Final Verification
+    await expect(this.passwordInput).not.toBeVisible();
   }
 
+  /**
+   * Clears session data
+   */
   async clearSession(): Promise<void> {
     await this.page.context().clearCookies();
-    await this.page.evaluate(() => window.localStorage.clear());
+    await this.page.evaluate(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
   }
 }

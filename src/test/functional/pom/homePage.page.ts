@@ -18,8 +18,7 @@ export class HomePage {
   }
 
   async verifyCorrectContent(): Promise<void> {
-    await expect(this.heading).toHaveText('Sign in or create an account');
-    await expect(this.page).toHaveURL(/.*sign-in-or-create.*/);
+    await expect(this.heading).toHaveText('Default page template');
   }
 
   async clickLicenceLink(): Promise<void> {
