@@ -10,8 +10,7 @@ def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
 def secrets = [
   'finrem-${env}': [
-    secret("idam-secret" ,"OAUTH2_CLIENT_FINREM"),
-    secret("finrem-idam-client-secret", "FINREM_IDAM_CLIENT_SECRET"),
+    secret("finrem-citizen-ui-idam-client-secret", "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET"),
   ]
 ]
 
@@ -30,26 +29,21 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
-  
   before('tests') {
     sh 'rm -rf smoke-output functional-output allure-results allure-results-smoke'
     sh 'npx playwright install chromium --with-deps'
   }
-
   before('functionalTests') {
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
     sh 'npx playwright install chromium --with-deps'
   }
-
   afterSuccess('functionalTests') {
     sh 'npx playwright install chromium --with-deps'
     yarnBuilder.yarn('test:a11y')
   }
-
   afterAlways('smokeTest') {
     junit testResults: 'smoke-output/smoke--test-results.xml', allowEmptyResults: true
     archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
-    
     allure([
       includeProperties: false,
       jdk: '',
@@ -58,7 +52,6 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
       results: [[path: 'allure-results-smoke']]
     ])
   }
-
   afterAlways('functionalTests') {
      junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
      allure([
@@ -66,7 +59,7 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
         jdk: '',
         properties: [],
         reportBuildPolicy: 'ALWAYS',
-        results: [[path: 'allure-results']] 
+        results: [[path: 'allure-results']]
      ])
      archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
   }
@@ -83,4 +76,4 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
     env.JENKINS_BRANCH = "preview"
     env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
   }
-} 
+}

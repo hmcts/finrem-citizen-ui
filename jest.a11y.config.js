@@ -4,9 +4,13 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   testEnvironment: 'node',
   transform: {
-    '^.+\\.ts?$': ['ts-jest', { useESM: true }],
+    '^.+\\.ts?$': 'ts-jest',
+    '^.+\\.m?js$': [
+      'babel-jest',
+      {
+        presets: [['@babel/preset-env', { targets: { node: 'current' }, modules: 'commonjs' }]],
+      },
+    ],
   },
-  extensionsToTreatAsEsm: ['.ts'],
-  transformIgnorePatterns: [],
-  testPathIgnorePatterns: ['/node_modules/', 'a11y.ts', 'a11y.test.ts'],
+  transformIgnorePatterns: ['/node_modules/(?!(openid-client|oauth4webapi|jose)/)'],
 };
