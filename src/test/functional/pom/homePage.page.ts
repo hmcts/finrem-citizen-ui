@@ -5,12 +5,14 @@ export class HomePage {
   readonly headerLogo: Locator;
   readonly footer: Locator;
   readonly licenceLink: Locator;
+  readonly copyRightImg: Locator;
 
   constructor(readonly page: Page) {
     this.heading = this.page.locator('h1.govuk-heading-xl');
     this.headerLogo = this.page.locator('div.govuk-header__logo');
     this.footer = this.page.locator('footer');
     this.licenceLink = this.page.locator('a.govuk-footer__link[rel="license"]');
+    this.copyRightImg = this.page.getByRole('link', { name: /© Crown copyright/i });
   }
 
   async goto(): Promise<void> {

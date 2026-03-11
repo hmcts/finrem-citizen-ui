@@ -25,8 +25,30 @@ test.describe('Authenticated Citizen Journey', () => {
 
     await page.goto('/');
 
-    // 4. Confirm back on login page
+    // Confirm back on login page
     await expect(page).toHaveURL(/.*sign-in-or-create.*/);
     await expect(idamPage.signInLink).toBeVisible();
+  });
+
+  test('User can see and interact with global header and footer elements @PR', async ({ page, homePage }) => {
+    // Check Header (Top of page)
+    await expect(homePage.headerLogo).toBeVisible();
+
+    // Check Footer (Bottom of page)
+    await homePage.footer.scrollIntoViewIfNeeded();
+    await expect(homePage.footer).toBeVisible();
+
+    // Check License Link (Inside Footer)
+    await expect(homePage.licenceLink).toBeVisible();
+    await homePage.licenceLink.click();
+    await expect(page).toHaveURL(/.*open-government-licence.*/);
+
+    await page.goBack();
+
+    // Check Copyright Link
+    await expect(homePage.copyRightImg).toBeVisible();
+    await expect(homePage.copyRightImg).toHaveAttribute('href', /nationalarchives.gov.uk/);
+    await homePage.copyRightImg.click();
+    await expect(page).toHaveURL(/.*nationalarchives.gov.uk.*/);
   });
 });
