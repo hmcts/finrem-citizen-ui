@@ -22,7 +22,6 @@ export default function (app: Application): void {
 
     const caseworkerUserApi = getCaseApi(systemUser, logger);
     const caseData = await caseworkerUserApi.getCaseById(caseReference);
-    console.log('caseApi:::', caseData);
     res.json(caseData);
   });
 
