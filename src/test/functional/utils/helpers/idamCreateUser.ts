@@ -1,30 +1,25 @@
-import { randomInt, randomUUID } from 'crypto';
+import { randomUUID } from 'crypto';
 
 import { APIRequestContext, request } from '@playwright/test';
 
 import { UserCredentials } from '../../../functional/pom/idamPage.page';
 
 export class IdamApiService {
-  private readonly createTokenEndpoint = 'https://idam-web-public.aat.platform.hmcts.net/o/token';
-  private readonly createUserEndpoint = 'https://idam-testing-support-api.aat.platform.hmcts.net/test/idam/users';
+  private readonly idamWebUrl = process.env.IDAM_WEB_URL;
+  private readonly idamTestApiUrl = process.env.IDAM_TESTING_SUPPORT_API_URL;
+  private readonly createTokenEndpoint = `${this.idamWebUrl}/o/token`;
+  private readonly createUserEndpoint = `${this.idamTestApiUrl}/test/idam/users`;
 
   async createCitizenUser(): Promise<UserCredentials> {
     const apiContext = await request.newContext();
 
-    const firstNames = ['James', 'Emma', 'Oliver', 'Sophia', 'Liam', 'Ava', 'Noah'];
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia'];
-
-    const first = firstNames[randomInt(firstNames.length)];
-    const last = lastNames[randomInt(lastNames.length)];
-    const randomNum = randomInt(1000, 10000);
-
     const user: UserCredentials = {
-      username: `${first.toLowerCase()}${last.toLowerCase()}${randomNum}@mailinator.com`,
+      username: `finrem-test-${randomUUID()}@mailinator.com`,
       password: 'Password1111',
     };
 
     const accessToken = await this.getAccessToken(apiContext);
-    await this.provisionUser(apiContext, accessToken, user, first, last);
+    await this.provisionUser(apiContext, accessToken, user, 'Test', 'User');
 
     return user;
   }
@@ -34,7 +29,7 @@ export class IdamApiService {
     const clientId = 'finrem-citizen-ui';
 
     if (!clientSecret) {
-      throw new Error('MISSING CONFIG: FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET is not defined in the environment.');
+      throw new Error('MISSING CONFIG: FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET is not defined.');
     }
 
     const response = await apiContext.post(this.createTokenEndpoint, {
@@ -48,8 +43,7 @@ export class IdamApiService {
     });
 
     if (!response.ok()) {
-      const errorBody = await response.text();
-      throw new Error(`IDAM Token Error: ${response.status()} - ${errorBody}`);
+      throw new Error(`IDAM Token Error: ${response.status()} - ${await response.text()}`);
     }
 
     const data = await response.json();
@@ -71,7 +65,6 @@ export class IdamApiService {
       data: {
         password: user.password,
         user: {
-          id: randomUUID(),
           email: user.username,
           forename: first,
           surname: last,
@@ -81,8 +74,7 @@ export class IdamApiService {
     });
 
     if (!response.ok()) {
-      const errorText = await response.text();
-      throw new Error(`User Creation Error: ${response.status()} - ${errorText}`);
+      throw new Error(`User Creation Error: ${response.status()} - ${await response.text()}`);
     }
   }
 }
