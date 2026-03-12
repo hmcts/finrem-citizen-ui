@@ -30,3 +30,6 @@ nodejs:
     IDAM_END_SESSION_URL: https://hmcts-access.{{ .Values.global.environment }}.platform.hmcts.net/o/endSession
     REDIS_EXPIRE_IN_DAYS: 180
     SECURE_COOKIE: 'true'
+
+redis:
+  enabled: false
