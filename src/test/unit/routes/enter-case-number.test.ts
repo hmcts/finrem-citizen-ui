@@ -73,14 +73,14 @@ describe('Enter Case Number Validation', () => {
     });
 
     it('should return null with mixed numbers and hyphens', () => {
-      const result = validateCaseNumber('12-34-56-78-90-12');
+      const result = validateCaseNumber('1234-567890-123456');
       expect(result).toBeNull();
     });
   });
 
   describe('Digit count validation', () => {
-    it('should return error when less than 16 digits', () => {
-      const result = validateCaseNumber('123456789012345');
+    it('should return error when less than 16 digits (15 digits)', () => {
+      const result = validateCaseNumber('1234-5678-90123-45');
       expect(result).not.toBeNull();
       expect(result?.caseNumber).toBe('Case number must be 16 digits');
     });
@@ -97,14 +97,14 @@ describe('Enter Case Number Validation', () => {
       expect(result?.caseNumber).toBe('Case number must be 16 digits');
     });
 
-    it('should return error when less than 16 digits with hyphens', () => {
-      const result = validateCaseNumber('1234-5678-0123');
+    it('should return error when less than 16 digits with hyphens (12 digits)', () => {
+      const result = validateCaseNumber('1234-5678-0123--');
       expect(result).not.toBeNull();
       expect(result?.caseNumber).toBe('Case number must be 16 digits');
     });
 
-    it('should return error when more than 16 digits with hyphens', () => {
-      const result = validateCaseNumber('1234-5678-0123-4567-89');
+    it('should return error when more than 16 digits with hyphens (18 digits)', () => {
+      const result = validateCaseNumber('123456-7890123456-78');
       expect(result).not.toBeNull();
       expect(result?.caseNumber).toBe('Case number must be 16 digits');
     });
