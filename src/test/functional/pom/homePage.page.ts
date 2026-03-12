@@ -9,7 +9,7 @@ export class HomePage {
 
   constructor(private readonly page: Page) {
     this.heading = this.page.locator('h1.govuk-heading-xl');
-    this.headerLogo = this.page.locator('svg.govuk-header__logotype');
+    this.headerLogo = this.page.getByRole('img', { name: 'GOV.UK' });
     this.footer = this.page.locator('footer');
     this.licenceLink = this.page.locator('a.govuk-footer__link[rel="license"]');
   }
