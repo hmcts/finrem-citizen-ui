@@ -39,6 +39,7 @@ export class HomePage {
   async verifyHeaderLogoAltText(): Promise<void> {
     await expect(this.headerLogo).toBeVisible();
     await expect(this.headerLogo).toHaveAttribute('aria-label', 'GOV.UK');
+    await expect(this.headerLogo).toHaveAccessibleName('GOV.UK');
   }
 
   

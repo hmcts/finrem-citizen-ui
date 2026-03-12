@@ -26,7 +26,7 @@ test.describe('HomePage', () => {
     await expect(heading).toBeAttached();
   });
 
-  test.only('Homepage Logo has correct alt text', async ({ page }) => {
+  test('Homepage Logo has correct alt text', async ({ page }) => {
     const homePage = new HomePage(page);
     await homePage.goto();
   
@@ -36,12 +36,10 @@ test.describe('HomePage', () => {
     await expect(logo).toHaveAttribute('aria-label', 'GOV.UK');
 
     const altText = await logo.getAttribute('aria-label');
-    console.log ( 'Logo alt text: ' + altText);
     
   });
 
   test('Homepage Logo has correct alt text using page object method', async ({ page }) => {
-    await page.pause();
     const homePage = new HomePage(page);
     await homePage.goto();
     await homePage.verifyHeaderLogoAltText();
