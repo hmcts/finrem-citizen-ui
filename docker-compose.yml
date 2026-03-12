@@ -1,4 +1,4 @@
-version: '2'
+version: '3.8'
 
 services:
   finrem-citizen-ui:
@@ -10,10 +10,32 @@ services:
         - no_proxy
     ports:
       - '3100:3100'
+    command: ${COMMAND:-yarn start:dev}
     depends_on:
-      - redis
+      cache:
+        condition: service_healthy
+    environment:
+      - REDIS_CONNECTION_STRING=redis://cache:6379
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.yarn
 
-  redis:
-      image: redis:7-alpine
-      ports:
-          - '6379:6379'
+  cache:
+    image: hmctspublic.azurecr.io/imported/bitnami/redis:8.2.0
+    ports:
+      - '6379:6379'
+    volumes:
+      - cache-data:/bitnami/redis/data
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 3s
+      timeout: 2s
+      retries: 10
+
+volumes:
+  cache-data:
