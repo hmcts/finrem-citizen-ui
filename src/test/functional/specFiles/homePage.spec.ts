@@ -26,18 +26,6 @@ test.describe('HomePage', () => {
     await expect(heading).toBeAttached();
   });
 
-  test('Homepage Logo has correct alt text', async ({ page }) => {
-    const homePage = new HomePage(page);
-    await homePage.goto();
-  
-    const logo = page.locator('svg.govuk-header__logotype');
-
-    await expect(logo).toBeVisible();
-    await expect(logo).toHaveAttribute('aria-label', 'GOV.UK');
-
-    const altText = await logo.getAttribute('aria-label');
-    
-  });
 
   test('Homepage Logo has correct alt text using page object method', async ({ page }) => {
     const homePage = new HomePage(page);
