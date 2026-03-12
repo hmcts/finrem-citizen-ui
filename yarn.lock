@@ -10634,8 +10634,6 @@ __metadata:
       optional: true
     esbuild-register:
       optional: true
-    esbuild-register:
-      optional: true
     ts-node:
       optional: true
   checksum: 10/89c49426e2be5ee0c7cf9d6ab0a1dd6eb5ea03f67a5cc57d991d3d2441762d7101a215da5596bcb5b39c47e209ab8fdf4682fd1365cef7a5e48903b689bf4116
