@@ -1,12 +1,14 @@
 import { expect, test } from '@playwright/test';
 
 import { HomePage } from '../pom/homePage.page';
+import { verify } from 'crypto';
 
 test.describe('HomePage', () => {
-  test('User sees correct content on the home page @PR', async ({ page }) => {
+  test.only('User sees correct content on the home page @PR', async ({ page }) => {
     const homePage = new HomePage(page);
     await homePage.goto();
     await homePage.verifyCorrectContent();
+    console.log(await page.url());
   });
 
   test('User can click license link in footer and it opens in the same tab', async ({ page }) => {
@@ -23,4 +25,30 @@ test.describe('HomePage', () => {
     const heading = page.getByRole('heading', { name: expectedTitle, exact: false, level: 1 });
     await expect(heading).toBeAttached();
   });
+
+  test('Homepage Logo has correct alt text', async ({ page }) => {
+    const homePage = new HomePage(page);
+
+    await homePage.goto();
+  
+    const logo = page.locator('svg.govuk-header__logotype');
+
+    await expect(logo).toBeVisible();
+
+    await expect(logo).toHaveAttribute('aria-label', 'GOV.UK');
+    const altText = await logo.getAttribute('aria-label');
+    console.log ( 'Logo alt text: ' + altText);
+    
+  });
+
+  test.only('Homepage Logo has correct alt text using page object method', async ({ page }) => {
+    await page.pause();
+    const homePage = new HomePage(page);
+    await homePage.goto();
+    await homePage.verifyHeaderLogoAltText();
+  });
+
+
+    
+
 });
