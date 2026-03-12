@@ -36,19 +36,10 @@ describe('Enter Case Number Validation', () => {
       expect(result?.caseNumber).toBe('Case number must be between 16 and 20 characters');
     });
 
-    it('should return null when case number is exactly 16 characters', () => {
-      const result = validateCaseNumber('1234567890123456');
-      expect(result).toBeNull();
-    });
-
-    it('should return null when case number is exactly 20 characters', () => {
-      const result = validateCaseNumber('12345678901234567890');
-      expect(result).toBeNull();
-    });
-
-    it('should return null when case number is 18 characters (within range)', () => {
-      const result = validateCaseNumber('123456789012345678');
-      expect(result).toBeNull();
+    it('should return error when more than 20 characters with hyphens', () => {
+      const result = validateCaseNumber('1234-5678-0123-4567-8901');
+      expect(result).not.toBeNull();
+      expect(result?.caseNumber).toBe('Case number must be between 16 and 20 characters');
     });
   });
 
@@ -83,6 +74,53 @@ describe('Enter Case Number Validation', () => {
 
     it('should return null with mixed numbers and hyphens', () => {
       const result = validateCaseNumber('12-34-56-78-90-12');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('Digit count validation', () => {
+    it('should return error when less than 16 digits', () => {
+      const result = validateCaseNumber('123456789012345');
+      expect(result).not.toBeNull();
+      expect(result?.caseNumber).toBe('Case number must be 16 digits');
+    });
+
+    it('should return error when more than 16 digits (17 digits)', () => {
+      const result = validateCaseNumber('12345678901234567');
+      expect(result).not.toBeNull();
+      expect(result?.caseNumber).toBe('Case number must be 16 digits');
+    });
+
+    it('should return error when 20 digits', () => {
+      const result = validateCaseNumber('12345678901234567890');
+      expect(result).not.toBeNull();
+      expect(result?.caseNumber).toBe('Case number must be 16 digits');
+    });
+
+    it('should return error when less than 16 digits with hyphens', () => {
+      const result = validateCaseNumber('1234-5678-0123');
+      expect(result).not.toBeNull();
+      expect(result?.caseNumber).toBe('Case number must be 16 digits');
+    });
+
+    it('should return error when more than 16 digits with hyphens', () => {
+      const result = validateCaseNumber('1234-5678-0123-4567-89');
+      expect(result).not.toBeNull();
+      expect(result?.caseNumber).toBe('Case number must be 16 digits');
+    });
+
+    it('should accept exactly 16 digits without hyphens', () => {
+      const result = validateCaseNumber('1234567890123456');
+      expect(result).toBeNull();
+    });
+
+    it('should accept exactly 16 digits with hyphens (19 chars)', () => {
+      const result = validateCaseNumber('1234-5678-0123-4567');
+      expect(result).toBeNull();
+    });
+
+    it('should accept exactly 16 digits with different hyphen format', () => {
+      const result = validateCaseNumber('12-3456-7890-1234-56');
       expect(result).toBeNull();
     });
   });

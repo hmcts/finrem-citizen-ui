@@ -29,16 +29,23 @@ export function validateCaseNumber(caseNumber: string | undefined): CaseNumberEr
 
   const trimmedCaseNumber = caseNumber.trim();
 
-  // Length validation (16-20 characters)
+  // Length validation (16-20 characters total)
   if (trimmedCaseNumber.length < 16 || trimmedCaseNumber.length > 20) {
     errors.caseNumber = 'Case number must be between 16 and 20 characters';
     return errors;
   }
 
   // Format validation (only numbers and hyphens)
-  const formatRegex = /^[0-9-]{16,20}$/;
+  const formatRegex = /^[0-9-]+$/;
   if (!formatRegex.test(trimmedCaseNumber)) {
     errors.caseNumber = 'Case number must only include numbers 0 to 9 and special characters such as hyphens';
+    return errors;
+  }
+
+  // Digit count validation (must be exactly 16 digits)
+  const digitsOnly = trimmedCaseNumber.replace(/-/g, '');
+  if (digitsOnly.length !== 16) {
+    errors.caseNumber = 'Case number must be 16 digits';
     return errors;
   }
 
