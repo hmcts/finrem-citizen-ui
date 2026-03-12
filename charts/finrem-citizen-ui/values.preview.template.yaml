@@ -1,3 +1,6 @@
+global:
+  security:
+    allowInsecureImages: true
 nodejs:
   environment:
     OAUTH_CALLBACK_URL: 'https://${SERVICE_FQDN}/oauth2/callback'
@@ -7,6 +10,8 @@ nodejs:
     IDAM_WEB_URL: https://hmcts-access.aat.platform.hmcts.net/login
     IDAM_END_SESSION_URL: https://hmcts-access.aat.platform.hmcts.net/o/endSession
     IDAM_API_URL: https://idam-api.aat.platform.hmcts.net/o/token
+
+    REDIS_CONNECTION_STRING: 'redis://{{ .Release.Name }}-redis-master:6379'
 
   # Don't modify below here
   image: ${IMAGE_NAME}
@@ -30,3 +35,14 @@ nodejs:
           alias: finrem-citizen-ui-idam-client-secret
         - name: app-insights-connection-string
           alias: app-insights-connection-string
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: false
+  image:
+    registry: hmctspublic.azurecr.io
+    repository: imported/bitnami/redis

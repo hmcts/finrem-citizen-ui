@@ -1,3 +1,6 @@
+global:
+  security:
+    allowInsecureImages: true
 nodejs:
   environment:
     OAUTH_CALLBACK_URL: 'https://${SERVICE_FQDN}/oauth2/callback'
