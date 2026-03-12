@@ -1,29 +1,28 @@
 module.exports = {
   roots: ['<rootDir>/src/test/smoke'],
   testRegex: '(/src/test/.*|\\.test)\\.(ts|js)$',
-  testRunner: 'jest-circus/runner',
   testEnvironment: 'node',
+  testRunner: 'jest-circus/runner',
   transform: {
     '^.+\\.ts$': 'ts-jest',
-  },
-  reporters: [
-    'default',
-    [
-      'jest-junit',
+    '^.+\\.m?js$': [
+      'babel-jest',
       {
-        outputDirectory: 'smoke-output',
-        outputName: 'smoke--test-results.xml',
+        presets: [['@babel/preset-env', { targets: { node: 'current' }, modules: 'commonjs' }]],
       },
     ],
+  },
+  transformIgnorePatterns: ['/node_modules/(?!(openid-client|oauth4webapi|jose)/)'],
+  moduleFileExtensions: ['ts', 'js', 'json'],
+  reporters: [
+    'default',
     [
       'jest-html-reporter',
       {
         pageTitle: 'Smoke Test Report',
-        outputPath: 'smoke-output/smoke-test-report.html',
+        outputPath: '<rootDir>/smoke-output/reports/test-report.html',
         includeFailureMsg: true,
       },
     ],
-    // Separate Allure folder for smoke
-    ['jest-allure2-reporter', { resultsDir: 'allure-results-smoke' }],
   ],
 };

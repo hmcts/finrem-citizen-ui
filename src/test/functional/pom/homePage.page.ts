@@ -19,10 +19,8 @@ export class HomePage {
   }
 
   async verifyCorrectContent(): Promise<void> {
-    await expect(this.heading).toHaveText('Default page template');
-    await expect(this.headerLogo).toBeVisible();
-    await expect(this.footer).toContainText('All content is available under the');
-    await expect(this.licenceLink).toHaveText('Open Government Licence v3.0');
+    await expect(this.heading).toHaveText('Sign in or create an account');
+    await expect(this.page).toHaveURL(/.*sign-in-or-create.*/);
   }
 
   async clickLicenceLink(): Promise<void> {

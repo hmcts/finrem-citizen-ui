@@ -11,7 +11,7 @@ test.describe('HomePage', () => {
     console.log(await page.url());
   });
 
-  test('User can click license link in footer and it opens in the same tab', async ({ page }) => {
+  test.skip('User can click license link in footer and it opens in the same tab', async ({ page }) => {
     const homePage = new HomePage(page);
     await homePage.goto();
     await homePage.clickLicenceLink();

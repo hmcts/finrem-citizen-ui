@@ -24,15 +24,20 @@ export default defineConfig({
     ignoreHTTPSErrors: true,
     trace: 'on-first-retry',
   },
-
   // 3. Conditional WebServer
   // Only start the local app if the URL contains 'localhost'
   webServer: testUrl.includes('localhost')
     ? {
         command: 'NODE_OPTIONS="--openssl-legacy-provider" yarn start',
-        url: testUrl,
+        url: `${testUrl}/health`,
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
+        // INJECT FALLBACK VARIABLES FOR CI
+        env: {
+          IDAM_SECRET: process.env.IDAM_SECRET || 'dummy-secret-for-playwright-tests',
+          SESSION_SECRET: process.env.SESSION_SECRET || 'dummy-session-secret',
+          PORT: '3100',
+        },
       }
     : undefined,
 
