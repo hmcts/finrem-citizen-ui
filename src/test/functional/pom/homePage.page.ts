@@ -9,7 +9,15 @@ export class HomePage extends BasePage {
     await this.page.goto('/');
   }
 
-  async verifyCorrectContent(): Promise<void> {
+  async verifyDashboardContent(): Promise<void> {
     await expect(this.heading).toHaveText('Default page template');
+  }
+
+  async clearSession(): Promise<void> {
+    await this.page.context().clearCookies();
+    await this.page.evaluate(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
   }
 }

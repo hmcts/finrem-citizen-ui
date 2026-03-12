@@ -45,13 +45,13 @@ export class IdamPage {
       this.continueBtn.click(),
     ]);
 
-    // 5. Verify no longer on the login page
+    // Verify no longer on the login page
     await expect(this.page).not.toHaveURL(/.*sign-in-or-create.*/);
     await expect(this.passwordInput).not.toBeVisible();
   }
 
   /**
-   * Clears session data
+   * Clear session data
    */
   async clearSession(): Promise<void> {
     await this.page.context().clearCookies();
