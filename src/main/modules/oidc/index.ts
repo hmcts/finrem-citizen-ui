@@ -29,7 +29,13 @@ export class OIDCModule {
 
     const oidcClient = await getOidcClient();
 
-    let clientSecret = process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET;
+    let clientSecret =
+      process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET ||
+      process.env.IDAM_CLIENT_SECRET;
+
+    if (!clientSecret && config.has('services.idam.clientSecret')) {
+      clientSecret = config.get<string>('services.idam.clientSecret');
+    }
 
     if (!clientSecret && config.has('secrets.finrem.finrem-citizen-ui-idam-client-secret')) {
       clientSecret = config.get<string>('secrets.finrem.finrem-citizen-ui-idam-client-secret');
