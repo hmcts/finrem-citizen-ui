@@ -43,7 +43,7 @@ nodejs:
         - finrem-citizen-ui-idam-client-secret
         - finrem-citizen-s2s-client-secret
         - name: app-insights-connection-string
-        - alias: app-insights-connection-string
+          alias: app-insights-connection-string
 
 idam-pr:
   enabled: true
