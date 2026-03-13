@@ -63,6 +63,18 @@ export class OIDCModule {
       this.logger.info('CRITICAL: REDIS connection string is missing');
     }
 
+    let sessionSecret: string | undefined;
+
+    if (config.has('secrets.finrem.session-secret')) {
+      sessionSecret = config.get<string>('secrets.finrem.session-secret');
+    }
+
+    if (sessionSecret) {
+      this.logger.info('session-secret loaded. ', sessionSecret);
+    } else {
+      this.logger.info('CRITICAL:session-secret is missing');
+    }
+
     try {
       this.logger.info('Setting up OIDC client via discovery');
       const issuer = new URL(this.oidcConfig.issuer);
