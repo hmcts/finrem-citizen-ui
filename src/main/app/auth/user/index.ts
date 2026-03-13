@@ -3,7 +3,7 @@ import config from 'config';
 import { jwtDecode } from 'jwt-decode';
 import NodeCache from 'node-cache';
 
-import { APPLICANT_2_CALLBACK_URL, CALLBACK_URL, PageLink, SIGN_IN_URL } from '../../../steps/urls';
+import { CALLBACK_URL, PageLink } from '../../../steps/urls';
 import { UserDetails } from '../../controller/AppRequest';
 
 const { Logger } = require('@hmcts/nodejs-logging');
@@ -12,10 +12,10 @@ const logger = Logger.getLogger('oidc');
 
 export const idamTokenCache = new NodeCache({ stdTTL: 3600, checkperiod: 1800 });
 
-export const getRedirectUrl = (serviceUrl: string, requestPath: string): string => {
+export const getRedirectUrl = (serviceUrl: string): string => {
   const id: string = config.get('services.idam.clientID');
   const loginUrl: string = config.get('services.idam.authorizationURL');
-  const callbackUrl = encodeURI(serviceUrl + (requestPath === SIGN_IN_URL ? CALLBACK_URL : APPLICANT_2_CALLBACK_URL));
+  const callbackUrl = encodeURI(serviceUrl + CALLBACK_URL);
 
   return `${loginUrl}?client_id=${id}&response_type=code&redirect_uri=${callbackUrl}`;
 };

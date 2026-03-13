@@ -1,9 +1,9 @@
 import axios, { AxiosRequestHeaders, AxiosResponse, AxiosStatic } from 'axios';
 import jwt from 'jsonwebtoken';
 
-import { APPLICANT_2_SIGN_IN_URL, CALLBACK_URL, SIGN_IN_URL } from '../../../steps/urls';
+import { CALLBACK_URL } from '../../../steps/urls';
 
-import { OidcResponse, getRedirectUrl, getSystemUser, getUserDetails, idamTokenCache } from './oidc';
+import { OidcResponse, getRedirectUrl, getSystemUser, getUserDetails, idamTokenCache } from './index';
 
 jest.mock('config', () => {
   const get = jest.fn();
@@ -60,14 +60,8 @@ beforeEach(() => {
 
 describe('getRedirectUrl', () => {
   test('should create a valid URL to redirect to the login screen', () => {
-    expect(getRedirectUrl('http://localhost', SIGN_IN_URL)).toBe(
+    expect(getRedirectUrl('http://localhost')).toBe(
       'https://idam-web-public.aat.platform.hmcts.net/login?client_id=divorce&response_type=code&redirect_uri=http://localhost/oauth2/callback'
-    );
-  });
-
-  test('should create a valid URL to redirect to applicant2 login screen', () => {
-    expect(getRedirectUrl('http://localhost', APPLICANT_2_SIGN_IN_URL)).toBe(
-      'https://idam-web-public.aat.platform.hmcts.net/login?client_id=divorce&response_type=code&redirect_uri=http://localhost/oauth2/callback-applicant2'
     );
   });
 });

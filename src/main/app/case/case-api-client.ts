@@ -9,8 +9,6 @@ import { CaseAssignedUserRole } from './case-roles';
 import { FinremCaseData, FinremCaseDetails } from './definition';
 
 export class CaseApiClient {
-  readonly maxRetries: number = 3;
-
   constructor(
     private readonly server: AxiosInstance,
     private readonly logger: LoggerInstance
@@ -52,6 +50,10 @@ export class CaseApiClient {
 }
 
 export const getCaseApiClient = (userDetails: UserDetails, logger: LoggerInstance): CaseApiClient => {
+  if (!userDetails?.accessToken) {
+    logger.error('Missing access token in userDetails');
+    throw new Error('Access token is required to create Case API client');
+  }
   const serviceAuthToken = getServiceAuthToken();
   return new CaseApiClient(
     axios.create({

@@ -1,7 +1,7 @@
 import { Application } from 'express';
 import { LoggerInstance } from 'winston';
 
-import { getSystemUser } from '../app/auth/user/oidc';
+import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { CaseRole } from '../app/case/definition';

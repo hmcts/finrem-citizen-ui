@@ -21,7 +21,7 @@
     "test:functional": "playwright test --project chromium --grep @PR",
     "test:full-functional": "playwright test --retries=2",
     "test:fullfunctional:allBrowsers:ui": "yarn playwright test --ui",
-    "cichecks": "yarn build && yarn lint && yarn test:unit && yarn test:routes && npx playwright install chromium --with-deps && yarn test:a11y",
+    "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes && npx playwright install chromium --with-deps && yarn test:a11y",
     "prepare": "husky"
   },
   "dependencies": {

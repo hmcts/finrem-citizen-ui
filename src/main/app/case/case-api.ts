@@ -6,8 +6,6 @@ import { CaseApiClient, getCaseApiClient } from './case-api-client';
 import { CaseRole, FinremCaseData } from './definition';
 
 export class CaseApi {
-  readonly maxRetries: number = 3;
-
   constructor(private readonly apiClient: CaseApiClient) {}
 
   public async addUsersToCase(assignments: { case_id: string; user_id: string; case_role: CaseRole }[]): Promise<void> {
