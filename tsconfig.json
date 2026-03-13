@@ -1,3 +1,5 @@
+// Main TypeScript configuration for the backend code, excluding tests to prevent type conflicts and ensure clean separation of concerns
+// / src/main
 {
   "compilerOptions": {
     "outDir": "./src/",

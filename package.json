@@ -9,6 +9,7 @@
     "start": "NODE_ENV=production ts-node -r tsconfig-paths/register src/main/server.ts",
     "start:dev": "nodemon --config nodemon.json",
     "lint": "eslint .",
+    "lint-staged": "lint-staged",
     "lint:fix": "eslint . --fix",
     "build": "yarn webpack --config webpack.config.js",
     "build:prod": "NODE_ENV=production yarn webpack --mode production --config webpack.config.js",
@@ -16,11 +17,11 @@
     "test:unit": "jest",
     "test:coverage": "jest --coverage",
     "test:routes": "jest -c jest.routes.config.js",
-    "test:a11y": "npx playwright install chromium --with-deps && playwright test src/test/a11y --project chromium",
+    "test:a11y": "npx playwright install chromium --with-deps && playwright test src/test/a11y --config playwright.config.mts --project chromium",
     "test:smoke": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --config jest.smoke.config.js",
-    "test:functional": "playwright test --project chromium --grep @PR",
-    "test:full-functional": "playwright test --retries=2",
-    "test:fullfunctional:allBrowsers:ui": "yarn playwright test --ui",
+    "test:functional": "playwright test --config playwright.config.mts --project chromium --grep @PR",
+    "test:full-functional": "playwright test --config playwright.config.mts --retries=2",
+    "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes && npx playwright install chromium --with-deps && yarn test:a11y",
     "prepare": "husky"
   },
@@ -96,7 +97,8 @@
     "copy-webpack-plugin": "10.2.4",
     "css-loader": "7.1.4",
     "debug": "4.4.3",
-    "eslint": "10.0.3",
+    "dotenv": "^17.3.1",
+    "eslint": "9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jest": "^29.0.0",
@@ -128,14 +130,9 @@
     "webpack-dev-middleware": "7.4.5",
     "webpack-node-externals": "3.0.0"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown",
-    "**/*.{js,ts}": "eslint --fix"
+    "**/*.{js,ts,mts}": "eslint --fix"
   },
   "packageManager": "yarn@4.12.0",
   "resolutions": {

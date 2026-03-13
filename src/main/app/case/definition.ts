@@ -1018,9 +1018,7 @@ export interface ApplicationNotApprovedCollection {
 }
 
 export interface DirectionOrderCollection
-  extends HasCaseDocument,
-    WithAttachmentsCollection,
-    UploadedApprovedOrderHolder {
+  extends HasCaseDocument, WithAttachmentsCollection, UploadedApprovedOrderHolder {
   id: string;
   value: DirectionOrder;
 }
@@ -3226,10 +3224,7 @@ export interface AdditionalDocumentsCollection extends HasCaseDocument {
 }
 
 export interface DraftOrderDocumentReview
-  extends HasCaseDocument,
-    Reviewable,
-    RefusalOrderConvertible,
-    HearingInstructionProcessable {
+  extends HasCaseDocument, Reviewable, RefusalOrderConvertible, HearingInstructionProcessable {
   draftOrderDocument: CaseDocument;
   resubmission: YesOrNo;
   uploadedOnBehalfOf: string;
@@ -3242,10 +3237,7 @@ export interface DraftOrderDocumentReview
 }
 
 export interface PsaDocumentReview
-  extends HasCaseDocument,
-    Reviewable,
-    RefusalOrderConvertible,
-    HearingInstructionProcessable {
+  extends HasCaseDocument, Reviewable, RefusalOrderConvertible, HearingInstructionProcessable {
   psaDocument: CaseDocument;
   resubmission: YesOrNo;
   uploadedOnBehalfOf: string;

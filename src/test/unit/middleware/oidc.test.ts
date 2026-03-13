@@ -25,7 +25,9 @@ describe('oidcMiddleware', () => {
   });
 
   it('calls next when user is in session', () => {
-    const req = makeReq({ session: { user: { accessToken: 'token', idToken: 'id', sub: 'u1', refreshToken: undefined } } as never });
+    const req = makeReq({
+      session: { user: { accessToken: 'token', idToken: 'id', sub: 'u1', refreshToken: undefined } } as never,
+    });
     const res = makeRes();
 
     oidcMiddleware(req, res, next);

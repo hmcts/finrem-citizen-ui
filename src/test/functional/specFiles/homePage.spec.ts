@@ -1,26 +1,50 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../../fixtures/fixtures';
 
-import { HomePage } from '../pom/homePage.page';
-
-test.describe('HomePage', () => {
-  test.skip('User sees correct content on the home page @PR', async ({ page }) => {
-    const homePage = new HomePage(page);
-    await homePage.goto();
-    await homePage.verifyCorrectContent();
+test.describe('Authenticated Citizen User Journey', () => {
+  /**
+   * AUTOMATIC SETUP (via beforeEach)
+   * By requesting 'loggedInPage', we trigger the fixtures file:
+   * 1. idamApiService: Creates the helper instance.
+   * 2. citizenUser: Calls the API to create a fresh user.
+   * 3. loggedInPage: Navigates to the app and performs the UI login.
+   */
+  test.beforeEach(async ({ loggedInPage: _loggedInPage }) => {
+    // The browser is already at the dashboard here
   });
 
-  test.skip('User can click license link in footer and it opens in the same tab', async ({ page }) => {
-    const homePage = new HomePage(page);
-    await homePage.goto();
-    await homePage.clickLicenceLink();
+  test('User can see dashboard after successful login @PR', async ({ homePage }) => {
+    // Verify dashboard elements
+    await homePage.verifyDashboardContent();
+  });
 
-    const expectedTitle = 'Open Government Licence for public sector information';
-    const urlSnippet = 'nationalarchives\\.gov\\.uk/doc/open-government-licence/version/3/';
+  test('User session can be cleared and redirects to login page @PR', async ({ page, homePage, idamPage }) => {
+    // Perform the logout/session clear action
+    await homePage.clearSession();
+    await page.goto('/');
 
-    await page.waitForURL(new RegExp(urlSnippet));
-    await expect(page).toHaveURL(new RegExp(urlSnippet));
+    // Assert user is back on login screen
+    await expect(page).toHaveURL(/.*sign-in-or-create.*/);
+    await expect(idamPage.signInLink).toBeVisible();
+  });
 
-    const heading = page.getByRole('heading', { name: expectedTitle, exact: false, level: 1 });
-    await expect(heading).toBeAttached();
+  test('Verify Global Layout elements: Header, Footer, @PR', async ({ page, homePage }) => {
+    // common elements from the Page Object for easier access
+    const { footer, licenceDescription, licenceLink, copyRightImgLink } = homePage;
+
+    // Check header
+    await expect(homePage.headerLogo).toBeVisible();
+
+    // Check footer (License description and Link navigates to the correct page)
+    await footer.scrollIntoViewIfNeeded();
+    await expect(footer).toBeVisible();
+    await expect(licenceDescription).toBeVisible();
+    await licenceLink.click();
+    await homePage.verifyUrl(/.*open-government-licence.*/);
+
+    await page.goBack();
+
+    // Check footer (Copyright Image link navigates to the correct page)
+    await copyRightImgLink.click();
+    await homePage.verifyUrl(/.*crown-copyright.*/);
   });
 });
