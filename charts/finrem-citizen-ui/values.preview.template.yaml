@@ -42,5 +42,5 @@ redis:
     persistence:
       enabled: false
   image:
-    registry: hmctspublic.azurecr.io
+    registry: hmctssbox.azurecr.io
     repository: imported/bitnami/redis
