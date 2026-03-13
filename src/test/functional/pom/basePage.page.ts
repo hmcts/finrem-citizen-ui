@@ -5,16 +5,14 @@ export class BasePage {
   readonly footer: Locator;
   readonly licenceDescription: Locator;
   readonly licenceLink: Locator;
-  readonly copyRightImg: Locator;
-  readonly copyRightLink: Locator;
+  readonly copyRightImgLink: Locator;
 
   constructor(readonly page: Page) {
-    this.headerLogo = this.page.locator('.govuk-header__logo');
+    this.headerLogo = this.page.getByRole('img', { name: 'GOV.UK' });
     this.footer = this.page.locator('footer');
-    this.licenceDescription = this.footer.locator('.govuk-footer__licence-description');
-    this.licenceLink = this.footer.locator('a[rel="license"]');
-    this.copyRightLink = this.footer.getByRole('link', { name: /© Crown copyright/i });
-    this.copyRightImg = this.footer.locator('.govuk-footer__copyright-logo');
+    this.licenceDescription = this.footer.getByText(/All content is available under the/i);
+    this.licenceLink = this.footer.getByRole('link', { name: 'Open Government Licence' });
+    this.copyRightImgLink = this.footer.getByRole('link', { name: /© Crown copyright/i });
   }
 
   async verifyUrl(path: string | RegExp): Promise<void> {

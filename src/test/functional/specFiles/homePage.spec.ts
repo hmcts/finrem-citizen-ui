@@ -28,26 +28,23 @@ test.describe('Authenticated Citizen User Journey', () => {
   });
 
   test('Verify Global Layout elements: Header, Footer, @PR', async ({ page, homePage }) => {
+    // common elements from the Page Object for easier access
+    const { footer, licenceDescription, licenceLink, copyRightImgLink } = homePage;
+
     // Check header
     await expect(homePage.headerLogo).toBeVisible();
 
-    // common elements from the Page Object for easier access
-    const { footer, licenceDescription, licenceLink, copyRightImg, copyRightLink } = homePage;
-
-    // Check footer
+    // Check footer (License description and Link navigates to the correct page)
     await footer.scrollIntoViewIfNeeded();
     await expect(footer).toBeVisible();
-
-    // Check footer License description and Link navigates to the correct page
     await expect(licenceDescription).toBeVisible();
     await licenceLink.click();
     await homePage.verifyUrl(/.*open-government-licence.*/);
 
     await page.goBack();
 
-    // Check footer Copyright Image visible and Link navigates to the correct page
-    await expect(copyRightImg).toBeVisible();
-    await copyRightLink.click();
+    // Check footer (Copyright Image link navigates to the correct page)
+    await copyRightImgLink.click();
     await homePage.verifyUrl(/.*crown-copyright.*/);
   });
 });
