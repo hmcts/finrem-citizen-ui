@@ -1,0 +1,50 @@
+{% extends "template.njk" %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% if errors and errors.caseNumber %}
+        <div class="govuk-error-summary" data-module="govuk-error-summary">
+          <div role="alert">
+            <h2 class="govuk-error-summary__title">There is a problem</h2>
+            <div class="govuk-error-summary__body">
+              <ul class="govuk-list govuk-error-summary__list">
+                <li><a href="#caseNumber">{{ errors.caseNumber }}</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <h1 class="govuk-heading-l">Enter case number</h1>
+
+      <form method="post" novalidate>
+        <div class="govuk-form-group {% if errors.caseNumber %}govuk-form-group--error{% endif %}">
+          <label class="govuk-label" for="caseNumber">
+            Case number
+          </label>
+          <div id="caseNumber-hint" class="govuk-hint">
+            This is your 16 digit financial remedy case number that can be found on your notice of first appointment, for example 1234-5678-0123-4567
+          </div>
+          {% if errors.caseNumber %}
+            <p id="caseNumber-error" class="govuk-error-message">
+              <span class="govuk-visually-hidden">Error:</span> {{ errors.caseNumber }}
+            </p>
+          {% endif %}
+          <input 
+            class="govuk-input {% if errors.caseNumber %}govuk-input--error{% endif %}" 
+            id="caseNumber" 
+            name="caseNumber" 
+            type="text" 
+            value="{{ caseNumber or '' }}"
+            aria-describedby="caseNumber-hint{% if errors.caseNumber %} caseNumber-error{% endif %}"
+          >
+        </div>
+
+        <button type="submit" class="govuk-button" data-module="govuk-button">
+          Continue
+        </button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

@@ -36,7 +36,7 @@ jest.mock('config', () => ({
 const mockSessionMiddleware = jest.requireMock('express-session') as jest.Mock;
 const configGetMock = (jest.requireMock('config') as { get: jest.Mock }).get;
 
-import { Session, parseSessionSecret } from '../../../../main/modules/session';
+import { Session, parseSessionSecret } from '../../../../main/modules/session/index';
 
 describe('parseSessionSecret', () => {
   it('returns plain string unchanged', () => {
