@@ -18,5 +18,21 @@
       "session-secret": "SESSION_SECRET",
       "redis-connection-string": "REDIS_CONNECTION_STRING"
     }
+  },
+  "services": {
+    "idam": {
+      "clientID": "IDAM_CLIENT_ID",
+      "clientSecret": "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET",
+      "authorizationURL": "IDAM_WEB_URL",
+      "tokenURL": "IDAM_API_URL",
+      "caching": "IDAM_TOKEN_CACHE"
+    },
+    "authProvider": {
+      "url": "SERVICE_AUTH_PROVIDER_URL",
+      "secret": "SERVICE_AUTH_SECRET"
+    },
+    "case": {
+      "url": "CCD_URL"
+    }
   }
 }
