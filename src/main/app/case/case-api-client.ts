@@ -1,0 +1,71 @@
+import axios, { AxiosError, AxiosInstance } from 'axios';
+import config from 'config';
+import { LoggerInstance } from 'winston';
+
+import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
+import { UserDetails } from '../controller/AppRequest';
+
+import { CaseAssignedUserRole } from './case-roles';
+import { FinremCaseData, FinremCaseDetails } from './definition';
+
+export class CaseApiClient {
+  constructor(
+    private readonly server: AxiosInstance,
+    private readonly logger: LoggerInstance
+  ) {}
+
+  public async addCaseUserRoles(assignments: CaseAssignedUserRole[]): Promise<void> {
+    try {
+      const payload = {
+        case_users: assignments,
+      };
+
+      await this.server.post('/case-users', payload);
+    } catch (err) {
+      this.logError(err as AxiosError);
+      throw new Error('Case user roles could not be added.');
+    }
+  }
+
+  public async getCaseById(caseId: string): Promise<FinremCaseData> {
+    try {
+      const response = await this.server.get<FinremCaseDetails>(`/cases/${caseId}`);
+      return response.data.data;
+    } catch (err) {
+      this.logError(err as AxiosError);
+      throw new Error('Case could not be retrieved.');
+    }
+  }
+
+  private logError(error: AxiosError) {
+    if (error.response) {
+      this.logger.error(`API Error ${error.config?.method} ${error.config?.url} ${error.response.status}`);
+      this.logger.info('Response: ', error.response.data);
+    } else if (error.request) {
+      this.logger.error(`API Error ${error.config?.method} ${error.config?.url}`);
+    } else {
+      this.logger.error('API Error', error.message);
+    }
+  }
+}
+
+export const getCaseApiClient = (userDetails: UserDetails, logger: LoggerInstance): CaseApiClient => {
+  if (!userDetails?.accessToken) {
+    logger.error('Missing access token in userDetails');
+    throw new Error('Access token is required to create Case API client');
+  }
+  const serviceAuthToken = getServiceAuthToken();
+  return new CaseApiClient(
+    axios.create({
+      baseURL: config.get('services.case.url'),
+      headers: {
+        Authorization: 'Bearer ' + userDetails.accessToken,
+        ServiceAuthorization: serviceAuthToken,
+        experimental: 'true',
+        Accept: '*/*',
+        'Content-Type': 'application/json',
+      },
+    }),
+    logger
+  );
+};

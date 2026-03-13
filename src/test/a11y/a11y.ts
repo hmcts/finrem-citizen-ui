@@ -4,6 +4,8 @@ import { AddressInfo } from 'net';
 import type { Express } from 'express';
 import supertest from 'supertest';
 
+import { app } from '../../main/app';
+
 const pa11y = require('pa11y');
 
 jest.mock('../../main/modules/oidc', () => ({

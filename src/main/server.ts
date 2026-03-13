@@ -6,6 +6,7 @@ import * as path from 'path';
 import config from 'config';
 
 import { app } from './app';
+import { AuthProvider } from './modules/auth-provider';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -16,7 +17,7 @@ let httpsServer: https.Server | null = null;
 app.locals.shutdown = false;
 
 const port: number = parseInt(process.env.PORT || '3100', 10);
-
+new AuthProvider().enable();
 if (config.get<boolean>('use-ssl')) {
   const sslDirectory = path.join(__dirname, 'resources', 'localhost-ssl');
   const sslOptions = {

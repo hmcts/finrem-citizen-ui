@@ -11,6 +11,28 @@
       "preload": true
     }
   },
+  "services": {
+    "idam": {
+      "systemUsername": "dummy_user",
+      "systemPassword": "",
+      "clientID": "finrem-citizen-ui",
+      "clientSecret": "NEED TO INSERT SECRET",
+      "authorizationURL": "https://hmcts-access.aat.platform.hmcts.net/login",
+      "tokenURL": "https://idam-api.aat.platform.hmcts.net/o/token",
+      "caching": false
+    },
+    "authProvider": {
+      "url": "http://rpe-service-auth-provider-aat.service.core-compute-aat.internal",
+      "microservice": "finrem_citizen_ui",
+      "secret": "NEED TO INSERT SECRET"
+    },
+    "case": {
+      // "url": "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
+      "url": "https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net"
+      // "url": "http://localhost:4452"
+      // "url": "https://nfdiv-case-api-pr-4188.preview.platform.hmcts.net" #uncomment to run against pr
+    }
+  },
   "oidc": {
     "issuer": "https://hmcts-access.aat.platform.hmcts.net/o",
     "clientId": "finrem-citizen-ui",
