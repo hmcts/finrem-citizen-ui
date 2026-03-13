@@ -47,6 +47,32 @@ export class OIDCModule {
 
     if (!clientSecret || clientSecret === 'PLACEHOLDER_IDAM_SECRET' || clientSecret === 'AAAAAAAAAAAA') {
       this.logger.error('CRITICAL: IDAM Client Secret is missing or still set to placeholder!');
+    }else{
+      this.logger.info('The length of the client secret should be 64. The actual length is:', clientSecret.length);
+    }
+
+    let redisConnectionString: string | undefined;
+
+    if (config.has('secrets.finrem.redis-connection-string')) {
+      redisConnectionString = config.get<string>('secrets.finrem.redis-connection-string');
+    }
+
+    if (redisConnectionString) {
+      this.logger.info('REDIS connection string loaded. ', redisConnectionString);
+    } else {
+      this.logger.info('CRITICAL: REDIS connection string is missing');
+    }
+
+    let sessionSecret: string | undefined;
+
+    if (config.has('secrets.finrem.session-secret')) {
+      sessionSecret = config.get<string>('secrets.finrem.session-secret');
+    }
+
+    if (sessionSecret) {
+      this.logger.info('session-secret loaded. ', sessionSecret);
+    } else {
+      this.logger.info('CRITICAL:session-secret is missing');
     }
 
     try {
