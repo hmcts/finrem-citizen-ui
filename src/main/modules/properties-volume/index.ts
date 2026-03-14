@@ -10,7 +10,10 @@ export class PropertiesVolume {
 
       this.setSecret('secrets.finrem.finrem-system-update-username', 'services.idam.systemUsername');
       this.setSecret('secrets.finrem.finrem-system-update-password', 'services.idam.systemPassword');
-      this.setSecret('secrets.finrem.finrem-citizen-ui-idam-client-secret', 'services.idam.clientSecret');
+      this.setSecret(
+        'secrets.finrem.finrem-citizen-ui-idam-client-secret',
+        'services.idam.finrem-citizen-ui-idam-client-secret'
+      );
       this.setSecret('secrets.finrem.finrem-citizen-s2s-client-secret', 'services.authProvider.secret');
       this.setSecret('secrets.rpe.AppInsightsInstrumentationKey', 'appInsights.instrumentationKey');
       this.setSecret('secrets.finrem.finrem-system-update-username', 'services.idam.systemUsername');
