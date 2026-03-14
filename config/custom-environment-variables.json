@@ -26,6 +26,7 @@
     "idam": {
       "clientID": "IDAM_CLIENT_ID",
       "clientSecret": "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET",
+      "finrem-citizen-ui-idam-client-secret": "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET",
       "authorizationURL": "IDAM_WEB_URL",
       "tokenURL": "IDAM_API_URL",
       "caching": "IDAM_TOKEN_CACHE"
