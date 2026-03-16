@@ -24,7 +24,7 @@ variable "common_tags" {
 }
 
 variable "key_vault_resource_group" {
-  default     = "finrem"
+  default     = "finrem-aat"
   description = "Resource group that contains the finrem key vault"
 }
 
