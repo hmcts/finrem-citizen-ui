@@ -1,8 +1,8 @@
-import { UserDetails } from '../../../../main/app/controller/AppRequest';
 
 import { CaseApi, getCaseApi } from '../../../../main/app/case/case-api';
 import * as caseApiClient from '../../../../main/app/case/case-api-client';
 import { CaseRole } from '../../../../main/app/case/definition';
+import { UserDetails } from '../../../../main/app/controller/AppRequest';
 
 jest.mock('axios');
 

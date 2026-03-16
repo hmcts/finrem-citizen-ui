@@ -2,11 +2,11 @@ import axios from 'axios';
 import type { AxiosInstance } from 'axios';
 import { LoggerInstance } from 'winston';
 
-import { UserDetails } from '../../../../main/app/controller/AppRequest';
 
 import { CaseApiClient, getCaseApiClient } from '../../../../main/app/case/case-api-client';
 import { CaseAssignedUserRole } from '../../../../main/app/case/case-roles';
 import { CaseRole } from '../../../../main/app/case/definition';
+import { UserDetails } from '../../../../main/app/controller/AppRequest';
 
 jest.mock('axios');
 
