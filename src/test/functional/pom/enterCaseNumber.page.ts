@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { Locator, Page, expect } from '@playwright/test';
 
 export class EnterCaseNumberPage {
   readonly caseNumberInput: Locator;
@@ -13,9 +13,20 @@ export class EnterCaseNumberPage {
     this.continueBtn = this.page.getByRole('button', { name: 'Continue' });
   }
 
-    async enterCaseNumber(caseNumber: string): Promise<void> {
+  async verifyCaseNumberPageContent(): Promise<void> {
+    await expect(this.caseNumberInput).toBeVisible();
+    await expect(this.caseNumberLabel).toBeVisible();
+    await expect(this.caseNumberHint).toBeVisible();
+    await expect(this.continueBtn).toBeVisible();
+  }
+
+    async enterValidCaseNumber(caseNumber: string): Promise<void> {
     await this.caseNumberInput.fill(caseNumber);
     await this.continueBtn.click();
   }
 
+    async enterInvalidCaseNumber(caseNumber: string): Promise<void> {  
+    await this.caseNumberInput.fill(caseNumber);
+    await this.continueBtn.click();
+  }
 }

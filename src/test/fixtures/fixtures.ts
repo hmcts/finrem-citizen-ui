@@ -3,6 +3,7 @@ import { test as base } from '@playwright/test';
 import { HomePage } from '../functional/pom/homePage.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
+import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 
 /** * Define the shape of the authentication session object.
  */
@@ -19,6 +20,7 @@ type MyFixtures = {
   idamPage: IdamPage;
   homePage: HomePage;
   loggedInPage: AuthSession;
+  enterCaseNumberPage: EnterCaseNumberPage;
 };
 
 /**
@@ -59,6 +61,13 @@ export const test = base.extend<MyFixtures>({
     // Pass the state to the test
     await use({ user: citizenUser, authStatus: 'success' });
   },
+
+  enterCaseNumberPage: async ({ page }, use) => {
+    await use(new EnterCaseNumberPage(page));
+  }
+
+ 
+
 });
 
 export { expect } from '@playwright/test';

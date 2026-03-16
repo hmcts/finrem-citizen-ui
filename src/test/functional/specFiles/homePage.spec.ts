@@ -47,4 +47,19 @@ test.describe('Authenticated Citizen User Journey', () => {
     await copyRightImgLink.click();
     await homePage.verifyUrl(/.*crown-copyright.*/);
   });
+
+  // Test to verify entering a case number 
+  test('User can enter a valid case number and proceed @PR', async ({ enterCaseNumberPage }) => {
+    await enterCaseNumberPage.verifyCaseNumberPageContent();
+    await enterCaseNumberPage.enterValidCaseNumber('1234567890123456');// Valid case number (16-20digits)
+  });
+
+  //Test to verify entering an invalid case number and not proceeding
+  test('User cannot proceed with an invalid case number @PR', async ({ enterCaseNumberPage }) => {
+    await enterCaseNumberPage.verifyCaseNumberPageContent();
+    await enterCaseNumberPage.enterInvalidCaseNumber('1234'); // Invalid case number (too short)
+    // Verify that we are still on the same page 
+    await expect(enterCaseNumberPage.caseNumberInput).toBeVisible();
+  });
+
 });
