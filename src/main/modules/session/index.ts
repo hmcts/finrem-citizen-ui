@@ -39,8 +39,9 @@ export class Session {
       const redis = new Redis(redisConnectionString);
 
       redis.on('connect', () => logger.info('Redis session store connected'));
-      redis.on('error', (err: Error) => logger.error('Redis session store error:', err));
-
+      redis.on('error', (err: Error) => {
+        logger.error('Redis session store error', err);
+      });
       app.locals.redisClient = redis;
 
       store = new RedisStore({
