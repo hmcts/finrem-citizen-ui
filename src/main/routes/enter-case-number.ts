@@ -3,8 +3,8 @@ import { Application, Request, Response } from 'express';
 import 'express-session';
 
 import { getCaseApi } from '../app/case/case-api';
-import { UserDetails } from '../app/controller/AppRequest';
 import { FinremCaseData } from '../app/case/definition';
+import { UserDetails } from '../app/controller/AppRequest';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
