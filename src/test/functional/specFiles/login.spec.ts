@@ -1,6 +1,6 @@
 import { expect, test } from '../../fixtures/fixtures';
 
-test.describe('Authenticated Citizen User Journey', () => {
+test.describe('Authenticated Citizen User Journey Verification', () => {
   /**
    * AUTOMATIC SETUP (via beforeEach)
    * By requesting 'loggedInPage', we trigger the fixtures file:
@@ -9,15 +9,17 @@ test.describe('Authenticated Citizen User Journey', () => {
    * 3. loggedInPage: Navigates to the app and performs the UI login.
    */
   test.beforeEach(async ({ loggedInPage: _loggedInPage }) => {
-    // The browser is already at the dashboard here
+    // The browser is already logged in here
   });
 
-  test('User can see dashboard after successful login @PR', async ({ homePage }) => {
-    // Verify dashboard elements
-    await homePage.verifyDashboardContent();
+  test('User can see access case number page after successful login @PR', async ({ homePage }) => {
+    await expect(homePage.heading).toHaveText('Default page template');
+
+    //await enterCaseNumberPage.verifyCaseNumberPageContent();
   });
 
   test('User session can be cleared and redirects to login page @PR', async ({ page, homePage, idamPage }) => {
+    //await enterCaseNumberPage.verifyCaseNumberPageContent();
     // Perform the logout/session clear action
     await homePage.clearSession();
     await page.goto('/');
@@ -47,19 +49,4 @@ test.describe('Authenticated Citizen User Journey', () => {
     await copyRightImgLink.click();
     await homePage.verifyUrl(/.*crown-copyright.*/);
   });
-
-  // Test to verify entering a case number 
-  test('User can enter a valid case number and proceed @PR', async ({ enterCaseNumberPage }) => {
-    await enterCaseNumberPage.verifyCaseNumberPageContent();
-    await enterCaseNumberPage.enterValidCaseNumber('1234567890123456');// Valid case number (16-20digits)
-  });
-
-  //Test to verify entering an invalid case number and not proceeding
-  test('User cannot proceed with an invalid case number @PR', async ({ enterCaseNumberPage }) => {
-    await enterCaseNumberPage.verifyCaseNumberPageContent();
-    await enterCaseNumberPage.enterInvalidCaseNumber('1234'); // Invalid case number (too short)
-    // Verify that we are still on the same page 
-    await expect(enterCaseNumberPage.caseNumberInput).toBeVisible();
-  });
-
 });

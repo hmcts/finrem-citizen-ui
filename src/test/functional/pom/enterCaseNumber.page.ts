@@ -1,31 +1,32 @@
 import { Locator, Page, expect } from '@playwright/test';
 
 export class EnterCaseNumberPage {
-  readonly caseNumberInput: Locator;
   readonly caseNumberLabel: Locator;
+  readonly caseNumberInput: Locator;
   readonly caseNumberHint: Locator;
   readonly continueBtn: Locator;
 
   constructor(readonly page: Page) {
-    this.caseNumberInput = this.page.getByLabel('Case number');
     this.caseNumberLabel = this.page.locator('label[for="caseNumber"]');
+    this.caseNumberInput = this.page.getByLabel('Case number');
     this.caseNumberHint = this.page.locator('#caseNumber-hint');
     this.continueBtn = this.page.getByRole('button', { name: 'Continue' });
   }
 
   async verifyCaseNumberPageContent(): Promise<void> {
-    await expect(this.caseNumberInput).toBeVisible();
-    await expect(this.caseNumberLabel).toBeVisible();
-    await expect(this.caseNumberHint).toBeVisible();
-    await expect(this.continueBtn).toBeVisible();
+    const elements = [this.caseNumberLabel, this.caseNumberInput, this.caseNumberHint, this.continueBtn];
+
+    for (const element of elements) {
+      await expect(element).toBeVisible();
+    }
   }
 
-    async enterValidCaseNumber(caseNumber: string): Promise<void> {
+  async enterValidCaseNumber(caseNumber: string): Promise<void> {
     await this.caseNumberInput.fill(caseNumber);
     await this.continueBtn.click();
   }
 
-    async enterInvalidCaseNumber(caseNumber: string): Promise<void> {  
+  async enterInvalidCaseNumber(caseNumber: string): Promise<void> {
     await this.caseNumberInput.fill(caseNumber);
     await this.continueBtn.click();
   }

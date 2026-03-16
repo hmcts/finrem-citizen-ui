@@ -1,9 +1,9 @@
 import { test as base } from '@playwright/test';
 
+import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 import { HomePage } from '../functional/pom/homePage.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
-import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 
 /** * Define the shape of the authentication session object.
  */
@@ -64,10 +64,7 @@ export const test = base.extend<MyFixtures>({
 
   enterCaseNumberPage: async ({ page }, use) => {
     await use(new EnterCaseNumberPage(page));
-  }
-
- 
-
+  },
 });
 
 export { expect } from '@playwright/test';
