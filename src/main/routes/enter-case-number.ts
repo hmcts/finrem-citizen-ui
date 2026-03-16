@@ -2,6 +2,10 @@ import { Application, Request, Response } from 'express';
 
 import 'express-session';
 
+import { getCaseApi } from '../app/case/case-api';
+import { UserDetails } from '../app/controller/AppRequest';
+import { FinremCaseData } from '../app/case/definition';
+
 const { Logger } = require('@hmcts/nodejs-logging');
 
 const logger = Logger.getLogger('enter-case-number');
@@ -11,6 +15,7 @@ declare module 'express-session' {
     caseNumber?: string;
     caseNumberErrors?: CaseNumberError;
     tempCaseNumber?: string;
+    caseData?: FinremCaseData;
   }
 }
 
@@ -68,10 +73,10 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
     });
   });
 
-  app.post('/enter-case-number', (req: Request, res: Response) => {
+  app.post('/enter-case-number', async (req: Request, res: Response) => {
     const caseNumber = req.body.caseNumber;
 
-    // Validate the case number
+    // Validate the case number format
     const errors = validateCaseNumber(caseNumber);
 
     if (errors) {
@@ -86,6 +91,41 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
         res.redirect('/enter-case-number');
       });
       return;
+    }
+
+    // Remove hyphens to get the actual case ID for CCD
+    const caseId = caseNumber.trim().replace(/-/g, '');
+
+    // Validate case exists in CCD backend (if user is authenticated with required fields)
+    if (req.session.user?.accessToken) {
+      logger.info(`User authenticated - validating case ${caseId} against CCD backend`);
+      try {
+        // Type assertion: OIDC user should have all required UserDetails fields
+        // The OIDC callback spreads userInfo which includes id, email, givenName, familyName, roles
+        const caseApi = getCaseApi(req.session.user as UserDetails, logger);
+        const caseData = await caseApi.getCaseById(caseId);
+        logger.info(`Case ${caseId} found in CCD`);
+        
+        // Store case data in session for later use
+        req.session.caseData = caseData;
+      } catch (error) {
+        logger.error(`Case ${caseId} not found in CCD:`, error);
+        // Case doesn't exist or user doesn't have access
+        req.session.caseNumberErrors = {
+          caseNumber: 'Case number not found. Please check and try again.',
+        };
+        req.session.tempCaseNumber = caseNumber || '';
+        
+        req.session.save((err) => {
+          if (err) {
+            logger.error('Session save error:', err);
+          }
+          res.redirect('/enter-case-number');
+        });
+        return;
+      }
+    } else {
+      logger.info(`User not authenticated - skipping CCD backend validation for case ${caseId}`);
     }
 
     // Save the validated case number to session
