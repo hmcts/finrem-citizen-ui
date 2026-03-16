@@ -21,7 +21,7 @@ nodejs:
         - finrem-system-update-password
         - finrem-citizen-ui-idam-client-secret
         - finrem-citizen-s2s-client-secret
-        - redis-connection-string
+        - finrem-citizen-ui-redis-connection-string
   autoscaling:
     enabled: true
     maxReplicas: 5
