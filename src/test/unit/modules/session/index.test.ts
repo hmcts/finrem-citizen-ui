@@ -94,7 +94,37 @@ describe('Session.enableFor', () => {
     });
   });
 
-  it('configures session with Redis store', () => {
+  it('configures session with in-memory store in test environment', () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'test';
+
+    const session = new Session();
+    const app = express();
+
+    session.enableFor(app);
+
+    expect(redisModule.Redis).not.toHaveBeenCalled();
+
+    expect(mockSessionMiddleware).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resave: false,
+        saveUninitialized: false,
+        rolling: true,
+        name: 'finrem_session',
+        secret: 'test-secret',
+      })
+    );
+
+    const callArg = mockSessionMiddleware.mock.calls[0][0] as Record<string, unknown>;
+    expect(callArg.store).toBeUndefined();
+
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  it('configures session with Redis store outside test environment', () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+
     const session = new Session();
     const app = express();
 
@@ -124,18 +154,28 @@ describe('Session.enableFor', () => {
 
     expect(callArg.store).toBeDefined();
     expect(callArg.cookie.maxAge).toBe(3600 * 1000);
+
+    process.env.NODE_ENV = originalEnv;
   });
 
-  it('stores redis client on app.locals', () => {
+  it('stores redis client on app.locals outside test environment', () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+
     const session = new Session();
     const app = express();
 
     session.enableFor(app);
 
     expect(app.locals.redisClient).toBeDefined();
+
+    process.env.NODE_ENV = originalEnv;
   });
 
-  it('registers redis connect and error handlers', () => {
+  it('registers redis connect and error handlers outside test environment', () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+
     const session = new Session();
     const app = express();
 
@@ -143,9 +183,14 @@ describe('Session.enableFor', () => {
 
     expect(redisOnMock).toHaveBeenCalledWith('connect', expect.any(Function));
     expect(redisOnMock).toHaveBeenCalledWith('error', expect.any(Function));
+
+    process.env.NODE_ENV = originalEnv;
   });
 
   it('parses JSON array session secret', () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'test';
+
     configGetMock.mockImplementation((key: string) => {
       if (key === 'secrets.finrem.session-secret') {
         return '["s1","s2"]';
@@ -171,6 +216,8 @@ describe('Session.enableFor', () => {
     };
 
     expect(callArg.secret).toEqual(['s1', 's2']);
+
+    process.env.NODE_ENV = originalEnv;
   });
 
   it('sets secure cookie in production', () => {

@@ -38,11 +38,32 @@ export class Session {
   public enableFor(app: Express): void {
     const typedApp = app as AppWithRedis;
     const secure = process.env.NODE_ENV === 'production';
+    const isTest = process.env.NODE_ENV === 'test';
     const ttlInSeconds = config.get<number>('session.ttlInSeconds');
     const rawSecret = config.get<string>('secrets.finrem.session-secret');
     const secret = parseSessionSecret(rawSecret);
-    const redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
 
+    const sessionOptions: session.SessionOptions = {
+      cookie: {
+        maxAge: ttlInSeconds * 1000,
+        sameSite: secure ? 'strict' : 'lax',
+        secure,
+      },
+      name: config.get<string>('session.cookieName'),
+      resave: false,
+      rolling: true,
+      saveUninitialized: false,
+      secret,
+    };
+
+    if (isTest) {
+      logger.info('Session configured with in-memory store for test environment');
+      app.set('trust proxy', true);
+      app.use(session(sessionOptions));
+      return;
+    }
+
+    const redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
     const redis = new Redis(redisConnectionString);
 
     redis.on('connect', () => {
@@ -61,23 +82,14 @@ export class Session {
       ttl: ttlInSeconds,
     }) as session.Store;
 
-    const sessionOptions: session.SessionOptions = {
-      cookie: {
-        maxAge: ttlInSeconds * 1000,
-        sameSite: secure ? 'strict' : 'lax',
-        secure,
-      },
-      name: config.get<string>('session.cookieName'),
-      resave: false,
-      rolling: true,
-      saveUninitialized: false,
-      secret,
-      store,
-    };
-
     logger.info('Session configured with Redis store');
 
     app.set('trust proxy', true);
-    app.use(session(sessionOptions));
+    app.use(
+      session({
+        ...sessionOptions,
+        store,
+      })
+    );
   }
 }
