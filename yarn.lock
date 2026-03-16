@@ -9032,7 +9032,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"flatted@npm:^3.4.0":
+"flatted@npm:^3.2.9, flatted@npm:^3.3.3":
   version: 3.4.1
   resolution: "flatted@npm:3.4.1"
   checksum: 10/39a308e2ef82d2d8c80ebc74b67d4ff3f668be168137b649440b6735eb9c115d1e0c13ab0d9958b3d2ea9c85087ab7e14c14aa6f625a22b2916d89bbd91bc4a0
