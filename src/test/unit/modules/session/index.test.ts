@@ -9,17 +9,20 @@ jest.mock('@hmcts/nodejs-logging', () => ({
 jest.mock('connect-redis', () => {
   return jest.fn().mockReturnValue(
     class MockRedisStore {
-      get = jest.fn();
-      set = jest.fn();
-      destroy = jest.fn();
+      public get = jest.fn();
+      public set = jest.fn();
+      public destroy = jest.fn();
     }
   );
 });
 
+const redisOnMock = jest.fn();
+const redisQuitMock = jest.fn();
+
 jest.mock('ioredis', () => ({
   Redis: jest.fn().mockImplementation(() => ({
-    on: jest.fn(),
-    quit: jest.fn(),
+    on: redisOnMock,
+    quit: redisQuitMock,
   })),
 }));
 
@@ -35,6 +38,7 @@ jest.mock('config', () => ({
 
 const mockSessionMiddleware = jest.requireMock('express-session') as jest.Mock;
 const configGetMock = (jest.requireMock('config') as { get: jest.Mock }).get;
+const redisModule = jest.requireMock('ioredis') as { Redis: jest.Mock };
 
 import { Session, parseSessionSecret } from '../../../../main/modules/session';
 
@@ -79,60 +83,66 @@ describe('Session.enableFor', () => {
 
     configGetMock.mockImplementation((key: string) => {
       const map: Record<string, unknown> = {
-        'features.redis': 'false',
         'session.ttlInSeconds': 3600,
         'secrets.finrem.session-secret': 'test-secret',
         'session.cookieName': 'finrem_session',
         'session.prefix': 'finrem-session',
         'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
       };
+
       return map[key];
     });
   });
 
-  it('configures session with memory store when redis is disabled', () => {
+  it('configures session with Redis store', () => {
     const session = new Session();
     const app = express();
+
     session.enableFor(app);
+
+    expect(redisModule.Redis).toHaveBeenCalledWith('redis://localhost:6379');
 
     expect(mockSessionMiddleware).toHaveBeenCalledWith(
       expect.objectContaining({
         resave: false,
         saveUninitialized: false,
         rolling: true,
+        name: 'finrem_session',
+        secret: 'test-secret',
+        store: expect.anything(),
       })
     );
 
-    const callArg = mockSessionMiddleware.mock.calls[0][0] as Record<string, unknown>;
-    expect(callArg['store']).toBeUndefined();
+    const callArg = mockSessionMiddleware.mock.calls[0][0] as {
+      cookie: {
+        maxAge: number;
+        sameSite: string;
+        secure: boolean;
+      };
+      store: unknown;
+    };
+
+    expect(callArg.store).toBeDefined();
+    expect(callArg.cookie.maxAge).toBe(3600 * 1000);
   });
 
-  it('configures session with Redis store when redis is enabled', () => {
-    configGetMock.mockImplementation((key: string) => {
-      const map: Record<string, unknown> = {
-        'features.redis': 'true',
-        'session.ttlInSeconds': 3600,
-        'secrets.finrem.session-secret': 'test-secret',
-        'session.cookieName': 'finrem_session',
-        'session.prefix': 'finrem-session',
-        'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
-      };
-      return map[key];
-    });
-
+  it('stores redis client on app.locals', () => {
     const session = new Session();
     const app = express();
+
     session.enableFor(app);
 
-    expect(mockSessionMiddleware).toHaveBeenCalledWith(
-      expect.objectContaining({
-        resave: false,
-        saveUninitialized: false,
-      })
-    );
+    expect(app.locals.redisClient).toBeDefined();
+  });
 
-    const callArg = mockSessionMiddleware.mock.calls[0][0] as Record<string, unknown>;
-    expect(callArg['store']).toBeDefined();
+  it('registers redis connect and error handlers', () => {
+    const session = new Session();
+    const app = express();
+
+    session.enableFor(app);
+
+    expect(redisOnMock).toHaveBeenCalledWith('connect', expect.any(Function));
+    expect(redisOnMock).toHaveBeenCalledWith('error', expect.any(Function));
   });
 
   it('parses JSON array session secret', () => {
@@ -140,21 +150,27 @@ describe('Session.enableFor', () => {
       if (key === 'secrets.finrem.session-secret') {
         return '["s1","s2"]';
       }
+
       const map: Record<string, unknown> = {
-        'features.redis': 'false',
         'session.ttlInSeconds': 3600,
         'session.cookieName': 'finrem_session',
         'session.prefix': 'finrem-session',
+        'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
       };
+
       return map[key];
     });
 
     const session = new Session();
     const app = express();
+
     session.enableFor(app);
 
-    const callArg = mockSessionMiddleware.mock.calls[0][0] as Record<string, unknown>;
-    expect(callArg['secret']).toEqual(['s1', 's2']);
+    const callArg = mockSessionMiddleware.mock.calls[0][0] as {
+      secret: string | string[];
+    };
+
+    expect(callArg.secret).toEqual(['s1', 's2']);
   });
 
   it('sets secure cookie in production', () => {
@@ -163,28 +179,40 @@ describe('Session.enableFor', () => {
 
     const session = new Session();
     const app = express();
+
     session.enableFor(app);
 
-    const callArg = mockSessionMiddleware.mock.calls[0][0] as Record<string, unknown>;
-    const cookie = callArg['cookie'] as Record<string, unknown>;
-    expect(cookie['secure']).toBe(true);
-    expect(cookie['sameSite']).toBe('strict');
+    const callArg = mockSessionMiddleware.mock.calls[0][0] as {
+      cookie: {
+        secure: boolean;
+        sameSite: string;
+      };
+    };
+
+    expect(callArg.cookie.secure).toBe(true);
+    expect(callArg.cookie.sameSite).toBe('strict');
 
     process.env.NODE_ENV = originalEnv;
   });
 
-  it('sets lax cookie in development', () => {
+  it('sets lax cookie outside production', () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'development';
 
     const session = new Session();
     const app = express();
+
     session.enableFor(app);
 
-    const callArg = mockSessionMiddleware.mock.calls[0][0] as Record<string, unknown>;
-    const cookie = callArg['cookie'] as Record<string, unknown>;
-    expect(cookie['secure']).toBe(false);
-    expect(cookie['sameSite']).toBe('lax');
+    const callArg = mockSessionMiddleware.mock.calls[0][0] as {
+      cookie: {
+        secure: boolean;
+        sameSite: string;
+      };
+    };
+
+    expect(callArg.cookie.secure).toBe(false);
+    expect(callArg.cookie.sameSite).toBe('lax');
 
     process.env.NODE_ENV = originalEnv;
   });

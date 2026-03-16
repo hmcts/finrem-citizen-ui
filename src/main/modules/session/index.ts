@@ -10,50 +10,56 @@ const logger = Logger.getLogger('session');
 
 export function parseSessionSecret(raw: string): string | string[] {
   const trimmed = raw.trim();
+
   if (!trimmed.startsWith('[')) {
     return raw;
   }
+
   try {
     const parsed: unknown = JSON.parse(trimmed);
-    if (Array.isArray(parsed) && parsed.every((s): s is string => typeof s === 'string')) {
+
+    if (Array.isArray(parsed) && parsed.every((value): value is string => typeof value === 'string')) {
       return parsed;
     }
+
     return raw;
   } catch {
     return raw;
   }
 }
 
+type AppWithRedis = Express & {
+  locals: Express['locals'] & {
+    redisClient?: Redis;
+  };
+};
+
 export class Session {
   public enableFor(app: Express): void {
-    const isRedisEnabled = config.get<string>('features.redis') === 'true';
+    const typedApp = app as AppWithRedis;
     const secure = process.env.NODE_ENV === 'production';
     const ttlInSeconds = config.get<number>('session.ttlInSeconds');
     const rawSecret = config.get<string>('secrets.finrem.session-secret');
     const secret = parseSessionSecret(rawSecret);
+    const redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
 
-    let store: session.Store | undefined;
+    const redis = new Redis(redisConnectionString);
 
-    if (isRedisEnabled) {
-      const redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
-      const redis = new Redis(redisConnectionString);
+    redis.on('connect', () => {
+      logger.info('Redis session store connected');
+    });
 
-      redis.on('connect', () => logger.info('Redis session store connected'));
-      redis.on('error', (err: Error) => {
-        logger.error('Redis session store error', err);
-      });
-      app.locals.redisClient = redis;
+    redis.on('error', (error: Error) => {
+      logger.error('Redis session store error', error);
+    });
 
-      store = new RedisStore({
-        client: redis,
-        prefix: config.get<string>('session.prefix') + ':',
-        ttl: ttlInSeconds,
-      }) as session.Store;
+    typedApp.locals.redisClient = redis;
 
-      logger.info('Session configured with Redis store');
-    } else {
-      logger.info('Session configured with in-memory store');
-    }
+    const store = new RedisStore({
+      client: redis,
+      prefix: `${config.get<string>('session.prefix')}:`,
+      ttl: ttlInSeconds,
+    }) as session.Store;
 
     const sessionOptions: session.SessionOptions = {
       cookie: {
@@ -66,8 +72,10 @@ export class Session {
       rolling: true,
       saveUninitialized: false,
       secret,
-      ...(store ? { store } : {}),
+      store,
     };
+
+    logger.info('Session configured with Redis store');
 
     app.set('trust proxy', true);
     app.use(session(sessionOptions));
