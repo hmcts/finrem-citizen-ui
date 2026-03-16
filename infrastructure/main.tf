@@ -38,8 +38,8 @@ resource "azurerm_key_vault_secret" "redis_access_key" {
   })
 }
 
-resource "azurerm_key_vault_secret" "redis_connection_string" {
-  name         = "redis-connection-string"
+resource "azurerm_key_vault_secret" "finrem_citizen_ui_redis_connection_string" {
+  name         = "finrem-citizen-ui-redis-connection-string"
   value        = "redis://:${urlencode(module.redis-cache-v2.access_key)}@${module.redis-cache-v2.host_name}:${module.redis-cache-v2.redis_port}?tls=true"
   key_vault_id = data.azurerm_key_vault.finrem_key_vault.id
 
