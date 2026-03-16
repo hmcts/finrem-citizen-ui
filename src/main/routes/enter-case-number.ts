@@ -58,6 +58,23 @@ export function validateCaseNumber(caseNumber: string | undefined): CaseNumberEr
 }
 
 export default function setupEnterCaseNumberRoute(app: Application): void {
+  // TEMPORARY DEBUG ENDPOINT - REMOVE BEFORE MERGING
+  app.get('/debug-session', (req: Request, res: Response) => {
+    const config = require('config');
+    res.json({
+      isAuthenticated: !!req.session.user?.accessToken,
+      caseNumber: req.session.caseNumber,
+      caseNumberErrors: req.session.caseNumberErrors,
+      hasCaseData: !!req.session.caseData,
+      ccdBackendUrl: config.get('services.case.url'),
+      user: req.session.user ? {
+        id: req.session.user.id,
+        email: req.session.user.email,
+        roles: req.session.user.roles
+      } : null
+    });
+  });
+
   app.get('/enter-case-number', (req: Request, res: Response) => {
     // Retrieve any errors from session (set by POST handler)
     const errors = req.session.caseNumberErrors;
@@ -98,7 +115,8 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
 
     // Validate case exists in CCD backend (if user is authenticated with required fields)
     if (req.session.user?.accessToken) {
-      logger.info(`User authenticated - validating case ${caseId} against CCD backend`);
+      const ccdUrl = require('config').get('services.case.url');
+      logger.info(`User authenticated - validating case ${caseId} against CCD backend: ${ccdUrl}`);
       try {
         // Type assertion: OIDC user should have all required UserDetails fields
         // The OIDC callback spreads userInfo which includes id, email, givenName, familyName, roles

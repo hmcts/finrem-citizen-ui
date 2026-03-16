@@ -1,6 +1,10 @@
 {% extends "template.njk" %}
 
 {% block content %}
+  <script>
+    console.log('DEBUG - Errors:', {{ errors | dump | safe }});
+    console.log('DEBUG - Case number:', '{{ caseNumber }}');
+  </script>
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       {% if errors and errors.caseNumber %}
