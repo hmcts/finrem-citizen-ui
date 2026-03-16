@@ -84,7 +84,7 @@ describe('Session.enableFor', () => {
         'secrets.finrem.session-secret': 'test-secret',
         'session.cookieName': 'finrem_session',
         'session.prefix': 'finrem-session',
-        'secrets.finrem.redis-connection-string': 'redis://localhost:6379',
+        'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
       };
       return map[key];
     });
@@ -115,7 +115,7 @@ describe('Session.enableFor', () => {
         'secrets.finrem.session-secret': 'test-secret',
         'session.cookieName': 'finrem_session',
         'session.prefix': 'finrem-session',
-        'secrets.finrem.redis-connection-string': 'redis://localhost:6379',
+        'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
       };
       return map[key];
     });

@@ -35,7 +35,7 @@ export class Session {
     let store: session.Store | undefined;
 
     if (isRedisEnabled) {
-      const redisConnectionString = config.get<string>('secrets.finrem.redis-connection-string');
+      const redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
       const redis = new Redis(redisConnectionString);
 
       redis.on('connect', () => logger.info('Redis session store connected'));
