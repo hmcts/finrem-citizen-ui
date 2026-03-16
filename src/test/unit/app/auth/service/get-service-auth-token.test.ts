@@ -19,7 +19,7 @@ jest.useFakeTimers({ legacyFakeTimers: true });
 
 import axios, { AxiosStatic } from 'axios';
 
-import { getServiceAuthToken, initAuthToken } from './get-service-auth-token';
+import { getServiceAuthToken, initAuthToken } from '../../../../../main/app/auth/service/get-service-auth-token';
 
 const mockedAxios = axios as unknown as jest.Mocked<AxiosStatic>;
 

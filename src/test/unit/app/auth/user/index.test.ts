@@ -1,9 +1,9 @@
 import axios, { AxiosRequestHeaders, AxiosResponse, AxiosStatic } from 'axios';
 import jwt from 'jsonwebtoken';
 
-import { CALLBACK_URL } from '../../../steps/urls';
+import { CALLBACK_URL } from '../../../../../main/steps/urls';
 
-import { OidcResponse, getRedirectUrl, getSystemUser, getUserDetails, idamTokenCache } from './index';
+import { OidcResponse, getRedirectUrl, getSystemUser, getUserDetails, idamTokenCache } from '../../../../../main/app/auth/user';
 
 jest.mock('config', () => {
   const get = jest.fn();
