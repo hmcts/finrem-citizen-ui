@@ -7,7 +7,7 @@ export class EnterCaseNumberPage {
   readonly continueBtn: Locator;
 
   constructor(readonly page: Page) {
-    this.caseNumberInput = page.getByLabel('Case number')
+    this.caseNumberInput = page.getByLabel('Case number');
     this.caseNumberLabel = this.page.locator('label[for="caseNumber"]');
     this.caseNumberHint = this.page.locator('#caseNumber-hint');
     this.continueBtn = this.page.getByRole('button', { name: 'Continue' });
