@@ -55,7 +55,10 @@ export class OIDCModule {
 
       this.clientConfig = await oidcClient.discovery(issuer, this.oidcConfig.clientId, clientSecret);
       this.logger.error('!!!!! !!!!! this.oidcConfig.clientId !!!!! !!!!!!', this.oidcConfig.clientId);
-
+      let redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
+      this.logger.error('!!!!! !!!!!! redisConnectionString !!!!! !!!!!!', redisConnectionString);
+      let sessionSecret = config.get<string>('secrets.finrem.session-secret');
+      this.logger.error('!!!!! !!!!!! sessionSecret !!!!! !!!!!!', sessionSecret);
       this.logger.info('OIDC client configured successfully');
     } catch (err: unknown) {
       this.logger.error('Failed to setup OIDC client:', err);
