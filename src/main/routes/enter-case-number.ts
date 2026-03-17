@@ -2,9 +2,9 @@ import { Application, Request, Response } from 'express';
 
 import 'express-session';
 
+import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
 import { FinremCaseData } from '../app/case/definition';
-import { UserDetails } from '../app/controller/AppRequest';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -120,9 +120,9 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
       const ccdUrl = require('config').get('services.case.url');
       logger.info(`User authenticated - validating case ${caseId} against CCD backend: ${ccdUrl}`);
       try {
-        // Type assertion: OIDC user should have all required UserDetails fields
-        // The OIDC callback spreads userInfo which includes id, email, givenName, familyName, roles
-        const caseApi = getCaseApi(req.session.user as UserDetails, logger);
+        // Use system user to query CCD as citizens don't have direct query permissions
+        const systemUser = await getSystemUser();
+        const caseApi = getCaseApi(systemUser, logger);
         const caseData = await caseApi.getCaseById(caseId);
         logger.info(`Case ${caseId} found in CCD`);
         
