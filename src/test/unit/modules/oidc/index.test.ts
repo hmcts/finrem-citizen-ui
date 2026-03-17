@@ -97,14 +97,32 @@ describe('OIDCModule', () => {
       if (key === 'oidc') {
         return baseOidcConfig as T;
       }
-      if (key === 'secrets.finrem.finrem-citizen-ui-idam-client-secret') {
+      // UPDATE: Group all the IDAM secret variations together to return 'secret-from-config'
+      if (
+        key === 'secrets.finrem.finrem-citizen-ui-idam-client-secret' ||
+        key === 'services.idam.clientSecret' ||
+        key === 'secrets.finrem.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET'
+      ) {
         return 'secret-from-config' as T;
+      }
+      if (key === 'secrets.finrem.finrem-citizen-ui-redis-connection-string') {
+        return 'redis://mocked-connection' as T;
+      }
+      if (key === 'secrets.finrem.session-secret') {
+        return 'mocked-session-secret' as T;
       }
       throw new Error(`Unexpected config.get key: ${key}`);
     });
 
     mockedConfig.has.mockImplementation((key: string): boolean => {
-      return key === 'secrets.finrem.finrem-citizen-ui-idam-client-secret';
+      const validKeys = [
+        'services.idam.clientSecret',
+        'secrets.finrem.finrem-citizen-ui-idam-client-secret',
+        'secrets.finrem.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET',
+        'secrets.finrem.finrem-citizen-ui-redis-connection-string',
+        'secrets.finrem.session-secret',
+      ];
+      return validKeys.includes(key);
     });
   });
 
@@ -253,6 +271,12 @@ describe('OIDCModule', () => {
       if (key === 'secrets.finrem.finrem-citizen-ui-idam-client-secret') {
         return 'secret-from-config' as T;
       }
+      if (key === 'secrets.finrem.finrem-citizen-ui-redis-connection-string') {
+        return 'redis://mocked-connection' as T;
+      }
+      if (key === 'secrets.finrem.session-secret') {
+        return 'mocked-session-secret' as T;
+      }
       throw new Error(`Unexpected config.get key: ${key}`);
     });
 
@@ -386,7 +410,7 @@ describe('OIDCModule', () => {
     const res = makeRes();
     const next = jest.fn<void, [unknown?]>();
 
-    await handler(req, res, next); // <--- ADDED AWAIT HERE
+    await handler(req, res, next);
 
     const redirectMock = (res as unknown as ResponseLike).redirect;
     expect(redirectMock).toHaveBeenCalledWith('/');
@@ -421,7 +445,7 @@ describe('OIDCModule', () => {
     const res = makeRes();
     const next = jest.fn<void, [unknown?]>();
 
-    await handler(req, res, next); // <--- ADDED AWAIT HERE
+    await handler(req, res, next);
 
     expect(mockedOidc.buildEndSessionUrl).toHaveBeenCalledWith(clientConfig, {
       post_logout_redirect_uri: 'https://app.example.com',
@@ -455,7 +479,7 @@ describe('OIDCModule', () => {
     const res = makeRes();
     const next = jest.fn<void, [unknown?]>();
 
-    await handler(req, res, next); // <--- ADDED AWAIT HERE
+    await handler(req, res, next);
 
     expect(mockLogger.error).toHaveBeenCalledWith('Session destroy error on logout:', destroyError);
 
