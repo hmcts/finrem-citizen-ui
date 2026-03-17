@@ -52,3 +52,8 @@ src/main/views/govuk
 # Misc
 npm-debug.log.*
 env.local
+
+# Helm Charts
+charts/*/charts/*.tgz
+charts/*/charts/nodejs/
+charts/*/charts/redis/
