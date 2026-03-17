@@ -5,6 +5,7 @@ import 'express-session';
 import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
 import { FinremCaseData } from '../app/case/definition';
+import { oidcMiddleware } from '../middleware';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -58,7 +59,7 @@ export function validateCaseNumber(caseNumber: string | undefined): CaseNumberEr
 }
 
 export default function setupEnterCaseNumberRoute(app: Application): void {
-  app.get('/enter-case-number', (req: Request, res: Response) => {
+  app.get('/enter-case-number', oidcMiddleware, (req: Request, res: Response) => {
     // Retrieve any errors from session (set by POST handler)
     const errors = req.session.caseNumberErrors;
     delete req.session.caseNumberErrors;
