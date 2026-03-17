@@ -143,6 +143,7 @@ export class OIDCModule {
         }
 
         const authUrl = oidcClient.buildAuthorizationUrl(this.clientConfig!, parameters);
+        this.logger.info('authUrl.href', authUrl.href);
         res.redirect(authUrl.href);
       } catch (err: unknown) {
         this.logger.error('Login error:', err);
@@ -156,6 +157,11 @@ export class OIDCModule {
 
         const { codeVerifier, nonce } = req.session;
         const callbackUrl = OIDCModule.getCurrentUrl(req);
+        this.logger.info(
+          `OIDC callback session: codeVerifierPresent=${Boolean(codeVerifier)} ` +
+            `codeVerifierLen=${codeVerifier ? String(codeVerifier).length : 0} ` +
+            `noncePresent=${Boolean(nonce)}`
+        );
 
         const tokens = await oidcClient.authorizationCodeGrant(this.clientConfig!, callbackUrl, {
           expectedNonce: nonce,
