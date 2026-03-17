@@ -35,3 +35,11 @@
     width: auto;
   }
 }
+
+// Push service navigation items to the right with proper spacing
+@media (min-width: 40.0625em) {
+  .govuk-service-navigation__wrapper {
+    display: flex;
+    justify-content: flex-end;
+  }
+}

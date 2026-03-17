@@ -16,13 +16,13 @@
         </div>
       {% endif %}
 
-      <h1 class="govuk-heading-l">Enter case number</h1>
-
       <form method="post" novalidate>
         <div class="govuk-form-group {% if errors.caseNumber %}govuk-form-group--error{% endif %}">
-          <label class="govuk-label" for="caseNumber">
-            Case number
-          </label>
+          <h1 class="govuk-label-wrapper">
+            <label class="govuk-label govuk-label--l" for="caseNumber">
+              Enter case number
+            </label>
+          </h1>
           <div id="caseNumber-hint" class="govuk-hint">
             This is your 16 digit financial remedy case number that you received from the court. For example, 1234-5678-0123-4567
           </div>
