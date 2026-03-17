@@ -7,19 +7,19 @@ describe('Enter Case Number Validation', () => {
     it('should return error when case number is undefined', () => {
       const result = validateCaseNumber(undefined);
       expect(result).not.toBeNull();
-      expect(result?.caseNumber).toBe('Enter case number');
+      expect(result?.caseNumber).toBe('Enter your case number');
     });
 
     it('should return error when case number is empty string', () => {
       const result = validateCaseNumber('');
       expect(result).not.toBeNull();
-      expect(result?.caseNumber).toBe('Enter case number');
+      expect(result?.caseNumber).toBe('Enter your case number');
     });
 
     it('should return error when case number is only whitespace', () => {
       const result = validateCaseNumber('   ');
       expect(result).not.toBeNull();
-      expect(result?.caseNumber).toBe('Enter case number');
+      expect(result?.caseNumber).toBe('Enter your case number');
     });
   });
 
