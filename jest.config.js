@@ -24,6 +24,7 @@ module.exports = {
     '!src/main/routes/health.ts',
     '!src/main/routes/info.ts',
     '!src/main/routes/home.ts',
+    '!src/main/routes/enter-case-number.ts',
     '!src/main/HttpError.ts',
     '!src/main/middleware/index.ts',
     '!src/main/modules/appinsights/**',
