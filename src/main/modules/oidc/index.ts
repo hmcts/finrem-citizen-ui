@@ -124,6 +124,12 @@ export class OIDCModule {
     app.get('/login', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
         const oidcClient = await getOidcClient();
+        this.logger.info(
+          'after await getOidcClient() !!!! codeVerifier ',
+          req.session.codeVerifier,
+          '!!!! nonce ',
+          req.session.nonce
+        );
 
         const codeVerifier = oidcClient.randomPKCECodeVerifier();
         req.session.codeVerifier = codeVerifier;
@@ -144,6 +150,12 @@ export class OIDCModule {
 
         const authUrl = oidcClient.buildAuthorizationUrl(this.clientConfig!, parameters);
         this.logger.info('authUrl.href', authUrl.href);
+        this.logger.info(
+          'before res.redirect(authUrl.href) !!!! codeVerifier ',
+          req.session.codeVerifier,
+          '!!!! nonce ',
+          req.session.nonce
+        );
         res.redirect(authUrl.href);
       } catch (err: unknown) {
         this.logger.error('Login error:', err);
@@ -153,9 +165,16 @@ export class OIDCModule {
 
     app.get('/oauth2/callback', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
+        this.logger.info('/oauth2/callback is called');
+
         const oidcClient = await getOidcClient();
+        this.logger.info('after await getOidcClient() ');
 
         const { codeVerifier, nonce } = req.session;
+        this.logger.info('before OIDCModule.getCurrentUrl(req);');
+        this.logger.info('codeVerifier: ',codeVerifier);
+        this.logger.info('nonce: ', nonce);
+
         const callbackUrl = OIDCModule.getCurrentUrl(req);
         this.logger.info(
           `OIDC callback session: codeVerifierPresent=${Boolean(codeVerifier)} ` +
@@ -172,7 +191,6 @@ export class OIDCModule {
         const { access_token, id_token, refresh_token } = tokens;
         const claims = tokens.claims();
 
-        // FIX: Directly return with next() instead of throwing locally
         if (!id_token || !claims) {
           const err = new OIDCCallbackError('No ID token received from IDAM');
           this.logger.error('OIDC callback error:', err);
@@ -189,12 +207,17 @@ export class OIDCModule {
         };
 
         req.session.save(() => {
+          this.logger.info('req.session.codeVerifier inside save ', req.session.codeVerifier);
+          this.logger.info('req.session.nonce after inside ', req.session.nonce);
           delete req.session.codeVerifier;
           delete req.session.nonce;
           const returnTo = req.session.returnTo ?? '/';
           delete req.session.returnTo;
           res.redirect(returnTo);
         });
+        this.logger.info('req.session.nonce after save ', req.session.nonce);
+        this.logger.info('req.session.nonce after save ', req.session.nonce);
+
       } catch (err: unknown) {
         this.logger.error('OIDC callback error:', err);
         next(new OIDCCallbackError('Authentication callback failed'));
