@@ -34,6 +34,7 @@ nodejs:
       resourceGroup: finrem
       secrets:
         - finrem-system-update-username
+        - session-secret
         - finrem-system-update-password
         - finrem-citizen-ui-idam-client-secret
         - finrem-citizen-s2s-client-secret
