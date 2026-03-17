@@ -12,16 +12,16 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
     // The browser is already logged in here
   });
 
-  test('User can see access case number page after successful login @PR', async ({ homePage }) => {
-    await expect(homePage.heading).toHaveText('Default page template');
+  test('User can see access case number page after successful login @PR', async ({ basePage }) => {
+    await expect(basePage.navigationLink).toBeVisible();
 
     //await enterCaseNumberPage.verifyCaseNumberPageContent();
   });
 
-  test('User session can be cleared and redirects to login page @PR', async ({ page, homePage, idamPage }) => {
+  test('User session can be cleared and redirects to login page @PR', async ({ page, basePage, idamPage }) => {
     //await enterCaseNumberPage.verifyCaseNumberPageContent();
     // Perform the logout/session clear action
-    await homePage.clearSession();
+    await basePage.clearSession();
     await page.goto('/');
 
     // Assert user is back on login screen
@@ -29,24 +29,24 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
     await expect(idamPage.signInLink).toBeVisible();
   });
 
-  test('Verify Global Layout elements: Header, Footer, @PR', async ({ page, homePage }) => {
+  test('Verify Global Layout elements: Header, Footer, @PR', async ({ page, basePage }) => {
     // common elements from the Page Object for easier access
-    const { footer, licenceDescription, licenceLink, copyRightImgLink } = homePage;
+    const { footer, licenceDescription, licenceLink, copyRightImgLink } = basePage;
 
     // Check header
-    await expect(homePage.headerLogo).toBeVisible();
+    await expect(basePage.headerLogo).toBeVisible();
 
     // Check footer (License description and Link navigates to the correct page)
     await footer.scrollIntoViewIfNeeded();
     await expect(footer).toBeVisible();
     await expect(licenceDescription).toBeVisible();
     await licenceLink.click();
-    await homePage.verifyUrl(/.*open-government-licence.*/);
+    await basePage.verifyUrl(/.*open-government-licence.*/);
 
     await page.goBack();
 
     // Check footer (Copyright Image link navigates to the correct page)
     await copyRightImgLink.click();
-    await homePage.verifyUrl(/.*crown-copyright.*/);
+    await basePage.verifyUrl(/.*crown-copyright.*/);
   });
 });

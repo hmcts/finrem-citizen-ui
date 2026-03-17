@@ -6,6 +6,7 @@ export class BasePage {
   readonly licenceDescription: Locator;
   readonly licenceLink: Locator;
   readonly copyRightImgLink: Locator;
+  readonly navigationLink: Locator;
 
   constructor(readonly page: Page) {
     this.headerLogo = this.page.getByRole('img', { name: 'GOV.UK' });
@@ -13,9 +14,22 @@ export class BasePage {
     this.licenceDescription = this.footer.getByText(/All content is available under the/i);
     this.licenceLink = this.footer.getByRole('link', { name: 'Open Government Licence' });
     this.copyRightImgLink = this.footer.getByRole('link', { name: /© Crown copyright/i });
+    this.navigationLink = this.page.getByRole('link', { name: 'Dividing your money and property' });
   }
 
   async verifyUrl(path: string | RegExp): Promise<void> {
     await expect(this.page).toHaveURL(path);
+  }
+
+  async goto(path = '/'): Promise<void> {
+    await this.page.goto(path);
+  }
+
+  async clearSession(): Promise<void> {
+    await this.page.context().clearCookies();
+    await this.page.evaluate(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
   }
 }
