@@ -16,6 +16,7 @@ declare module 'express-session' {
     caseNumberErrors?: CaseNumberError;
     tempCaseNumber?: string;
     caseData?: FinremCaseData;
+    lastCcdError?: { message: string; status?: number; data?: unknown };
   }
 }
 
@@ -67,6 +68,7 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
       caseNumberErrors: req.session.caseNumberErrors,
       hasCaseData: !!req.session.caseData,
       ccdBackendUrl: config.get('services.case.url'),
+      lastCcdError: req.session.lastCcdError,
       user: req.session.user ? {
         id: req.session.user.id,
         email: req.session.user.email,
@@ -128,11 +130,22 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
         req.session.caseData = caseData;
       } catch (error) {
         logger.error(`Case ${caseId} not found in CCD:`, error);
+        // Store detailed error info for debugging
+        const errorObj = error as { response?: { status?: number; data?: unknown } };
+        const errorDetails = {
+          message: error instanceof Error ? error.message : String(error),
+          status: errorObj?.response?.status,
+          data: errorObj?.response?.data
+        };
+        logger.error('CCD Error Details:', errorDetails);
+        
         // Case doesn't exist or user doesn't have access
         req.session.caseNumberErrors = {
           caseNumber: 'Case number not found. Please check and try again.',
         };
         req.session.tempCaseNumber = caseNumber || '';
+        // Store error details in session for debug endpoint
+        req.session.lastCcdError = errorDetails;
         
         req.session.save((err) => {
           if (err) {
