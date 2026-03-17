@@ -96,38 +96,39 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
     // Remove hyphens to get the actual case ID for CCD
     const caseId = caseNumber.trim().replace(/-/g, '');
 
-    // Validate case exists in CCD backend (if user is authenticated with required fields)
-    if (req.session.user?.accessToken) {
-      const ccdUrl = require('config').get('services.case.url');
-      logger.info(`User authenticated - validating case ${caseId} against CCD backend: ${ccdUrl}`);
-      try {
-        // Use system user to query CCD as citizens don't have direct query permissions
-        const systemUser = await getSystemUser();
-        const caseApi = getCaseApi(systemUser, logger);
-        const caseData = await caseApi.getCaseById(caseId);
-        logger.info(`Case ${caseId} found in CCD`);
-        
-        // Store case data in session for later use
-        req.session.caseData = caseData;
-      } catch (error) {
-        logger.error(`Case ${caseId} not found in CCD:`, error);
-        
-        // Case doesn't exist or user doesn't have access
-        req.session.caseNumberErrors = {
-          caseNumber: 'Case number not found. Please check and try again.',
-        };
-        req.session.tempCaseNumber = caseNumber || '';
-        
-        req.session.save((err) => {
-          if (err) {
-            logger.error('Session save error:', err);
-          }
-          res.redirect('/enter-case-number');
-        });
-        return;
-      }
-    } else {
-      logger.info(`User not authenticated - skipping CCD backend validation for case ${caseId}`);
+    // User must be authenticated to validate case against CCD
+    if (!req.session.user?.accessToken) {
+      logger.error('User not authenticated when attempting to validate case number');
+      return res.redirect('/oauth2/login');
+    }
+
+    // Validate case exists in CCD backend
+    const ccdUrl = require('config').get('services.case.url');
+    logger.info(`User authenticated - validating case ${caseId} against CCD backend: ${ccdUrl}`);
+    try {
+      const systemUser = await getSystemUser();
+      const caseApi = getCaseApi(systemUser, logger);
+      const caseData = await caseApi.getCaseById(caseId);
+      logger.info(`Case ${caseId} found in CCD`);
+      
+      // Store case data in session for later use
+      req.session.caseData = caseData;
+    } catch (error) {
+      logger.error(`Case ${caseId} not found in CCD:`, error);
+      
+      // Case doesn't exist or user doesn't have access
+      req.session.caseNumberErrors = {
+        caseNumber: 'Case number not found. Please check and try again.',
+      };
+      req.session.tempCaseNumber = caseNumber || '';
+      
+      req.session.save((err) => {
+        if (err) {
+          logger.error('Session save error:', err);
+        }
+        res.redirect('/enter-case-number');
+      });
+      return;
     }
 
     // Save the validated case number to session
