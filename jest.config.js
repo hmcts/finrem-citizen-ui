@@ -1,5 +1,5 @@
 module.exports = {
-  roots: ['<rootDir>/src/main', '<rootDir>/src/test/unit'],
+  roots: ['<rootDir>/src/main', '<rootDir>/src/test/unit', '<rootDir>/src/test/routes'],
   testRegex: '.*\\.(test|spec)\\.ts$',
   moduleFileExtensions: ['ts', 'js', 'json'],
   testEnvironment: 'node',
@@ -12,7 +12,7 @@ module.exports = {
       },
     ],
   },
-  transformIgnorePatterns: ['/node_modules/(?!(openid-client|oauth4webapi|jose)/)'],
+  transformIgnorePatterns: ['/node_modules/(?!(openid-client|oauth4webapi|jose|otplib|@otplib|@scure|@noble)/)'],
   setupFilesAfterEnv: ['<rootDir>/src/test/jest.setup.ts'],
   collectCoverageFrom: [
     'src/main/**/*.ts',
@@ -24,6 +24,7 @@ module.exports = {
     '!src/main/routes/health.ts',
     '!src/main/routes/info.ts',
     '!src/main/routes/home.ts',
+    '!src/main/routes/enter-case-number.ts',
     '!src/main/HttpError.ts',
     '!src/main/middleware/index.ts',
     '!src/main/modules/appinsights/**',

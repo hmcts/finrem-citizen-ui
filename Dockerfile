@@ -1,5 +1,5 @@
 # ---- Base image ----
-FROM hmctspublic.azurecr.io/base/node:20-alpine as base
+FROM hmctsprod.azurecr.io/base/node:20-alpine as base
 
 COPY --chown=hmcts:hmcts . .
 RUN yarn workspaces focus --all --production \
@@ -13,5 +13,4 @@ RUN yarn install && yarn build:prod
 FROM base as runtime
 RUN rm -rf webpack/ webpack.config.js
 COPY --from=build $WORKDIR/src/main ./src/main
-# TODO: expose the right port for your application
 EXPOSE 3100

@@ -48,13 +48,17 @@ export class OIDCModule {
     if (!clientSecret || clientSecret === 'PLACEHOLDER_IDAM_SECRET' || clientSecret === 'AAAAAAAAAAAA') {
       this.logger.error('CRITICAL: IDAM Client Secret is missing or still set to placeholder!');
     }
-
+    this.logger.error('!!!!! !!!!! clientSecret !!!!! !!!!!!', clientSecret);
     try {
       this.logger.info('Setting up OIDC client via discovery');
       const issuer = new URL(this.oidcConfig.issuer);
 
       this.clientConfig = await oidcClient.discovery(issuer, this.oidcConfig.clientId, clientSecret);
-
+      this.logger.error('!!!!! !!!!! this.oidcConfig.clientId !!!!! !!!!!!', this.oidcConfig.clientId);
+      let redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
+      this.logger.error('!!!!! !!!!!! redisConnectionString !!!!! !!!!!!', redisConnectionString);
+      let sessionSecret = config.get<string>('secrets.finrem.session-secret');
+      this.logger.error('!!!!! !!!!!! sessionSecret !!!!! !!!!!!', sessionSecret);
       this.logger.info('OIDC client configured successfully');
     } catch (err: unknown) {
       this.logger.error('Failed to setup OIDC client:', err);
@@ -139,6 +143,7 @@ export class OIDCModule {
         }
 
         const authUrl = oidcClient.buildAuthorizationUrl(this.clientConfig!, parameters);
+        this.logger.info('authUrl.href', authUrl.href);
         res.redirect(authUrl.href);
       } catch (err: unknown) {
         this.logger.error('Login error:', err);
@@ -152,6 +157,11 @@ export class OIDCModule {
 
         const { codeVerifier, nonce } = req.session;
         const callbackUrl = OIDCModule.getCurrentUrl(req);
+        this.logger.info(
+          `OIDC callback session: codeVerifierPresent=${Boolean(codeVerifier)} ` +
+            `codeVerifierLen=${codeVerifier ? String(codeVerifier).length : 0} ` +
+            `noncePresent=${Boolean(nonce)}`
+        );
 
         const tokens = await oidcClient.authorizationCodeGrant(this.clientConfig!, callbackUrl, {
           expectedNonce: nonce,

@@ -9,7 +9,7 @@ import { oidcMiddleware } from '../middleware';
 
 export default function (app: Application): void {
   app.get('/', oidcMiddleware, (req, res) => {
-    res.render('home');
+    res.redirect('/enter-case-number');
   });
 
   app.get('/case/:caseReference', async (req, res) => {
