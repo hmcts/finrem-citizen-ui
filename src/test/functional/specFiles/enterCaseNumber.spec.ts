@@ -46,7 +46,7 @@ test.describe.skip('Enter Case Number Page Verification', () => {
     page,
   }) => {
     const VALID_EXISTING_CASE = '1773677683810798';
-    const NEXT_PAGE_TEXT = 'Dividing your money and property';
+    const PAGE_TITLE = 'Dividing your money and property';
 
     // Enter known valid case number
     await enterCaseNumberPage.submitCaseNumber(VALID_EXISTING_CASE);
@@ -55,8 +55,9 @@ test.describe.skip('Enter Case Number Page Verification', () => {
     await expect(enterCaseNumberPage.errorSummary).toBeHidden({ timeout: 15000 });
 
     // Verify landing on the next page by checking the Service Name in the navigation
-    const serviceNameLink = page.getByRole('link', { name: NEXT_PAGE_TEXT });
+    const serviceNameLink = page.getByRole('link', { name: PAGE_TITLE });
     await expect(serviceNameLink).toBeVisible();
+    await expect(page.locator('body')).toContainText('This is a placeholder page for the access code step');
   });
 
   // --- FAILURE CASES (Based on Backend Logic) ---
