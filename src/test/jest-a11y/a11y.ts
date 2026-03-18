@@ -4,8 +4,6 @@ import { AddressInfo } from 'net';
 import type { Express } from 'express';
 import supertest from 'supertest';
 
-import { app } from '../../main/app';
-
 const pa11y = require('pa11y');
 
 jest.mock('../../main/modules/oidc', () => ({
@@ -80,7 +78,7 @@ class PallyIssue {
 }
 
 function ensurePageCallWillSucceed(url: string): Promise<void> {
-  return supertest(server)
+  return supertest(app)
     .get(url)
     .set('Connection', 'close')
     .then((res: supertest.Response) => {

@@ -84,8 +84,8 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
       // Store errors and input value in session for redirect
       req.session.caseNumberErrors = errors;
       req.session.tempCaseNumber = caseNumber || '';
-      
-      req.session.save((err) => {
+
+      req.session.save(err => {
         if (err) {
           logger.error('Session save error:', err);
         }
@@ -111,19 +111,19 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
       const caseApi = getCaseApi(systemUser, logger);
       const caseData = await caseApi.getCaseById(caseId);
       logger.info(`Case ${caseId} found in CCD`);
-      
+
       // Store case data in session for later use
       req.session.caseData = caseData;
     } catch (error) {
       logger.error(`Case ${caseId} not found in CCD:`, error);
-      
+
       // Case doesn't exist or user doesn't have access
       req.session.caseNumberErrors = {
         caseNumber: 'We cannot find that case number, Enter the case number that you received from the court',
       };
       req.session.tempCaseNumber = caseNumber || '';
-      
-      req.session.save((err) => {
+
+      req.session.save(err => {
         if (err) {
           logger.error('Session save error:', err);
         }
@@ -135,7 +135,7 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
     // Save the validated case number to session
     req.session.caseNumber = caseNumber.trim();
 
-    req.session.save((err) => {
+    req.session.save(err => {
       if (err) {
         logger.error('Session save error:', err);
       }
@@ -143,4 +143,4 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
       res.redirect('/enter-access-code');
     });
   });
-};
+}

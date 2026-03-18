@@ -3,8 +3,19 @@ module.exports = {
   testRegex: '(/src/test/.*|\\.test)\\.(ts|js)$',
   testEnvironment: 'node',
   testRunner: 'jest-circus/runner',
+
+  moduleNameMapper: {
+    '^router/(.*)$': '<rootDir>/src/main/router/$1',
+    '^routes/(.*)$': '<rootDir>/src/main/routes/$1',
+  },
+
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.jest.json',
+      },
+    ],
     '^.+\\.m?js$': [
       'babel-jest',
       {

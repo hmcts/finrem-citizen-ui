@@ -1,13 +1,63 @@
 import { test as base } from '@playwright/test';
 
-import { HomePage } from '../functional/pom/homePage.page';
+import { BasePage } from '../functional/pom/basePage.page';
+import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
+import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
+import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
 
+/** * Define the shape of the authentication session object.
+ */
+export type AuthSession = {
+  user: UserCredentials;
+  authStatus: 'success' | 'failure';
+};
+
+/** * Extend the base MyFixtures type to include Page Objects and Services.
+ */
 type MyFixtures = {
-  homePage: HomePage;
+  idamApiService: IdamApiService;
+  citizenUser: UserCredentials;
+  idamPage: IdamPage;
+  basePage: BasePage;
+  loggedInPage: AuthSession;
+  enterCaseNumberPage: EnterCaseNumberPage;
 };
 
 export const test = base.extend<MyFixtures>({
-  homePage: async ({ page }, use) => {
-    await use(new HomePage(page));
+  idamApiService: async ({}, use) => {
+    await use(new IdamApiService());
+  },
+
+  idamPage: async ({ page }, use) => {
+    await use(new IdamPage(page));
+  },
+
+  basePage: async ({ page }, use) => {
+    await use(new BasePage(page));
+  },
+
+  /** DATA FIXTURE: Creates a new citizen user in IDAM.
+   * Test-scoped, a unique user is created for every test that requests 'loggedInPage'.
+   */
+  citizenUser: async ({ idamApiService }, use) => {
+    const user = await idamApiService.createCitizenUser();
+    await use(user);
+  },
+
+  /** LOGIN FIXTURE: Performs the login flow.
+   */
+  // TO DO: Add a post-login assertion inside the fixture to confirm successful login.
+  loggedInPage: async ({ idamPage, citizenUser, basePage }, use) => {
+    // Navigate and log in
+    await basePage.goto();
+    await idamPage.login(citizenUser);
+
+    await use({ user: citizenUser, authStatus: 'success' });
+  },
+
+  enterCaseNumberPage: async ({ page }, use) => {
+    await use(new EnterCaseNumberPage(page));
   },
 });
+
+export { expect } from '@playwright/test';

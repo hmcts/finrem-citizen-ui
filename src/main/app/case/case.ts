@@ -58,4 +58,3 @@ export interface CaseWithId extends Case {
 }
 
 export type AnyObject = Record<string, unknown>;
-

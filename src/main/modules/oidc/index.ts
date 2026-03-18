@@ -29,9 +29,7 @@ export class OIDCModule {
 
     const oidcClient = await getOidcClient();
 
-    let clientSecret =
-      process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET ||
-      process.env.IDAM_CLIENT_SECRET;
+    let clientSecret = process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET || process.env.IDAM_CLIENT_SECRET;
 
     if (!clientSecret && config.has('services.idam.clientSecret')) {
       clientSecret = config.get<string>('services.idam.clientSecret');
@@ -229,7 +227,6 @@ export class OIDCModule {
         });
         this.logger.info('req.session.nonce after save ', req.session.nonce);
         this.logger.info('req.session.nonce after save ', req.session.nonce);
-
       } catch (err: unknown) {
         this.logger.error('OIDC callback error:', err);
         next(new OIDCCallbackError('Authentication callback failed'));

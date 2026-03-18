@@ -52,19 +52,25 @@ describe('Enter Case Number Validation', () => {
     it('should return error with letters in case number', () => {
       const result = validateCaseNumber('1234-5678-ABCD-4567');
       expect(result).not.toBeNull();
-      expect(result?.caseNumber).toBe('Case number must only include numbers 0 to 9 and special characters such as hyphens');
+      expect(result?.caseNumber).toBe(
+        'Case number must only include numbers 0 to 9 and special characters such as hyphens'
+      );
     });
 
     it('should return error with special characters other than hyphens', () => {
       const result = validateCaseNumber('1234-5678-0123@4567');
       expect(result).not.toBeNull();
-      expect(result?.caseNumber).toBe('Case number must only include numbers 0 to 9 and special characters such as hyphens');
+      expect(result?.caseNumber).toBe(
+        'Case number must only include numbers 0 to 9 and special characters such as hyphens'
+      );
     });
 
     it('should return error with spaces in case number', () => {
       const result = validateCaseNumber('1234 5678 0123 4567');
       expect(result).not.toBeNull();
-      expect(result?.caseNumber).toBe('Case number must only include numbers 0 to 9 and special characters such as hyphens');
+      expect(result?.caseNumber).toBe(
+        'Case number must only include numbers 0 to 9 and special characters such as hyphens'
+      );
     });
 
     it('should return null with only numbers (no hyphens)', () => {

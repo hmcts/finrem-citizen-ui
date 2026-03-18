@@ -1,13 +1,22 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "target": "ESNext",
-    "module": "CommonJS",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true,
-    "lib": ["esnext", "dom"],
-    "types": ["@playwright/test"]
+    "noEmit": true,
+    "lib": ["ESNext", "DOM"],
+    "types": ["node", "@playwright/test"],
+    "baseUrl": "../../",
+    "paths": {
+      "router/*": ["src/main/router/*"],
+      "routes/*": ["src/main/routes/*"],
+      "@pom/*": ["src/test/functional/pom/*"],
+      "@helpers/*": ["src/test/functional/utils/helpers/*"]
+    }
   },
-  "include": ["**/*.ts", "**/*.js"],
-  "exclude": ["node_modules"]
+  "include": ["functional/**/*.ts", "a11y/**/*.ts", "../../playwright.config.mts"]
 }
