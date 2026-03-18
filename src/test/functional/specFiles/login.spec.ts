@@ -53,7 +53,7 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
     await basePage.verifyUrl(/.*crown-copyright.*/);
   });
 
-  test('forgotten password link navigates to correct page', async ({ basePage, idamPage, citizenUser,page }) => {
+  test('forgotten password link navigates to correct page', async ({ basePage, idamPage, citizenUser }) => {
     await basePage.signOut();
     await idamPage.clickSignIn();
     await idamPage.enterEmail(citizenUser);
