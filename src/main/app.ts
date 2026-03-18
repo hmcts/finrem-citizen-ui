@@ -67,6 +67,8 @@ app.use((req, res) => {
 
 app.use((err: HTTPError, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logger.error(`${err.stack || err}`);
+  logger.error(err?.message);
+  logger.error(err?.stack);
   res.locals.message = err.message;
   res.locals.error = env === 'development' ? err : {};
   res.status(err.status || 500);

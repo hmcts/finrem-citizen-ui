@@ -12,21 +12,22 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
     // The browser is already logged in here
   });
 
-  test('User can see access case number page after successful login @PR', async ({ basePage }) => {
+  test('User can see access case number page after successful login @PR', async ({ basePage, enterCaseNumberPage }) => {
     await expect(basePage.navigationLink).toBeVisible();
-
-    //await enterCaseNumberPage.verifyCaseNumberPageContent();
+    await enterCaseNumberPage.verifyCaseNumberPageContent();
   });
 
-  test('User session can be cleared and redirects to login page @PR', async ({ page, basePage, idamPage }) => {
-    //await enterCaseNumberPage.verifyCaseNumberPageContent();
-    // Perform the logout/session clear action
-    await basePage.clearSession();
-    await page.goto('/');
+  test('User can sign out via the UI and is redirected to IDAM @PR', async ({ page, basePage, idamPage }) => {
+    // Perform the UI-driven sign out
+    await basePage.signOut();
 
-    // Assert user is back on login screen
+    // Assert redirection to IDAM (Sign-in page)
     await expect(page).toHaveURL(/.*sign-in-or-create.*/);
     await expect(idamPage.signInLink).toBeVisible();
+
+    // Verify that trying to go back to the app root redirects back to login
+    await basePage.goto('/');
+    await expect(page).toHaveURL(/.*sign-in-or-create.*/);
   });
 
   test('Verify Global Layout elements: Header, Footer, @PR', async ({ page, basePage }) => {

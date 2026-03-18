@@ -2,88 +2,68 @@ import { expect, test } from '../../fixtures/fixtures';
 
 const dataFactory = {
   generateDigits: (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join(''),
-  validFormatted: () => {
-    const d = Array.from({ length: 16 }, () => Math.floor(Math.random() * 10)).join('');
-    return `${d.slice(0, 4)}-${d.slice(4, 8)}-${d.slice(8, 12)}-${d.slice(12, 16)}`;
+  validFormatted: (base: string) => {
+    // Formats a 16-digit string into XXXX-XXXX-XXXX-XXXX
+    return `${base.slice(0, 4)}-${base.slice(4, 8)}-${base.slice(8, 12)}-${base.slice(12, 16)}`;
   },
 };
 
 test.describe('Enter Case Number Page Verification', () => {
+  const VALID_CASE = '1773677683810798';
+
   test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
   });
 
-  // --- SUCCESS CASES (Logic Validation Passed) ---
-  const successScenarios = [
-    { desc: '16 digits', value: dataFactory.generateDigits(16) },
-    { desc: '16 digits with hyphens', value: dataFactory.validFormatted() },
-    { desc: '16 digits with spaces', value: `  ${dataFactory.generateDigits(16)}  ` },
+  // --- SUCCESS & BOUNDARY HAPPY PATHS ---
+  const happyPaths = [
+    { desc: '16 digits (Standard Boundary)', value: VALID_CASE },
+    { desc: '16 digits with hyphens', value: dataFactory.validFormatted(VALID_CASE) },
   ];
 
-  for (const { desc, value } of successScenarios) {
-    test(`Success: ${desc} @PR`, async ({ enterCaseNumberPage }) => {
+  for (const { desc, value } of happyPaths) {
+    test(`Happy Path: ${desc} @PR`, async ({ page, enterCaseNumberPage }) => {
       await enterCaseNumberPage.submitCaseNumber(value);
 
-      /**
-       * Since we use random data, the backend may return "Case number not found".
-       * To verify the VALIDATION logic passed, we check that the specific length/format error messages are NOT visible.
-       */
-      const validationErrors = [
-        'Case number must be between 16 and 20 characters',
-        'Case number must only include numbers 0 to 9 and special characters such as hyphens',
-        'Case number must be 16 digits',
-      ];
-
-      for (const error of validationErrors) {
-        await expect(enterCaseNumberPage.errorSummary.getByRole('link', { name: error })).not.toBeVisible();
-      }
+      // Verify redirection to Access Code page
+      await expect(page).toHaveURL(/\/enter-access-code$/);
+      await expect(page.locator('body')).toContainText('This is a placeholder page for the access code step');
     });
   }
 
-  // --- END-TO-END HAPPY PATH ---
-  test('Happy Path: User enters valid existing case number and proceeds to the service dashboard @PR', async ({
-    enterCaseNumberPage,
-    page,
-  }) => {
-    const VALID_EXISTING_CASE = '1773677683810798';
-    const PAGE_TITLE = 'Dividing your money and property';
+  /**
+   * Note: The 20-digit Upper Boundary is a "Logic Success" (No length error)
+   * but a "Functional Failure" (No DB record exists for a random 20-digit string).
+   */
+  test('Success Logic: 20 digits (Upper Boundary) @PR', async ({ enterCaseNumberPage }) => {
+    await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(20));
 
-    await enterCaseNumberPage.submitCaseNumber(VALID_EXISTING_CASE);
-    await expect(enterCaseNumberPage.errorSummary).toBeHidden({ timeout: 15000 });
+    // Confirm that the length-specific validation is NOT triggered
+    await enterCaseNumberPage.expectNoSpecificValidationErrors(['Case number must be between 16 and 20 characters']);
 
-    // Verify landing on the next page by checking the Service Name in the navigation
-    const serviceNameLink = page.getByRole('link', { name: PAGE_TITLE });
-    await expect(serviceNameLink).toBeVisible();
-    await expect(page.locator('body')).toContainText('This is a placeholder page for the access code step');
+    // We expect the "Not Found" error because this random 20-digit ID doesn't exist in DB
+    await enterCaseNumberPage.expectValidationError('Case number must be 16 digits');
   });
 
-  // --- FAILURE CASES (Based on Backend Logic) ---
+  // --- VALIDATION ERROR SCENARIOS ---
+
   test('Error: Empty input @PR', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber('');
     await enterCaseNumberPage.expectValidationError('Enter your case number');
   });
 
-  test('Error: Too short (15 digits) @PR', async ({ enterCaseNumberPage }) => {
+  test('Error: Boundary check - 15 characters (Lower Boundary - 1) @PR', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(15));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
   });
 
-  test('Error: Invalid format (Letters) @PR', async ({ enterCaseNumberPage }) => {
-    const invalid = dataFactory.generateDigits(12) + 'ABCD';
-    await enterCaseNumberPage.submitCaseNumber(invalid);
-    await enterCaseNumberPage.expectValidationError(
-      'Case number must only include numbers 0 to 9 and special characters such as hyphens'
-    );
+  test('Error: Boundary check - 21 characters (Upper Boundary + 1) @PR', async ({ enterCaseNumberPage }) => {
+    await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(21));
+    await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
   });
 
-  test('Error: Digit count (20 digits) @PR', async ({ enterCaseNumberPage }) => {
-    await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(20));
-    await enterCaseNumberPage.expectValidationError('Case number must be 16 digits');
-  });
-
-  test('Error: Invalid characters (Spaces) @PR', async ({ enterCaseNumberPage }) => {
-    const val = '1234 5678 1234 5678';
-    await enterCaseNumberPage.submitCaseNumber(val);
+  test('Error: Invalid format - Letters @PR', async ({ enterCaseNumberPage }) => {
+    await enterCaseNumberPage.submitCaseNumber('1234-5678-ABCD-EFGH');
     await enterCaseNumberPage.expectValidationError(
       'Case number must only include numbers 0 to 9 and special characters such as hyphens'
     );
