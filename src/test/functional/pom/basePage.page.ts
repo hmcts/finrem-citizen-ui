@@ -32,4 +32,5 @@ export class BasePage {
       window.sessionStorage.clear();
     });
   }
+  
 }
