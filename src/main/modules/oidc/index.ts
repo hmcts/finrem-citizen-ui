@@ -161,6 +161,11 @@ export class OIDCModule {
             this.logger.error('Session save error before redirecting to IDAM:', err);
             return next(new OIDCAuthenticationError('Failed to save session before login redirect'));
           }
+
+          this.logger.info(
+            `[oidc] Session saved successfully before redirect. sessionID=${req.sessionID} codeVerifierPresent=${!!req.session?.codeVerifier} noncePresent=${!!req.session?.nonce}`
+          );
+
           res.redirect(authUrl.href);
         });
       } catch (err: unknown) {
