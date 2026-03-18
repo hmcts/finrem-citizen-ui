@@ -2,6 +2,7 @@ import { LoggerInstance } from 'winston';
 
 import { UserDetails } from '../controller/AppRequest';
 
+import { CaseWithId } from './case';
 import { CaseApiClient, getCaseApiClient } from './case-api-client';
 import { CaseRole, FinremCaseData } from './definition';
 
@@ -14,6 +15,10 @@ export class CaseApi {
 
   public async getCaseById(caseId: string): Promise<FinremCaseData> {
     return this.apiClient.getCaseById(caseId);
+  }
+
+  public async triggerEvent(caseId: string, userData: Partial<FinremCaseData>, eventName: string): Promise<CaseWithId> {
+    return this.apiClient.sendEvent(caseId, userData, eventName);
   }
 }
 

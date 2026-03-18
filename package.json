@@ -81,6 +81,7 @@
     "@types/express": "5.0.6",
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.1.0",
     "@types/node": "^24.0.0",
     "@types/pa11y": "^5.3.7",
     "@types/serve-favicon": "^2.5.7",

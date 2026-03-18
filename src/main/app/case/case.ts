@@ -26,7 +26,7 @@ export interface Case {
   respondentAccessCode: AccessCodeCollection;
 }
 
-export interface CaseWithId extends Case {
+export interface CaseWithId extends FinremCaseData {
   id: string;
   state: State;
 }
@@ -52,10 +52,6 @@ export interface UploadedFile {
   name: string;
 }
 
-export interface CaseWithId extends Case {
-  id: string;
-  state: State;
-}
-
 export type AnyObject = Record<string, unknown>;
 
+export const JURISDICTION = 'DIVORCE';
