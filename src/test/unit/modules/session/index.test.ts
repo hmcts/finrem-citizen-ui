@@ -181,7 +181,7 @@ describe('Session.enableFor', () => {
 
     session.enableFor(app);
 
-    expect(redisOnMock).toHaveBeenCalledWith('connect', expect.any(Function));
+    expect(redisOnMock).toHaveBeenCalledWith('ready', expect.any(Function));
     expect(redisOnMock).toHaveBeenCalledWith('error', expect.any(Function));
 
     process.env.NODE_ENV = originalEnv;

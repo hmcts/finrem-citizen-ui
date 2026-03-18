@@ -8,7 +8,7 @@ const dataFactory = {
   },
 };
 
-test.describe.skip('Enter Case Number Page Verification', () => {
+test.describe('Enter Case Number Page Verification', () => {
   test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
   });
@@ -48,10 +48,7 @@ test.describe.skip('Enter Case Number Page Verification', () => {
     const VALID_EXISTING_CASE = '1773677683810798';
     const PAGE_TITLE = 'Dividing your money and property';
 
-    // Enter known valid case number
     await enterCaseNumberPage.submitCaseNumber(VALID_EXISTING_CASE);
-
-    // Assert the Error Summary is completely gone (since this is a real case)
     await expect(enterCaseNumberPage.errorSummary).toBeHidden({ timeout: 15000 });
 
     // Verify landing on the next page by checking the Service Name in the navigation
@@ -63,17 +60,15 @@ test.describe.skip('Enter Case Number Page Verification', () => {
   // --- FAILURE CASES (Based on Backend Logic) ---
   test('Error: Empty input @PR', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber('');
-    await enterCaseNumberPage.expectValidationError('Enter case number');
+    await enterCaseNumberPage.expectValidationError('Enter your case number');
   });
 
   test('Error: Too short (15 digits) @PR', async ({ enterCaseNumberPage }) => {
-    // 'should return error when case number is less than 16 characters'
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(15));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
   });
 
   test('Error: Invalid format (Letters) @PR', async ({ enterCaseNumberPage }) => {
-    // 'should return error with letters in case number'
     const invalid = dataFactory.generateDigits(12) + 'ABCD';
     await enterCaseNumberPage.submitCaseNumber(invalid);
     await enterCaseNumberPage.expectValidationError(
@@ -82,17 +77,22 @@ test.describe.skip('Enter Case Number Page Verification', () => {
   });
 
   test('Error: Digit count (20 digits) @PR', async ({ enterCaseNumberPage }) => {
-    // 'should return error when 20 digits' -> 'Case number must be 16 digits'
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(20));
     await enterCaseNumberPage.expectValidationError('Case number must be 16 digits');
   });
 
   test('Error: Invalid characters (Spaces) @PR', async ({ enterCaseNumberPage }) => {
-    // 'should return error with spaces in case number'
     const val = '1234 5678 1234 5678';
     await enterCaseNumberPage.submitCaseNumber(val);
     await enterCaseNumberPage.expectValidationError(
       'Case number must only include numbers 0 to 9 and special characters such as hyphens'
+    );
+  });
+
+  test('Error: Case number not found @PR', async ({ enterCaseNumberPage }) => {
+    await enterCaseNumberPage.submitCaseNumber('1111222233334444');
+    await enterCaseNumberPage.expectValidationError(
+      'We cannot find that case number, Enter the case number that you received from the court'
     );
   });
 });

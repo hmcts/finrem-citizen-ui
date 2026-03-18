@@ -11,7 +11,13 @@
   }) }}
   {{ govukServiceNavigation({
     serviceName: "Dividing your money and property",
-    serviceUrl: "/"
+    serviceUrl: "/",
+    navigation: [
+      {
+        href: "/logout",
+        text: "Sign out"
+      }
+    ]
   }) }}
 {% endblock %}
 

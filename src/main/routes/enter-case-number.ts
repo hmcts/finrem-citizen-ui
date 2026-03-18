@@ -29,7 +29,7 @@ export function validateCaseNumber(caseNumber: string | undefined): CaseNumberEr
 
   // Required validation
   if (!caseNumber || typeof caseNumber !== 'string' || !caseNumber.trim()) {
-    errors.caseNumber = 'Enter case number';
+    errors.caseNumber = 'Enter your case number';
     return errors;
   }
 
@@ -119,7 +119,7 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
 
       // Case doesn't exist or user doesn't have access
       req.session.caseNumberErrors = {
-        caseNumber: 'Case number not found. Please check and try again.',
+        caseNumber: 'We cannot find that case number, Enter the case number that you received from the court',
       };
       req.session.tempCaseNumber = caseNumber || '';
 
