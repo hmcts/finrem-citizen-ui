@@ -1,5 +1,12 @@
 import { Locator, Page, expect } from '@playwright/test';
 
+// Option A: Move it outside the class (Cleaner if other pages need it too)
+const ROUTES = {
+  HOME: '/',
+  LOGIN: '/login',
+  DASHBOARD: '/dashboard',
+};
+
 export class BasePage {
   readonly headerLogo: Locator;
   readonly footer: Locator;
@@ -25,7 +32,8 @@ export class BasePage {
     await expect(this.page).toHaveURL(path);
   }
 
-  async goto(path = '/'): Promise<void> {
+  // Uses the ROUTES constant defined above
+  async goto(path: string = ROUTES.HOME): Promise<void> {
     await this.page.goto(path);
   }
 
