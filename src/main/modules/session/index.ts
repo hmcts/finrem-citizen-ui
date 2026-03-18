@@ -67,11 +67,30 @@ export class Session {
       return;
     }
 
-    const redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
-    const redis = new Redis(redisConnectionString);
+const redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
+const redis = new Redis(redisConnectionString);
 
-    redis.on('connect', () => {
-      logger.info('Redis session store connected');
+redis.on('ready', async () => {
+      logger.info('Redis session store connected and ready');
+
+      try {
+        const testKey = 'debug:test:key';
+        const testValue = JSON.stringify({
+          message: 'hello redis',
+          ts: new Date().toISOString()
+        });
+
+        await redis.set(testKey, testValue, 'EX', 300);
+        logger.info(`Redis SET successful for key=${testKey}`);
+
+        const value = await redis.get(testKey);
+        logger.info(`Redis GET returned: ${value}`);
+
+        const ttl = await redis.ttl(testKey);
+        logger.info(`Redis TTL for ${testKey}: ${ttl}`);
+      } catch (err) {
+        logger.error('Redis SET/GET test failed', err);
+      }
     });
 
     redis.on('error', (error: Error) => {
