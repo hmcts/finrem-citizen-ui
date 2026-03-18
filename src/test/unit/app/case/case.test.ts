@@ -8,8 +8,8 @@ import {
   type UploadedFile,
   formFieldsToCaseMapping,
   formatCase,
-} from './case';
-import { type AccessCodeCollection, type AccessCodeEntry, YesOrNo } from './definition';
+} from '../../../../main/app/case/case';
+import { type AccessCodeCollection, type AccessCodeEntry, YesOrNo } from '../../../../main/app/case/definition';
 
 const entry = (code: string): AccessCodeEntry => ({
   accessCode: code,

@@ -46,7 +46,7 @@ export class Session {
     const sessionOptions: session.SessionOptions = {
       cookie: {
         maxAge: ttlInSeconds * 1000,
-        sameSite: secure ? 'strict' : 'lax',
+        sameSite: secure ? 'none' : 'lax',
         secure,
       },
       name: config.get<string>('session.cookieName'),
@@ -55,6 +55,10 @@ export class Session {
       saveUninitialized: false,
       secret,
     };
+
+    logger.info(
+      `Session cookie settings: sameSite=${sessionOptions.cookie?.sameSite} secure=${sessionOptions.cookie?.secure}`
+    );
 
     if (isTest) {
       logger.info('Session configured with in-memory store for test environment');

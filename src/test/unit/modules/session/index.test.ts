@@ -237,7 +237,7 @@ describe('Session.enableFor', () => {
     };
 
     expect(callArg.cookie.secure).toBe(true);
-    expect(callArg.cookie.sameSite).toBe('strict');
+    expect(callArg.cookie.sameSite).toBe('none');
 
     process.env.NODE_ENV = originalEnv;
   });
