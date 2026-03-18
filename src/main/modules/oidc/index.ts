@@ -156,7 +156,13 @@ export class OIDCModule {
           '!!!! nonce ',
           req.session.nonce
         );
-        res.redirect(authUrl.href);
+        req.session.save(err => {
+          if (err) {
+            this.logger.error('Session save error before redirecting to IDAM:', err);
+            return next(new OIDCAuthenticationError('Failed to save session before login redirect'));
+          }
+          res.redirect(authUrl.href);
+        });
       } catch (err: unknown) {
         this.logger.error('Login error:', err);
         next(new OIDCAuthenticationError('Failed to initiate login'));
