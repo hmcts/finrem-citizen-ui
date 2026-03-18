@@ -25,30 +25,36 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
+  // Explicitly tell Jenkins to run ONLY Jest unit tests for this stage
+  env.UNIT_TESTS_COMMAND = "test:unit"
+  
   loadVaultSecrets(secrets)
 
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
 
-  // UNIT TEST STAGE: Run Jest A11y alongside standard tests
+  // 1. UNIT TEST STAGE: Runs Jest A11y (Fast) after Jest unit tests finish
   afterSuccess('test') {
-    yarnBuilder.yarn('test:jest-a11y')
+    yarnBuilder.yarn('test:a11y')
   }
 
+  // 2. Setup for Smoke Tests
   before('tests') {
     sh 'rm -rf smoke-output functional-output allure-results allure-results-smoke'
     sh 'npx playwright install chromium --with-deps'
   }
 
+  // 3. Setup for Functional Tests
   before('functionalTests') {
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
     sh 'npx playwright install chromium --with-deps'
   }
 
+  // 4. POST-FUNCTIONAL STAGE: Runs Playwright A11y (Slow) at the very end
   afterSuccess('functionalTests') {
     sh 'npx playwright install chromium --with-deps'
-    yarnBuilder.yarn('test:a11y')
+    yarnBuilder.yarn('test:playwright:a11y')
   }
 
   afterAlways('smokeTest') {
@@ -64,16 +70,20 @@ withPipeline(type, product, component) {
   }
 
   afterAlways('functionalTests') {
-     junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
-     allure([
-        includeProperties: false,
-        jdk: '',
-        properties: [],
-        reportBuildPolicy: 'ALWAYS',
-        results: [[path: 'allure-results']]
-     ])
-     archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
-  }
+      // Run Playwright A11y tests
+      sh 'npx playwright install chromium --with-deps'
+      yarnBuilder.yarn('test:a11y')
+
+      junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
+      allure([
+          includeProperties: false,
+          jdk: '',
+          properties: [],
+          reportBuildPolicy: 'ALWAYS',
+          results: [[path: 'allure-results']]
+      ])
+      archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
+    }
 
   enableSlackNotifications('#finrem-dev')
   enableAksStagingDeployment()
