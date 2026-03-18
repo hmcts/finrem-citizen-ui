@@ -29,9 +29,7 @@ export class OIDCModule {
 
     const oidcClient = await getOidcClient();
 
-    let clientSecret =
-      process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET ||
-      process.env.IDAM_CLIENT_SECRET;
+    let clientSecret = process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET || process.env.IDAM_CLIENT_SECRET;
 
     if (!clientSecret && config.has('services.idam.clientSecret')) {
       clientSecret = config.get<string>('services.idam.clientSecret');
@@ -156,7 +154,18 @@ export class OIDCModule {
           '!!!! nonce ',
           req.session.nonce
         );
-        res.redirect(authUrl.href);
+        req.session.save(err => {
+          if (err) {
+            this.logger.error('Session save error before redirecting to IDAM:', err);
+            return next(new OIDCAuthenticationError('Failed to save session before login redirect'));
+          }
+
+          this.logger.info(
+            `[oidc] Session saved successfully before redirect. sessionID=${req.sessionID} codeVerifierPresent=${!!req.session?.codeVerifier} noncePresent=${!!req.session?.nonce}`
+          );
+
+          res.redirect(authUrl.href);
+        });
       } catch (err: unknown) {
         this.logger.error('Login error:', err);
         next(new OIDCAuthenticationError('Failed to initiate login'));
@@ -172,7 +181,7 @@ export class OIDCModule {
 
         const { codeVerifier, nonce } = req.session;
         this.logger.info('before OIDCModule.getCurrentUrl(req);');
-        this.logger.info('codeVerifier: ',codeVerifier);
+        this.logger.info('codeVerifier: ', codeVerifier);
         this.logger.info('nonce: ', nonce);
 
         const callbackUrl = OIDCModule.getCurrentUrl(req);
@@ -217,7 +226,6 @@ export class OIDCModule {
         });
         this.logger.info('req.session.nonce after save ', req.session.nonce);
         this.logger.info('req.session.nonce after save ', req.session.nonce);
-
       } catch (err: unknown) {
         this.logger.error('OIDC callback error:', err);
         next(new OIDCCallbackError('Authentication callback failed'));
