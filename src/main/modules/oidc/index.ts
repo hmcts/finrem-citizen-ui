@@ -123,10 +123,9 @@ export class OIDCModule {
       try {
         const oidcClient = await getOidcClient();
         this.logger.info(
-          'after await getOidcClient() !!!! codeVerifier ',
-          req.session.codeVerifier,
-          '!!!! nonce ',
-          req.session.nonce
+          `[oidc] Session saved successfully before redirect. sessionID=${req.sessionID}
+          codeVerifierPresent=${!!req.session?.codeVerifier}
+          noncePresent=${!!req.session?.nonce}`
         );
 
         const codeVerifier = oidcClient.randomPKCECodeVerifier();
@@ -180,9 +179,11 @@ export class OIDCModule {
         this.logger.info('after await getOidcClient() ');
 
         const { codeVerifier, nonce } = req.session;
-        this.logger.info('before OIDCModule.getCurrentUrl(req);');
-        this.logger.info('codeVerifier: ', codeVerifier);
-        this.logger.info('nonce: ', nonce);
+        this.logger.info(
+          `[oidc] Callback session. sessionID=${req.sessionID}
+           codeVerifierPresent=${!!req.session?.codeVerifier}
+           noncePresent=${!!req.session?.nonce}`
+        );
 
         const callbackUrl = OIDCModule.getCurrentUrl(req);
         this.logger.info(
