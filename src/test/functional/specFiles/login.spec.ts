@@ -1,5 +1,7 @@
 import { expect, test } from '../../fixtures/fixtures';
 
+
+
 test.describe('Authenticated Citizen User Journey Verification', () => {
   /**
    * AUTOMATIC SETUP (via beforeEach)
@@ -12,7 +14,7 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
     // The browser is already logged in here
   });
 
-  test('User can see access case number page after successful login @PR', async ({ basePage, enterCaseNumberPage }) => {
+  test('User can see access case number page after successful login @PR', async ({ basePage, enterCaseNumberPage, page }) => {
     await expect(basePage.navigationLink).toBeVisible();
     await enterCaseNumberPage.verifyCaseNumberPageContent();
   });
@@ -50,4 +52,15 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
     await copyRightImgLink.click();
     await basePage.verifyUrl(/.*crown-copyright.*/);
   });
+
+  test('forgotten password link navigates to correct page', async ({ basePage, idamPage, citizenUser,page }) => {
+    await basePage.signOut();
+    await idamPage.clickSignIn();
+    await idamPage.enterEmail(citizenUser);
+    await idamPage.continueAfterEmail();
+    await idamPage.clickForgottenPassword();
+    await idamPage.verifyOnForgottenPasswordPage();
+  });
+
+
 });

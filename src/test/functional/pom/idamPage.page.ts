@@ -10,12 +10,14 @@ export class IdamPage {
   readonly emailInput: Locator;
   readonly passwordInput: Locator;
   readonly continueBtn: Locator;
+  readonly forgottenPasswordLink: Locator;
 
   constructor(readonly page: Page) {
     this.signInLink = this.page.getByRole('button', { name: /sign in/i });
     this.emailInput = this.page.locator('#email');
     this.passwordInput = this.page.locator('#password');
     this.continueBtn = this.page.locator('button[type="submit"]', { hasText: 'Continue' });
+    this.forgottenPasswordLink = this.page.getByRole('link', { name: 'I have forgotten my password' });
   }
 
   /**
@@ -60,4 +62,30 @@ export class IdamPage {
       window.sessionStorage.clear();
     });
   }
+
+  async clickSignIn(): Promise<void> {
+    await this.signInLink.click();
+  }
+
+  async enterEmail(user: UserCredentials): Promise<void> {
+    await this.emailInput.fill(user.username);
+  }
+
+  async continueAfterEmail(): Promise<void> {
+    await this.continueBtn.click();
+  }
+ 
+  async clickForgottenPassword(): Promise<void> {
+    await expect(this.forgottenPasswordLink).toBeVisible();
+    await this.forgottenPasswordLink.click();
+  }
+
+  async verifyOnForgottenPasswordPage(): Promise<void> {
+    await expect(this.page).toHaveURL(/.*reset-password-check-email.*/);
+    await expect(this.page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
+    await expect(this.page.getByRole('link', {name: 'request another password reset email'})).toBeVisible();
+    await expect(this.page.getByRole('link', {name: 'contact us for help'})).toBeVisible();
+  
+  }
+
 }
