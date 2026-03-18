@@ -1,6 +1,7 @@
 import { Locator, Page, expect } from '@playwright/test';
 
 export class EnterCaseNumberPage {
+  readonly caseNumberHeader: Locator;
   readonly caseNumberInput: Locator;
   readonly caseNumberHint: Locator;
   readonly continueBtn: Locator;
@@ -9,7 +10,8 @@ export class EnterCaseNumberPage {
   readonly fieldError: Locator;
 
   constructor(readonly page: Page) {
-    this.caseNumberInput = this.page.getByLabel('Case number');
+    this.caseNumberHeader = this.page.getByRole('heading', { name: 'Enter case number' });
+    this.caseNumberInput = this.page.getByRole('textbox', { name: 'Enter case number' });
     this.caseNumberHint = this.page.locator('#caseNumber-hint');
     this.continueBtn = this.page.getByRole('button', { name: 'Continue' });
     this.errorSummary = this.page.getByRole('alert');
@@ -18,8 +20,11 @@ export class EnterCaseNumberPage {
   }
 
   async verifyCaseNumberPageContent(): Promise<void> {
-    await expect(this.caseNumberInput).toBeVisible();
-    await expect(this.continueBtn).toBeVisible();
+    const elementsToCheck = [this.caseNumberHeader, this.caseNumberInput, this.caseNumberHint, this.continueBtn];
+
+    for (const element of elementsToCheck) {
+      await expect(element).toBeVisible();
+    }
   }
 
   async submitCaseNumber(caseNumber: string): Promise<void> {
