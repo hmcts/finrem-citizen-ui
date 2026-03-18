@@ -15,7 +15,7 @@ export class IdamPage {
     this.signInLink = this.page.getByRole('button', { name: /sign in/i });
     this.emailInput = this.page.locator('#email');
     this.passwordInput = this.page.locator('#password');
-    this.continueBtn = this.page.locator('button[type="submit"]', { hasText: 'Continue' });
+    this.continueBtn = this.page.getByRole('button', { name: /continue/i });
   }
 
   /**
