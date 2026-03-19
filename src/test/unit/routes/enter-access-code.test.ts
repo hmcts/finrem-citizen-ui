@@ -1,7 +1,7 @@
 import { validateAccessCode } from '../../../main/routes/enter-access-code';
 
 describe('Enter Access Code Validation', () => {
-  describe('Required validation (AC4)', () => {
+  describe('Required validation', () => {
     it('should return error when access code is undefined', () => {
       const result = validateAccessCode(undefined);
       expect(result).not.toBeNull();
@@ -21,7 +21,7 @@ describe('Enter Access Code Validation', () => {
     });
   });
 
-  describe('Length validation (AC5)', () => {
+  describe('Length validation', () => {
     it('should return error when access code is less than 8 characters', () => {
       const result = validateAccessCode('ABC123');
       expect(result).not.toBeNull();
@@ -40,7 +40,7 @@ describe('Enter Access Code Validation', () => {
     });
   });
 
-  describe('Format validation (AC6)', () => {
+  describe('Format validation', () => {
     it('should return error when access code contains special characters', () => {
       const result = validateAccessCode('ABC-1234');
       expect(result).not.toBeNull();

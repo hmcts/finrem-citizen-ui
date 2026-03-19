@@ -23,7 +23,6 @@ interface AccessCodeError {
 export function validateAccessCode(accessCode: string | undefined): AccessCodeError | null {
   const errors: AccessCodeError = {};
 
-  // AC4: Required validation
   if (!accessCode || typeof accessCode !== 'string' || !accessCode.trim()) {
     errors.accessCode = 'Enter your access code';
     return errors;
