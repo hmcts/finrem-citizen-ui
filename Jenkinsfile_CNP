@@ -35,16 +35,16 @@ withPipeline(type, product, component) {
 
   before('tests') {
     sh 'rm -rf smoke-output functional-output a11y-output allure-results allure-results-smoke allure-results-a11y'
-    sh 'npx playwright install chromium --with-deps'
+    sh 'yarn playwright install chromium --with-deps'
   }
 
   before('functionalTests') {
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
-    sh 'npx playwright install --with-deps'
+    sh 'yarn playwright install chromium --with-deps'
   }
 
   afterSuccess('functionalTests') {
-    sh 'npx playwright install --with-deps'
+    sh 'yarn playwright install chromium --with-deps'
     withEnv(['TEST_TYPE=a11y']) {
       yarnBuilder.yarn('test:playwright:a11y')
     }
