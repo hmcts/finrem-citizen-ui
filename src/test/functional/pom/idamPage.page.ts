@@ -80,6 +80,7 @@ export class IdamPage {
     await this.forgottenPasswordLink.click();
   }
 
+//verify on the forgotten password page by checking URL and key elements
   async verifyOnForgottenPasswordPage(): Promise<void> {
     await expect(this.page).toHaveURL(/.*reset-password-check-email.*/);
     await expect(this.page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
