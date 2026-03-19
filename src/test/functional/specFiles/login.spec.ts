@@ -1,6 +1,6 @@
 import { expect, test } from '../../fixtures/fixtures';
 
-test.describe.skip('Authenticated Citizen User Journey Verification', () => {
+test.describe('Authenticated Citizen User Journey Verification', () => {
   /**
    * AUTOMATIC SETUP (via beforeEach)
    * By requesting 'loggedInPage', we trigger the fixtures file:

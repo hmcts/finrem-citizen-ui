@@ -10,7 +10,7 @@ test.describe('Accessibility Tests', () => {
     await axeUtils.audit();
   });
 
-  test.skip('should have no accessibility errors on the enter case number page', async ({ page }) => {
+  test('should have no accessibility errors on the enter case number page', async ({ page }) => {
     const { AxeUtils } = await import('@hmcts/playwright-common');
 
     await page.goto('/enter-case-number');
@@ -19,7 +19,7 @@ test.describe('Accessibility Tests', () => {
     await axeUtils.audit();
   });
 
-  test.skip('should have no accessibility errors on the enter access code page', async ({ page }) => {
+  test('should have no accessibility errors on the enter access code page', async ({ page }) => {
     const { AxeUtils } = await import('@hmcts/playwright-common');
 
     await page.goto('/enter-access-code');
