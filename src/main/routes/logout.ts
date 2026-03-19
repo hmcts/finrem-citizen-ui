@@ -13,8 +13,14 @@ export default function setupLogoutRoute(app: Application): void {
       }
       
       const cookieName = config.get<string>('session.cookieName');
+      const secure = process.env.NODE_ENV === 'production';
       // Clear the session cookie
-      res.clearCookie(cookieName);
+      res.clearCookie(cookieName, {
+        path: '/',
+        httpOnly: true,
+        secure: true,
+        sameSite: secure ? 'none' : 'lax',
+      });
       res.redirect('/');
     });
   });
