@@ -1,7 +1,7 @@
 #!groovy
 
 properties([
-  pipelineTriggers([cron('45 10 * * 1-5')]),
+  pipelineTriggers([cron('45 21 * * 1-5')]),
   parameters([
     string(name: 'URL_TO_TEST', defaultValue: 'https://finrem-citizen-ui.aat.platform.hmcts.net',
       description: 'The URL you want to run these tests against'),
@@ -36,40 +36,45 @@ withNightlyPipeline(type, product, component) {
   env.TEST_URL = params.URL_TO_TEST
   loadVaultSecrets(secrets)
 
-  // TODO: Enable and implement when these tests are planned and written
-  //  For reference see: nfdiv-frontend application
-  //enableCrossBrowserTest()
-  //enablePerformanceTest()
-  //enableMutationTest()
-
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
 
+  // --- FULL FUNCTIONAL TESTS ---
   before('fullFunctionalTest') {
-    env.FULL_FUNCTIONAL_TESTS_COMMAND = "test:full-functional"
+    sh 'yarn playwright install chromium --with-deps'
+    sh 'mkdir -p functional-output allure-results allure-results-a11y'
+    env.FULL_FUNCTIONAL_TESTS_COMMAND = "yarn test:full-functional"
   }
 
   enableFullFunctionalTest(200)
 
+  // --- ACCESSIBILITY TESTS ---
   afterAlways('fullFunctionalTest') {
-    junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
+    sh "REPORT_NAME=accessibility-nightly ALLURE_RESULTS_DIR=allure-results-a11y-nightly yarn test:playwright:a11y || true"
 
-    archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
+    // Renaming logic for visibility
+    sh '''
+      if [ -f functional-output/playwright-full-functional-test-report/index.html ]; then
+        cp functional-output/playwright-full-functional-test-report/index.html functional-output/playwright-full-functional-report.html
+      fi
+
+      if [ -f functional-output/playwright-accessibility-nightly-test-report/index.html ]; then
+        cp functional-output/playwright-accessibility-nightly-test-report/index.html functional-output/playwright-accessibility-nightly-report.html
+      fi
+    '''
+
+    junit testResults: 'functional-output/playwright-*-test-results.xml', allowEmptyResults: true
 
     allure([
       includeProperties: false,
       jdk: '',
       properties: [],
       reportBuildPolicy: 'ALWAYS',
-      results: [[path: 'allure-results']]
+      results: [[path: 'allure-results'], [path: 'allure-results-a11y-nightly']]
     ])
-}
 
-  // 4. Ensure A11y also runs nightly
-  afterSuccess('fullFunctionalTest') {
-    yarnBuilder.yarn('playwright install chromium')
-    yarnBuilder.yarn('test:a11y')
+    archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
   }
 
   enableSlackNotifications('#finrem-dev')
