@@ -40,27 +40,35 @@ withPipeline(type, product, component) {
 
   // --- FUNCTIONAL TESTS ---
   before('functionalTests') {
-    sh 'mkdir -p functional-output allure-results'
+    sh 'mkdir -p functional-output allure-results allure-results-a11y'
+    env.TEST_RESULTS_DIR = "functional-output"
     env.FUNCTIONAL_TESTS_COMMAND = "yarn test:functional"
   }
 
-  // --- ACCESSIBILITY TESTS ---
+  // --- ACCESSIBILITY & FUNCTIONAL REPORTING ---
   afterAlways('functionalTests') {
-    sh "REPORT_NAME=accessibility ALLURE_RESULTS_DIR=allure-results-a11y yarn test:playwright:a11y || true"
+    // We pass TEST_RESULTS_DIR here to ensure it aligns with the functional tests folder
+    sh "REPORT_NAME=accessibility TEST_RESULTS_DIR=functional-output ALLURE_RESULTS_DIR=allure-results-a11y yarn test:playwright:a11y || true"
     
-    // Renaming logic for BOTH reports
+    // Renaming logic for BOTH reports and artifact processing
     sh '''
       echo "Processing report artifacts..."
-      if [ -f functional-output/playwright-functional-test-report/index.html ]; then
-        cp functional-output/playwright-functional-test-report/index.html functional-output/playwright-functional-test-report.html
+      
+      # Handle Functional Report (standard index.html to uniquely named html file)
+      if [ -d functional-output/playwright-functional-test-report ]; then
+        cp functional-output/playwright-functional-test-report/index.html functional-output/playwright-functional-test-report.html || true
       fi
-      if [ -f functional-output/playwright-accessibility-test-report/index.html ]; then
-        cp functional-output/playwright-accessibility-test-report/index.html functional-output/playwright-accessibility-test-report.html
+      
+      # Handle Accessibility Report
+      if [ -d functional-output/playwright-accessibility-test-report ]; then
+        cp functional-output/playwright-accessibility-test-report/index.html functional-output/playwright-accessibility-test-report.html || true
       fi
     '''
 
+    // Look for JUnit XMLs in the functional-output root (where playwright.config.mts saves them)
     junit testResults: 'functional-output/*.xml', allowEmptyResults: true
     
+    // Aggregate functional and a11y Allure results
     allure([
         includeProperties: false,
         jdk: '',
@@ -69,6 +77,7 @@ withPipeline(type, product, component) {
         results: [[path: 'allure-results'], [path: 'allure-results-a11y']]
     ])
     
+    // Archive the output folder and the specific a11y allure results
     archiveArtifacts artifacts: 'functional-output/**, allure-results-a11y/**', allowEmptyArchive: true
   }
 

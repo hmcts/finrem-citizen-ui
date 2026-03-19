@@ -6,11 +6,11 @@ const { CommonConfig, ProjectsConfig } = await import('@hmcts/playwright-common'
 
 dotenv.config();
 
-// 1. Determine Target URL and Results Directory
+// Determine Target URL and Results Directory
+// Defaulting to functional-output ensures consistency with Jenkinsfile expectations
 const resultsDir = process.env.TEST_RESULTS_DIR || 'functional-output';
 
 // Dynamic naming for reports based on the run type (functional vs a11y)
-// This ensures they don't overwrite each other in the same folder
 const reportName = process.env.REPORT_NAME || 'functional';
 const allureDir = process.env.ALLURE_RESULTS_DIR || 'allure-results';
 
@@ -39,18 +39,19 @@ if (!process.env.ALREADY_LOGGED && !process.env.PW_WORKER_INDEX) {
   console.log('-------------------------------------------------------');
   process.env.ALREADY_LOGGED = 'true';
 }
+ 
 
 export default defineConfig({
   ...CommonConfig.recommended,
 
   tsconfig: 'src/test/tsconfig.json',
   testDir: './src/test',
-  testMatch: ['a11y/*.test.ts', 'functional/**/*.spec.ts'],
+  testMatch: ['a11y/**/*.@(test|spec).ts', 'functional/**/*.@(test|spec).ts'],
 
-  // 2. Updated dynamic reporting
+  // Updated dynamic reporting
   reporter: [
     ...((CommonConfig.recommended.reporter as ReporterDescription[]) || []),
-    ['html', { outputFolder: `${resultsDir}/playwright-${reportName}-test-report` }],
+    ['html', { outputFolder: `${resultsDir}/playwright-${reportName}-test-report`, open: 'never' }],
     ['allure-playwright', { resultsDir: allureDir }],
     ['junit', { outputFile: `${resultsDir}/playwright-${reportName}-test-results.xml` }],
   ] as ReporterDescription[],
