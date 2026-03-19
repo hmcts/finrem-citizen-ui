@@ -4,7 +4,7 @@ import request from 'supertest';
 import { app } from '../../main/app';
 
 describe('Enter Case Number page', () => {
-  describe.skip('on GET /enter-case-number', () => {
+  describe('on GET /enter-case-number', () => {
     test('should redirect to login when not authenticated', async () => {
       const res = await request(app).get('/enter-case-number');
 
