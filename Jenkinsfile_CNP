@@ -25,7 +25,6 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
-  // Unit-level checks
   env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes && yarn test:a11y"
   
   loadVaultSecrets(secrets)
@@ -42,8 +41,7 @@ withPipeline(type, product, component) {
   before('functionalTests') {
     sh 'npx playwright install chromium --with-deps'
     sh 'mkdir -p functional-output allure-results allure-results-a11y'
-    // both functional and accessibility tests run sequentially
-    env.FUNCTIONAL_TESTS_COMMAND = "yarn test:functional ; ALLURE_RESULTS_DIR=allure-results-a11y yarn test:playwright:a11y"
+    env.FUNCTIONAL_TESTS_COMMAND = "yarn test:all-playwright"
   }
 
   afterAlways('smokeTest') {
@@ -59,13 +57,16 @@ withPipeline(type, product, component) {
   }
 
   afterAlways('functionalTests') {
-      // rename index.html to descriptive names for the Jenkins Artifacts view
+      // Renaming logic:
       sh '''
+        echo "Checking for reports to rename..."
         if [ -f functional-output/playwright-functional-test-report/index.html ]; then
           cp functional-output/playwright-functional-test-report/index.html functional-output/playwright-functional-test-report.html
+          echo "Renamed functional report."
         fi
         if [ -f functional-output/playwright-accessibility-test-report/index.html ]; then
           cp functional-output/playwright-accessibility-test-report/index.html functional-output/playwright-accessibility-test-report.html
+          echo "Renamed accessibility report."
         fi
       '''
 
@@ -79,7 +80,6 @@ withPipeline(type, product, component) {
           results: [[path: 'allure-results'], [path: 'allure-results-a11y']]
       ])
       
-      // Archive everything in functional-output (including our renamed .html files)
       archiveArtifacts artifacts: 'functional-output/**, allure-results-a11y/**', allowEmptyArchive: true
     }
 
