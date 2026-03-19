@@ -25,7 +25,7 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
-  // Unit-level checks (Jest, Lint, Routes, Jest-A11y)
+  // Unit-level checks
   env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes && yarn test:a11y"
   
   loadVaultSecrets(secrets)
@@ -34,21 +34,20 @@ withPipeline(type, product, component) {
     yarnBuilder.yarn('build')
   }
 
-  // Cleanup and setup
   before('tests') {
     sh 'rm -rf smoke-output functional-output allure-results allure-results-smoke allure-results-a11y'
     sh 'npx playwright install chromium --with-deps'
   }
 
-  // Setup and Combined Execution for Functional & A11y Tests
   before('functionalTests') {
     sh 'npx playwright install chromium --with-deps'
     sh 'mkdir -p functional-output allure-results allure-results-a11y'
-    env.FUNCTIONAL_TESTS_COMMAND = "yarn test:functional || true; ALLURE_RESULTS_DIR=allure-results-a11y yarn test:playwright:a11y"
+    sh 'touch functional-output/index.html'
+    env.FUNCTIONAL_TESTS_COMMAND = "(yarn test:functional || true); ALLURE_RESULTS_DIR=allure-results-a11y yarn test:playwright:a11y"
   }
 
   afterAlways('smokeTest') {
-    junit testResults: 'smoke-output/smoke--test-results.xml', allowEmptyResults: true
+    junit testResults: '**/smoke-output/*.xml', allowEmptyResults: true
     archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
     allure([
       includeProperties: false,
@@ -60,7 +59,7 @@ withPipeline(type, product, component) {
   }
 
   afterAlways('functionalTests') {
-      junit testResults: '**/functional-output/*.xml', allowEmptyResults: true
+      junit testResults: '**/*.xml', allowEmptyResults: true
       
       allure([
           includeProperties: false,
