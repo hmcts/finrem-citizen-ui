@@ -1,8 +1,8 @@
 import { describe, expect, test } from '@jest/globals';
 import request from 'supertest';
-import { RouteNames } from '../../main/route-names';
 
 import { app } from '../../main/app';
+import { RouteNames } from '../../main/route-names';
 
 describe('Enter Case Number page', () => {
   describe('on GET /enter-case-number', () => {
