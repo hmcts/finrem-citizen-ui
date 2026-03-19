@@ -20,7 +20,7 @@
     "test:a11y": "NODE_ENV=test jest --config jest.a11y.config.js",
     "test:playwright:a11y": "yarn playwright install --with-deps chromium && REPORT_NAME=accessibility ALLURE_RESULTS_DIR=allure-results-a11y playwright test src/test/a11y --config playwright.config.mts --project chromium",
     "test:smoke": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --config jest.smoke.config.js",
-    "test:functional": "yarn playwright install --with-deps chromium && REPORT_NAME=functional ALLURE_RESULTS_DIR=allure-results playwright test --config playwright.config.mts --project chromium --grep @PR",
+    "test:functional": "yarn playwright install --with-deps chromium && REPORT_NAME=functional ALLURE_RESULTS_DIR=allure-results playwright test --config playwright.config.mts --project chromium --grep @PR && mv functional-output/index.html functional-output/playwright-functional-test-report.html",
     "test:full-functional": "REPORT_NAME=full-functional playwright test --config playwright.config.mts --retries=2",
     "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:a11y",
