@@ -49,7 +49,7 @@ export default defineConfig({
     ...((CommonConfig.recommended.reporter as ReporterDescription[]) || []),
     ['html', { outputFolder: `${resultsDir}/functional-test-report` }],
     ['allure-playwright', { resultsDir: 'allure-results' }],
-    ['junit', { outputFile: `${resultsDir}/functional-test-results.xml' ` }],
+    ['junit', { outputFile: `${resultsDir}/functional-test-results.xml` }],
   ] as ReporterDescription[],
 
   timeout: 30 * 1000,
@@ -68,11 +68,9 @@ export default defineConfig({
   webServer: isLocal
     ? {
         command: 'NODE_OPTIONS="--openssl-legacy-provider" yarn start',
-        // Combined health check endpoint from Main branch
         url: `${finalBaseUrl}/health`,
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
-        // Injected Fallback Variables from Main branch
         env: {
           IDAM_SECRET: process.env.IDAM_SECRET || 'dummy-secret-for-playwright-tests',
           SESSION_SECRET: process.env.SESSION_SECRET || 'dummy-session-secret',

@@ -46,6 +46,7 @@ export const test = base.extend<MyFixtures>({
 
   /** LOGIN FIXTURE: Performs the login flow.
    */
+  // TO DO: Add a post-login assertion inside the fixture to confirm successful login.
   loggedInPage: async ({ idamPage, citizenUser, basePage }, use) => {
     // Navigate and log in
     await basePage.goto();

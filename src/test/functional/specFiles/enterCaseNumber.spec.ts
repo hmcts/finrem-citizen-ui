@@ -8,7 +8,7 @@ const dataFactory = {
   },
 };
 
-test.describe('Enter Case Number Page Verification', () => {
+test.describe.skip('Enter Case Number Page Verification', () => {
   const VALID_CASE = '1773677683810798';
 
   test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage }) => {

@@ -18,6 +18,7 @@ export class IdamPage {
     this.passwordInput = this.page.locator('#password');
     this.continueBtn = this.page.locator('button[type="submit"]', { hasText: 'Continue' });
     this.forgottenPasswordLink = this.page.getByRole('link', { name: 'I have forgotten my password' });
+    this.continueBtn = this.page.getByRole('button', { name: /continue/i });
   }
 
   /**

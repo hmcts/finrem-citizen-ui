@@ -29,9 +29,7 @@ export class OIDCModule {
 
     const oidcClient = await getOidcClient();
 
-    let clientSecret =
-      process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET ||
-      process.env.IDAM_CLIENT_SECRET;
+    let clientSecret = process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET || process.env.IDAM_CLIENT_SECRET;
 
     if (!clientSecret && config.has('services.idam.clientSecret')) {
       clientSecret = config.get<string>('services.idam.clientSecret');
@@ -125,10 +123,9 @@ export class OIDCModule {
       try {
         const oidcClient = await getOidcClient();
         this.logger.info(
-          'after await getOidcClient() !!!! codeVerifier ',
-          req.session.codeVerifier,
-          '!!!! nonce ',
-          req.session.nonce
+          `[oidc] Session saved successfully before redirect. sessionID=${req.sessionID}
+          codeVerifierPresent=${!!req.session?.codeVerifier}
+          noncePresent=${!!req.session?.nonce}`
         );
 
         const codeVerifier = oidcClient.randomPKCECodeVerifier();
@@ -182,9 +179,11 @@ export class OIDCModule {
         this.logger.info('after await getOidcClient() ');
 
         const { codeVerifier, nonce } = req.session;
-        this.logger.info('before OIDCModule.getCurrentUrl(req);');
-        this.logger.info('codeVerifier: ',codeVerifier);
-        this.logger.info('nonce: ', nonce);
+        this.logger.info(
+          `[oidc] Callback session. sessionID=${req.sessionID}
+           codeVerifierPresent=${!!req.session?.codeVerifier}
+           noncePresent=${!!req.session?.nonce}`
+        );
 
         const callbackUrl = OIDCModule.getCurrentUrl(req);
         this.logger.info(
@@ -228,7 +227,6 @@ export class OIDCModule {
         });
         this.logger.info('req.session.nonce after save ', req.session.nonce);
         this.logger.info('req.session.nonce after save ', req.session.nonce);
-
       } catch (err: unknown) {
         this.logger.error('OIDC callback error:', err);
         next(new OIDCCallbackError('Authentication callback failed'));
