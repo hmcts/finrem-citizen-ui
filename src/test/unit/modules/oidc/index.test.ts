@@ -4,6 +4,7 @@ import * as oidcClient from 'openid-client';
 
 import { OIDCAuthenticationError, OIDCCallbackError } from '../../../../main/modules/oidc/errors';
 import { OIDCModule } from '../../../../main/modules/oidc/index';
+import { RouteNames } from '../../../../main/route-names';
 
 const mockLogger = {
   info: jest.fn<void, [string]>(),
@@ -646,7 +647,7 @@ describe('OIDCModule', () => {
       session: {
         codeVerifier: 'verifier-123',
         nonce: 'nonce-123',
-        returnTo: '/dashboard',
+        returnTo: RouteNames.dashboard,
         destroy: (callback: (err?: unknown) => void): void => callback(),
         save: (callback: () => void): void => callback(),
       },
@@ -681,7 +682,7 @@ describe('OIDCModule', () => {
     expect(requestAfter.session.returnTo).toBeUndefined();
 
     const redirectMock = (res as unknown as ResponseLike).redirect;
-    expect(redirectMock).toHaveBeenCalledWith('/dashboard');
+    expect(redirectMock).toHaveBeenCalledWith(RouteNames.dashboard);
     expect(next).not.toHaveBeenCalled();
   });
 
