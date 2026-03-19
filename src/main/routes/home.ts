@@ -6,10 +6,11 @@ import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { CaseRole } from '../app/case/definition';
 import { oidcMiddleware } from '../middleware';
+import { RouteNames } from '../route-names';
 
 export default function (app: Application): void {
   app.get('/', oidcMiddleware, (req, res) => {
-    res.redirect('/enter-case-number');
+      res.redirect(RouteNames.enterCaseNumber);
   });
 
   app.get('/case/:caseReference', async (req, res) => {
