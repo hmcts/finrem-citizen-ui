@@ -85,8 +85,8 @@ export class IdamPage {
   async verifyOnForgottenPasswordPage(): Promise<void> {
     await expect(this.page).toHaveURL(/.*reset-password-check-email.*/);
     await expect(this.page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
-    await expect(this.page.getByRole('link', {name: 'request another password reset email'})).toBeVisible();
-    await expect(this.page.getByRole('link', {name: 'contact us for help'})).toBeVisible();
+    await expect(this.page.getByRole('link', { name: 'request another password reset email' })).toBeVisible();
+    await expect(this.page.getByRole('link', { name: 'contact us for help' })).toBeVisible();
   
   }
 
