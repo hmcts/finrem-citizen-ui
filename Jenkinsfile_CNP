@@ -25,7 +25,7 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
-  // 1. Unit-level checks (Jest, Lint, Routes, Jest-A11y) into one stage
+  // Unit-level checks (Jest, Lint, Routes, Jest-A11y)
   env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes && yarn test:a11y"
   
   loadVaultSecrets(secrets)
@@ -34,22 +34,16 @@ withPipeline(type, product, component) {
     yarnBuilder.yarn('build')
   }
 
-  // 2. Setup for Smoke Tests
+  // Setup for Smoke Tests Container
   before('tests') {
-    sh 'rm -rf smoke-output functional-output allure-results allure-results-smoke'
+    sh 'rm -rf smoke-output functional-output allure-results allure-results-smoke allure-results-a11y'
     sh 'npx playwright install chromium --with-deps'
   }
 
-  // 3. Setup for Functional Tests
+  // Setup and Combined Execution for Functional & A11y Tests
   before('functionalTests') {
-    env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
-    sh 'npx playwright install --with-deps'
-  }
-
-  // 4. Run Playwright A11y tests
-  afterSuccess('functionalTests') {
-    sh 'npx playwright install --with-deps'
-    yarnBuilder.yarn('test:playwright:a11y')
+    sh 'npx playwright install chromium --with-deps'
+    env.FUNCTIONAL_TESTS_COMMAND = "yarn test:functional; ALLURE_RESULTS_DIR=allure-results-a11y yarn test:playwright:a11y"
   }
 
   afterAlways('smokeTest') {
@@ -65,14 +59,14 @@ withPipeline(type, product, component) {
   }
 
   afterAlways('functionalTests') {
-     
-      junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
+      junit testResults: 'functional-output/*.xml', allowEmptyResults: true
+      
       allure([
           includeProperties: false,
           jdk: '',
           properties: [],
           reportBuildPolicy: 'ALWAYS',
-          results: [[path: 'allure-results']]
+          results: [[path: 'allure-results'], [path: 'allure-results-a11y']]
       ])
       archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
     }

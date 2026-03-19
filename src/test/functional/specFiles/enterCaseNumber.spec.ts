@@ -8,8 +8,9 @@ const dataFactory = {
   },
 };
 
-test.describe.skip('Enter Case Number Page Verification', () => {
+test.describe('Enter Case Number Page Verification', () => {
   const VALID_CASE = '1773677683810798';
+  // need to skip until we have a valid case number in the test environment that we can use for the happy path test
 
   test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
@@ -22,7 +23,7 @@ test.describe.skip('Enter Case Number Page Verification', () => {
   ];
 
   for (const { desc, value } of happyPaths) {
-    test(`Happy Path: ${desc} @PR`, async ({ page, enterCaseNumberPage }) => {
+    test.skip(`Happy Path: ${desc} @PR`, async ({ page, enterCaseNumberPage }) => {
       await enterCaseNumberPage.submitCaseNumber(value);
 
       // Verify redirection to Access Code page
