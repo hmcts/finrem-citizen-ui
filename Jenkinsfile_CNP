@@ -42,7 +42,6 @@ withPipeline(type, product, component) {
   before('functionalTests') {
     sh 'npx playwright install chromium --with-deps'
     sh 'mkdir -p functional-output allure-results allure-results-a11y'
-    sh 'touch functional-output/index.html'
     env.FUNCTIONAL_TESTS_COMMAND = "(yarn test:functional || true); ALLURE_RESULTS_DIR=allure-results-a11y yarn test:playwright:a11y"
   }
 
@@ -59,7 +58,7 @@ withPipeline(type, product, component) {
   }
 
   afterAlways('functionalTests') {
-      junit testResults: '**/*.xml', allowEmptyResults: true
+      junit testResults: 'functional-output/*.xml', allowEmptyResults: true
       
       allure([
           includeProperties: false,
