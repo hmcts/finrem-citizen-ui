@@ -38,19 +38,20 @@ withPipeline(type, product, component) {
     sh 'yarn playwright install chromium --with-deps'
   }
 
-  before('smokeTest') {
-    env.SMOKE_TESTS_COMMAND = "TEST_TYPE=smoke yarn test:smoke"
+  before('functionalTests') {
+    env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
     sh 'yarn playwright install chromium --with-deps'
   }
 
-  // Functional and A11y Tests triggered in the same stage
-  before('functionalTests') {
-    env.FUNCTIONAL_TESTS_COMMAND = "yarn test:functional; TEST_TYPE=a11y yarn test:playwright:a11y"
+  afterSuccess('functionalTests') {
     sh 'yarn playwright install chromium --with-deps'
+    withEnv(['TEST_TYPE=a11y']) {
+      yarnBuilder.yarn('test:playwright:a11y')
+    }
   }
 
   afterAlways('smokeTest') {
-    junit testResults: 'smoke-output/smoke-test-results.xml', allowEmptyResults: true
+    junit testResults: 'smoke-output/smoke--test-results.xml', allowEmptyResults: true
     archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
     allure([
       includeProperties: false,
@@ -62,8 +63,8 @@ withPipeline(type, product, component) {
   }
 
   afterAlways('functionalTests') {
+      // Functional Reports
       junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
-      archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
       allure([
           includeProperties: false,
           jdk: '',
@@ -71,9 +72,8 @@ withPipeline(type, product, component) {
           reportBuildPolicy: 'ALWAYS',
           results: [[path: 'allure-results']]
       ])
-
-      junit testResults: 'a11y-output/accessibility-test-results.xml', allowEmptyResults: true
-      archiveArtifacts artifacts: 'a11y-output/**', allowEmptyArchive: true
+      archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
+      junit testResults: 'a11y-output/a11y-test-results.xml', allowEmptyResults: true
       allure([
           includeProperties: false,
           jdk: '',
@@ -81,6 +81,7 @@ withPipeline(type, product, component) {
           reportBuildPolicy: 'ALWAYS',
           results: [[path: 'allure-results-a11y']]
       ])
+      archiveArtifacts artifacts: 'a11y-output/**', allowEmptyArchive: true
     }
 
   enableSlackNotifications('#finrem-dev')

@@ -36,19 +36,26 @@ withNightlyPipeline(type, product, component) {
   env.TEST_URL = params.URL_TO_TEST
   loadVaultSecrets(secrets)
 
+  // TODO: Enable and implement when these tests are planned and written
+  //  For reference see: nfdiv-frontend application
+  //enableCrossBrowserTest()
+  //enablePerformanceTest()
+  //enableMutationTest()
+
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
 
   before('fullFunctionalTest') {
     sh 'rm -rf functional-output a11y-output allure-results allure-results-a11y'
-    env.FULL_FUNCTIONAL_TESTS_COMMAND = "yarn test:full-functional; TEST_TYPE=a11y yarn test:playwright:a11y"
+    env.FULL_FUNCTIONAL_TESTS_COMMAND = "test:full-functional"
     sh 'yarn playwright install chromium --with-deps'
   }
 
   enableFullFunctionalTest(200)
 
   afterAlways('fullFunctionalTest') {
+    // Functional Results
     junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
     archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
     allure([
@@ -59,7 +66,7 @@ withNightlyPipeline(type, product, component) {
       results: [[path: 'allure-results']]
     ])
 
-    junit testResults: 'a11y-output/accessibility-test-results.xml', allowEmptyResults: true
+    junit testResults: 'a11y-output/a11y-test-results.xml', allowEmptyResults: true
     archiveArtifacts artifacts: 'a11y-output/**', allowEmptyArchive: true
     allure([
       includeProperties: false,
@@ -68,6 +75,13 @@ withNightlyPipeline(type, product, component) {
       reportBuildPolicy: 'ALWAYS',
       results: [[path: 'allure-results-a11y']]
     ])
+  }
+
+  afterSuccess('fullFunctionalTest') {
+    sh 'yarn playwright install chromium --with-deps'
+    withEnv(['TEST_TYPE=a11y']) {
+      yarnBuilder.yarn('test:playwright:a11y')
+    }
   }
 
   enableSlackNotifications('#finrem-dev')

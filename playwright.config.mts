@@ -6,17 +6,14 @@ const { CommonConfig, ProjectsConfig } = await import('@hmcts/playwright-common'
 
 dotenv.config();
 
-// Determine Target URL and Results Directory
+// 1. Determine Target URL and Results Directory
 const isA11y = process.env.TEST_TYPE === 'a11y';
-const isSmoke = process.env.TEST_TYPE === 'smoke';
-
-// Logic for directory naming
-const defaultDir = isA11y ? 'a11y-output' : isSmoke ? 'smoke-output' : 'functional-output';
+const defaultDir = isA11y ? 'a11y-output' : 'functional-output';
 const resultsDir = process.env.TEST_RESULTS_DIR || defaultDir;
 
-// Logic for specific file naming
-const reportName = isA11y ? 'accessibility' : isSmoke ? 'smoke' : 'functional';
-const allureDir = isA11y ? 'allure-results-a11y' : isSmoke ? 'allure-results-smoke' : 'allure-results';
+// Dynamic naming for reports
+const reportName = isA11y ? 'a11y' : 'functional';
+const allureDir = isA11y ? 'allure-results-a11y' : 'allure-results';
 
 const getBaseUrl = (): string => {
   if (process.env.TEST_URL) {
@@ -52,18 +49,11 @@ export default defineConfig({
   tsconfig: 'src/test/tsconfig.json',
 
   testDir: './src/test',
-  testMatch: isA11y ? ['a11y/*.test.ts'] : isSmoke ? ['smoke/**/*.spec.ts'] : ['functional/**/*.spec.ts'],
+  testMatch: isA11y ? ['a11y/*.test.ts'] : ['functional/**/*.spec.ts'],
 
   reporter: [
     ...((CommonConfig.recommended.reporter as ReporterDescription[]) || []),
-    [
-      'html',
-      {
-        outputFolder: resultsDir,
-        outputFile: `${reportName}-test-report.html`,
-        open: 'never',
-      },
-    ],
+    ['html', { outputFolder: `${resultsDir}/${reportName}-test-report` }],
     ['allure-playwright', { resultsDir: allureDir }],
     ['junit', { outputFile: `${resultsDir}/${reportName}-test-results.xml` }],
   ] as ReporterDescription[],
@@ -100,7 +90,7 @@ export default defineConfig({
       ...ProjectsConfig.chromium,
       use: { ...devices['Desktop Chrome'] },
     },
-    // Only run a11y on Chromium. For smoke/functional, run all 3.
+    // only run a11y on Chromium to save time/resources in CI
     ...(!isA11y
       ? [
           {
