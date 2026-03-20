@@ -1,9 +1,9 @@
 dependencies:
 - name: nodejs
-  repository: oci://hmctspublic.azurecr.io/helm
-  version: 3.2.0
+  repository: oci://hmctsprod.azurecr.io/helm
+  version: 3.2.1
 - name: redis
   repository: oci://registry-1.docker.io/bitnamicharts
-  version: 25.3.2
-digest: sha256:baf425a396ff07c333952ace7e7a364fbe51d3af438c91f9acb920bf19fa7483
-generated: "2026-03-17T11:25:08.801924Z"
+  version: 25.3.6
+digest: sha256:e0e220f02a7033067e00f1804f30f0203effaa58cf9b03e4c21bb67999e9b238
+generated: "2026-03-20T07:35:24.503825446Z"
