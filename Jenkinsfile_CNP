@@ -34,53 +34,66 @@ withPipeline(type, product, component) {
   }
 
   before('tests') {
-    sh 'rm -rf smoke-output functional-output allure-results allure-results-smoke allure-results-a11y'
+    sh 'rm -rf smoke-output functional-output allure-results* test-results'
     sh 'yarn playwright install chromium --with-deps'
   }
 
-  // --- FUNCTIONAL TESTS ---
+  // --- FUNCTIONAL & ACCESSIBILITY TESTS ---
   before('functionalTests') {
-    sh 'mkdir -p functional-output allure-results allure-results-a11y'
+    sh 'mkdir -p functional-output allure-results-functional allure-results-a11y'
     env.TEST_RESULTS_DIR = "functional-output"
-    env.FUNCTIONAL_TESTS_COMMAND = "yarn test:functional"
+    
+    /**
+     * Logic: Run functional tests (capturing exit code), then run a11y.
+     * Environment variables are handled inside package.json scripts.
+     */
+    env.FUNCTIONAL_TESTS_COMMAND = """
+      yarn test:functional; func_exit=\$?;
+      yarn test:playwright:a11y || true;
+      exit \$func_exit
+    """
   }
 
-  // --- ACCESSIBILITY & FUNCTIONAL REPORTING ---
   afterAlways('functionalTests') {
-    // We pass TEST_RESULTS_DIR here to ensure it aligns with the functional tests folder
-    echo "Running accessibility tests with TEST_RESULTS_DIR set to ${env.TEST_RESULTS_DIR}"
-    sh "REPORT_NAME=accessibility TEST_RESULTS_DIR=functional-output ALLURE_RESULTS_DIR=allure-results-a11y yarn test:playwright:a11y || true"
+    echo "Processing Functional and Accessibility Reports..."
     
-    // Renaming logic for BOTH reports and artifact processing
     sh '''
-      echo "Processing report artifacts..."
-      
-      # Handle Functional Report (standard index.html to uniquely named html file)
-      if [ -d functional-output/playwright-functional-test-report ]; then
-        cp functional-output/playwright-functional-test-report/index.html functional-output/playwright-functional-test-report.html
-      fi
-      
-      # Handle Accessibility Report
-      if [ -d functional-output/playwright-accessibility-test-report ]; then
-        cp functional-output/playwright-accessibility-test-report/index.html functional-output/playwright-accessibility-test-report.html
-      fi
-    '''
+          # Clean up old final report names to avoid conflicts
+          rm -rf functional-output/functional-html-report functional-output/a11y-html-report
 
-    // Look for JUnit XMLs in the functional-output root (where playwright.config.mts saves them)
-    junit testResults: 'functional-output/*.xml', allowEmptyResults: true
+          # Move functional report if it exists
+          if [ -d "functional-output/playwright-functional-test-report" ]; then
+            mv -v functional-output/playwright-functional-test-report functional-output/functional-html-report
+          else
+            echo "Warning: functional-html-report not found"
+          fi
+
+          # Move a11y report if it exists
+          if [ -d "functional-output/playwright-accessibility-test-report" ]; then
+            mv -v functional-output/playwright-accessibility-test-report functional-output/a11y-html-report
+          else
+            echo "Warning: a11y-html-report not found"
+          fi
+        '''
+
+    // Aggregate Junit XMLs for the Jenkins Test Result Trend graph
+    junit testResults: 'functional-output/junit-*.xml', allowEmptyResults: true
     
-    // Aggregate functional and a11y Allure results
+    // Consolidate Allure into a single unified report view
     allure([
         includeProperties: false,
         jdk: '',
         properties: [],
         reportBuildPolicy: 'ALWAYS',
-        results: [[path: 'allure-results'], [path: 'allure-results-a11y']]
+        results: [
+          [path: 'allure-results-functional'], 
+          [path: 'allure-results-a11y']
+        ]
     ])
     
-    // Archive the output folder and the specific a11y allure results
-    archiveArtifacts artifacts: 'functional-output/**, allure-results-a11y/**', allowEmptyArchive: true
-  }
+    // Archive 
+    archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
+}
 
   afterAlways('smokeTest') {
     junit testResults: '**/smoke-output/*.xml', allowEmptyResults: true
