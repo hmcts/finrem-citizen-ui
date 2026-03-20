@@ -9,7 +9,7 @@ import { oidcMiddleware } from '../middleware';
 import { RouteNames } from '../route-names';
 
 export default function (app: Application): void {
-  app.get('/', oidcMiddleware, (req, res) => {
+  app.get(RouteNames.basePath, oidcMiddleware, (req, res) => {
       res.redirect(RouteNames.enterCaseNumber);
   });
 

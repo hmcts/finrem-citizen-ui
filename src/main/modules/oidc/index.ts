@@ -3,8 +3,11 @@ import config from 'config';
 import type { Express, NextFunction, Request, Response } from 'express';
 import type * as OidcClientType from 'openid-client';
 
+import { RouteNames } from '../../route-names';
+
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
+
 
 const getOidcClient = async (): Promise<typeof OidcClientType> => {
   if (process.env.JEST_WORKER_ID !== undefined || process.env.NODE_ENV === 'test') {
@@ -102,7 +105,7 @@ export class OIDCModule {
       const oidcClient = await getOidcClient();
 
       if (!this.clientConfig) {
-        req.session.destroy(() => res.redirect('/'));
+        req.session.destroy(() => res.redirect(RouteNames.basePath));
         return;
       }
 
@@ -221,7 +224,7 @@ export class OIDCModule {
           this.logger.info('req.session.nonce after inside ', req.session.nonce);
           delete req.session.codeVerifier;
           delete req.session.nonce;
-          const returnTo = req.session.returnTo ?? '/';
+          const returnTo = req.session.returnTo ?? RouteNames.basePath;
           delete req.session.returnTo;
           res.redirect(returnTo);
         });

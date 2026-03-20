@@ -414,7 +414,7 @@ describe('OIDCModule', () => {
     await handler(req, res, next);
 
     const redirectMock = (res as unknown as ResponseLike).redirect;
-    expect(redirectMock).toHaveBeenCalledWith('/');
+    expect(redirectMock).toHaveBeenCalledWith(RouteNames.basePath);
   });
 
   it('logout builds end-session URL and redirects to issuer logout', async () => {
@@ -723,7 +723,7 @@ describe('OIDCModule', () => {
     await handler(req, res, next);
 
     const redirectMock = (res as unknown as ResponseLike).redirect;
-    expect(redirectMock).toHaveBeenCalledWith('/');
+    expect(redirectMock).toHaveBeenCalledWith(RouteNames.basePath);
   });
 
   it('callback passes through OIDCCallbackError when no ID token is returned', async () => {

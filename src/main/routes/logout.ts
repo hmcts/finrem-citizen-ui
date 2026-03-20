@@ -1,6 +1,8 @@
 import config from 'config';
 import { Application, Request, Response } from 'express';
 
+import { RouteNames } from '../route-names';
+
 const { Logger } = require('@hmcts/nodejs-logging');
 
 const logger = Logger.getLogger('logout');
@@ -16,12 +18,12 @@ export default function setupLogoutRoute(app: Application): void {
       const secure = process.env.NODE_ENV === 'production';
       // Clear the session cookie
       res.clearCookie(cookieName, {
-        path: '/',
+        path: RouteNames.basePath,
         httpOnly: true,
         secure: true,
         sameSite: secure ? 'none' : 'lax',
       });
-      res.redirect('/');
+      res.redirect(RouteNames.basePath);
     });
   });
 }
