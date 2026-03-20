@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
 import { oidcMiddleware } from '../../../main/middleware/oidc';
+import { RouteNames } from '../../../main/route-names';
 
 function makeReq(overrides: Partial<Request> = {}): Request {
   return {
@@ -37,7 +38,7 @@ describe('oidcMiddleware', () => {
   });
 
   it('calls next for /login without requiring a session', () => {
-    const req = makeReq({ session: undefined, path: '/login', originalUrl: '/login' });
+    const req = makeReq({ session: undefined, path: RouteNames.login, originalUrl: RouteNames.login });
     const res = makeRes();
 
     oidcMiddleware(req, res, next);
@@ -67,7 +68,7 @@ describe('oidcMiddleware', () => {
     expect(next).not.toHaveBeenCalled();
     expect(req.session!.returnTo).toBe('/protected?query=1');
     expect(req.session!.save).toHaveBeenCalled(); // Verify save was called
-    expect(res.redirect).toHaveBeenCalledWith('/login');
+    expect(res.redirect).toHaveBeenCalledWith(RouteNames.login);
   });
 
   it('redirects to /login without setting returnTo when session is falsy', () => {
@@ -76,7 +77,7 @@ describe('oidcMiddleware', () => {
 
     oidcMiddleware(req, res, next);
 
-    expect(res.redirect).toHaveBeenCalledWith('/login');
+    expect(res.redirect).toHaveBeenCalledWith(RouteNames.login);
     expect(next).not.toHaveBeenCalled();
   });
 });

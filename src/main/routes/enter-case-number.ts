@@ -6,6 +6,7 @@ import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
 import { FinremCaseData } from '../app/case/definition';
 import { oidcMiddleware } from '../middleware';
+import { RouteNames } from '../route-names';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -59,7 +60,7 @@ export function validateCaseNumber(caseNumber: string | undefined): CaseNumberEr
 }
 
 export default function setupEnterCaseNumberRoute(app: Application): void {
-  app.get('/enter-case-number', oidcMiddleware, (req: Request, res: Response) => {
+  app.get(RouteNames.enterCaseNumber, oidcMiddleware, (req: Request, res: Response) => {
     // Retrieve any errors from session (set by POST handler)
     const errors = req.session.caseNumberErrors;
     delete req.session.caseNumberErrors;
@@ -74,7 +75,7 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
     });
   });
 
-  app.post('/enter-case-number', async (req: Request, res: Response) => {
+  app.post(RouteNames.enterCaseNumber, async (req: Request, res: Response) => {
     const caseNumber = req.body.caseNumber;
 
     // Validate the case number format
@@ -89,7 +90,7 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
         if (err) {
           logger.error('Session save error:', err);
         }
-        res.redirect('/enter-case-number');
+        res.redirect(RouteNames.enterCaseNumber);
       });
       return;
     }
@@ -127,7 +128,7 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
         if (err) {
           logger.error('Session save error:', err);
         }
-        res.redirect('/enter-case-number');
+        res.redirect(RouteNames.enterCaseNumber);
       });
       return;
     }
@@ -140,7 +141,7 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
         logger.error('Session save error:', err);
       }
       // Redirect to next step in the journey
-      res.redirect('/enter-access-code');
+      res.redirect(RouteNames.enterAccessCode);
     });
   });
 }

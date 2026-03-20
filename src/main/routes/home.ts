@@ -6,13 +6,14 @@ import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { CaseRole } from '../app/case/definition';
 import { oidcMiddleware } from '../middleware';
+import { RouteNames } from '../route-names';
 
 export default function (app: Application): void {
-  app.get('/', oidcMiddleware, (req, res) => {
-    res.redirect('/enter-case-number');
+  app.get(RouteNames.basePath, oidcMiddleware, (req, res) => {
+      res.redirect(RouteNames.enterCaseNumber);
   });
 
-  app.get('/case/:caseReference', async (req, res) => {
+  app.get(RouteNames.caseReference, async (req, res) => {
     const { caseReference } = req.params;
 
     const logger: LoggerInstance = console as unknown as LoggerInstance;
@@ -24,7 +25,7 @@ export default function (app: Application): void {
     res.json(caseData);
   });
 
-  app.get('/case/:caseReference/:userId/:caseRole', async (req, res) => {
+  app.get(RouteNames.caseUserRole, async (req, res) => {
     const assignments: CaseAssignedUserRole[] = [
       {
         case_id: req.params.caseReference,
