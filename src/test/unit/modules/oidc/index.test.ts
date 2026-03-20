@@ -85,7 +85,7 @@ describe('OIDCModule', () => {
   const baseOidcConfig = {
     issuer: 'https://idam-web-public.perftest.platform.hmcts.net',
     clientId: 'finrem-citizen',
-    callbackUrl: '/oauth2/callback',
+    callbackUrl: RouteNames.callbackUrl,
     scope: 'openid profile roles',
   };
 
@@ -346,7 +346,7 @@ describe('OIDCModule', () => {
     expect(app.use).toHaveBeenCalledTimes(1);
     expect(app.get).toHaveBeenCalledWith(RouteNames.logout, expect.any(Function));
     expect(app.get).toHaveBeenCalledWith(RouteNames.login, expect.any(Function));
-    expect(app.get).toHaveBeenCalledWith('/oauth2/callback', expect.any(Function));
+    expect(app.get).toHaveBeenCalledWith(RouteNames.callbackUrl, expect.any(Function));
   });
 
   it('setup middleware calls setupClient when client config is missing', async () => {
@@ -637,7 +637,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/oauth2/callback'];
+    const handler = app.__routes[RouteNames.callbackUrl];
     const req = makeReq({
       headers: {
         'x-forwarded-proto': 'https',
@@ -707,7 +707,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/oauth2/callback'];
+    const handler = app.__routes[RouteNames.callbackUrl];
     const req = makeReq({
       originalUrl: '/oauth2/callback?code=abc',
       session: {
@@ -743,7 +743,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/oauth2/callback'];
+    const handler = app.__routes[RouteNames.callbackUrl];
     const req = makeReq({
       session: {
         codeVerifier: 'verifier',
@@ -778,7 +778,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/oauth2/callback'];
+    const handler = app.__routes[RouteNames.callbackUrl];
     const req = makeReq({
       session: {
         codeVerifier: 'verifier',

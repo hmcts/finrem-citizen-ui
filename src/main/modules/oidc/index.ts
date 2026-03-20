@@ -174,7 +174,7 @@ export class OIDCModule {
       }
     });
 
-    app.get('/oauth2/callback', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    app.get(RouteNames.callbackUrl, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
         this.logger.info('/oauth2/callback is called');
 

@@ -2,8 +2,8 @@ import type { NextFunction, Request, RequestHandler, Response } from 'express';
 
 import { RouteNames } from '../route-names';
 
-const PUBLIC_PATHS = [RouteNames.login, '/oauth2/callback', RouteNames.info, '/favicon.ico'];
-const PUBLIC_PREFIXES = ['/health'];
+const PUBLIC_PATHS = [RouteNames.login, RouteNames.callbackUrl, RouteNames.info, '/favicon.ico'];
+const PUBLIC_PREFIXES = [RouteNames.health];
 
 export const oidcMiddleware: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
   const requestPath = req.path || req.originalUrl;
