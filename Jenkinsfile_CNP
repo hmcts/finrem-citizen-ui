@@ -55,26 +55,24 @@ withPipeline(type, product, component) {
   }
 
   afterAlways('functionalTest') {
-    echo "Processing Functional and Accessibility Reports..."
-    
-    sh '''
-          # Clean up old final report names to avoid conflicts
-          rm -rf functional-output/functional-html-report functional-output/a11y-html-report
+      echo "Processing Functional and Accessibility Reports..."
+      
+      sh '''
+            # Clean up old final report names
+            rm -rf functional-output/functional-html-report functional-output/a11y-html-report
 
-          # Move functional report if it exists
-          if [ -d "functional-output/playwright-functional-test-report" ]; then
-            mv -v functional-output/playwright-functional-test-report functional-output/functional-html-report
-          else
-            echo "Warning: functional-html-report not found"
-          fi
+            # Move and rename functional report
+            if [ -d "functional-output/playwright-functional-test-report" ]; then
+              mv -v functional-output/playwright-functional-test-report functional-output/functional-html-report
+              mv functional-output/functional-html-report/index.html functional-output/functional-html-report/functional-report.html
+            fi
 
-          # Move a11y report if it exists
-          if [ -d "functional-output/playwright-accessibility-test-report" ]; then
-            mv -v functional-output/playwright-accessibility-test-report functional-output/a11y-html-report
-          else
-            echo "Warning: a11y-html-report not found"
-          fi
-        '''
+            # Move and rename a11y report
+            if [ -d "functional-output/playwright-accessibility-test-report" ]; then
+              mv -v functional-output/playwright-accessibility-test-report functional-output/a11y-html-report
+              mv functional-output/a11y-html-report/index.html functional-output/a11y-html-report/a11y-report.html
+            fi
+          '''
 
     // Aggregate Junit XMLs for the Jenkins Test Result Trend graph
     junit testResults: 'functional-output/junit-*.xml', allowEmptyResults: true

@@ -42,6 +42,7 @@ functional-output/
 mochawesome-report/
 junit*.xml
 allure-results-a11y/*
+allure-results-functional/*
 
 # Project Specific Paths
 src/main/public/img/lib/*
