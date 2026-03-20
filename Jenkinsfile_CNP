@@ -25,6 +25,9 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
+  env.PLAYWRIGHT_BROWSERS_PATH = "./pw-browsers"
+
+  env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes && yarn test:a11y"
   
   loadVaultSecrets(secrets)
 
@@ -34,13 +37,7 @@ withPipeline(type, product, component) {
 
   before('tests') {
     sh 'rm -rf smoke-output functional-output allure-results* test-results pw-browsers'
-    
-    // Determine absolute path using shell 'pwd' 
-    def absPath = sh(script: 'pwd', returnStdout: true).trim()
-    env.PLAYWRIGHT_BROWSERS_PATH = "${absPath}/pw-browsers"
-    
-    // Install browsers using the absolute path
-    sh "export PLAYWRIGHT_BROWSERS_PATH=${env.PLAYWRIGHT_BROWSERS_PATH} && yarn playwright install --with-deps"
+    sh 'yarn playwright install chromium --with-deps'
   }
 
   // --- FUNCTIONAL & ACCESSIBILITY TESTS ---
@@ -48,7 +45,6 @@ withPipeline(type, product, component) {
     sh 'mkdir -p functional-output allure-results-functional allure-results-a11y'
     env.TEST_RESULTS_DIR = "functional-output"
     
-    // Use absolute path determined in the 'before tests' stage
     env.FUNCTIONAL_TESTS_CMD = """
       export PLAYWRIGHT_BROWSERS_PATH=${env.PLAYWRIGHT_BROWSERS_PATH}
       yarn test:functional; func_exit=\$?;
@@ -61,12 +57,15 @@ withPipeline(type, product, component) {
     echo "Processing Functional and Accessibility Reports..."
     
     sh '''
+          # Clean up old final report names to avoid conflicts
           rm -rf functional-output/functional-html-report functional-output/a11y-html-report
 
+          # Move functional report if it exists
           if [ -d "functional-output/playwright-functional-test-report" ]; then
             mv -v functional-output/playwright-functional-test-report functional-output/functional-html-report
           fi
 
+          # Move a11y report if it exists
           if [ -d "functional-output/playwright-accessibility-test-report" ]; then
             mv -v functional-output/playwright-accessibility-test-report functional-output/a11y-html-report
           fi
@@ -79,7 +78,10 @@ withPipeline(type, product, component) {
         jdk: '',
         properties: [],
         reportBuildPolicy: 'ALWAYS',
-        results: [[path: 'allure-results-functional'], [path: 'allure-results-a11y']]
+        results: [
+          [path: 'allure-results-functional'], 
+          [path: 'allure-results-a11y']
+        ]
     ])
     
     archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
