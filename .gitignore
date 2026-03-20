@@ -41,6 +41,7 @@ smoke-output/
 functional-output/
 mochawesome-report/
 junit*.xml
+allure-results-a11y/*
 
 # Project Specific Paths
 src/main/public/img/lib/*
