@@ -2,6 +2,7 @@ import { Application, Request, Response } from 'express';
 
 import { RouteNames } from '../route-names';
 
+import { getMockCaseData, isMockEnabled } from '../app/case/mock-case-data';
 import { oidcMiddleware } from '../middleware';
 
 const { Logger } = require('@hmcts/nodejs-logging');
@@ -97,12 +98,20 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
     const trimmedAccessCode = accessCode.trim().toUpperCase();
 
     try {
-      // Get case data from CCD using the case number
+      // Get case data from CCD (or use mock for local development)
       const caseNumber = req.session.caseNumber!;
-      const userDetails = req.session.user!;
+      let caseData;
       
-      const caseApi = require('../app/case/case-api').getCaseApi(userDetails, logger);
-      const caseData = await caseApi.getCaseById(caseNumber);
+      if (isMockEnabled()) {
+        // Use mock data for local development
+        logger.info('MOCK_CCD enabled - using mock data for access code validation');
+        caseData = getMockCaseData(caseNumber);
+      } else {
+        // Use real CCD backend
+        const userDetails = req.session.user!;
+        const caseApi = require('../app/case/case-api').getCaseApi(userDetails, logger);
+        caseData = await caseApi.getCaseById(caseNumber);
+      }
 
       // Validate access code against CCD
       const allAccessCodes = [
@@ -135,8 +144,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
         return res.redirect('/enter-access-code');
       }
 
-      // AC8: Access code has already been used (check isValid flag)
-      // Note: This is marked as TBC in the ticket for future implementation
+      // Access code has already been used (check isValid flag)
       if (matchingAccessCode.value.isValid === 'No') {
         req.session.accessCodeErrors = {
           accessCode: 'The access code you entered has already been used, you should contact the court.',
@@ -154,7 +162,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       });
 
       // TODO: Mark access code as used in CCD (update isValid to 'No')
-      // TODO: Send confirmation email if this is a new account setup (AC3)
+      // TODO: Send confirmation email if this is a new account setup
       
       return res.redirect('/dashboard');
     } catch (error) {
