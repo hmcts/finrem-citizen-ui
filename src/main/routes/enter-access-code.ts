@@ -1,9 +1,8 @@
 import { Application, Request, Response } from 'express';
 
-import { RouteNames } from '../route-names';
-
 import { getMockCaseData, isMockEnabled } from '../app/case/mock-case-data';
 import { oidcMiddleware } from '../middleware';
+import { RouteNames } from '../route-names';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -48,9 +47,7 @@ export function validateAccessCode(accessCode: string | undefined): AccessCodeEr
 }
 
 export default function setupEnterAccessCodeRoute(app: Application): void {
-  app.get(RouteNames.enterAccessCode, (req: Request, res: Response) => {
-    res.render('enter-access-code');
-  app.get('/enter-access-code', oidcMiddleware, (req: Request, res: Response) => {
+  app.get(RouteNames.enterAccessCode, oidcMiddleware, (req: Request, res: Response) => {
     // Check if user is authenticated
     if (!req.session.user?.accessToken) {
       return res.redirect('/oauth2/login');
@@ -58,7 +55,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
 
     // Check if case number exists in session
     if (!req.session.caseNumber) {
-      return res.redirect('/enter-case-number');
+      return res.redirect(RouteNames.enterCaseNumber);
     }
 
     const errors = req.session.accessCodeErrors;
@@ -74,7 +71,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
     });
   });
 
-  app.post('/enter-access-code', oidcMiddleware, async (req: Request, res: Response) => {
+  app.post(RouteNames.enterAccessCode, oidcMiddleware, async (req: Request, res: Response) => {
     // Check if user is authenticated
     if (!req.session.user?.accessToken) {
       return res.redirect('/oauth2/login');
@@ -82,7 +79,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
 
     // Check if case number exists in session
     if (!req.session.caseNumber) {
-      return res.redirect('/enter-case-number');
+      return res.redirect(RouteNames.enterCaseNumber);
     }
 
     const { accessCode } = req.body;
@@ -92,7 +89,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
     if (validationErrors) {
       req.session.accessCodeErrors = validationErrors;
       req.session.tempAccessCode = accessCode || '';
-      return res.redirect('/enter-access-code');
+      return res.redirect(RouteNames.enterAccessCode);
     }
 
     const trimmedAccessCode = accessCode.trim().toUpperCase();
@@ -129,7 +126,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
           accessCode: 'Access code does not match case number',
         };
         req.session.tempAccessCode = accessCode || '';
-        return res.redirect('/enter-access-code');
+        return res.redirect(RouteNames.enterAccessCode);
       }
 
       // Access code has expired
@@ -141,7 +138,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
           accessCode: 'The access code you entered has expired. Contact the court to get a new code',
         };
         req.session.tempAccessCode = accessCode || '';
-        return res.redirect('/enter-access-code');
+        return res.redirect(RouteNames.enterAccessCode);
       }
 
       // Access code has already been used (check isValid flag)
@@ -150,7 +147,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
           accessCode: 'The access code you entered has already been used, you should contact the court.',
         };
         req.session.tempAccessCode = accessCode || '';
-        return res.redirect('/enter-access-code');
+        return res.redirect(RouteNames.enterAccessCode);
       }
 
       // All validations passed - store access code and proceed
@@ -164,7 +161,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       // TODO: Mark access code as used in CCD (update isValid to 'No')
       // TODO: Send confirmation email if this is a new account setup
       
-      return res.redirect('/dashboard');
+      return res.redirect(RouteNames.dashboard);
     } catch (error) {
       const err = error as Error;
       logger.error('Error validating access code', { error: err.message });
@@ -175,7 +172,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       };
       req.session.tempAccessCode = accessCode || '';
       
-      return res.redirect('/enter-access-code');
+      return res.redirect(RouteNames.enterAccessCode);
     }
   });
 }

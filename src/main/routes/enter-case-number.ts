@@ -105,33 +105,6 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
       return res.redirect('/oauth2/login');
     }
 
-    // Validate case exists in CCD backend
-    const ccdUrl = require('config').get('services.case.url');
-    logger.info(`User authenticated - validating case ${caseId} against CCD backend: ${ccdUrl}`);
-    try {
-      const systemUser = await getSystemUser();
-      const caseApi = getCaseApi(systemUser, logger);
-      const caseData = await caseApi.getCaseById(caseId);
-      logger.info(`Case ${caseId} found in CCD`);
-
-      // Store case data in session for later use
-      req.session.caseData = caseData;
-    } catch (error) {
-      logger.error(`Case ${caseId} not found in CCD:`, error);
-
-      // Case doesn't exist or user doesn't have access
-      req.session.caseNumberErrors = {
-        caseNumber: 'We cannot find that case number, Enter the case number that you received from the court',
-      };
-      req.session.tempCaseNumber = caseNumber || '';
-
-      req.session.save(err => {
-        if (err) {
-          logger.error('Session save error:', err);
-        }
-        res.redirect(RouteNames.enterCaseNumber);
-      });
-      return;
     // Validate case exists in CCD backend (or use mock for local development)
     let caseData: FinremCaseData;
     
@@ -151,7 +124,7 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
           if (err) {
             logger.error('Session save error:', err);
           }
-          res.redirect('/enter-case-number');
+          res.redirect(RouteNames.enterCaseNumber);
         });
         return;
       }
@@ -174,7 +147,7 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
           if (err) {
             logger.error('Session save error:', err);
           }
-          res.redirect('/enter-case-number');
+          res.redirect(RouteNames.enterCaseNumber);
         });
         return;
       }
