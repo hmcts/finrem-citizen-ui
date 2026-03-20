@@ -25,9 +25,8 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
-  // Set the browser path globally to ensure consistency
-  env.PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}/pw-browsers"
-  
+  env.PLAYWRIGHT_BROWSERS_PATH = "./pw-browsers"
+
   env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes && yarn test:a11y"
   
   loadVaultSecrets(secrets)
@@ -72,10 +71,8 @@ withPipeline(type, product, component) {
           fi
         '''
 
-    // Aggregate Junit XMLs
     junit testResults: 'functional-output/junit-*.xml', allowEmptyResults: true
     
-    // Consolidate Allure
     allure([
         includeProperties: false,
         jdk: '',
