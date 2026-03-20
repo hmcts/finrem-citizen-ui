@@ -406,7 +406,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/logout'];
+    const handler = app.__routes[RouteNames.logout];
     const req = makeReq();
     const res = makeRes();
     const next = jest.fn<void, [unknown?]>();
@@ -428,13 +428,13 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/logout'];
+    const handler = app.__routes[RouteNames.logout];
     const req = makeReq({
       headers: {
         'x-forwarded-proto': 'https',
         'x-forwarded-host': 'app.example.com',
       },
-      originalUrl: '/logout',
+      originalUrl: RouteNames.logout,
       session: {
         user: {
           idToken: 'id-token-123',
@@ -469,7 +469,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/logout'];
+    const handler = app.__routes[RouteNames.logout];
     const req = makeReq({
       session: {
         user: {},
