@@ -12,7 +12,7 @@ const allureDir = process.env.ALLURE_RESULTS_DIR || 'allure-results';
 const junitFileName = process.env.JUNIT_REPORT_NAME || 'junit.xml';
 
 const getBaseUrl = (): string => {
-  if (process.env.TEST_URL) {return process.env.TEST_URL;}
+  if (process.env.TEST_URL) return process.env.TEST_URL;
   const env = process.env.RUNNING_ENV || 'aat';
   if (env.startsWith('pr-') || env.includes('preview')) {
     return `https://finrem-citizen-ui-${env}.preview.platform.hmcts.net`;
