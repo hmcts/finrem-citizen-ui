@@ -25,6 +25,9 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
+  // Set the browser path globally to ensure consistency
+  env.PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}/pw-browsers"
+  
   env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes && yarn test:a11y"
   
   loadVaultSecrets(secrets)
@@ -34,7 +37,7 @@ withPipeline(type, product, component) {
   }
 
   before('tests') {
-    sh 'rm -rf smoke-output functional-output allure-results* test-results'
+    sh 'rm -rf smoke-output functional-output allure-results* test-results pw-browsers'
     sh 'yarn playwright install chromium --with-deps'
   }
 
@@ -43,11 +46,8 @@ withPipeline(type, product, component) {
     sh 'mkdir -p functional-output allure-results-functional allure-results-a11y'
     env.TEST_RESULTS_DIR = "functional-output"
     
-    /**
-     * Logic: Run functional tests (capturing exit code), then run a11y.
-     * We use FUNCTIONAL_TESTS_CMD as it is the standard override for the Infrastructure library.
-     */
     env.FUNCTIONAL_TESTS_CMD = """
+      export PLAYWRIGHT_BROWSERS_PATH=${env.PLAYWRIGHT_BROWSERS_PATH}
       yarn test:functional; func_exit=\$?;
       yarn test:playwright:a11y || true;
       exit \$func_exit
@@ -64,22 +64,18 @@ withPipeline(type, product, component) {
           # Move functional report if it exists
           if [ -d "functional-output/playwright-functional-test-report" ]; then
             mv -v functional-output/playwright-functional-test-report functional-output/functional-html-report
-          else
-            echo "Warning: functional-html-report not found"
           fi
 
           # Move a11y report if it exists
           if [ -d "functional-output/playwright-accessibility-test-report" ]; then
             mv -v functional-output/playwright-accessibility-test-report functional-output/a11y-html-report
-          else
-            echo "Warning: a11y-html-report not found"
           fi
         '''
 
-    // Aggregate Junit XMLs for the Jenkins Test Result Trend graph
+    // Aggregate Junit XMLs
     junit testResults: 'functional-output/junit-*.xml', allowEmptyResults: true
     
-    // Consolidate Allure into a single unified report view
+    // Consolidate Allure
     allure([
         includeProperties: false,
         jdk: '',
@@ -91,7 +87,6 @@ withPipeline(type, product, component) {
         ]
     ])
     
-    // Archive 
     archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
   }
 
