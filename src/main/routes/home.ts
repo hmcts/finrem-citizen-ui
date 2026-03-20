@@ -13,7 +13,7 @@ export default function (app: Application): void {
       res.redirect(RouteNames.enterCaseNumber);
   });
 
-  app.get('/case/:caseReference', async (req, res) => {
+  app.get(RouteNames.caseReference, async (req, res) => {
     const { caseReference } = req.params;
 
     const logger: LoggerInstance = console as unknown as LoggerInstance;
@@ -25,7 +25,7 @@ export default function (app: Application): void {
     res.json(caseData);
   });
 
-  app.get('/case/:caseReference/:userId/:caseRole', async (req, res) => {
+  app.get(RouteNames.caseUserRole, async (req, res) => {
     const assignments: CaseAssignedUserRole[] = [
       {
         case_id: req.params.caseReference,
