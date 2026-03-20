@@ -46,21 +46,21 @@ withPipeline(type, product, component) {
     env.PLAYWRIGHT_BROWSERS_PATH = "pw-browsers"
     
     // Install and Run Functional and Accessibility tests together to ensure they run in the same container instance
-    env.FUNCTIONAL_TESTS_CMD = """
+    env.FUNCTIONAL_TESTS_CMD = '''
       export PLAYWRIGHT_BROWSERS_PATH=$(pwd)/pw-browsers
       
       echo "--- Installing Browsers to Local Folder ---"
       yarn playwright install chromium chromium-headless-shell --with-deps
 
       echo "--- Running Functional Tests ---"
-      REPORT_NAME=functional JUNIT_REPORT_NAME=junit-functional.xml ALLURE_RESULTS_DIR=allure-results-functional yarn test:functional; func_exit=\$?;
+      REPORT_NAME=functional JUNIT_REPORT_NAME=junit-functional.xml ALLURE_RESULTS_DIR=allure-results-functional yarn test:functional; func_exit=$?;
       
       echo "--- Running Accessibility Tests ---"
       REPORT_NAME=accessibility JUNIT_REPORT_NAME=junit-a11y.xml ALLURE_RESULTS_DIR=allure-results-a11y yarn test:playwright:a11y || true;
       
-      exit \$func_exit
-    """
-  }
+      exit $func_exit
+    '''
+      }
 
   afterAlways('functionalTest') {
       echo "Processing Functional and Accessibility Reports..."
