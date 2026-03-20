@@ -7,6 +7,7 @@ export const RouteNames = {
   enterAccessCode: '/enter-access-code',
   info: '/info',
   login: '/login',
-  logout: '/logout'
+  logout: '/logout',
+  taskListUpload: '/task-list-upload-dashboard'
 } as const;
 

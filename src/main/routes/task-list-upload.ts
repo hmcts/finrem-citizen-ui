@@ -4,9 +4,10 @@ import path from 'path';
 import { Application } from 'express';
 
 import { oidcMiddleware } from '../middleware';
+import { RouteNames } from '../route-names';
 
 const taskListUpload = (app: Application): void => {
-  app.get('/task-list-upload-dashboard', oidcMiddleware, (req, res, next) => {
+  app.get(RouteNames.taskListUpload, oidcMiddleware, (req, res, next) => {
     try {
       const filePath = path.join(__dirname, '../models/tasklist.json');
       const data = fs.readFileSync(filePath, 'utf-8');

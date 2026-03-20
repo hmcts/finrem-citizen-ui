@@ -4,6 +4,6 @@ import { RouteNames } from '../route-names';
 
 export default function setupEnterAccessCodeRoute(app: Application): void {
   app.get(RouteNames.enterAccessCode, (req: Request, res: Response) => {
-    res.render(RouteNames.enterAccessCode);
+    res.render('enter-access-code');
   });
 }
