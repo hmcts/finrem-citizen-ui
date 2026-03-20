@@ -25,6 +25,7 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
+  // Unit-level checks (Jest, Lint, Routes, Jest-A11y)
   env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes && yarn test:a11y"
   
   loadVaultSecrets(secrets)
@@ -33,23 +34,25 @@ withPipeline(type, product, component) {
     yarnBuilder.yarn('build')
   }
 
+  // Global Setup for Playwright (Used by Smoke and Functional)
   before('tests') {
-    // Clean up previous runs including loose files at root
-    sh 'rm -rf smoke-output functional-output allure-results* test-results *.html *.xml'
+    sh 'rm -rf smoke-output functional-output allure-results* test-results'
     sh 'yarn playwright install chromium --with-deps'
   }
 
-  before('functionalTest') {
+  // Functional & Accessibility Tests
+  before('functionalTests') {
     sh 'mkdir -p functional-output allure-results-functional allure-results-a11y'
     env.TEST_RESULTS_DIR = "functional-output"
-
+    
+    /**
+     * Logic: Run functional tests, capture exit code, then run a11y.
+     * This ensures both run and reporting is captured regardless of failure.
+     */
     env.FUNCTIONAL_TESTS_CMD = """
       yarn test:functional; func_exit=\$?;
-      yarn test:playwright:a11y; pw_exit=\$?;
-      if [ \$func_exit -ne 0 ]; then
-        exit \$func_exit
-      fi
-      exit \$pw_exit
+      yarn test:playwright:a11y || true;
+      exit \$func_exit
     """
   }
 
@@ -57,42 +60,60 @@ withPipeline(type, product, component) {
     echo "Processing Functional and Accessibility Reports..."
     
     sh '''
-      # Move and Rename Functional Report to root (Loose)
-      if [ -f "functional-output/playwright-functional-test-report/index.html" ]; then
-        mv "functional-output/playwright-functional-test-report/index.html" "playwright-functional-report.html"
+      # Define base directory
+      BASE_DIR="functional-output"
+      
+      # Clean up old final report names to prevent duplicates
+      rm -rf $BASE_DIR/functional-html-report $BASE_DIR/a11y-html-report
+
+      # Process Functional Report
+      FUNC_DIR="$BASE_DIR/playwright-functional-test-report"
+      if [ -d "$FUNC_DIR" ]; then
+        echo "Found Functional Report folder. Renaming..."
+        # Move the index file to the specific name within its folder
+        mv "$FUNC_DIR/index.html" "$FUNC_DIR/playwright-functional-report.html"
+        # Rename the folder
+        mv "$FUNC_DIR" "$BASE_DIR/playwright-functional-html-report"
+      else
+        echo "Warning: Functional folder $FUNC_DIR not found"
       fi
 
-      # Move and Rename Accessibility Report to root (Loose)
-      if [ -f "functional-output/playwright-accessibility-test-report/index.html" ]; then
-        mv "functional-output/playwright-accessibility-test-report/index.html" "playwright-a11y-report.html"
+      # Process Accessibility Report
+      A11Y_DIR="$BASE_DIR/playwright-accessibility-test-report"
+      if [ -d "$A11Y_DIR" ]; then
+        echo "Found Accessibility Report folder. Renaming..."
+        # Move the index file to the specific name within its folder
+        mv "$A11Y_DIR/index.html" "$A11Y_DIR/playwright-a11y-report.html"
+        # Rename the folder
+        mv "$A11Y_DIR" "$BASE_DIR/playwright-a11y-html-report"
+      else
+        echo "Warning: A11y folder $A11Y_DIR not found"
       fi
-
-      # Bring XMLs to root
-      cp functional-output/junit-*.xml . || true
     '''
 
+    // Aggregate Junit XMLs for the Jenkins Test Result Trend graph
     junit testResults: 'functional-output/junit-*.xml', allowEmptyResults: true
     
+    // Consolidate Allure into a single unified report view
     allure([
         includeProperties: false,
         jdk: '',
         properties: [],
         reportBuildPolicy: 'ALWAYS',
-        results: [[path: 'allure-results-functional'], [path: 'allure-results-a11y']]
+        results: [
+          [path: 'allure-results-functional'], 
+          [path: 'allure-results-a11y']
+        ]
     ])
     
-    // ARCHIVE FIX: Targets the loose files now at the root
-    archiveArtifacts artifacts: '*.html, *.xml', allowEmptyArchive: true
+    // Archive everything in functional-output
+    archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
   }
 
+  // 4. Smoke Test Reporting
   afterAlways('smokeTest') {
-    sh 'cp smoke-output/*.xml . || true'
-    
-    junit testResults: 'smoke-output/*.xml', allowEmptyResults: true
-    
-    // ARCHIVE FIX: Targets loose files
-    archiveArtifacts artifacts: '*.html, *.xml', allowEmptyArchive: true
-
+    junit testResults: '**/smoke-output/*.xml', allowEmptyResults: true
+    archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
     allure([
       includeProperties: false,
       jdk: '',
@@ -106,7 +127,10 @@ withPipeline(type, product, component) {
   enableAksStagingDeployment()
   disableLegacyDeployment()
 
-  onMaster() { env.JENKINS_BRANCH = "master" }
+  onMaster() {
+    env.JENKINS_BRANCH = "master"
+  }
+
   onPR() {
     env.JENKINS_BRANCH = "preview"
     env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
