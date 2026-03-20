@@ -25,7 +25,7 @@
     "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:a11y",
     "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:a11y && yarn test:playwright:a11y",
-    "prepare": "husky"
+    "prepare": "husky install"
   },
   "dependencies": {
     "@hmcts/info-provider": "1.4.0",
