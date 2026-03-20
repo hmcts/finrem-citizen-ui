@@ -39,22 +39,22 @@ withPipeline(type, product, component) {
   }
 
   // --- FUNCTIONAL & ACCESSIBILITY TESTS ---
-  before('functionalTests') {
+  before('functionalTest') {
     sh 'mkdir -p functional-output allure-results-functional allure-results-a11y'
     env.TEST_RESULTS_DIR = "functional-output"
     
     /**
      * Logic: Run functional tests (capturing exit code), then run a11y.
-     * Environment variables are handled inside package.json scripts.
+     * We use FUNCTIONAL_TESTS_CMD as it is the standard override for the Infrastructure library.
      */
-    env.FUNCTIONAL_TESTS_COMMAND = """
+    env.FUNCTIONAL_TESTS_CMD = """
       yarn test:functional; func_exit=\$?;
       yarn test:playwright:a11y || true;
       exit \$func_exit
     """
   }
 
-  afterAlways('functionalTests') {
+  afterAlways('functionalTest') {
     echo "Processing Functional and Accessibility Reports..."
     
     sh '''
@@ -93,7 +93,7 @@ withPipeline(type, product, component) {
     
     // Archive 
     archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
-}
+  }
 
   afterAlways('smokeTest') {
     junit testResults: '**/smoke-output/*.xml', allowEmptyResults: true
