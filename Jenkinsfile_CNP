@@ -39,17 +39,11 @@ withPipeline(type, product, component) {
 
   // --- FUNCTIONAL & ACCESSIBILITY TESTS ---
   before('functionalTest') {
-    // create the directories
     sh 'mkdir -p functional-output allure-results-functional allure-results-a11y'
+    env.TEST_RESULTS_DIR = "functional-output"
     
-    // simple relative path for the browsers
-    env.PLAYWRIGHT_BROWSERS_PATH = "pw-browsers"
-    
-    // Install and Run Functional and Accessibility tests together to ensure they run in the same container instance
     env.FUNCTIONAL_TESTS_CMD = """
-      export PLAYWRIGHT_BROWSERS_PATH=$(pwd)/pw-browsers
-      
-      echo "--- Installing Browsers to Local Folder ---"
+      echo "--- Installing Playwright Browsers in Container ---"
       yarn playwright install chromium chromium-headless-shell --with-deps
 
       echo "--- Running Functional Tests ---"
