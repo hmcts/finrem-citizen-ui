@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+import { RouteNames } from '../../main/route-names';
+
 const testUrl = process.env.TEST_URL || 'http://localhost:3100';
 
 const axiosConfig = {
@@ -21,7 +23,7 @@ describe('Smoke Test - Page Availability', () => {
   });
 
   test('Enter Access Code page loads', async () => {
-    const response = await axios.get(`${testUrl}/enter-access-code`, axiosConfig);
+    const response = await axios.get(`${testUrl}${RouteNames.enterAccessCode}`, axiosConfig);
     expect([200, 302]).toContain(response.status);
   });
 });

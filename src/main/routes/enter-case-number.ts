@@ -141,7 +141,7 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
         logger.error('Session save error:', err);
       }
       // Redirect to next step in the journey
-      res.redirect('/enter-access-code');
+      res.redirect(RouteNames.enterAccessCode);
     });
   });
 }
