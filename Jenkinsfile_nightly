@@ -42,26 +42,33 @@ withNightlyPipeline(type, product, component) {
 
   // --- FULL FUNCTIONAL TESTS ---
   before('fullFunctionalTest') {
-    sh 'yarn playwright install chromium --with-deps'
     sh 'rm -rf functional-output allure-results allure-results-a11y-nightly'
     sh 'mkdir -p functional-output allure-results allure-results-a11y-nightly'
     
     env.TEST_RESULTS_DIR = "functional-output"
     env.REPORT_NAME = "full-functional"
-    env.FULL_FUNCTIONAL_TESTS_COMMAND = "yarn test:full-functional"
+    env.FULL_FUNCTIONAL_TESTS_COMMAND = """
+      echo "--- Installing Playwright Browsers in Nightly Container ---"
+      yarn playwright install chromium chromium-headless-shell --with-deps
+      
+      echo "--- Running Full Functional Tests ---"
+      yarn test:full-functional
+    """
   }
 
   enableFullFunctionalTest(200)
 
   // --- ACCESSIBILITY TESTS ---
   afterAlways('fullFunctionalTest') {
-    // Run A11y tests
-    sh "REPORT_NAME=accessibility-nightly TEST_RESULTS_DIR=functional-output ALLURE_RESULTS_DIR=allure-results-a11y-nightly yarn test:playwright:a11y || true"
+    sh """
+      yarn playwright install chromium chromium-headless-shell --with-deps
+      REPORT_NAME=accessibility-nightly TEST_RESULTS_DIR=functional-output ALLURE_RESULTS_DIR=allure-results-a11y-nightly yarn test:playwright:a11y || true
+    """
 
     sh '''
       echo "Processing Nightly report folders..."
       
-      # Clean up old final report names to prevent folder-inside-folder errors
+      # Clean up old final report names
       rm -rf functional-output/full-functional-html-report functional-output/a11y-nightly-html-report
 
       # Move and rename Full Functional report folder

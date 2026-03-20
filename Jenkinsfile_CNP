@@ -35,7 +35,6 @@ withPipeline(type, product, component) {
 
   before('tests') {
     sh 'rm -rf smoke-output functional-output allure-results* test-results'
-    sh 'yarn playwright install chromium --with-deps && yarn playwright install chromium-headless-shell --with-deps'
   }
 
   // --- FUNCTIONAL & ACCESSIBILITY TESTS ---
@@ -43,13 +42,16 @@ withPipeline(type, product, component) {
     sh 'mkdir -p functional-output allure-results-functional allure-results-a11y'
     env.TEST_RESULTS_DIR = "functional-output"
     
-    /**
-     * Logic: Run functional tests (capturing exit code), then run a11y.
-     * We use FUNCTIONAL_TESTS_CMD as it is the standard override for the Infrastructure library.
-     */
     env.FUNCTIONAL_TESTS_CMD = """
-      yarn test:functional; func_exit=\$?;
-      yarn test:playwright:a11y || true;
+      echo "--- Installing Playwright Browsers in Container ---"
+      yarn playwright install chromium chromium-headless-shell --with-deps
+
+      echo "--- Running Functional Tests ---"
+      REPORT_NAME=functional JUNIT_REPORT_NAME=junit-functional.xml ALLURE_RESULTS_DIR=allure-results-functional yarn test:functional; func_exit=\$?;
+      
+      echo "--- Running Accessibility Tests ---"
+      REPORT_NAME=accessibility JUNIT_REPORT_NAME=junit-a11y.xml ALLURE_RESULTS_DIR=allure-results-a11y yarn test:playwright:a11y || true;
+      
       exit \$func_exit
     """
   }
