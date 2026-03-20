@@ -26,6 +26,7 @@ module.exports = {
     '!src/main/routes/home.ts',
     '!src/main/routes/enter-case-number.ts',
     '!src/main/routes/enter-access-code.ts',
+    '!src/main/app/case/mock-case-data.ts',
     '!src/main/HttpError.ts',
     '!src/main/middleware/index.ts',
     '!src/main/modules/appinsights/**',
