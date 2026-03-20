@@ -56,12 +56,12 @@ withPipeline(type, product, component) {
       
       # Handle Functional Report (standard index.html to uniquely named html file)
       if [ -d functional-output/playwright-functional-test-report ]; then
-        cp functional-output/playwright-functional-test-report/index.html functional-output/playwright-functional-test-report.html || true
+        cp functional-output/playwright-functional-test-report/index.html functional-output/playwright-functional-test-report.html
       fi
       
       # Handle Accessibility Report
       if [ -d functional-output/playwright-accessibility-test-report ]; then
-        cp functional-output/playwright-accessibility-test-report/index.html functional-output/playwright-accessibility-test-report.html || true
+        cp functional-output/playwright-accessibility-test-report/index.html functional-output/playwright-accessibility-test-report.html
       fi
     '''
 
