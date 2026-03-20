@@ -5,6 +5,8 @@ export const RouteNames = {
   enterCaseNumber: '/enter-case-number',
   dashboard: '/dashboard',
   enterAccessCode: '/enter-access-code',
-  info: '/info'
+  info: '/info',
+  login: '/login',
+  logout: '/logout'
 } as const;
 

@@ -2,7 +2,7 @@ import type { NextFunction, Request, RequestHandler, Response } from 'express';
 
 import { RouteNames } from '../route-names';
 
-const PUBLIC_PATHS = ['/login', '/oauth2/callback', RouteNames.info, '/favicon.ico'];
+const PUBLIC_PATHS = [RouteNames.login, '/oauth2/callback', RouteNames.info, '/favicon.ico'];
 const PUBLIC_PREFIXES = ['/health'];
 
 export const oidcMiddleware: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
@@ -21,9 +21,9 @@ export const oidcMiddleware: RequestHandler = (req: Request, res: Response, next
   if (req.session) {
     req.session.returnTo = req.originalUrl;
     req.session.save(() => {
-      res.redirect('/login');
+      res.redirect(RouteNames.login);
     });
   } else {
-    res.redirect('/login');
+    res.redirect(RouteNames.login);
   }
 };

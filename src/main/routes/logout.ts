@@ -8,7 +8,7 @@ const { Logger } = require('@hmcts/nodejs-logging');
 const logger = Logger.getLogger('logout');
 
 export default function setupLogoutRoute(app: Application): void {
-  app.get('/logout', (req: Request, res: Response) => {
+  app.get(RouteNames.logout, (req: Request, res: Response) => {
     req.session.destroy((err) => {
       if (err) {
         logger.error('Error destroying session:', err);

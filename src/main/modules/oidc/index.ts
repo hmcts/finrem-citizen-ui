@@ -101,7 +101,7 @@ export class OIDCModule {
       }
     });
 
-    app.get('/logout', async (req: Request, res: Response): Promise<void> => {
+    app.get(RouteNames.logout, async (req: Request, res: Response): Promise<void> => {
       const oidcClient = await getOidcClient();
 
       if (!this.clientConfig) {
@@ -122,7 +122,7 @@ export class OIDCModule {
       });
     });
 
-    app.get('/login', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    app.get(RouteNames.login, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
         const oidcClient = await getOidcClient();
         this.logger.info(

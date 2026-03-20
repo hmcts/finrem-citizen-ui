@@ -344,8 +344,8 @@ describe('OIDCModule', () => {
 
     expect(app.set).toHaveBeenCalledWith('trust proxy', true);
     expect(app.use).toHaveBeenCalledTimes(1);
-    expect(app.get).toHaveBeenCalledWith('/logout', expect.any(Function));
-    expect(app.get).toHaveBeenCalledWith('/login', expect.any(Function));
+    expect(app.get).toHaveBeenCalledWith(RouteNames.logout, expect.any(Function));
+    expect(app.get).toHaveBeenCalledWith(RouteNames.login, expect.any(Function));
     expect(app.get).toHaveBeenCalledWith('/oauth2/callback', expect.any(Function));
   });
 
@@ -506,7 +506,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/login'];
+    const handler = app.__routes[RouteNames.login];
     const req = makeReq({
       headers: {
         'x-forwarded-proto': 'https',
@@ -557,7 +557,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/login'];
+    const handler = app.__routes[RouteNames.login];
     const req = makeReq();
     const res = makeRes();
     const next = jest.fn<void, [unknown?]>();
@@ -597,7 +597,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/login'];
+    const handler = app.__routes[RouteNames.login];
     const req = makeReq();
     const res = makeRes();
     const next = jest.fn<void, [unknown?]>();
