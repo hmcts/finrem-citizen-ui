@@ -48,17 +48,16 @@ withNightlyPipeline(type, product, component) {
 
   before('fullFunctionalTest') {
     echo "Preparing environment for tests..."
-    env.FULL_FUNCTIONAL_TESTS_COMMAND = "test:full-functional:report"
     sh 'rm -rf functional-output a11y-output allure-results'
     sh 'npx playwright install --with-deps'
-  }
+    env.FULL_FUNCTIONAL_TESTS_COMMAND = "test:full-functional:report"  }
 
   enableFullFunctionalTest(200)
 
   afterSuccess('fullFunctionalTest') {
     echo "Running Accessibility Tests..."
-    sh "yarn test:a11y:report"
     sh 'npx playwright install --with-deps'
+    sh "yarn test:a11y:report"
 
   }
 
