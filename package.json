@@ -128,7 +128,7 @@
     "ts-loader": "9.5.4",
     "webpack": "5.105.4",
     "webpack-cli": "7.0.2",
-    "webpack-dev-middleware": "7.4.5",
+    "webpack-dev-middleware": "8.0.0",
     "webpack-node-externals": "3.0.0"
   },
   "lint-staged": {
