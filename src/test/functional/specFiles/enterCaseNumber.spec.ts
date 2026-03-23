@@ -4,6 +4,7 @@ const dataFactory = {
   generateDigits: (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join(''),
   validFormatted: (base: string) => {
     // Formats a 16-digit string into XXXX-XXXX-XXXX-XXXX
+    // comment
     return `${base.slice(0, 4)}-${base.slice(4, 8)}-${base.slice(8, 12)}-${base.slice(12, 16)}`;
   },
 };
