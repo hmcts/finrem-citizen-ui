@@ -65,12 +65,5 @@ withNightlyPipeline(type, product, component) {
       results: [[path: 'allure-results']]
     ])
 }
-
-  // 4. Ensure A11y also runs nightly
-  afterSuccess('fullFunctionalTest') {
-    yarnBuilder.yarn('playwright install chromium')
-    yarnBuilder.yarn('test:a11y')
-  }
-
   enableSlackNotifications('#finrem-dev')
 }

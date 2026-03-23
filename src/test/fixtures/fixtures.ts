@@ -1,19 +1,16 @@
 import { test as base } from '@playwright/test';
+import { AxeUtils } from '@hmcts/playwright-common';
 
 import { BasePage } from '../functional/pom/basePage.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
 
-/** * Define the shape of the authentication session object.
- */
 export type AuthSession = {
   user: UserCredentials;
   authStatus: 'success' | 'failure';
 };
 
-/** * Extend the base MyFixtures type to include Page Objects and Services.
- */
 type MyFixtures = {
   idamApiService: IdamApiService;
   citizenUser: UserCredentials;
@@ -21,9 +18,15 @@ type MyFixtures = {
   basePage: BasePage;
   loggedInPage: AuthSession;
   enterCaseNumberPage: EnterCaseNumberPage;
+  axeUtils: AxeUtils; 
 };
 
 export const test = base.extend<MyFixtures>({
+  axeUtils: async ({ page }, use) => {
+    const axeUtils = new AxeUtils(page);
+    await use(axeUtils);
+  },
+
   idamApiService: async ({}, use) => {
     await use(new IdamApiService());
   },
@@ -36,22 +39,16 @@ export const test = base.extend<MyFixtures>({
     await use(new BasePage(page));
   },
 
-  /** DATA FIXTURE: Creates a new citizen user in IDAM.
-   * Test-scoped, a unique user is created for every test that requests 'loggedInPage'.
-   */
   citizenUser: async ({ idamApiService }, use) => {
     const user = await idamApiService.createCitizenUser();
     await use(user);
   },
 
-  /** LOGIN FIXTURE: Performs the login flow.
-   */
-  // TO DO: Add a post-login assertion inside the fixture to confirm successful login.
   loggedInPage: async ({ idamPage, citizenUser, basePage }, use) => {
-    // Navigate and log in
     await basePage.goto();
     await idamPage.login(citizenUser);
-
+    // TO DO Add post-login assertion here
+    // await expect(page).toHaveURL(/.*dashboard/); 
     await use({ user: citizenUser, authStatus: 'success' });
   },
 
