@@ -2,7 +2,6 @@ import { Application, Request, Response } from 'express';
 
 import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
-import { getMockCaseData, isMockEnabled } from '../app/case/mock-case-data';
 import { oidcMiddleware } from '../middleware';
 import { RouteNames } from '../route-names';
 
@@ -97,19 +96,14 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
     const trimmedAccessCode = accessCode.trim().toUpperCase();
 
     try {
-      // Get case data from CCD (or use mock for local development)
+      // Get case data from CCD backend
       const caseNumber = req.session.caseNumber!;
-      let caseData;
+      // Remove hyphens to get the actual case ID for CCD
+      const caseId = caseNumber.replace(/-/g, '');
       
-      if (isMockEnabled()) {
-        // Use mock data for local development
-        logger.info('MOCK_CCD enabled - using mock data for access code validation');
-        caseData = getMockCaseData(caseNumber);
-      } else {
-        const systemUser = await getSystemUser();
-        const caseApi = getCaseApi(systemUser, logger);
-        caseData = await caseApi.getCaseById(caseNumber);
-      }
+      const systemUser = await getSystemUser();
+      const caseApi = getCaseApi(systemUser, logger);
+      const caseData = await caseApi.getCaseById(caseId);
 
       // Validate access code against CCD
       const allAccessCodes = [

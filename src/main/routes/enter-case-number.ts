@@ -5,7 +5,6 @@ import 'express-session';
 import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
 import { FinremCaseData } from '../app/case/definition';
-import { getMockCaseData, isMockEnabled } from '../app/case/mock-case-data';
 import { oidcMiddleware } from '../middleware';
 import { RouteNames } from '../route-names';
 
@@ -105,52 +104,29 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
       return res.redirect('/oauth2/login');
     }
 
-    // Validate case exists in CCD backend (or use mock for local development)
+    // Validate case exists in CCD backend
     let caseData: FinremCaseData;
     
-    if (isMockEnabled()) {
-      // Use mock data for local development
-      logger.info(`MOCK_CCD enabled - using mock data for case ${caseId}`);
-      try {
-        caseData = getMockCaseData(caseId);
-        logger.info(`Mock case ${caseId} found`);
-      } catch (error) {
-        logger.error(`Mock case ${caseId} not found:`, error);
-        req.session.caseNumberErrors = {
-          caseNumber: 'We cannot find that case number, Enter the case number that you received from the court',
-        };
-        req.session.tempCaseNumber = caseNumber || '';
-        req.session.save(err => {
-          if (err) {
-            logger.error('Session save error:', err);
-          }
-          res.redirect(RouteNames.enterCaseNumber);
-        });
-        return;
-      }
-    } else {
-      // Use real CCD backend
-      const ccdUrl = require('config').get('services.case.url');
-      logger.info(`User authenticated - validating case ${caseId} against CCD backend: ${ccdUrl}`);
-      try {
-        const systemUser = await getSystemUser();
-        const caseApi = getCaseApi(systemUser, logger);
-        caseData = await caseApi.getCaseById(caseId);
-        logger.info(`Case ${caseId} found in CCD`);
-      } catch (error) {
-        logger.error(`Case ${caseId} not found in CCD:`, error);
-        req.session.caseNumberErrors = {
-          caseNumber: 'We cannot find that case number, Enter the case number that you received from the court',
-        };
-        req.session.tempCaseNumber = caseNumber || '';
-        req.session.save(err => {
-          if (err) {
-            logger.error('Session save error:', err);
-          }
-          res.redirect(RouteNames.enterCaseNumber);
-        });
-        return;
-      }
+    const ccdUrl = require('config').get('services.case.url');
+    logger.info(`User authenticated - validating case ${caseId} against CCD backend: ${ccdUrl}`);
+    try {
+      const systemUser = await getSystemUser();
+      const caseApi = getCaseApi(systemUser, logger);
+      caseData = await caseApi.getCaseById(caseId);
+      logger.info(`Case ${caseId} found in CCD`);
+    } catch (error) {
+      logger.error(`Case ${caseId} not found in CCD:`, error);
+      req.session.caseNumberErrors = {
+        caseNumber: 'We cannot find that case number, Enter the case number that you received from the court',
+      };
+      req.session.tempCaseNumber = caseNumber || '';
+      req.session.save(err => {
+        if (err) {
+          logger.error('Session save error:', err);
+        }
+        res.redirect(RouteNames.enterCaseNumber);
+      });
+      return;
     }
 
     // Store case data in session for later use
