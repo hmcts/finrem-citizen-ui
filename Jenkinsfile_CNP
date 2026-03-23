@@ -40,7 +40,8 @@ withPipeline(type, product, component) {
 
   // Setup for Functional Tests
   before('functionalTests') {
-    env.FUNCTIONAL_TESTS_COMMAND = "npx playwright install chromium --with-deps && yarn test:functional:report"
+    sh 'npx playwright install chromium --with-deps'
+    env.FUNCTIONAL_TESTS_COMMAND = "yarn test:functional:report"
   }
 
   // Run Playwright A11y tests only if functional tests passed
