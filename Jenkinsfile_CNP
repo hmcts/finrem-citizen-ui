@@ -40,13 +40,13 @@ withPipeline(type, product, component) {
 
   before('functionalTests') {
     echo "Preparing Functional Tests (with @PR tags)..."
-    sh 'npx playwright install --with-deps'
+    sh 'npx playwright install chromium --with-deps'
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional:report"
   }
 
   afterSuccess('functionalTests') {
     echo "Running Accessibility Tests..."
-    sh 'npx playwright install --with-deps'
+    sh 'npx playwright install chromium --with-deps'
     sh 'yarn test:a11y:report'
   }
 
