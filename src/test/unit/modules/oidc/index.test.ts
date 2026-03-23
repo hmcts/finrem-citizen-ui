@@ -4,6 +4,7 @@ import * as oidcClient from 'openid-client';
 
 import { OIDCAuthenticationError, OIDCCallbackError } from '../../../../main/modules/oidc/errors';
 import { OIDCModule } from '../../../../main/modules/oidc/index';
+import { RouteNames } from '../../../../main/route-names';
 
 const mockLogger = {
   info: jest.fn<void, [string]>(),
@@ -84,7 +85,7 @@ describe('OIDCModule', () => {
   const baseOidcConfig = {
     issuer: 'https://idam-web-public.perftest.platform.hmcts.net',
     clientId: 'finrem-citizen',
-    callbackUrl: '/oauth2/callback',
+    callbackUrl: RouteNames.callbackUrl,
     scope: 'openid profile roles',
   };
 
@@ -343,9 +344,9 @@ describe('OIDCModule', () => {
 
     expect(app.set).toHaveBeenCalledWith('trust proxy', true);
     expect(app.use).toHaveBeenCalledTimes(1);
-    expect(app.get).toHaveBeenCalledWith('/logout', expect.any(Function));
-    expect(app.get).toHaveBeenCalledWith('/login', expect.any(Function));
-    expect(app.get).toHaveBeenCalledWith('/oauth2/callback', expect.any(Function));
+    expect(app.get).toHaveBeenCalledWith(RouteNames.logout, expect.any(Function));
+    expect(app.get).toHaveBeenCalledWith(RouteNames.login, expect.any(Function));
+    expect(app.get).toHaveBeenCalledWith(RouteNames.callbackUrl, expect.any(Function));
   });
 
   it('setup middleware calls setupClient when client config is missing', async () => {
@@ -405,7 +406,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/logout'];
+    const handler = app.__routes[RouteNames.logout];
     const req = makeReq();
     const res = makeRes();
     const next = jest.fn<void, [unknown?]>();
@@ -413,7 +414,7 @@ describe('OIDCModule', () => {
     await handler(req, res, next);
 
     const redirectMock = (res as unknown as ResponseLike).redirect;
-    expect(redirectMock).toHaveBeenCalledWith('/');
+    expect(redirectMock).toHaveBeenCalledWith(RouteNames.basePath);
   });
 
   it('logout builds end-session URL and redirects to issuer logout', async () => {
@@ -427,13 +428,13 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/logout'];
+    const handler = app.__routes[RouteNames.logout];
     const req = makeReq({
       headers: {
         'x-forwarded-proto': 'https',
         'x-forwarded-host': 'app.example.com',
       },
-      originalUrl: '/logout',
+      originalUrl: RouteNames.logout,
       session: {
         user: {
           idToken: 'id-token-123',
@@ -468,7 +469,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/logout'];
+    const handler = app.__routes[RouteNames.logout];
     const req = makeReq({
       session: {
         user: {},
@@ -505,7 +506,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/login'];
+    const handler = app.__routes[RouteNames.login];
     const req = makeReq({
       headers: {
         'x-forwarded-proto': 'https',
@@ -556,7 +557,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/login'];
+    const handler = app.__routes[RouteNames.login];
     const req = makeReq();
     const res = makeRes();
     const next = jest.fn<void, [unknown?]>();
@@ -596,7 +597,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/login'];
+    const handler = app.__routes[RouteNames.login];
     const req = makeReq();
     const res = makeRes();
     const next = jest.fn<void, [unknown?]>();
@@ -636,7 +637,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/oauth2/callback'];
+    const handler = app.__routes[RouteNames.callbackUrl];
     const req = makeReq({
       headers: {
         'x-forwarded-proto': 'https',
@@ -646,7 +647,7 @@ describe('OIDCModule', () => {
       session: {
         codeVerifier: 'verifier-123',
         nonce: 'nonce-123',
-        returnTo: '/dashboard',
+        returnTo: RouteNames.dashboard,
         destroy: (callback: (err?: unknown) => void): void => callback(),
         save: (callback: () => void): void => callback(),
       },
@@ -681,7 +682,7 @@ describe('OIDCModule', () => {
     expect(requestAfter.session.returnTo).toBeUndefined();
 
     const redirectMock = (res as unknown as ResponseLike).redirect;
-    expect(redirectMock).toHaveBeenCalledWith('/dashboard');
+    expect(redirectMock).toHaveBeenCalledWith(RouteNames.dashboard);
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -706,7 +707,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/oauth2/callback'];
+    const handler = app.__routes[RouteNames.callbackUrl];
     const req = makeReq({
       originalUrl: '/oauth2/callback?code=abc',
       session: {
@@ -722,7 +723,7 @@ describe('OIDCModule', () => {
     await handler(req, res, next);
 
     const redirectMock = (res as unknown as ResponseLike).redirect;
-    expect(redirectMock).toHaveBeenCalledWith('/');
+    expect(redirectMock).toHaveBeenCalledWith(RouteNames.basePath);
   });
 
   it('callback passes through OIDCCallbackError when no ID token is returned', async () => {
@@ -742,7 +743,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/oauth2/callback'];
+    const handler = app.__routes[RouteNames.callbackUrl];
     const req = makeReq({
       session: {
         codeVerifier: 'verifier',
@@ -777,7 +778,7 @@ describe('OIDCModule', () => {
 
     module.enableFor(app as unknown as Express);
 
-    const handler = app.__routes['/oauth2/callback'];
+    const handler = app.__routes[RouteNames.callbackUrl];
     const req = makeReq({
       session: {
         codeVerifier: 'verifier',

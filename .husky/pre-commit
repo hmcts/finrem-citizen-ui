@@ -1,1 +1,3 @@
-yarn lint-staged
+yarn build || exit 1
+yarn test || exit 1
+yarn lint --fix || exit 1
