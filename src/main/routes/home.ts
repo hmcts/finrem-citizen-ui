@@ -10,7 +10,7 @@ import { RouteNames } from '../route-names';
 
 export default function (app: Application): void {
   app.get(RouteNames.basePath, oidcMiddleware, (req, res) => {
-      res.redirect(RouteNames.enterCaseNumber);
+    res.redirect(RouteNames.enterCaseNumber);
   });
 
   app.get(RouteNames.caseReference, async (req, res) => {
