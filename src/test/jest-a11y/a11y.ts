@@ -6,6 +6,10 @@ import supertest from 'supertest';
 
 const pa11y = require('pa11y');
 
+jest.mock('otplib', () => ({
+  generate: jest.fn(() => '123456'),
+}));
+
 jest.mock('../../main/modules/oidc', () => ({
   OIDCModule: class {
     enableFor(): void {
