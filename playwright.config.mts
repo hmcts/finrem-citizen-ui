@@ -51,12 +51,12 @@ export default defineConfig({
     [
       'html',
       {
-        outputFolder:
+        outputFile:
           resultsDir === 'functional-output'
             ? `${resultsDir}/playwright-functional-test-report.html`
             : resultsDir === 'a11y-output'
             ? `${resultsDir}/playwright-accessibility-test-report.html`
-            : `${resultsDir}/test-report`,
+            : `${resultsDir}/test-report.html`,
         open: 'never',
       },
     ],

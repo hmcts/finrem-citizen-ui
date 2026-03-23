@@ -34,12 +34,12 @@ withPipeline(type, product, component) {
   }
 
   before('tests') {
-    sh 'rm -rf smoke-output functional-output a11y-output allure-results allure-results-smoke'
+    sh 'rm -rf smoke-output functional-output a11y-output allure-results *-result.json test-results.xml'
     sh 'npx playwright install chromium --with-deps'
   }
 
   before('functionalTests') {
-    echo "Running Functional Tests (with @PR tags)..."
+    echo "Preparing Functional Tests (with @PR tags)..."
     sh 'npx playwright install --with-deps'
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional:report"
   }
@@ -52,16 +52,12 @@ withPipeline(type, product, component) {
 
   afterAlways('smokeTest') {
     junit testResults: 'smoke-output/smoke--test-results.xml', allowEmptyResults: true
-    archiveArtifacts artifacts: 'smoke-output/jest-test-report.html,smoke-output/**', allowEmptyArchive: true
+    archiveArtifacts artifacts: 'smoke-output/jest-smoke-test-report.html,smoke-output/**', allowEmptyArchive: true
   }
 
   afterAlways('functionalTests') {
-    junit testResults: 'functional-output/test-results.xml', allowEmptyResults: true
-    archiveArtifacts artifacts: 'functional-output/playwright-functional-test-report.html,functional-output/**', allowEmptyArchive: true
-    
-    junit testResults: 'a11y-output/test-results.xml', allowEmptyResults: true
-    archiveArtifacts artifacts: 'a11y-output/playwright-accessibility-test-report.html,a11y-output/**', allowEmptyArchive: true
-
+    junit testResults: 'test-results.xml', allowEmptyResults: true
+    archiveArtifacts artifacts: 'functional-output/playwright-functional-test-report.html, a11y-output/playwright-accessibility-test-report.html, test-results.xml, functional-output/*-result.json, a11y-output/*-result.json, pods-logs-functional/**', allowEmptyArchive: true
 
     allure([
       includeProperties: false,
@@ -69,8 +65,7 @@ withPipeline(type, product, component) {
       properties: [],
       reportBuildPolicy: 'ALWAYS',
       results: [
-        [path: 'functional-output/allure-results'],
-        [path: 'a11y-output/allure-results']
+        [path: '.']
       ]
     ])
   }

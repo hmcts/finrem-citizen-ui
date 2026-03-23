@@ -66,10 +66,12 @@ withNightlyPipeline(type, product, component) {
     junit testResults: 'a11y-output/test-results.xml', allowEmptyResults: true
     
     archiveArtifacts artifacts: '''
-        functional-output/playwright-functional-test-report.html,
-        functional-output/**,
-        a11y-output/playwright-accessibility-test-report.html,
-        a11y-output/**
+      functional-output/playwright-functional-test-report.html,
+      functional-output/*-result.json,
+      functional-output/**,
+      a11y-output/playwright-accessibility-test-report.html,
+      a11y-output/*-result.json,
+      a11y-output/**
     '''.replaceAll('\\s+', ''), allowEmptyArchive: true
     
     allure([
