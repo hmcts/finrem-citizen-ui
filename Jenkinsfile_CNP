@@ -33,6 +33,8 @@ withPipeline(type, product, component) {
 
   before('tests') {
     sh 'rm -rf smoke-output functional-output a11y-output allure-results allure-results-smoke'
+    sh 'npx playwright install chromium --with-deps'
+
   }
 
   before('functionalTests') {
