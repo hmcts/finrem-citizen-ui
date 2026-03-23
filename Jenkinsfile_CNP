@@ -52,13 +52,18 @@ withPipeline(type, product, component) {
 
   afterAlways('smokeTest') {
     junit testResults: 'smoke-output/*.xml', allowEmptyResults: true
-    archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
+    
+    archiveArtifacts artifacts: 'smoke-output/**, pods-logs-smoke/**', allowEmptyArchive: true
+    
+    fingerprint 'pods-logs-smoke/**/*.log, jest-smoke-test-report.html'
   }
 
   afterAlways('functionalTests') {
     junit testResults: 'functional-output/*.xml, a11y-output/*.xml', allowEmptyResults: true
     
-    archiveArtifacts artifacts: 'functional-output/**, a11y-output/**', allowEmptyArchive: true
+    archiveArtifacts artifacts: 'functional-output/**, a11y-output/**, pods-logs-functional/**', allowEmptyArchive: true
+
+    fingerprint 'pods-logs-functional/**/*.log, functional-output/playwright-functional-test-report.html, a11y-output/playwright-accessibility-test-report.html'
 
     allure([
       includeProperties: false,
