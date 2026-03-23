@@ -40,9 +40,7 @@ if (!process.env.ALREADY_LOGGED && !process.env.PW_WORKER_INDEX) {
 export default defineConfig({
   ...CommonConfig.recommended,
 
-  // Link to your test-specific tsconfig
   tsconfig: 'src/test/tsconfig.json',
-
   testDir: './src/test',
   testMatch: ['a11y/*.test.ts', 'functional/**/*.spec.ts'],
 
@@ -51,17 +49,18 @@ export default defineConfig({
     [
       'html',
       {
-        outputFile:
+        outputFolder:
           resultsDir === 'functional-output'
-            ? `${resultsDir}/playwright-functional-test-report.html`
+            ? `${resultsDir}/playwright-functional-report`
             : resultsDir === 'a11y-output'
-            ? `${resultsDir}/playwright-accessibility-test-report.html`
-            : `${resultsDir}/test-report.html`,
+            ? `${resultsDir}/playwright-accessibility-report`
+            : `${resultsDir}/playwright-html-report`,
         open: 'never',
       },
     ],
     ['allure-playwright', { resultsDir: `${resultsDir}/allure-results` }],
-    ['junit', { outputFile: `${resultsDir}/test-results.xml` }],
+    // IMPROVEMENT: Use a dynamic filename for JUnit to avoid collisions
+    ['junit', { outputFile: `${resultsDir}/results.xml` }],
   ] as ReporterDescription[],
 
   timeout: 30 * 1000,

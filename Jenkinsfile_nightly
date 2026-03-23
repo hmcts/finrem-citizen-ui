@@ -36,45 +36,30 @@ withNightlyPipeline(type, product, component) {
   env.TEST_URL = params.URL_TO_TEST
   loadVaultSecrets(secrets)
 
-  // TODO: Enable and implement when these tests are planned and written
-  //  For reference see: nfdiv-frontend application
-  //enableCrossBrowserTest()
-  //enablePerformanceTest()
-  //enableMutationTest()
-
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
 
+  // Install Playwright ONCE before all functional/a11y test stages
   before('fullFunctionalTest') {
     echo "Preparing environment for tests..."
     sh 'rm -rf functional-output a11y-output allure-results'
-    sh 'npx playwright install chromium --with-deps'
-    env.FULL_FUNCTIONAL_TESTS_COMMAND = "test:full-functional:report"  }
+    env.FULL_FUNCTIONAL_TESTS_COMMAND = "npx playwright install chromium --with-deps && TEST_RESULTS_DIR=functional-output yarn test:full-functional"
+  }
 
   enableFullFunctionalTest(200)
 
   afterSuccess('fullFunctionalTest') {
-    echo "Running Accessibility Tests..."
-    sh 'npx playwright install chromium --with-deps'
+    echo "Functional tests passed. Running Accessibility Tests..."
     sh "yarn test:a11y:report"
-
   }
 
   afterAlways('fullFunctionalTest') {
-    junit testResults: 'functional-output/test-results.xml', allowEmptyResults: true
-    junit testResults: 'a11y-output/test-results.xml', allowEmptyResults: true
+    junit testResults: 'functional-output/*.xml, a11y-output/*.xml', allowEmptyResults: true
     
-    archiveArtifacts artifacts: '''
-      functional-output/playwright-functional-test-report.html,
-      functional-output/*-result.json,
-      functional-output/**,
-      a11y-output/playwright-accessibility-test-report.html,
-      a11y-output/*-result.json,
-      a11y-output/**
-    '''.replaceAll('\\s+', ''), allowEmptyArchive: true
+    archiveArtifacts artifacts: 'functional-output/**, a11y-output/**', allowEmptyArchive: true
     
-    fingerprint 'functional-output/playwright-functional-test-report.html, a11y-output/playwright-accessibility-test-report.html'
+    fingerprint 'functional-output/playwright-functional-report/index.html, a11y-output/playwright-accessibility-report/index.html'
     
     allure([
       includeProperties: false,

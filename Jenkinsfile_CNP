@@ -26,6 +26,7 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 
 withPipeline(type, product, component) {
   env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes && yarn test:a11y"
+  env.FUNCTIONAL_TESTS_COMMAND = "npx playwright install chromium --with-deps && yarn test:functional:report"
   
   loadVaultSecrets(secrets)
 
@@ -33,29 +34,21 @@ withPipeline(type, product, component) {
     yarnBuilder.yarn('build')
   }
 
+  // Setup for Smoke Tests (Jest-based, no Playwright needed)
   before('tests') {
     sh 'rm -rf smoke-output functional-output a11y-output allure-results'
-    sh 'npx playwright install chromium --with-deps'
-  }
-
-  // Setup for Functional Tests
-  before('functionalTests') {
-    sh 'npx playwright install chromium --with-deps'
-    env.FUNCTIONAL_TESTS_COMMAND = "yarn test:functional:report"
   }
 
   // Run Playwright A11y tests only if functional tests passed
   afterSuccess('functionalTests') {
     echo "Functional tests passed. Running Playwright Accessibility Tests..."
-    sh 'npx playwright install chromium --with-deps'
+    // Playwright already installed from functional tests
     yarnBuilder.yarn('test:a11y:report')
   }
 
   afterAlways('smokeTest') {
     junit testResults: 'smoke-output/*.xml', allowEmptyResults: true
-    
     archiveArtifacts artifacts: 'smoke-output/**, pods-logs-smoke/**', allowEmptyArchive: true
-    
     fingerprint 'pods-logs-smoke/**/*.log, jest-smoke-test-report.html'
   }
 
@@ -64,7 +57,7 @@ withPipeline(type, product, component) {
     
     archiveArtifacts artifacts: 'functional-output/**, a11y-output/**, pods-logs-functional/**', allowEmptyArchive: true
 
-    fingerprint 'pods-logs-functional/**/*.log, functional-output/playwright-functional-test-report.html, a11y-output/playwright-accessibility-test-report.html'
+    fingerprint 'pods-logs-functional/**/*.log, functional-output/playwright-functional-report/index.html, a11y-output/playwright-accessibility-report/index.html'
 
     allure([
       includeProperties: false,
