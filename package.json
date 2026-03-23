@@ -26,7 +26,7 @@
     "test:functional:report": "TEST_RESULTS_DIR=functional-output playwright test --config=playwright.config.mts --grep-invert @a11y",
     "test:a11y:report": "TEST_RESULTS_DIR=a11y-output playwright test --config=playwright.config.mts --grep @a11y",
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes",
-    "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:playwright:functional",
+    "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:functional",
     "prepare": "husky install"
   },
   "dependencies": {
