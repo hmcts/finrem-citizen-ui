@@ -111,6 +111,9 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
         ...(caseData.respondentAccessCodes || []),
       ];
 
+      // TEMP DEBUG: Show what codes are available
+      const availableCodes = allAccessCodes.map(ac => ac.value.accessCode).join(', ');
+      
       const matchingAccessCode = allAccessCodes.find(
         (ac) => ac.value.accessCode?.toUpperCase() === trimmedAccessCode
       );
@@ -118,7 +121,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       // Access code does not match case number
       if (!matchingAccessCode) {
         req.session.accessCodeErrors = {
-          accessCode: 'Access code does not match case number',
+          accessCode: `DEBUG: Entered '${trimmedAccessCode}', Available codes: [${availableCodes}], Total: ${allAccessCodes.length}`,
         };
         req.session.tempAccessCode = accessCode || '';
         return res.redirect(RouteNames.enterAccessCode);
