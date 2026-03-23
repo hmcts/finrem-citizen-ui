@@ -74,6 +74,8 @@ withNightlyPipeline(type, product, component) {
       a11y-output/**
     '''.replaceAll('\\s+', ''), allowEmptyArchive: true
     
+    fingerprint 'functional-output/playwright-functional-test-report.html, a11y-output/playwright-accessibility-test-report.html'
+    
     allure([
       includeProperties: false,
       jdk: '',
