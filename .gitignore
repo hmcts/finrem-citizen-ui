@@ -60,3 +60,4 @@ charts/*/charts/redis/
 a11y-output/test-results.xml
 a11y-output/playwright-accessibility-report/index.html
 a11y-output/results.xml
+allure-results/environment.properties

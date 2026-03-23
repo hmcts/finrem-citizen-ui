@@ -26,7 +26,6 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 
 withPipeline(type, product, component) {
   env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes && yarn test:a11y"
-  env.FUNCTIONAL_TESTS_COMMAND = "npx playwright install chromium --with-deps && yarn test:functional:report"
   
   loadVaultSecrets(secrets)
 
@@ -37,6 +36,11 @@ withPipeline(type, product, component) {
   // Setup for Smoke Tests (Jest-based, no Playwright needed)
   before('tests') {
     sh 'rm -rf smoke-output functional-output a11y-output allure-results'
+  }
+
+  // Setup for Functional Tests - Install Playwright before tests run
+  before('functionalTests') {
+    sh 'npx playwright install chromium --with-deps'
   }
 
   // Run Playwright A11y tests only if functional tests passed
