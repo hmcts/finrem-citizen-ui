@@ -1,5 +1,7 @@
 import { Application, Request, Response } from 'express';
 
+import { getSystemUser } from '../app/auth/user';
+import { getCaseApi } from '../app/case/case-api';
 import { getMockCaseData, isMockEnabled } from '../app/case/mock-case-data';
 import { oidcMiddleware } from '../middleware';
 import { RouteNames } from '../route-names';
@@ -104,9 +106,8 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
         logger.info('MOCK_CCD enabled - using mock data for access code validation');
         caseData = getMockCaseData(caseNumber);
       } else {
-        // Use real CCD backend
-        const userDetails = req.session.user!;
-        const caseApi = require('../app/case/case-api').getCaseApi(userDetails, logger);
+        const systemUser = await getSystemUser();
+        const caseApi = getCaseApi(systemUser, logger);
         caseData = await caseApi.getCaseById(caseNumber);
       }
 
