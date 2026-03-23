@@ -57,3 +57,4 @@ env.local
 charts/*/charts/*.tgz
 charts/*/charts/nodejs/
 charts/*/charts/redis/
+a11y-output/test-results.xml

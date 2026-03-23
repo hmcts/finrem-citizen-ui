@@ -25,7 +25,7 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
-  env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes"
+  env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes && yarn test:a11y"
   
   loadVaultSecrets(secrets)
 
@@ -34,30 +34,31 @@ withPipeline(type, product, component) {
   }
 
   before('tests') {
-    sh 'rm -rf smoke-output functional-output a11y-output allure-results *-result.json test-results.xml'
+    sh 'rm -rf smoke-output functional-output a11y-output allure-results'
     sh 'npx playwright install chromium --with-deps'
   }
 
+  // Setup for Functional Tests
   before('functionalTests') {
-    echo "Preparing Functional Tests (with @PR tags)..."
-    sh 'npx playwright install chromium --with-deps'
-    env.FUNCTIONAL_TESTS_COMMAND = "test:functional:report"
+    env.FUNCTIONAL_TESTS_COMMAND = "npx playwright install chromium --with-deps && yarn test:functional:report"
   }
 
+  // Run Playwright A11y tests only if functional tests passed
   afterSuccess('functionalTests') {
-    echo "Running Accessibility Tests..."
+    echo "Functional tests passed. Running Playwright Accessibility Tests..."
     sh 'npx playwright install chromium --with-deps'
-    sh 'yarn test:a11y:report'
+    yarnBuilder.yarn('test:a11y:report')
   }
 
   afterAlways('smokeTest') {
-    junit testResults: 'smoke-output/smoke--test-results.xml', allowEmptyResults: true
-    archiveArtifacts artifacts: 'smoke-output/jest-smoke-test-report.html,smoke-output/**', allowEmptyArchive: true
+    junit testResults: 'smoke-output/*.xml', allowEmptyResults: true
+    archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
   }
 
   afterAlways('functionalTests') {
-    junit testResults: 'test-results.xml', allowEmptyResults: true
-    archiveArtifacts artifacts: 'functional-output/playwright-functional-test-report.html, a11y-output/playwright-accessibility-test-report.html, test-results.xml, functional-output/*-result.json, a11y-output/*-result.json, pods-logs-functional/**', allowEmptyArchive: true
+    junit testResults: 'functional-output/*.xml, a11y-output/*.xml', allowEmptyResults: true
+    
+    archiveArtifacts artifacts: 'functional-output/**, a11y-output/**', allowEmptyArchive: true
 
     allure([
       includeProperties: false,
@@ -65,7 +66,8 @@ withPipeline(type, product, component) {
       properties: [],
       reportBuildPolicy: 'ALWAYS',
       results: [
-        [path: '.']
+        [path: 'functional-output/allure-results'],
+        [path: 'a11y-output/allure-results']
       ]
     ])
   }
@@ -81,5 +83,5 @@ withPipeline(type, product, component) {
   onPR() {
     env.JENKINS_BRANCH = "preview"
     env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
-  } 
+  }
 }
