@@ -14,13 +14,6 @@ def type = "nodejs"
 def product = "finrem"
 def component = "citizen-ui"
 
-def secrets = [
-  'finrem-${env}': [
-    secret("finrem-citizen-s2s-client-secret", "SERVICE_AUTH_SECRET"),
-    secret("finrem-citizen-ui-idam-client-secret", "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET"),
-  ]
-]
-
 static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
   [ $class: 'AzureKeyVaultSecret',
     secretType: 'Secret',
@@ -33,6 +26,13 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
 withNightlyPipeline(type, product, component) {
+  def secrets = [
+    "finrem-${env.env}": [
+      secret("finrem-citizen-s2s-client-secret", "SERVICE_AUTH_SECRET"),
+      secret("finrem-citizen-ui-idam-client-secret", "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET"),
+    ]
+  ]
+
   env.TEST_URL = params.URL_TO_TEST
   loadVaultSecrets(secrets)
 
@@ -46,24 +46,31 @@ withNightlyPipeline(type, product, component) {
     yarnBuilder.yarn('build')
   }
 
+  // The library will handle running these based on the variables below
   before('fullFunctionalTest') {
-    env.FULL_FUNCTIONAL_TESTS_COMMAND = "test:full-functional"
+    env.FULL_FUNCTIONAL_TESTS_COMMAND = "test:full-functional:report"
+    env.A11Y_TESTS_COMMAND = "test:a11y:report"
+    sh 'npx playwright install chromium --with-deps'
   }
 
+  // This enables the built-in stage for functional tests
   enableFullFunctionalTest(200)
 
   afterAlways('fullFunctionalTest') {
-    junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
-
-    archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
-
+    junit testResults: 'functional-output/test-results.xml', allowEmptyResults: true
+    junit testResults: 'a11y-output/test-results.xml', allowEmptyResults: true
+    archiveArtifacts artifacts: 'functional-output/playwright-functional-test-report.html,functional-output/**,a11y-output/playwright-accessibility-test-report.html,a11y-output/**', allowEmptyArchive: true
     allure([
       includeProperties: false,
       jdk: '',
       properties: [],
       reportBuildPolicy: 'ALWAYS',
-      results: [[path: 'allure-results']]
+      results: [
+        [path: 'functional-output/allure-results'],
+        [path: 'a11y-output/allure-results']
+      ]
     ])
-}
+  }
+
   enableSlackNotifications('#finrem-dev')
 }

@@ -14,6 +14,7 @@
     "build": "yarn webpack --config webpack.config.js",
     "build:prod": "NODE_ENV=production yarn webpack --mode production --config webpack.config.js",
     "test": "npx if-env CI=true && exit 0 || yarn test:unit",
+    "test:a11y": "echo 'placeholder'",
     "test:unit": "jest",
     "test:coverage": "jest --coverage",
     "test:routes": "jest -c jest.routes.config.js",
@@ -22,6 +23,8 @@
     "test:functional": "playwright test --config playwright.config.mts --project chromium --grep @PR",
     "test:full-functional": "playwright test --config playwright.config.mts --retries=2",
     "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
+    "test:functional:report": "TEST_RESULTS_DIR=functional-output playwright test --config=playwright.config.mts --grep-invert @a11y",
+    "test:a11y:report": "TEST_RESULTS_DIR=a11y-output playwright test --config=playwright.config.mts --grep @a11y",
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes",
     "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:playwright:functional",
     "prepare": "husky install"

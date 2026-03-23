@@ -7,6 +7,7 @@ const { CommonConfig, ProjectsConfig } = await import('@hmcts/playwright-common'
 dotenv.config();
 
 // 1. Determine Target URL and Results Directory
+// Use TEST_RESULTS_DIR env variable to control output directory for reports (functional-output or a11y-output)
 const resultsDir = process.env.TEST_RESULTS_DIR || 'functional-output';
 
 const getBaseUrl = (): string => {
@@ -47,9 +48,20 @@ export default defineConfig({
 
   reporter: [
     ...((CommonConfig.recommended.reporter as ReporterDescription[]) || []),
-    ['html', { outputFolder: `${resultsDir}/functional-test-report` }],
-    ['allure-playwright', { resultsDir: 'allure-results' }],
-    ['junit', { outputFile: `${resultsDir}/functional-test-results.xml` }],
+    [
+      'html',
+      {
+        outputFolder:
+          resultsDir === 'functional-output'
+            ? `${resultsDir}/playwright-functional-test-report.html`
+            : resultsDir === 'a11y-output'
+            ? `${resultsDir}/playwright-accessibility-test-report.html`
+            : `${resultsDir}/test-report`,
+        open: 'never',
+      },
+    ],
+    ['allure-playwright', { resultsDir: `${resultsDir}/allure-results` }],
+    ['junit', { outputFile: `${resultsDir}/test-results.xml` }],
   ] as ReporterDescription[],
 
   timeout: 30 * 1000,

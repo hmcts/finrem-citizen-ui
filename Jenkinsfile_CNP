@@ -8,13 +8,6 @@ def component = "citizen-ui"
 
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
-def secrets = [
-  'finrem-${env}': [
-    secret("finrem-citizen-s2s-client-secret", "SERVICE_AUTH_SECRET"),
-    secret("finrem-citizen-ui-idam-client-secret", "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET")
-  ]
-]
-
 static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
   [ $class: 'AzureKeyVaultSecret',
     secretType: 'Secret',
@@ -25,8 +18,14 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
-  // 1. Unit-level checks (Jest, Lint, Routes) into one stage
-  env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes"
+  def secrets = [
+    "finrem-${env.env}": [
+      secret("finrem-citizen-s2s-client-secret", "SERVICE_AUTH_SECRET"),
+      secret("finrem-citizen-ui-idam-client-secret", "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET")
+    ]
+  ]
+
+  env.UNIT_TESTS_COMMAND = "test:unit && yarn test:coverage && yarn lint && yarn test:routes"
   
   loadVaultSecrets(secrets)
 
@@ -34,43 +33,36 @@ withPipeline(type, product, component) {
     yarnBuilder.yarn('build')
   }
 
-  // 2. Setup for Smoke Tests
   before('tests') {
-    sh 'rm -rf smoke-output functional-output allure-results allure-results-smoke'
+    sh 'rm -rf smoke-output functional-output a11y-output allure-results allure-results-smoke'
+  }
+
+  before('functionalTests') {
+    env.FUNCTIONAL_TESTS_COMMAND = "test:functional:report"
+    env.A11Y_TESTS_COMMAND = "test:a11y:report"
     sh 'npx playwright install chromium --with-deps'
   }
 
-  // 3. Setup for Functional Tests
-  before('functionalTests') {
-    env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
-    sh 'npx playwright install --with-deps'
-  }
-
-
   afterAlways('smokeTest') {
     junit testResults: 'smoke-output/smoke--test-results.xml', allowEmptyResults: true
-    archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
+    archiveArtifacts artifacts: 'smoke-output/jest-test-report.html,smoke-output/**', allowEmptyArchive: true
+  }
+
+  afterAlways('functionalTests') {
+    junit testResults: 'functional-output/test-results.xml', allowEmptyResults: true
+    junit testResults: 'a11y-output/test-results.xml', allowEmptyResults: true
+    archiveArtifacts artifacts: 'functional-output/playwright-functional-test-report.html,functional-output/**,a11y-output/playwright-accessibility-test-report.html,a11y-output/**', allowEmptyArchive: true
     allure([
       includeProperties: false,
       jdk: '',
       properties: [],
       reportBuildPolicy: 'ALWAYS',
-      results: [[path: 'allure-results-smoke']]
+      results: [
+        [path: 'functional-output/allure-results'],
+        [path: 'a11y-output/allure-results']
+      ]
     ])
   }
-
-  afterAlways('functionalTests') {
-     
-      junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
-      allure([
-          includeProperties: false,
-          jdk: '',
-          properties: [],
-          reportBuildPolicy: 'ALWAYS',
-          results: [[path: 'allure-results']]
-      ])
-      archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
-    }
 
   enableSlackNotifications('#finrem-dev')
   enableAksStagingDeployment()
@@ -83,5 +75,5 @@ withPipeline(type, product, component) {
   onPR() {
     env.JENKINS_BRANCH = "preview"
     env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
-  }
+  } 
 }
