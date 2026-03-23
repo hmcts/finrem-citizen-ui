@@ -1,5 +1,5 @@
-import { test as base } from '@playwright/test';
 import { AxeUtils } from '@hmcts/playwright-common';
+import { test as base } from '@playwright/test';
 
 import { BasePage } from '../functional/pom/basePage.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
