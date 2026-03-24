@@ -1,4 +1,4 @@
-import {describe} from "@jest/globals";
+import { describe } from '@jest/globals';
 
 jest.mock('axios');
 
