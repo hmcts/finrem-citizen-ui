@@ -1,4 +1,4 @@
-import { test as base } from '@playwright/test';
+import { Page, test as base } from '@playwright/test'; 
 
 import { BasePage } from '../functional/pom/basePage.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
@@ -8,6 +8,7 @@ import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
 /** * Define the shape of the authentication session object.
  */
 export type AuthSession = {
+  page: Page; // Changed from any to Page
   user: UserCredentials;
   authStatus: 'success' | 'failure';
 };
@@ -46,13 +47,11 @@ export const test = base.extend<MyFixtures>({
 
   /** LOGIN FIXTURE: Performs the login flow.
    */
-  // TO DO: Add a post-login assertion inside the fixture to confirm successful login.
-  loggedInPage: async ({ idamPage, citizenUser, basePage }, use) => {
+  loggedInPage: async ({ page, idamPage, citizenUser, basePage }, use) => {
     // Navigate and log in
     await basePage.goto();
     await idamPage.login(citizenUser);
-
-    await use({ user: citizenUser, authStatus: 'success' });
+    await use({ page, user: citizenUser, authStatus: 'success' });
   },
 
   enterCaseNumberPage: async ({ page }, use) => {

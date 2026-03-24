@@ -1,98 +1,95 @@
-import { test } from '../../fixtures/fixtures';
+import { expect, test } from '../../fixtures/fixtures';
 import { createCase } from '../utils/helpers/caseCreation';
+import { ErrorMessages, caseDataFactory } from '../utils/helpers/testData';
 
-const dataFactory = {
-  generateDigits: (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join(''),
-  validFormatted: (base: string) => {
-    // Formats a 16-digit string into XXXX-XXXX-XXXX-XXXX
-    return `${base.slice(0, 4)}-${base.slice(4, 8)}-${base.slice(8, 12)}-${base.slice(12, 16)}`;
-  },
-};
+const { generateDigits, formatCaseNumber } = caseDataFactory;
 
-test.describe('Enter Case Number Page Verification', () => {
-  let VALID_CASE: string;
+/** Helper to create a Financial Remedy case for the given citizen email */
+async function createFinancialRemedyCase(citizenEmail: string): Promise<string> {
+  return createCase({
+    caseType: 'FinancialRemedyMVP2',
+    eventId: 'FR_newPaperCase',
+    dataLocation: 'src/test/functional/data/case-data.json',
+    dataModifications: [{ action: 'insert', key: 'applicantEmail', value: citizenEmail }],
+  });
+}
 
-  test.beforeAll(async () => {
-    // Create a test case before running all tests
-    try {
-      VALID_CASE = await createCase({
-        caseType: 'FinancialRemedyMVP2',
-        eventId: 'FR_newPaperCase',
-        dataLocation: 'src/test/functional/data/case-data.json'
-      });
-      console.log(`Case created: ${VALID_CASE}`);
-    } catch (error) {
-      console.error('Failed to create test case:', error);
-      throw error;
-    }
+/**
+ * Happy Path Tests
+ * NOTE: Skipped - portal case lookup requires specific case state not set by FR_newPaperCase
+ */
+test.describe('Enter Case Number - Citizen Happy Path', () => {
+  test.skip('Citizen enters valid case number and lands on access code page @PR', async ({
+    loggedInPage,
+    enterCaseNumberPage,
+    page,
+  }) => {
+    const caseNumber = await createFinancialRemedyCase(loggedInPage.user.username);
+    await page.goto('/enter-case-number');
+    await enterCaseNumberPage.verifyCaseNumberPageContent();
+    await enterCaseNumberPage.submitCaseNumber(caseNumber);
+    await expect(page).toHaveURL(/\/enter-access-code$/);
   });
 
+  test.skip('Citizen enters hyphenated case number and lands on access code page @PR', async ({
+    loggedInPage,
+    enterCaseNumberPage,
+    page,
+  }) => {
+    const caseNumber = await createFinancialRemedyCase(loggedInPage.user.username);
+    await page.goto('/enter-case-number');
+    await enterCaseNumberPage.verifyCaseNumberPageContent();
+    await enterCaseNumberPage.submitCaseNumber(formatCaseNumber(caseNumber));
+    await expect(page).toHaveURL(/\/enter-access-code$/);
+  });
+
+  test('Case created via API - portal returns not found (current behavior) @PR', async ({
+    loggedInPage,
+    enterCaseNumberPage,
+    page,  
+  }) => {
+    const caseNumber = await createFinancialRemedyCase(loggedInPage.user.username);
+    await page.goto('/enter-case-number'); 
+    await enterCaseNumberPage.verifyCaseNumberPageContent();
+    await enterCaseNumberPage.submitCaseNumber(caseNumber);
+    await enterCaseNumberPage.expectValidationError(ErrorMessages.NOT_FOUND);
+  });
+});
+
+/** Validation Tests */
+test.describe('Enter Case Number Page Verification', () => {
   test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
   });
 
-  // --- SUCCESS & BOUNDARY HAPPY PATHS ---
-  test('Happy Path: 16 digits (Standard Boundary) @PR', async ({ enterCaseNumberPage }) => {
-    await enterCaseNumberPage.submitCaseNumber(VALID_CASE);
-
-    // Case exists but isn't linked to citizen - expect "not found"
-    await enterCaseNumberPage.expectValidationError(
-      'We cannot find that case number, Enter the case number that you received from the court'
-    );
-  });
-
-  test('Happy Path: 16 digits with hyphens @PR', async ({ enterCaseNumberPage }) => {
-    const formattedCase = dataFactory.validFormatted(VALID_CASE);
-    await enterCaseNumberPage.submitCaseNumber(formattedCase);
-
-    // Case exists but isn't linked to citizen - expect "not found"
-    await enterCaseNumberPage.expectValidationError(
-      'We cannot find that case number, Enter the case number that you received from the court'
-    );
-  });
-
-  /**
-   * Note: The 20-digit Upper Boundary is a "Logic Success" (No length error)
-   * but a "Functional Failure" (No DB record exists for a random 20-digit string).
-   */
-  test('Success Logic: 20 digits (Upper Boundary) @PR', async ({ enterCaseNumberPage }) => {
-    await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(20));
-
-    // Confirm that the length-specific validation is NOT triggered
-    await enterCaseNumberPage.expectNoSpecificValidationErrors(['Case number must be between 16 and 20 characters']);
-
-    // We expect the "Not Found" error because this random 20-digit ID doesn't exist in DB
-    await enterCaseNumberPage.expectValidationError('Case number must be 16 digits');
-  });
-
-  // --- VALIDATION ERROR SCENARIOS ---
-
   test('Error: Empty input @PR', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber('');
-    await enterCaseNumberPage.expectValidationError('Enter your case number');
+    await enterCaseNumberPage.expectValidationError(ErrorMessages.EMPTY);
   });
 
-  test('Error: Boundary check - 15 characters (Lower Boundary - 1) @PR', async ({ enterCaseNumberPage }) => {
-    await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(15));
-    await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
+  test('Error: Boundary check - 15 characters @PR', async ({ enterCaseNumberPage }) => {
+    await enterCaseNumberPage.submitCaseNumber(generateDigits(15));
+    await enterCaseNumberPage.expectValidationError(ErrorMessages.INVALID_LENGTH);
   });
 
-  test('Error: Boundary check - 21 characters (Upper Boundary + 1) @PR', async ({ enterCaseNumberPage }) => {
-    await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(21));
-    await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
+  test('Error: Boundary check - 21 characters @PR', async ({ enterCaseNumberPage }) => {
+    await enterCaseNumberPage.submitCaseNumber(generateDigits(21));
+    await enterCaseNumberPage.expectValidationError(ErrorMessages.INVALID_LENGTH);
   });
 
   test('Error: Invalid format - Letters @PR', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber('1234-5678-ABCD-EFGH');
-    await enterCaseNumberPage.expectValidationError(
-      'Case number must only include numbers 0 to 9 and special characters such as hyphens'
-    );
+    await enterCaseNumberPage.expectValidationError(ErrorMessages.INVALID_CHARS);
   });
 
   test('Error: Case number not found @PR', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber('1111222233334444');
-    await enterCaseNumberPage.expectValidationError(
-      'We cannot find that case number, Enter the case number that you received from the court'
-    );
+    await enterCaseNumberPage.expectValidationError(ErrorMessages.NOT_FOUND);
+  });
+
+  test('Success Logic: 20 digits (Upper Boundary) @PR', async ({ enterCaseNumberPage }) => {
+    await enterCaseNumberPage.submitCaseNumber(generateDigits(20));
+    await enterCaseNumberPage.expectNoSpecificValidationErrors([ErrorMessages.INVALID_LENGTH]);
+    await enterCaseNumberPage.expectValidationError('Case number must be 16 digits');
   });
 });
