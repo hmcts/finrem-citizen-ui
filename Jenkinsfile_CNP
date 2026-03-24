@@ -40,7 +40,7 @@ withPipeline(type, product, component) {
 
   // Setup for Functional Tests - Install Playwright before tests run
   before('functionalTests') {
-    sh 'npx playwright install chromium --with-deps'
+    sh 'yarn playwright install --with-deps'
   }
 
   // Run Playwright A11y tests only if functional tests passed

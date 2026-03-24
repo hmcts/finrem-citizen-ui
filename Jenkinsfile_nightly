@@ -44,7 +44,7 @@ withNightlyPipeline(type, product, component) {
   before('fullFunctionalTest') {
     echo "Preparing environment for tests..."
     sh 'rm -rf functional-output a11y-output allure-results'
-    env.FULL_FUNCTIONAL_TESTS_COMMAND = "npx playwright install chromium --with-deps && TEST_RESULTS_DIR=functional-output yarn test:full-functional"
+    env.FULL_FUNCTIONAL_TESTS_COMMAND = "yarn playwright install --with-deps && TEST_RESULTS_DIR=functional-output yarn test:full-functional"
   }
 
   enableFullFunctionalTest(200)
