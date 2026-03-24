@@ -6,8 +6,8 @@ import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { CaseRole } from '../app/case/definition';
 import { UserDetails } from '../app/controller/AppRequest';
+import { RouteNames } from '../common-constants';
 import { oidcMiddleware } from '../middleware';
-import { RouteNames } from '../route-names';
 
 export default function (app: Application): void {
   app.get(RouteNames.basePath, oidcMiddleware, (req, res) => {

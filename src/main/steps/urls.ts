@@ -1,4 +1,4 @@
-import { RouteNames } from '../route-names';
+import { RouteNames } from '../common-constants';
 
 export type PageLink = `/${string}`;
 
