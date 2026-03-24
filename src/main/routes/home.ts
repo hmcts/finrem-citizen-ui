@@ -7,10 +7,21 @@ import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { CaseRole } from '../app/case/definition';
 import { oidcMiddleware } from '../middleware';
 import { RouteNames } from '../route-names';
+import {getHomePageForUser} from "../functions/util/homepage";
 
 export default function (app: Application): void {
-  app.get(RouteNames.basePath, oidcMiddleware, (req, res) => {
+  app.get(RouteNames.basePath, oidcMiddleware, async (req, res) => {
       res.redirect(RouteNames.enterCaseNumber);
+
+    const accessToken = req.session?.user?.accessToken;
+
+    if (!accessToken) {
+      throw new Error("User not authenticated");
+    }
+
+    const homePageRouter = await getHomePageForUser(accessToken, req.session);
+    console.log("homepageRouter : ", homePageRouter)
+    res.redirect(homePageRouter);
   });
 
   app.get(RouteNames.caseReference, async (req, res) => {
