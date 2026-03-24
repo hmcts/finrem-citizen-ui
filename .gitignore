@@ -57,3 +57,5 @@ env.local
 charts/*/charts/*.tgz
 charts/*/charts/nodejs/
 charts/*/charts/redis/
+.auth-tokens.json
+.ccd-token-cache.json

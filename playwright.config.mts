@@ -96,4 +96,7 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
   ],
+
+  // Global setup for IDAM token validation
+  globalSetup: './src/test/functional/utils/helpers/idamTokenGenerator.ts',
 });

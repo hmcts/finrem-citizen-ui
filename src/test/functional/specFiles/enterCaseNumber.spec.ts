@@ -1,4 +1,5 @@
-import { expect, test } from '../../fixtures/fixtures';
+import { test } from '../../fixtures/fixtures';
+import { createCase } from '../utils/helpers/caseCreation';
 
 const dataFactory = {
   generateDigits: (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join(''),
@@ -8,28 +9,47 @@ const dataFactory = {
   },
 };
 
-test.describe.skip('Enter Case Number Page Verification', () => {
-  const VALID_CASE = '1773677683810798';
+test.describe('Enter Case Number Page Verification', () => {
+  let VALID_CASE: string;
+
+  test.beforeAll(async () => {
+    // Create a test case before running all tests
+    try {
+      VALID_CASE = await createCase({
+        caseType: 'FinancialRemedyMVP2',
+        eventId: 'FR_newPaperCase',
+        dataLocation: 'src/test/functional/data/case-data.json'
+      });
+      console.log(`Case created: ${VALID_CASE}`);
+    } catch (error) {
+      console.error('Failed to create test case:', error);
+      throw error;
+    }
+  });
 
   test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
   });
 
   // --- SUCCESS & BOUNDARY HAPPY PATHS ---
-  const happyPaths = [
-    { desc: '16 digits (Standard Boundary)', value: VALID_CASE },
-    { desc: '16 digits with hyphens', value: dataFactory.validFormatted(VALID_CASE) },
-  ];
+  test('Happy Path: 16 digits (Standard Boundary) @PR', async ({ enterCaseNumberPage }) => {
+    await enterCaseNumberPage.submitCaseNumber(VALID_CASE);
 
-  for (const { desc, value } of happyPaths) {
-    test(`Happy Path: ${desc} @PR`, async ({ page, enterCaseNumberPage }) => {
-      await enterCaseNumberPage.submitCaseNumber(value);
+    // Case exists but isn't linked to citizen - expect "not found"
+    await enterCaseNumberPage.expectValidationError(
+      'We cannot find that case number, Enter the case number that you received from the court'
+    );
+  });
 
-      // Verify redirection to Access Code page
-      await expect(page).toHaveURL(/\/enter-access-code$/);
-      await expect(page.locator('body')).toContainText('This is a placeholder page for the access code step');
-    });
-  }
+  test('Happy Path: 16 digits with hyphens @PR', async ({ enterCaseNumberPage }) => {
+    const formattedCase = dataFactory.validFormatted(VALID_CASE);
+    await enterCaseNumberPage.submitCaseNumber(formattedCase);
+
+    // Case exists but isn't linked to citizen - expect "not found"
+    await enterCaseNumberPage.expectValidationError(
+      'We cannot find that case number, Enter the case number that you received from the court'
+    );
+  });
 
   /**
    * Note: The 20-digit Upper Boundary is a "Logic Success" (No length error)

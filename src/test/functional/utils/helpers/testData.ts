@@ -3,8 +3,6 @@ export const caseDataFactory = {
 
   formatCaseNumber: (digits: string): string =>
     `${digits.slice(0, 4)}-${digits.slice(4, 8)}-${digits.slice(8, 12)}-${digits.slice(12, 16)}`,
-
-  VALID_CASE: '1773677683810798',
 };
 
 export const ErrorMessages = {
