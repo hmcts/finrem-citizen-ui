@@ -33,7 +33,7 @@ withPipeline(type, product, component) {
     yarnBuilder.yarn('build')
   }
 
-  // Setup for Smoke Tests (Jest-based, no Playwright needed)
+  // Setup for Smoke Tests (Jest-based, no playwright needed)
   before('tests') {
     sh 'rm -rf smoke-output functional-output a11y-output allure-results'
   }
