@@ -1,7 +1,5 @@
-import axios from 'axios';
-import type { AxiosInstance } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { LoggerInstance } from 'winston';
-
 
 import { CaseApiClient, getCaseApiClient } from '../../../../main/app/case/case-api-client';
 import { CaseAssignedUserRole } from '../../../../main/app/case/case-roles';

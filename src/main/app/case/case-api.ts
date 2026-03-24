@@ -1,7 +1,6 @@
 import { LoggerInstance } from 'winston';
 
 import { UserDetails } from '../controller/AppRequest';
-
 import { CaseApiClient, getCaseApiClient } from './case-api-client';
 import { CaseRole, FinremCaseData } from './definition';
 

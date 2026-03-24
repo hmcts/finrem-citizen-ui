@@ -1,6 +1,6 @@
 import * as express from 'express';
 
-import { RouteNames } from './route-names';
+import { RouteNames } from './common-constants';
 
 const setupDev = (app: express.Express, developmentMode: boolean): void => {
   if (developmentMode) {
