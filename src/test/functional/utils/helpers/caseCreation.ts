@@ -69,22 +69,34 @@ interface ApiConfig {
   };
 }
 
+const getEnvironment = (): string => {
+  // Check for PR/preview environment
+  if (process.env.RUNNING_ENV?.startsWith('pr-')) {
+    return 'preview';
+  }
+  return process.env.RUNNING_ENV || 'aat';
+};
+
 const getConfig = (): ApiConfig => {
   if (!process.env.IDAM_CLIENT_SECRET) {
     // eslint-disable-next-line no-console
     console.warn('⚠️  IDAM_CLIENT_SECRET not set - authentication may fail');
   }
 
-  // All shared services (IDAM, CCD, S2S) use AAT - PR environments don't have their own instances
+  const env = getEnvironment();
+  
+  // Shared services use AAT for both AAT and preview environments
+  // Preview apps connect to the same AAT backend services
+  const serviceEnv = env === 'preview' ? 'aat' : env;
+  
   return {
     idam: {
-      baseUrl: process.env.IDAM_API_URL || '',
+      baseUrl: process.env.IDAM_API_URL || `https://idam-api.${serviceEnv}.platform.hmcts.net`,
       clientId: process.env.IDAM_CLIENT_ID || 'divorce',
       clientSecret: process.env.IDAM_CLIENT_SECRET || ''
     },
     ccd: {
-      // Always use AAT for CCD Data Store
-      dataStoreApi: process.env.CCD_DATA_STORE_API || 'http://ccd-data-store-api-aat.service.core-compute-aat.internal'
+      dataStoreApi: process.env.CCD_DATA_STORE_API || `http://ccd-data-store-api-${serviceEnv}.service.core-compute-${serviceEnv}.internal`
     }
   };
 };
@@ -282,8 +294,10 @@ async function getServiceToken(): Promise<string> {
     );
   }
 
-  // Always use AAT for S2S service
-  const s2sUrl = 'http://rpe-service-auth-provider-aat.service.core-compute-aat.internal';
+  // Use configured S2S URL or derive from environment
+  const env = getEnvironment();
+  const serviceEnv = env === 'preview' ? 'aat' : env;
+  const s2sUrl = process.env.S2S_URL || `http://rpe-service-auth-provider-${serviceEnv}.service.core-compute-${serviceEnv}.internal`;
   const microservice = 'finrem_citizen_ui';
 
   try {
@@ -422,7 +436,14 @@ export async function createCaseWithResponse(
 }
 
 export class IdamApiService {
-  private readonly createUserEndpoint = 'https://idam-testing-support-api.aat.platform.hmcts.net/test/idam/users';
+  private readonly createUserEndpoint: string;
+
+  constructor() {
+    const env = getEnvironment();
+    const serviceEnv = env === 'preview' ? 'aat' : env;
+    this.createUserEndpoint = process.env.IDAM_TESTING_SUPPORT_URL || 
+      `https://idam-testing-support-api.${serviceEnv}.platform.hmcts.net/test/idam/users`;
+  }
 
   async createCitizenUser(): Promise<UserCredentials> {
     const apiContext = await request.newContext();

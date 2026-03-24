@@ -83,10 +83,12 @@ withPipeline(type, product, component) {
 
   onMaster() {
     env.JENKINS_BRANCH = "master"
+    env.RUNNING_ENV = "aat"
   }
 
   onPR() {
     env.JENKINS_BRANCH = "preview"
+    env.RUNNING_ENV = "pr-${CHANGE_ID}"
     env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
   }
 }
