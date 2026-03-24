@@ -24,7 +24,7 @@
     "test:full-functional": "playwright test --config playwright.config.mts --retries=2",
     "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:a11y",
-    "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:a11y && yarn test:playwright:a11y",
+    "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:a11y && yarn test:functional && yarn test:playwright:a11y",
     "prepare": "husky install"
   },
   "dependencies": {
