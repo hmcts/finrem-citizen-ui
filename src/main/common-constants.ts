@@ -10,6 +10,7 @@ export const PublicRoutes = {
 export const PrivateRoutes = {
   caseUserRole: '/case/:caseReference/:userId/:caseRole',
   caseReference: '/case/:caseReference',
+  retrieveCase: '/retrieveCase',
   enterCaseNumber: '/enter-case-number',
   dashboard: '/dashboard',
   enterAccessCode: '/enter-access-code',

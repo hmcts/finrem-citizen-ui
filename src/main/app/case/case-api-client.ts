@@ -5,7 +5,7 @@ import { LoggerInstance } from 'winston';
 import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
 import { UserDetails } from '../controller/AppRequest';
 import { CaseAssignedUserRole } from './case-roles';
-import { FinremCaseData, FinremCaseDetails } from './definition';
+import { FinremCaseData, FinremCaseDetails, State } from './definition';
 
 export class CaseApiClient {
   constructor(
@@ -32,6 +32,27 @@ export class CaseApiClient {
       return response.data.data;
     } catch (err) {
       this.logError(err as AxiosError);
+      throw new Error('Case could not be retrieved.');
+    }
+  }
+
+  public async findExistingUserCases(caseType: string): Promise<CcdV1Response[] | false> {
+    const query = {
+      query: { match_all: {} },
+      sort: [{ created_date: { order: 'desc' } }],
+    };
+    return this.findUserCases(caseType, JSON.stringify(query));
+  }
+
+  private async findUserCases(caseType: string, query: string): Promise<CcdV1Response[] | false> {
+    try {
+      const response = await this.server.post<ES<CcdV1Response>>(`/searchCases?ctid=${caseType}`, query);
+      return response.data.cases;
+    } catch (err) {
+      if (err.response?.status === 404) {
+        return false;
+      }
+      this.logError(err);
       throw new Error('Case could not be retrieved.');
     }
   }
@@ -68,3 +89,15 @@ export const getCaseApiClient = (userDetails: UserDetails, logger: LoggerInstanc
     logger
   );
 };
+
+interface ES<T> {
+  cases: T[];
+  total: number;
+}
+
+export interface CcdV1Response {
+  id: string;
+  state: State;
+  created_date: string;
+  case_data: FinremCaseData;
+}
