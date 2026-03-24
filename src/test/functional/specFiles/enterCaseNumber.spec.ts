@@ -19,7 +19,7 @@ async function createFinancialRemedyCase(citizenEmail: string): Promise<string> 
  * NOTE: Skipped - portal case lookup requires specific case state not set by FR_newPaperCase
  */
 test.describe('Enter Case Number - Citizen Happy Path', () => {
-  test.skip('Citizen enters valid case number and lands on access code page @PR', async ({
+  test('Citizen enters valid case number and lands on access code page @PR', async ({
     loggedInPage,
     enterCaseNumberPage,
     page,
@@ -31,7 +31,7 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
     await expect(page).toHaveURL(/\/enter-access-code$/);
   });
 
-  test.skip('Citizen enters hyphenated case number and lands on access code page @PR', async ({
+  test('Citizen enters hyphenated case number and lands on access code page @PR', async ({
     loggedInPage,
     enterCaseNumberPage,
     page,

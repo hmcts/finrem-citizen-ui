@@ -33,22 +33,21 @@ withPipeline(type, product, component) {
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
-
   // 2. Setup for Smoke Tests
   before('tests') {
     sh 'rm -rf smoke-output functional-output allure-results allure-results-smoke'
-    sh 'yarn playwright install chromium'
+    sh 'npx playwright install chromium'
   }
 
   // 3. Setup for Functional Tests
   before('functionalTests') {
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
-    sh 'yarn playwright install chromium'
+    sh 'npx playwright install'
   }
 
   // 4. Run Playwright A11y tests
   afterSuccess('functionalTests') {
-    sh 'yarn playwright install chromium'
+    sh 'npx playwright install'
     yarnBuilder.yarn('test:playwright:a11y')
   }
 
