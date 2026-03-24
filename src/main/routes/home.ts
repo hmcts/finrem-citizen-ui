@@ -5,8 +5,8 @@ import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { CaseRole } from '../app/case/definition';
-import { RouteNames } from '../common-constants';
 import { UserDetails } from '../app/controller/AppRequest';
+import { RouteNames } from '../common-constants';
 import { oidcMiddleware } from '../middleware';
 
 export default function (app: Application): void {
