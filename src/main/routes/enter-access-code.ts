@@ -1,7 +1,6 @@
 import { Application, Request, Response } from 'express';
 
-import { getSystemUser } from '../app/auth/user';
-import { getCaseApi } from '../app/case/case-api';
+import { AccessCodeCollection, FinremCaseData } from '../app/case/definition';
 import { oidcMiddleware } from '../middleware';
 import { RouteNames } from '../route-names';
 
@@ -9,16 +8,63 @@ const { Logger } = require('@hmcts/nodejs-logging');
 
 const logger = Logger.getLogger('enter-access-code');
 
-declare module 'express-session' {
-  interface SessionData {
-    accessCode?: string;
-    accessCodeErrors?: AccessCodeError;
-    tempAccessCode?: string;
-  }
-}
-
 interface AccessCodeError {
   accessCode?: string;
+}
+
+interface AccessCodeValidationResult {
+  isValid: boolean;
+  error?: string;
+}
+
+export function retrieveCaseData(caseData: FinremCaseData | undefined): FinremCaseData | null {
+  if (!caseData) {
+    return null;
+  }
+  return caseData;
+}
+
+export function getMatchingAccessCode(
+  caseData: FinremCaseData,
+  accessCode: string
+): AccessCodeCollection | null {
+  const trimmedAccessCode = accessCode.trim().toUpperCase();
+  
+  const allAccessCodes = [
+    ...(caseData.applicantAccessCodes || []),
+    ...(caseData.respondentAccessCodes || []),
+  ];
+
+  const matchingAccessCode = allAccessCodes.find(
+    (ac) => ac.value.accessCode?.toUpperCase() === trimmedAccessCode
+  );
+
+  return matchingAccessCode || null;
+}
+
+export function validateAccessCodeAgainstCase(
+  matchingAccessCode: AccessCodeCollection
+): AccessCodeValidationResult {
+  // Check if access code has expired
+  const validUntilDate = new Date(matchingAccessCode.value.validUntil);
+  const now = new Date();
+  
+  if (now > validUntilDate) {
+    return {
+      isValid: false,
+      error: 'The access code you entered has expired. Contact the court to get a new code',
+    };
+  }
+
+  // Check if access code has already been used
+  if (matchingAccessCode.value.isValid === 'No') {
+    return {
+      isValid: false,
+      error: 'The access code you entered has already been used, you should contact the court.',
+    };
+  }
+
+  return { isValid: true };
 }
 
 export function validateAccessCode(accessCode: string | undefined): AccessCodeError | null {
@@ -59,17 +105,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       return res.redirect(RouteNames.enterCaseNumber);
     }
 
-    const errors = req.session.accessCodeErrors;
-    const accessCode = req.session.tempAccessCode;
-
-    // Clear session errors and temp data
-    delete req.session.accessCodeErrors;
-    delete req.session.tempAccessCode;
-
-    res.render('enter-access-code', {
-      errors,
-      accessCode,
-    });
+    res.render('enter-access-code');
   });
 
   app.post(RouteNames.enterAccessCode, oidcMiddleware, async (req: Request, res: Response) => {
@@ -88,66 +124,44 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
     // Validate access code format
     const validationErrors = validateAccessCode(accessCode);
     if (validationErrors) {
-      req.session.accessCodeErrors = validationErrors;
-      req.session.tempAccessCode = accessCode || '';
-      return res.redirect(RouteNames.enterAccessCode);
+      return res.render('enter-access-code', {
+        errors: validationErrors,
+        accessCode: accessCode || '',
+      });
     }
 
     const trimmedAccessCode = accessCode.trim().toUpperCase();
 
     try {
-      // Get case data from CCD backend
-      const caseNumber = req.session.caseNumber!;
-      // Remove hyphens to get the actual case ID for CCD
-      const caseId = caseNumber.replace(/-/g, '');
+      // Retrieve case data from session
+      const caseData = retrieveCaseData(req.session.caseData);
       
-      const systemUser = await getSystemUser();
-      const caseApi = getCaseApi(systemUser, logger);
-      const caseData = await caseApi.getCaseById(caseId);
+      if (!caseData) {
+        logger.error('Case data not found in session');
+        return res.redirect(RouteNames.enterCaseNumber);
+      }
 
-      // Validate access code against CCD
-      const allAccessCodes = [
-        ...(caseData.applicantAccessCodes || []),
-        ...(caseData.respondentAccessCodes || []),
-      ];
+      // Get matching access code from case data
+      const matchingAccessCode = getMatchingAccessCode(caseData, trimmedAccessCode);
 
-      const matchingAccessCode = allAccessCodes.find(
-        (ac) => ac.value.accessCode?.toUpperCase() === trimmedAccessCode
-      );
-
-      // Access code does not match case number
       if (!matchingAccessCode) {
-        req.session.accessCodeErrors = {
-          accessCode: 'Access code does not match case number',
-        };
-        req.session.tempAccessCode = accessCode || '';
-        return res.redirect(RouteNames.enterAccessCode);
+        return res.render('enter-access-code', {
+          errors: { accessCode: 'Access code does not match case number' },
+          accessCode: accessCode || '',
+        });
       }
 
-      // Access code has expired
-      const validUntilDate = new Date(matchingAccessCode.value.validUntil);
-      const now = new Date();
+      // Validate access code against case (expiry and usage)
+      const validationResult = validateAccessCodeAgainstCase(matchingAccessCode);
       
-      if (now > validUntilDate) {
-        req.session.accessCodeErrors = {
-          accessCode: 'The access code you entered has expired. Contact the court to get a new code',
-        };
-        req.session.tempAccessCode = accessCode || '';
-        return res.redirect(RouteNames.enterAccessCode);
+      if (!validationResult.isValid) {
+        return res.render('enter-access-code', {
+          errors: { accessCode: validationResult.error! },
+          accessCode: accessCode || '',
+        });
       }
 
-      // Access code has already been used (check isValid flag)
-      if (matchingAccessCode.value.isValid === 'No') {
-        req.session.accessCodeErrors = {
-          accessCode: 'The access code you entered has already been used, you should contact the court.',
-        };
-        req.session.tempAccessCode = accessCode || '';
-        return res.redirect(RouteNames.enterAccessCode);
-      }
-
-      // All validations passed - store access code and proceed
-      req.session.accessCode = trimmedAccessCode;
-      
+      // All validations passed - proceed to dashboard
       logger.info('Access code validated successfully', {
         caseNumber: req.session.caseNumber,
         accessCode: trimmedAccessCode,
@@ -162,12 +176,10 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       logger.error('Error validating access code', { error: err.message });
       
       // Handle case not found or other CCD errors
-      req.session.accessCodeErrors = {
-        accessCode: 'Access code does not match case number',
-      };
-      req.session.tempAccessCode = accessCode || '';
-      
-      return res.redirect(RouteNames.enterAccessCode);
+      return res.render('enter-access-code', {
+        errors: { accessCode: 'Access code does not match case number' },
+        accessCode: accessCode || '',
+      });
     }
   });
 }

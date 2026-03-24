@@ -32,7 +32,7 @@
             </p>
           {% endif %}
           <input 
-            class="govuk-input govuk-input--width-10 {% if errors.accessCode %}govuk-input--error{% endif %}" 
+            class="govuk-input {% if errors.accessCode %}govuk-input--error{% endif %}" 
             id="accessCode" 
             name="accessCode" 
             type="text" 
