@@ -44,19 +44,19 @@ describe('Enter Access Code Validation', () => {
     it('should return error when access code contains special characters', () => {
       const result = validateAccessCode('ABC-1234');
       expect(result).not.toBeNull();
-      expect(result?.accessCode).toBe('Access code must include letters a-z, and numbers 0-9');
+      expect(result?.accessCode).toBe('Access code must only include letters a-z, and numbers 0-9');
     });
 
     it('should return error when access code contains spaces', () => {
       const result = validateAccessCode('ABC 1234');
       expect(result).not.toBeNull();
-      expect(result?.accessCode).toBe('Access code must include letters a-z, and numbers 0-9');
+      expect(result?.accessCode).toBe('Access code must only include letters a-z, and numbers 0-9');
     });
 
     it('should return error when access code contains symbols', () => {
       const result = validateAccessCode('ABC@1234');
       expect(result).not.toBeNull();
-      expect(result?.accessCode).toBe('Access code must include letters a-z, and numbers 0-9');
+      expect(result?.accessCode).toBe('Access code must only include letters a-z, and numbers 0-9');
     });
 
     it('should return null with valid alphanumeric code (uppercase)', () => {

@@ -40,7 +40,7 @@ export function validateAccessCode(accessCode: string | undefined): AccessCodeEr
   // Format validation (only letters a-z and numbers 0-9)
   const formatRegex = /^[a-zA-Z0-9]+$/;
   if (!formatRegex.test(trimmedAccessCode)) {
-    errors.accessCode = 'Access code must include letters a-z, and numbers 0-9';
+    errors.accessCode = 'Access code must only include letters a-z, and numbers 0-9';
     return errors;
   }
 
