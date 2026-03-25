@@ -1,6 +1,5 @@
-import { randomUUID } from 'crypto';
-
 import { APIRequestContext, request } from '@playwright/test';
+import { randomUUID } from 'crypto';
 
 import { UserCredentials } from '../../../functional/pom/idamPage.page';
 

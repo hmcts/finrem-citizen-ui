@@ -1,7 +1,5 @@
-import axios from 'axios';
-import type { AxiosInstance } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { LoggerInstance } from 'winston';
-
 
 import { CaseApiClient, getCaseApiClient } from '../../../../main/app/case/case-api-client';
 import { CaseAssignedUserRole } from '../../../../main/app/case/case-roles';
@@ -149,3 +147,72 @@ describe('CaseApi.addCaseUserRoles', () => {
     });
   });
 });
+
+describe('CaseApiClient.findExistingUserCases', () => {
+  let mockAxios: jest.Mocked<Pick<typeof axios, 'post' | 'get'>>;
+  let mockLogger: LoggerInstance;
+  let api: CaseApiClient;
+
+  beforeEach(() => {
+    mockAxios = {
+      post: jest.fn(),
+      get: jest.fn(),
+    } as unknown as jest.Mocked<Pick<typeof axios, 'post' | 'get'>>;
+
+    mockLogger = {
+      error: jest.fn().mockImplementation((msg: string) => msg),
+      info: jest.fn().mockImplementation((msg: string) => msg),
+    } as unknown as LoggerInstance;
+
+    api = new CaseApiClient(mockAxios as unknown as AxiosInstance, mockLogger);
+  });
+
+  const CASE_TYPE = 'FinancialRemedyContested';
+
+  test('should return cases when search is successful', async () => {
+    const cases = [{ id: '1', state: 'Draft', case_data: {} }];
+
+    mockAxios.post.mockResolvedValue({
+      data: { cases, total: 1 },
+    });
+
+    const result = await api.findExistingUserCases(CASE_TYPE);
+
+    expect(mockAxios.post).toHaveBeenCalledWith(
+      `/searchCases?ctid=${CASE_TYPE}`,
+      expect.any(String)
+    );
+    expect(result).toEqual(cases);
+  });
+
+  test('should return false when 404 is returned', async () => {
+    mockAxios.post.mockRejectedValue({
+      response: { status: 404 },
+    });
+
+    const result = await api.findExistingUserCases(CASE_TYPE);
+
+    expect(result).toBe(false);
+    expect(mockLogger.error).not.toHaveBeenCalled();
+  });
+
+  test('should log error and throw when error occurs', async () => {
+    mockAxios.post.mockRejectedValue({
+      config: { method: 'post', url: `/searchCases?ctid=${CASE_TYPE}` },
+      response: { status: 500, data: { error: 'bad' } },
+    });
+
+    await expect(api.findExistingUserCases(CASE_TYPE))
+      .rejects.toThrow('Case could not be retrieved.');
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      `API Error post /searchCases?ctid=${CASE_TYPE} 500`
+    );
+
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Response: ',
+      { error: 'bad' }
+    );
+  });
+});
+

@@ -1,8 +1,8 @@
 const globals = require('globals');
 const tsParser = require('@typescript-eslint/parser');
 const tseslint = require('@typescript-eslint/eslint-plugin');
-const importPlugin = require('eslint-plugin-import');
 const jestPlugin = require('eslint-plugin-jest');
+const simpleImportSort = require('eslint-plugin-simple-import-sort');
 
 module.exports = [
   {
@@ -21,8 +21,8 @@ module.exports = [
     files: ['**/*.ts', '**/*.tsx', '**/*.mts'],
     plugins: {
       '@typescript-eslint': tseslint,
-      import: importPlugin,
       jest: jestPlugin,
+      'simple-import-sort': simpleImportSort,
     },
     rules: {
       '@typescript-eslint/array-type': 'error',
@@ -39,21 +39,10 @@ module.exports = [
       '@typescript-eslint/no-var-requires': 'off',
       curly: 'error',
       eqeqeq: 'error',
-      'import/no-duplicates': 'error',
-      'import/no-named-as-default': 'error',
-      'import/order': [
-        'error',
-        {
-          alphabetize: {
-            caseInsensitive: false,
-            order: 'asc',
-          },
-          'newlines-between': 'always',
-        },
-      ],
       'jest/prefer-to-have-length': 'error',
       'jest/valid-expect': 'off',
       'linebreak-style': ['error', 'unix'],
+      'no-duplicate-imports': 'error',
       'no-console': 'warn', // Global default
       'no-prototype-builtins': 'off',
       'no-return-await': 'error',
@@ -74,12 +63,9 @@ module.exports = [
         },
       ],
       semi: ['error', 'always'],
-      'sort-imports': [
-        'error',
-        {
-          ignoreDeclarationSort: true,
-        },
-      ],
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+      'sort-imports': 'off',
     },
     ignores: ['dist/*', 'coverage/*', '**/*.d.ts', '/src/main/public/', '/src/main/types/', '**/*.js', '.pnp.*'],
   },

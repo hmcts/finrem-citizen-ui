@@ -1,9 +1,8 @@
 #!/usr/bin/env node
+import config from 'config';
 import * as fs from 'fs';
 import * as https from 'https';
 import * as path from 'path';
-
-import config from 'config';
 
 import { app } from './app';
 import { AuthProvider } from './modules/auth-provider';
