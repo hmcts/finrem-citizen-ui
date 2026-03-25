@@ -172,7 +172,8 @@ export class ContestedEventApi {
       ''
     );
     // Return the general application ID from the response
-    return response?.generalApplications?.[0]?.id || '';
+    const generalApplications = response?.generalApplications as { id: string }[] | undefined;
+    return generalApplications?.[0]?.id || '';
   }
 
   /**
