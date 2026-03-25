@@ -1,0 +1,1 @@
+{"value":"@types/config","children":{"ID":"@types/config (deprecation)","Issue":"This is a stub types definition. config provides its own type definitions, so you do not need this installed.","Severity":"moderate","Vulnerable Versions":"4.4.0","Tree Versions":["4.4.0"],"Dependents":["finrem-citizen-ui@workspace:."]}}

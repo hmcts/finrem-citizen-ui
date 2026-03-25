@@ -4,10 +4,10 @@ import {
   type CaseWithId,
   Checkbox,
   type FieldFormats,
+  formatCase,
+  formFieldsToCaseMapping,
   LanguagePreference,
   type UploadedFile,
-  formFieldsToCaseMapping,
-  formatCase,
 } from '../../../../main/app/case/case';
 import { type AccessCodeCollection, type AccessCodeEntry, YesOrNo } from '../../../../main/app/case/definition';
 

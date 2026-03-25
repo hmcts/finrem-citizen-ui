@@ -1,7 +1,7 @@
 import axios, { AxiosRequestHeaders, AxiosResponse, AxiosStatic } from 'axios';
 import jwt from 'jsonwebtoken';
 
-import { OidcResponse, getRedirectUrl, getSystemUser, getUserDetails, idamTokenCache } from '../../../../../main/app/auth/user';
+import { getRedirectUrl, getSystemUser, getUserDetails, idamTokenCache,OidcResponse } from '../../../../../main/app/auth/user';
 import { CALLBACK_URL } from '../../../../../main/steps/urls';
 
 
