@@ -11,7 +11,16 @@ def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 def secrets = [
   'finrem-${env}': [
     secret("finrem-citizen-s2s-client-secret", "SERVICE_AUTH_SECRET"),
-    secret("finrem-citizen-ui-idam-client-secret", "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET")
+    secret("finrem-citizen-ui-idam-client-secret", "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET"),
+    // Caseworker credentials for case creation
+    secret("fr-caseworker-username", "USERNAME_CASEWORKER"),
+    secret("fr-caseworker-password", "PASSWORD_CASEWORKER"),
+    // Solicitor credentials for case submission
+    secret("playwright-solicitor-username", "PLAYWRIGHT_SOLICITOR_USERNAME"),
+    secret("playwright-solicitor-password", "PLAYWRIGHT_SOLICITOR_PSWD"),
+    // System user for citizen case lookup
+    secret("finrem-system-update-username", "IDAM_SYSTEM_USERNAME"),
+    secret("finrem-system-update-password", "IDAM_SYSTEM_PASSWORD")
   ]
 ]
 
@@ -33,22 +42,21 @@ withPipeline(type, product, component) {
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
-
   // 2. Setup for Smoke Tests
   before('tests') {
     sh 'rm -rf smoke-output functional-output allure-results allure-results-smoke'
-    sh 'npx playwright install chromium --with-deps'
+    sh 'npx playwright install chromium'
   }
 
   // 3. Setup for Functional Tests
   before('functionalTests') {
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
-    sh 'npx playwright install --with-deps'
+    sh 'npx playwright install'
   }
 
   // 4. Run Playwright A11y tests
   afterSuccess('functionalTests') {
-    sh 'npx playwright install --with-deps'
+    sh 'npx playwright install'
     yarnBuilder.yarn('test:playwright:a11y')
   }
 
@@ -83,10 +91,12 @@ withPipeline(type, product, component) {
 
   onMaster() {
     env.JENKINS_BRANCH = "master"
+    env.RUNNING_ENV = "aat"
   }
 
   onPR() {
     env.JENKINS_BRANCH = "preview"
+    env.RUNNING_ENV = "pr-${CHANGE_ID}"
     env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
   }
 }
