@@ -63,7 +63,7 @@
     "node-cache": "5.1.2",
     "nunjucks": "3.2.4",
     "openid-client": "^6.8.2",
-    "otplib": "12.0.1",
+    "otplib": "13.4.0",
     "postcss": "^8.4.27",
     "require-directory": "2.1.1",
     "serve-favicon": "2.5.1",
@@ -73,7 +73,7 @@
     "superagent": "^10.2.1",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
-    "typescript": "5.9.3"
+    "typescript": "6.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",
@@ -129,7 +129,7 @@
     "ts-loader": "9.5.4",
     "webpack": "5.105.4",
     "webpack-cli": "7.0.2",
-    "webpack-dev-middleware": "8.0.0",
+    "webpack-dev-middleware": "8.0.2",
     "webpack-node-externals": "3.0.0"
   },
   "lint-staged": {
@@ -144,7 +144,7 @@
     "@isaacs/brace-expansion": "5.0.1",
     "js-yaml": "4.1.1",
     "tar": "^7.5.11",
-    "diff": "8.0.3",
+    "diff": "8.0.4",
     "qs": "6.15.0",
     "test-exclude": "8.0.0",
     "minimatch": "10.2.4",

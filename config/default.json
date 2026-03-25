@@ -13,10 +13,10 @@
   },
   "services": {
     "idam": {
-      "systemUsername": "fr_system_user@hmcts.net",
-      "systemPassword": "I87ef91zA!",
+      "systemUsername": "dummy_user",
+      "systemPassword": "",
       "clientID": "finrem-citizen-ui",
-      "clientSecret": "1tCA59sk1N8aytRa99sXTEHSXTHG8YHNdOCZCI6DTc2jfU9WbXjb7nB3JGYVYAno",
+      "clientSecret": "NEED TO INSERT SECRET",
       "authorizationURL": "https://hmcts-access.aat.platform.hmcts.net/login",
       "tokenURL": "https://idam-api.aat.platform.hmcts.net/o/token",
       "caching": false
@@ -24,7 +24,7 @@
     "authProvider": {
       "url": "http://rpe-service-auth-provider-aat.service.core-compute-aat.internal",
       "microservice": "finrem_citizen_ui",
-      "secret": "LDQLJVK663YRY6JJ"
+      "secret": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     },
     "case": {
       "url": "https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net"
