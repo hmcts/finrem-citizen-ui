@@ -1,11 +1,10 @@
 /* eslint-disable no-console */
-import { randomUUID } from 'crypto';
-import fs from 'fs';
-import path from 'path';
-
 import { chromium } from '@playwright/test';
 import axios from 'axios';
+import { randomUUID } from 'crypto';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
 // Load .env file
 dotenv.config();

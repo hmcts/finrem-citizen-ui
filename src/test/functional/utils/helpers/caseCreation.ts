@@ -1,16 +1,14 @@
-import { randomUUID } from 'crypto';
-import { existsSync, readFileSync } from 'fs';
-import path from 'path';
-
 import { request } from '@playwright/test';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { randomUUID } from 'crypto';
+import { existsSync, readFileSync } from 'fs';
 import fs from 'fs-extra';
 import { set, unset } from 'lodash';
 import { authenticator } from 'otplib';
+import path from 'path';
 import lockfile from 'proper-lockfile';
 
 import { UserCredentials } from '../../../functional/pom/idamPage.page';
-
 import { loadStoredTokens } from './idamTokenGenerator';
 
 // Parse export-prefixed env variables

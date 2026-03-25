@@ -1,6 +1,6 @@
 import { expect, test } from '../../fixtures/fixtures';
 import { createCase } from '../utils/helpers/caseCreation';
-import { ErrorMessages, caseDataFactory } from '../utils/helpers/testData';
+import { caseDataFactory,ErrorMessages } from '../utils/helpers/testData';
 
 const { generateDigits, formatCaseNumber } = caseDataFactory;
 
