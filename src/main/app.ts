@@ -1,12 +1,12 @@
-import * as path from 'path';
-
 import * as bodyParser from 'body-parser';
+import * as path from 'path';
 import config = require('config');
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import RateLimit from 'express-rate-limit';
 import { glob } from 'glob';
 
+import { ViewNames } from './common-constants';
 import { HTTPError } from './HttpError';
 import { AppInsights } from './modules/appinsights';
 import { Helmet } from './modules/helmet';
@@ -62,7 +62,7 @@ setupDev(app, developmentMode);
 
 app.use((req, res) => {
   res.status(404);
-  res.render('not-found');
+  res.render(ViewNames.NotFound);
 });
 
 app.use((err: HTTPError, req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -72,5 +72,5 @@ app.use((err: HTTPError, req: express.Request, res: express.Response, _next: exp
   res.locals.message = err.message;
   res.locals.error = env === 'development' ? err : {};
   res.status(err.status || 500);
-  res.render('error');
+  res.render(ViewNames.Error);
 });

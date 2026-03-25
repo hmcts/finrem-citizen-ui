@@ -3,6 +3,7 @@
 {
   "compilerOptions": {
     "outDir": "./src/",
+    "rootDir": "src/main",
     "module": "commonjs",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -11,6 +12,7 @@
     "noImplicitAny": true,
     "noImplicitThis": false,
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "noUnusedLocals": true,
     "experimentalDecorators": true,
     "useUnknownInCatchVariables": false,

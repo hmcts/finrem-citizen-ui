@@ -23,7 +23,7 @@ module.exports = {
       },
     ],
   },
-  transformIgnorePatterns: ['/node_modules/(?!(openid-client|oauth4webapi|jose)/)'],
+  transformIgnorePatterns: ['/node_modules/(?!(openid-client|oauth4webapi|jose|otplib|@otplib|@scure|@noble)/)'],
   moduleFileExtensions: ['ts', 'js', 'json'],
   reporters: [
     'default',

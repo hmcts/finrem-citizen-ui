@@ -10,6 +10,7 @@ export const PublicRoutes = {
 export const PrivateRoutes = {
   caseUserRole: '/case/:caseReference/:userId/:caseRole',
   caseReference: '/case/:caseReference',
+  retrieveCase: '/retrieveCase',
   enterCaseNumber: '/enter-case-number',
   dashboard: '/dashboard',
   enterAccessCode: '/enter-access-code',
@@ -20,3 +21,12 @@ export const RouteNames = {
   ...PublicRoutes,
   ...PrivateRoutes,
 } as const;
+
+export const ViewNames = {
+  Dashboard: 'dashboard',
+  EnterCaseNumber: 'enter-case-number',
+  EnterAccessCode: 'enter-access-code',
+  Error: 'error',
+  NotFound: 'not-found',
+  TaskListUploadDashboard: 'task-list-upload-dashboard'
+};

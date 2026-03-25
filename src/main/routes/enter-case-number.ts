@@ -1,12 +1,12 @@
-import { Application, Request, Response } from 'express';
-
 import 'express-session';
+
+import { Application, Request, Response } from 'express';
 
 import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
 import { FinremCaseData } from '../app/case/definition';
+import { RouteNames, ViewNames } from '../common-constants';
 import { oidcMiddleware } from '../middleware';
-import { RouteNames } from '../route-names';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -69,7 +69,7 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
     const caseNumber = req.session.tempCaseNumber || '';
     delete req.session.tempCaseNumber;
 
-    res.render('enter-case-number', {
+    res.render(ViewNames.EnterCaseNumber, {
       errors,
       caseNumber,
     });

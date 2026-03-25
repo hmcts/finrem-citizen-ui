@@ -5,8 +5,9 @@ import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { CaseRole } from '../app/case/definition';
+import { UserDetails } from '../app/controller/AppRequest';
+import { RouteNames } from '../common-constants';
 import { oidcMiddleware } from '../middleware';
-import { RouteNames } from '../route-names';
 
 export default function (app: Application): void {
   app.get(RouteNames.basePath, oidcMiddleware, (req, res) => {
@@ -56,5 +57,13 @@ export default function (app: Application): void {
         error: err.message,
       });
     }
+  });
+
+  app.get(RouteNames.retrieveCase, async (req, res) => {
+    
+    const logger: LoggerInstance = console as unknown as LoggerInstance;
+    const caseApi = getCaseApi(req.session.user as UserDetails, logger);
+    const caseId = await caseApi.getExistingUserCase();
+    res.json({ id: caseId });
   });
 }
