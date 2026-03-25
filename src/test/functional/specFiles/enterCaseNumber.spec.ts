@@ -23,7 +23,7 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
    * This test creates a real contested case via API (caseworker creates it with hearing date),
    * then logs in as a citizen and submits the case number.
    */
-  test.skip('Citizen can enter a valid case number created via API @PR', async ({
+  test('Citizen can enter a valid case number created via API @PR', async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
     contestedCaseWithHearing,
@@ -39,7 +39,7 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
     await expect(page.locator('body')).toContainText('This is a placeholder page for the access code step');
   });
 
-  test.skip('Citizen can enter formatted case number (with hyphens) @PR', async ({
+  test('Citizen can enter formatted case number (with hyphens) @PR', async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
     contestedCaseWithHearing,
