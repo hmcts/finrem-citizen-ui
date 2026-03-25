@@ -8,7 +8,7 @@ const dataFactory = {
   },
 };
 
-test.describe('Enter Case Number - Citizen Happy Path', () => {
+test.describe.skip('Enter Case Number - Citizen Happy Path', () => {
   /**
    * TODO: These tests are skipped pending DevOps investigation.
    * The system user (fr_system_user@hmcts.net) credentials in Key Vault are valid,
