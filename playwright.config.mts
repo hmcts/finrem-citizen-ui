@@ -7,7 +7,12 @@ const { CommonConfig, ProjectsConfig } = await import('@hmcts/playwright-common'
 dotenv.config();
 
 // 1. Determine Target URL and Results Directory
-const resultsDir = process.env.TEST_RESULTS_DIR || 'functional-output';
+const isA11yRun = process.env.A11Y_TEST_RUN === 'true';
+const resultsDir = isA11yRun 
+  ? (process.env.A11Y_RESULTS_DIR || 'a11y-output')
+  : (process.env.TEST_RESULTS_DIR || 'functional-output');
+const allureResultsDir = isA11yRun ? 'allure-results-a11y' : 'allure-results';
+const reportName = isA11yRun ? 'playwright-accessibility-test' : 'playwright-functional-test';
 
 const getBaseUrl = (): string => {
   if (process.env.TEST_URL) {
@@ -47,9 +52,9 @@ export default defineConfig({
 
   reporter: [
     ...((CommonConfig.recommended.reporter as ReporterDescription[]) || []),
-    ['html', { outputFolder: `${resultsDir}/functional-test-report` }],
-    ['allure-playwright', { resultsDir: 'allure-results' }],
-    ['junit', { outputFile: `${resultsDir}/functional-test-results.xml` }],
+    ['html', { outputFolder: `${resultsDir}/${reportName}-report`, open: 'never' }],
+    ['allure-playwright', { resultsDir: allureResultsDir }],
+    ['junit', { outputFile: `${resultsDir}/${reportName}-results.xml` }],
   ] as ReporterDescription[],
 
   timeout: 30 * 1000,

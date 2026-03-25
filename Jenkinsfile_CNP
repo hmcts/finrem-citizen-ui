@@ -36,7 +36,7 @@ withPipeline(type, product, component) {
 
   // 2. Setup for Smoke Tests
   before('tests') {
-    sh 'rm -rf smoke-output functional-output allure-results allure-results-smoke'
+    sh 'rm -rf smoke-output functional-output a11y-output allure-results allure-results-smoke allure-results-a11y'
     sh 'npx playwright install chromium --with-deps'
   }
 
@@ -46,35 +46,25 @@ withPipeline(type, product, component) {
     sh 'npx playwright install --with-deps'
   }
 
-  // 4. Run Playwright A11y tests
-  afterSuccess('functionalTests') {
-    sh 'npx playwright install --with-deps'
-    yarnBuilder.yarn('test:playwright:a11y')
-  }
-
   afterAlways('smokeTest') {
-    junit testResults: 'smoke-output/smoke--test-results.xml', allowEmptyResults: true
     archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
-    allure([
-      includeProperties: false,
-      jdk: '',
-      properties: [],
-      reportBuildPolicy: 'ALWAYS',
-      results: [[path: 'allure-results-smoke']]
-    ])
   }
 
   afterAlways('functionalTests') {
-     
-      junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
+      // Run a11y tests to generate separate report (same tests, filtered by @a11y tag)
+      yarnBuilder.yarn('test:playwright:a11y')
+      
+      junit testResults: 'functional-output/playwright-functional-test-results.xml', allowEmptyResults: true
+      junit testResults: 'a11y-output/playwright-accessibility-test-results.xml', allowEmptyResults: true
       allure([
           includeProperties: false,
           jdk: '',
           properties: [],
           reportBuildPolicy: 'ALWAYS',
-          results: [[path: 'allure-results']]
+          results: [[path: 'allure-results'], [path: 'allure-results-a11y']]
       ])
       archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
+      archiveArtifacts artifacts: 'a11y-output/**', allowEmptyArchive: true
     }
 
   enableSlackNotifications('#finrem-dev')
