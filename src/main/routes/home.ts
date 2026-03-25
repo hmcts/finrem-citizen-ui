@@ -6,20 +6,14 @@ import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { CaseRole } from '../app/case/definition';
 import { UserDetails } from '../app/controller/AppRequest';
+import { RouteNames } from '../common-constants';
+import { getHomePageForUser } from '../functions/util/homepage';
 import { oidcMiddleware } from '../middleware';
-import { RouteNames } from '../route-names';
 
 export default function (app: Application): void {
   app.get(RouteNames.basePath, oidcMiddleware, async (req, res) => {
-      res.redirect(RouteNames.enterCaseNumber);
-
-    const accessToken = req.session?.user?.accessToken;
-
-    if (!accessToken) {
-      throw new Error('User not authenticated');
-    }
-
-    res.redirect('homePageRouter');
+    const homePageRouter = await getHomePageForUser(req.session);
+    res.render(homePageRouter);
   });
 
   app.get(RouteNames.caseReference, async (req, res) => {
@@ -68,7 +62,7 @@ export default function (app: Application): void {
   });
 
   app.get(RouteNames.retrieveCase, async (req, res) => {
-    
+
     const logger: LoggerInstance = console as unknown as LoggerInstance;
     const caseApi = getCaseApi(req.session.user as UserDetails, logger);
     const caseId = await caseApi.getExistingUserCase();

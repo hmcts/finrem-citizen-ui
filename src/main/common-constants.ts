@@ -21,3 +21,12 @@ export const RouteNames = {
   ...PublicRoutes,
   ...PrivateRoutes,
 } as const;
+
+export const ViewNames = {
+  Dashboard: 'dashboard',
+  EnterCaseNumber: 'enter-case-number',
+  EnterAccessCode: 'enter-access-code',
+  Error: 'error',
+  NotFound: 'not-found',
+  TaskListUploadDashboard: 'task-list-upload-dashboard'
+};

@@ -3,21 +3,24 @@ import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../../app/auth/user';
 import { getCaseApi } from '../../app/case/case-api';
-import { RouteNames } from '../../route-names';
+import { UserDetails } from '../../app/controller/AppRequest';
+import { ViewNames } from '../../common-constants';
 
-export async function getHomePageForUser(accessToken: string, session: SessionData): Promise<string> {
-  const caseReference: string | null = '';
+export async function getHomePageForUser(session: SessionData): Promise<string> {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
-  if (caseReference?.trim()) {
+
+  const caseApi = getCaseApi(session.user as UserDetails, logger);
+  const caseId = await caseApi.getExistingUserCase();
+
+  if (caseId?.trim()) {
     const systemUser = await getSystemUser();
-
     const caseworkerUserApi = getCaseApi(systemUser, logger);
-    session.caseData = await caseworkerUserApi.getCaseById(caseReference);
+    session.caseData = await caseworkerUserApi.getCaseById(caseId);
 
-    logger.info('Routing to : ', RouteNames.dashboard);
-    return RouteNames.dashboard;
+    logger.info('Routing to : ', ViewNames.Dashboard);
+    return ViewNames.Dashboard;
   } else {
-    logger.info('Routing to : ', RouteNames.enterCaseNumber);
-    return RouteNames.enterCaseNumber;
+    logger.info('Routing to : ', ViewNames.EnterCaseNumber);
+    return ViewNames.EnterCaseNumber;
   }
 }
