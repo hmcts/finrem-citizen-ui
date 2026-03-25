@@ -299,7 +299,7 @@ async function getServiceToken(): Promise<string> {
   const env = getEnvironment();
   const serviceEnv = env === 'preview' ? 'aat' : env;
   const s2sUrl = process.env.S2S_URL || `http://rpe-service-auth-provider-${serviceEnv}.service.core-compute-${serviceEnv}.internal`;
-  const microservice = 'finrem_citizen_ui';
+  const microservice = 'finrem_case_orchestration';
 
   try {
     // Generate TOTP using otplib v13+ API

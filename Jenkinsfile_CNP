@@ -10,7 +10,8 @@ def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
 def secrets = [
   'finrem-${env}': [
-    secret("finrem-citizen-s2s-client-secret", "SERVICE_AUTH_SECRET"),
+    // Use COS S2S secret - works for CCD API access
+    secret("finrem-case-orchestration-service-s2s-key", "SERVICE_AUTH_SECRET"),
     secret("finrem-citizen-ui-idam-client-secret", "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET"),
     // Caseworker credentials for case creation
     secret("fr-caseworker-username", "USERNAME_CASEWORKER"),
