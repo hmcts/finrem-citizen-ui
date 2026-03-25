@@ -3,16 +3,27 @@ import { test as base } from '@playwright/test';
 import { BasePage } from '../functional/pom/basePage.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
+import { ContestedCaseFactory } from '../functional/utils/factories/contested/ContestedCaseFactory';
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
 
-/** * Define the shape of the authentication session object.
+/**
+ * Define the shape of the authentication session object.
  */
 export type AuthSession = {
   user: UserCredentials;
   authStatus: 'success' | 'failure';
 };
 
-/** * Extend the base MyFixtures type to include Page Objects and Services.
+/**
+ * Created case data shape
+ */
+export type CreatedCase = {
+  caseId: string;
+  formattedCaseId: string;
+};
+
+/**
+ * Extend the base MyFixtures type to include Page Objects and Services.
  */
 type MyFixtures = {
   idamApiService: IdamApiService;
@@ -21,6 +32,7 @@ type MyFixtures = {
   basePage: BasePage;
   loggedInPage: AuthSession;
   enterCaseNumberPage: EnterCaseNumberPage;
+  contestedCaseWithHearing: CreatedCase;
 };
 
 export const test = base.extend<MyFixtures>({
@@ -57,6 +69,22 @@ export const test = base.extend<MyFixtures>({
 
   enterCaseNumberPage: async ({ page }, use) => {
     await use(new EnterCaseNumberPage(page));
+  },
+
+  /**
+   * CASE CREATION FIXTURE: Creates a contested case with hearing date via API.
+   * This creates a real case in CCD that can be used for testing.
+   */
+  contestedCaseWithHearing: async ({}, use) => {
+    const caseId = await ContestedCaseFactory.createContestedCaseWithHearing();
+    
+    // Ensure caseId is a string
+    const caseIdStr = String(caseId);
+    
+    // Format case ID with hyphens (XXXX-XXXX-XXXX-XXXX)
+    const formattedCaseId = caseIdStr.replace(/(\d{4})(?=\d)/g, '$1-');
+    
+    await use({ caseId: caseIdStr, formattedCaseId });
   },
 });
 

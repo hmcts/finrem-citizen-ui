@@ -1,6 +1,7 @@
 # Environments & Dependencies
 .env
 .env.local
+!.env.example
 node_modules/
 lib/
 .yarn/

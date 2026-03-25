@@ -1,0 +1,59 @@
+/**
+ * Configuration for functional test API endpoints
+ */
+
+const RUNNING_ENV = process.env.RUNNING_ENV || 'aat';
+
+// Map preview/PR environments to AAT for backend services (no PR-specific CCD exists)
+const isPrEnv = RUNNING_ENV === 'preview' || RUNNING_ENV.startsWith('pr-');
+const derivedEnv = isPrEnv ? 'aat' : RUNNING_ENV;
+
+// IDAM and S2S always use AAT (no PR-specific instances exist)
+const idamEnv = 'aat';
+
+const config = {
+  // CCD Data Store API - always use AAT for PR environments
+  ccdDataStoreApi: process.env.CCD_DATA_STORE_API_URL 
+    || `http://ccd-data-store-api-${derivedEnv}.service.core-compute-${derivedEnv}.internal`,
+
+  // IDAM endpoints - ALWAYS use AAT
+  idamApi: process.env.IDAM_API_URL 
+    || `https://idam-api.${idamEnv}.platform.hmcts.net`,
+  idamWebUrl: process.env.IDAM_WEB_URL 
+    || `https://idam-web-public.${idamEnv}.platform.hmcts.net`,
+
+  // S2S also uses AAT
+  s2sUrl: process.env.SERVICE_AUTH_PROVIDER_URL 
+    || `http://rpe-service-auth-provider-${idamEnv}.service.core-compute-${idamEnv}.internal`,
+
+  // Microservice name for S2S
+  microservice: process.env.S2S_MICROSERVICE || 'finrem_citizen_ui',
+
+  // Test user credentials (caseworker)
+  caseworker: {
+    username: process.env.USERNAME_CASEWORKER || '',
+    password: process.env.PASSWORD_CASEWORKER || '',
+  },
+
+  // Solicitor credentials
+  solicitor: {
+    username: process.env.PLAYWRIGHT_SOLICITOR_USERNAME || '',
+    password: process.env.PLAYWRIGHT_SOLICITOR_PSWD || '',
+  },
+
+  // Citizen credentials (dynamically created in tests)
+  citizen: {
+    username: process.env.CITIZEN_USERNAME || '',
+    password: process.env.CITIZEN_PASSWORD || '',
+  },
+
+  // IDAM client config
+  idam: {
+    clientId: 'finrem-citizen-ui',
+    clientSecret: process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET || '',
+    redirectUri: process.env.IDAM_REDIRECT_URI || 'http://localhost:3100/oauth2/callback',
+    scope: 'openid profile roles',
+  },
+};
+
+export default config;

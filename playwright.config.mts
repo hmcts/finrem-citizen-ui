@@ -17,7 +17,10 @@ const getBaseUrl = (): string => {
   if (env.startsWith('pr-')) {
     return `https://finrem-citizen-ui-${env}.preview.platform.hmcts.net`;
   }
-  return `https://manage-case.${env}.platform.hmcts.net`;
+  // For AAT/demo/etc use the citizen UI, not manage-case (XUI)
+  return `https://finrem-citizen-ui.${env}.platform.hmcts.net`;
+  
+  //   return `https://manage-case.${env}.platform.hmcts.net`;
 };
 
 const finalBaseUrl = getBaseUrl();

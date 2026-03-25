@@ -8,44 +8,60 @@ const dataFactory = {
   },
 };
 
-test.describe.skip('Enter Case Number Page Verification', () => {
-  const VALID_CASE = '1773677683810798';
+test.describe('Enter Case Number - Citizen Happy Path', () => {
+  /**
+   * TODO: These tests are skipped pending DevOps investigation.
+   * The system user (fr_system_user@hmcts.net) credentials in Key Vault are valid,
+   * but the deployed app fails to look up cases in CCD. Possible causes:
+   * 1. Key Vault secrets not being mounted correctly in pods
+   * 2. getSystemUser() not being called correctly in enter-case-number route
+   * 
+   * Case creation via API works fine - only the citizen UI lookup fails.
+   */
+  
+  /**
+   * This test creates a real contested case via API (caseworker creates it with hearing date),
+   * then logs in as a citizen and submits the case number.
+   */
+  test.skip('Citizen can enter a valid case number created via API @PR', async ({
+    loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    contestedCaseWithHearing,
+    page
+  }) => {
+    await enterCaseNumberPage.verifyCaseNumberPageContent();
+    
+    // Use the dynamically created case ID
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
 
+    // Verify redirection to Access Code page
+    await expect(page).toHaveURL(/\/enter-access-code$/);
+    await expect(page.locator('body')).toContainText('This is a placeholder page for the access code step');
+  });
+
+  test.skip('Citizen can enter formatted case number (with hyphens) @PR', async ({
+    loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    contestedCaseWithHearing,
+    page
+  }) => {
+    await enterCaseNumberPage.verifyCaseNumberPageContent();
+    
+    // Use the formatted case ID (XXXX-XXXX-XXXX-XXXX)
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.formattedCaseId);
+
+    // Verify redirection to Access Code page
+    await expect(page).toHaveURL(/\/enter-access-code$/);
+    await expect(page.locator('body')).toContainText('This is a placeholder page for the access code step');
+  });
+});
+
+test.describe('Enter Case Number Page Verification', () => {
   test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
   });
 
-  // --- SUCCESS & BOUNDARY HAPPY PATHS ---
-  const happyPaths = [
-    { desc: '16 digits (Standard Boundary)', value: VALID_CASE },
-    { desc: '16 digits with hyphens', value: dataFactory.validFormatted(VALID_CASE) },
-  ];
-
-  for (const { desc, value } of happyPaths) {
-    test(`Happy Path: ${desc} @PR`, async ({ page, enterCaseNumberPage }) => {
-      await enterCaseNumberPage.submitCaseNumber(value);
-
-      // Verify redirection to Access Code page
-      await expect(page).toHaveURL(/\/enter-access-code$/);
-      await expect(page.locator('body')).toContainText('This is a placeholder page for the access code step');
-    });
-  }
-
-  /**
-   * Note: The 20-digit Upper Boundary is a "Logic Success" (No length error)
-   * but a "Functional Failure" (No DB record exists for a random 20-digit string).
-   */
-  test('Success Logic: 20 digits (Upper Boundary) @PR', async ({ enterCaseNumberPage }) => {
-    await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(20));
-
-    // Confirm that the length-specific validation is NOT triggered
-    await enterCaseNumberPage.expectNoSpecificValidationErrors(['Case number must be between 16 and 20 characters']);
-
-    // We expect the "Not Found" error because this random 20-digit ID doesn't exist in DB
-    await enterCaseNumberPage.expectValidationError('Case number must be 16 digits');
-  });
-
-  // --- VALIDATION ERROR SCENARIOS ---
+  // --- VALIDATION ERROR SCENARIOS (no real case needed) ---
 
   test('Error: Empty input @PR', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber('');
@@ -74,5 +90,18 @@ test.describe.skip('Enter Case Number Page Verification', () => {
     await enterCaseNumberPage.expectValidationError(
       'We cannot find that case number, Enter the case number that you received from the court'
     );
+  });
+
+  /**
+   * Note: 20-digit is valid length but won't exist in DB - tests length validation passes
+   */
+  test('Success Logic: 20 digits (Upper Boundary) @PR', async ({ enterCaseNumberPage }) => {
+    await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(20));
+
+    // Confirm that the length-specific validation is NOT triggered
+    await enterCaseNumberPage.expectNoSpecificValidationErrors(['Case number must be between 16 and 20 characters']);
+
+    // We expect the "Not Found" error because this random 20-digit ID doesn't exist in DB
+    await enterCaseNumberPage.expectValidationError('Case number must be 16 digits');
   });
 });
