@@ -62,22 +62,19 @@ describe('getHomePageForUser', () => {
     expect(getSystemUser).toHaveBeenCalled();
   });
 
-  test('should route to enterCaseNumber when caseId is empty', async () => {
-    mockGetExistingUserCase.mockResolvedValue('');
+  test.each([
+    ['empty string', ''],
+    ['undefined', undefined],
+  ])(
+    'should route to enterCaseNumber when caseId is %s',
+    async (_, caseId) => {
+      mockGetExistingUserCase.mockResolvedValue(caseId);
 
-    const result = await getHomePageForUser(session);
+      const result = await getHomePageForUser(session);
 
-    expect(mockGetCaseById).not.toHaveBeenCalled();
-    expect(session.caseData).toBeUndefined();
-    expect(result).toBe(ViewNames.EnterCaseNumber);
-  });
-
-  test('should route to enterCaseNumber when caseId is undefined', async () => {
-    mockGetExistingUserCase.mockResolvedValue(undefined);
-
-    const result = await getHomePageForUser(session);
-
-    expect(mockGetCaseById).not.toHaveBeenCalled();
-    expect(result).toBe(ViewNames.EnterCaseNumber);
-  });
+      expect(mockGetCaseById).not.toHaveBeenCalled();
+      expect(session.caseData).toBeUndefined();
+      expect(result).toBe(ViewNames.EnterCaseNumber);
+    }
+  );
 });
