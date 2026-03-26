@@ -14,6 +14,9 @@ jest.mock('axios', () => ({
     post: jest.fn(),
   },
 }));
+jest.mock('otplib', () => ({
+  generate: jest.fn().mockResolvedValue('12345')
+}));
 
 jest.useFakeTimers({ legacyFakeTimers: true });
 
@@ -24,10 +27,11 @@ import { getServiceAuthToken, initAuthToken } from '../../../../../main/app/auth
 const mockedAxios = axios as unknown as jest.Mocked<AxiosStatic>;
 
 describe('initAuthToken', () => {
-  test('Should set an interval to start fetching a token', () => {
-    (mockedAxios.post as jest.Mock).mockResolvedValue('token');
+  test('Should set an interval to start fetching a token', async () => {
+    (mockedAxios.post as jest.Mock).mockResolvedValue({ data: 'token' });
 
     initAuthToken();
+    await new Promise(setImmediate);
     expect(mockedAxios.post).toHaveBeenCalledWith(
       'http://rpe-service-auth-provider-aat.service.core-compute-aat.internal/lease',
       {

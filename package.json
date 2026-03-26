@@ -75,7 +75,7 @@
     "superagent": "^10.2.1",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
-    "typescript": "5.9.3"
+    "typescript": "6.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",
@@ -155,6 +155,6 @@
     "minimatch": "10.2.4",
     "@eslint/eslintrc/ajv": "6.14.0",
     "flatted": "^3.4.0",
-    "serialize-javascript": "^7.0.3"
+    "picomatch": "4.0.4"
   }
 }
