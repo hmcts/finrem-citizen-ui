@@ -2,6 +2,7 @@ import { describe } from '@jest/globals';
 
 import { getSystemUser } from '../../../../main/app/auth/user';
 import { getCaseApi } from '../../../../main/app/case/case-api';
+import { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { ViewNames } from '../../../../main/common-constants';
 import { getHomePageForUser } from '../../../../main/functions/util/commonUtil';
 
@@ -14,10 +15,9 @@ jest.mock('../../../../main/app/auth/user', () => ({
 }));
 
 describe('getHomePageForUser', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let session: any;
   let mockGetExistingUserCase: jest.Mock;
   let mockGetCaseById: jest.Mock;
+  let userDetails: UserDetails;
 
   beforeEach(() => {
     mockGetExistingUserCase = jest.fn();
@@ -40,10 +40,15 @@ describe('getHomePageForUser', () => {
       roles: ['admin'],
     });
 
-    session = {
-      user: { id: 'user-123' },
-      caseData: undefined,
-    };
+    userDetails = {  accessToken: 'token',
+      idToken: 'id',
+      refreshToken: undefined,
+      sub: 'test@test.com',
+      email: 'test@test.com',
+      givenName: 'John',
+      familyName: 'Dorian',
+      id: '123',
+      roles: ['citizen'] };
   });
 
   test('should route to dashboard when caseId exists', async () => {
@@ -52,13 +57,18 @@ describe('getHomePageForUser', () => {
     mockGetExistingUserCase.mockResolvedValue('CASE123');
     mockGetCaseById.mockResolvedValue(mockCaseData);
 
-    const homepageResult = await getHomePageForUser(session);
+    const homepageResult = await getHomePageForUser(userDetails);
+
+    const expectedResult = {
+      caseData: {
+        id: 'CASE123',
+      },
+      url: ViewNames.Dashboard,
+    };
 
     expect(mockGetExistingUserCase).toHaveBeenCalled();
     expect(mockGetCaseById).toHaveBeenCalledWith('CASE123');
-    expect(session.caseData).toEqual(mockCaseData);
-    expect(homepageResult).toBe(ViewNames.Dashboard);
-
+    expect(homepageResult).toEqual(expectedResult);
     expect(getSystemUser).toHaveBeenCalled();
   });
 
@@ -70,11 +80,10 @@ describe('getHomePageForUser', () => {
     async (_, caseId) => {
       mockGetExistingUserCase.mockResolvedValue(caseId);
 
-      const result = await getHomePageForUser(session);
+      const result = await getHomePageForUser(userDetails);
 
       expect(mockGetCaseById).not.toHaveBeenCalled();
-      expect(session.caseData).toBeUndefined();
-      expect(result).toBe(ViewNames.EnterCaseNumber);
+      expect(result).toEqual({ 'url': ViewNames.EnterCaseNumber });
     }
   );
 });

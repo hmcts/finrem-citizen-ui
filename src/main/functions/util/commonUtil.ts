@@ -6,12 +6,12 @@ import { getCaseApi } from '../../app/case/case-api';
 import { UserDetails } from '../../app/controller/AppRequest';
 import { ViewNames } from '../../common-constants';
 
-export interface UserDetaultPageDetails {
+export interface UserDefaultPageDetails {
   url: string;
   caseData?: FinremCaseData
 }
 
-export async function getHomePageForUser(userDetails: UserDetails): Promise<UserDetaultPageDetails> {
+export async function getHomePageForUser(userDetails: UserDetails): Promise<UserDefaultPageDetails> {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
 
   const caseApi = getCaseApi(userDetails, logger);
