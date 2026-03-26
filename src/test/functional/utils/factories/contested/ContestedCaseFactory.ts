@@ -163,15 +163,9 @@ export class ContestedCaseFactory {
     const issueDate = DateHelper.getCurrentDate();
     const caseId = await this.createAndProcessFormACaseUpToProgressToListing(false, issueDate);
     
-    // Try to add hearing, but continue if it fails (hearing isn't required for citizen to link case)
-    try {
-      await ContestedEventApi.caseWorkerPerformsAddAHearing(caseId);
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn(`[Warning] Could not add hearing to case ${caseId}: ${error instanceof Error ? error.message : error}`);
-      // eslint-disable-next-line no-console
-      console.info('Continuing without hearing - case is still valid for citizen to link');
-    }
+    // Skip add hearing for now - case is valid for citizen to link without it
+    // eslint-disable-next-line no-console
+    console.info(`✓ Case ${caseId} created and progressed to listing (hearing step skipped)`);
     
     return caseId;
   }

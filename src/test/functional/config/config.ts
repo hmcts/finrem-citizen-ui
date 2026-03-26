@@ -2,19 +2,20 @@
  * Configuration for functional test API endpoints
  */
 
-const RUNNING_ENV = process.env.RUNNING_ENV || 'aat';
+// const RUNNING_ENV = process.env.RUNNING_ENV || 'aat';
 
 // Map preview/PR environments to AAT for backend services (no PR-specific CCD exists)
-const isPrEnv = RUNNING_ENV === 'preview' || RUNNING_ENV.startsWith('pr-');
-const derivedEnv = isPrEnv ? 'aat' : RUNNING_ENV;
+// const isPrEnv = RUNNING_ENV === 'preview' || RUNNING_ENV.startsWith('pr-');
+// const derivedEnv = isPrEnv ? 'aat' : RUNNING_ENV;
 
 // IDAM and S2S always use AAT (no PR-specific instances exist)
 const idamEnv = 'aat';
 
 const config = {
   // CCD Data Store API - always use AAT for PR environments
-  ccdDataStoreApi: process.env.CCD_DATA_STORE_API_URL 
-    || `http://ccd-data-store-api-${derivedEnv}.service.core-compute-${derivedEnv}.internal`,
+  ccdDataStoreApi: `https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net`,
+  // ccdDataStoreApi: process.env.CCD_DATA_STORE_API_URL 
+  //   || `http://ccd-data-store-api-${derivedEnv}.service.core-compute-${derivedEnv}.internal`,
 
   // IDAM endpoints - ALWAYS use AAT
   idamApi: process.env.IDAM_API_URL 
