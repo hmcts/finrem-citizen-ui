@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import { existsSync, readFileSync } from 'fs';
 import fs from 'fs-extra';
 import { set, unset } from 'lodash';
-import { generate, createGuardrails, OTPGuardrails } from 'otplib';
+import { createGuardrails, generate, OTPGuardrails } from 'otplib';
 import path from 'path';
 import lockfile from 'proper-lockfile';
 
@@ -285,7 +285,7 @@ async function getServiceToken(): Promise<string> {
   }
 
   // Generate S2S token using TOTP
-  const s2sSecret = process.env.FINREM_CASE_ORCHESTRATION_SERVICE_S2S_KEY
+  const s2sSecret = process.env.FINREM_CASE_ORCHESTRATION_SERVICE_S2S_KEY;
   if (!s2sSecret) {
     throw new Error('S2S_SECRET not set.');
   }
