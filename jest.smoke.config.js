@@ -35,5 +35,18 @@ module.exports = {
         includeFailureMsg: true,
       },
     ],
+    [
+      'jest-junit',
+      {
+        outputDirectory: '<rootDir>/smoke-output',
+        outputName: 'smoke-test-results.xml',
+      },
+    ],
+    [
+      'jest-allure2-reporter',
+      {
+        resultsDir: 'allure-results-smoke',
+      },
+    ],
   ],
 };
