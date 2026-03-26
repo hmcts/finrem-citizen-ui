@@ -31,7 +31,7 @@ module.exports = {
       'jest-html-reporter',
       {
         pageTitle: 'Smoke Test Report',
-        outputPath: '<rootDir>/smoke-output/smoke-test-report.html',
+        outputPath: '<rootDir>/smoke-output/reports/test-report.html',
         includeFailureMsg: true,
       },
     ],

@@ -30,18 +30,17 @@ version
 .settings/
 
 # Testing & Reporting (Playwright/Allure/Jest)
-allure-results/*
-allure-report/*
-allure-results-smoke/*
-playwright-report/*
+allure-results/
+allure-report/
+allure-results-smoke/
+playwright-report/
 test-results/
 test-results.json
-coverage/*
-smoke-output/*
-functional-output/*
-mochawesome-report/*
+coverage/
+smoke-output/
+functional-output/
+mochawesome-report/
 junit*.xml
-a11y-output/*
 
 # Project Specific Paths
 src/main/public/img/lib/*
