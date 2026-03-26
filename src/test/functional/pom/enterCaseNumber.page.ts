@@ -25,6 +25,10 @@ export class EnterCaseNumberPage {
     for (const element of elementsToCheck) {
       await expect(element).toBeVisible();
     }
+
+    // Verify the hint text content and take a screenshot for visual testing
+    await expect(this.caseNumberHint).toHaveText('This is your 16 digit financial remedy case number that you received from the court. For example, 1234-5678-0123-4567');
+    await expect(this.page.locator('#caseNumber-hint')).toHaveScreenshot('case-number-hint.png');
   }
 
   async submitCaseNumber(caseNumber: string): Promise<void> {
