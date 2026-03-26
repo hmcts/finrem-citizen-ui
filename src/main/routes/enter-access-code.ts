@@ -1,8 +1,8 @@
 import { Application, Request, Response } from 'express';
 
 import { AccessCodeCollection, FinremCaseData } from '../app/case/definition';
-import { oidcMiddleware } from '../middleware';
 import { RouteNames, ViewNames } from '../common-constants';
+import { oidcMiddleware } from '../middleware';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
