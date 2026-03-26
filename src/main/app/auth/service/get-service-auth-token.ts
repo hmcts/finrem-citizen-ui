@@ -3,17 +3,17 @@ import config from 'config';
 import { generate } from 'otplib';
 
 const { Logger } = require('@hmcts/nodejs-logging');
-
 const logger = Logger.getLogger('service-auth-token');
+
 let token: string;
 
-export const getTokenFromApi = (): void => {
+export const getTokenFromApi = async (): Promise<void> => {
   logger.info('Refreshing service auth token');
 
   const url: string = config.get('services.authProvider.url') + '/lease';
   const microservice: string = config.get('services.authProvider.microservice');
   const secret: string = config.get('services.authProvider.secret');
-  const oneTimePassword = generate({ secret });
+  const oneTimePassword = await generate ( { secret });
   const body = { microservice, oneTimePassword };
 
   axios
@@ -27,6 +27,4 @@ export const initAuthToken = (): void => {
   setInterval(getTokenFromApi, 1000 * 60 * 60);
 };
 
-export const getServiceAuthToken = (): string => {
-  return token;
-};
+export const getServiceAuthToken = (): string => token;
