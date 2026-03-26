@@ -31,7 +31,6 @@ version
 
 # Testing & Reporting (Playwright/Allure/Jest)
 allure-results/*
-allure-results-a11y/*
 allure-report/*
 allure-results-smoke/*
 playwright-report/*

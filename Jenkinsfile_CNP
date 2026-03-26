@@ -37,13 +37,13 @@ withPipeline(type, product, component) {
   // 2. Setup for Smoke Tests
   before('tests') {
     sh 'rm -rf smoke-output functional-output a11y-output allure-results allure-results-smoke allure-results-a11y'
-    sh 'npx playwright install chromium'
+    sh 'npx playwright install chromium --with-deps'
   }
 
   // 3. Setup for Functional Tests
   before('functionalTests') {
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
-    sh 'npx playwright install'
+    sh 'npx playwright install --with-deps'
   }
 
   afterAlways('smokeTest') {
@@ -73,12 +73,10 @@ withPipeline(type, product, component) {
 
   onMaster() {
     env.JENKINS_BRANCH = "master"
-    env.RUNNING_ENV = "aat"
   }
 
   onPR() {
     env.JENKINS_BRANCH = "preview"
-    env.RUNNING_ENV = "pr-${CHANGE_ID}"
     env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
   }
 }
