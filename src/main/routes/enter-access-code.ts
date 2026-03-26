@@ -95,11 +95,6 @@ export function validateAccessCode(accessCode: string | undefined): AccessCodeEr
 
 export default function setupEnterAccessCodeRoute(app: Application): void {
   app.get(RouteNames.enterAccessCode, oidcMiddleware, (req: Request, res: Response) => {
-    // Check if user is authenticated
-    if (!req.session.user?.accessToken) {
-      return res.redirect('/oauth2/login');
-    }
-
     // Check if case number exists in session
     if (!req.session.caseNumber) {
       return res.redirect(RouteNames.enterCaseNumber);
@@ -109,11 +104,6 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
   });
 
   app.post(RouteNames.enterAccessCode, oidcMiddleware, async (req: Request, res: Response) => {
-    // Check if user is authenticated
-    if (!req.session.user?.accessToken) {
-      return res.redirect('/oauth2/login');
-    }
-
     // Check if case number exists in session
     if (!req.session.caseNumber) {
       return res.redirect(RouteNames.enterCaseNumber);
