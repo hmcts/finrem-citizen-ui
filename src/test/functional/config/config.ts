@@ -13,7 +13,7 @@ const idamEnv = 'aat';
 
 const config = {
   // CCD Data Store API - always use AAT for PR environments
-  ccdDataStoreApi: `https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net`,
+  ccdDataStoreApi: 'https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net',
   // ccdDataStoreApi: process.env.CCD_DATA_STORE_API_URL 
   //   || `http://ccd-data-store-api-${derivedEnv}.service.core-compute-${derivedEnv}.internal`,
 

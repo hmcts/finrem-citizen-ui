@@ -138,9 +138,9 @@ export class CcdApi {
     this.makeModifications(dataModifications, data);
 
     // Debug: log the payload data keys
-    // eslint-disable-next-line no-console
+     
     //console.log('[DEBUG] Payload fields:', Object.keys(data));
-    // eslint-disable-next-line no-console
+     
     //console.log('[DEBUG] Using credentials for user:', userName);
 
     const payload: CcdEventPayload = {

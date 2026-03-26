@@ -10,16 +10,6 @@ const dataFactory = {
 
 test.describe('Enter Case Number - Citizen Happy Path', () => {
   /**
-   * TODO: These tests are skipped pending DevOps investigation.
-   * The system user (fr_system_user@hmcts.net) credentials in Key Vault are valid,
-   * but the deployed app fails to look up cases in CCD. Possible causes:
-   * 1. Key Vault secrets not being mounted correctly in pods
-   * 2. getSystemUser() not being called correctly in enter-case-number route
-   * 
-   * Case creation via API works fine - only the citizen UI lookup fails.
-   */
-  
-  /**
    * This test creates a real contested case via API (caseworker creates it with hearing date),
    * then logs in as a citizen and submits the case number.
    */
