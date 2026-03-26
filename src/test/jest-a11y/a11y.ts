@@ -1,10 +1,13 @@
+import type { Express } from 'express';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
-
-import type { Express } from 'express';
 import supertest from 'supertest';
 
 const pa11y = require('pa11y');
+
+jest.mock('otplib', () => ({
+  generate: jest.fn(() => '123456'),
+}));
 
 jest.mock('../../main/modules/oidc', () => ({
   OIDCModule: class {

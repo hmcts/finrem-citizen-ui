@@ -2,7 +2,7 @@ import { Application, Request, Response } from 'express';
 
 import { AccessCodeCollection, FinremCaseData } from '../app/case/definition';
 import { oidcMiddleware } from '../middleware';
-import { RouteNames } from '../route-names';
+import { RouteNames, ViewNames } from '../common-constants';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -105,8 +105,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       return res.redirect(RouteNames.enterCaseNumber);
     }
 
-    res.render('enter-access-code');
-  });
+    res.render(ViewNames.EnterAccessCode);
 
   app.post(RouteNames.enterAccessCode, oidcMiddleware, async (req: Request, res: Response) => {
     // Check if user is authenticated

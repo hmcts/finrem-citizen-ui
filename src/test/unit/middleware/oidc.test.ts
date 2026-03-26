@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
+import { RouteNames } from '../../../main/common-constants';
 import { oidcMiddleware } from '../../../main/middleware/oidc';
-import { RouteNames } from '../../../main/route-names';
 
 function makeReq(overrides: Partial<Request> = {}): Request {
   return {

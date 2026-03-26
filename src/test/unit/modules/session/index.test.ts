@@ -40,7 +40,7 @@ const mockSessionMiddleware = jest.requireMock('express-session') as jest.Mock;
 const configGetMock = (jest.requireMock('config') as { get: jest.Mock }).get;
 const redisModule = jest.requireMock('ioredis') as { Redis: jest.Mock };
 
-import { Session, parseSessionSecret } from '../../../../main/modules/session/index';
+import { parseSessionSecret,Session } from '../../../../main/modules/session/index';
 
 describe('parseSessionSecret', () => {
   it('returns plain string unchanged', () => {
