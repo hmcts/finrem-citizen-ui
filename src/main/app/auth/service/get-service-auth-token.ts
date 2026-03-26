@@ -1,6 +1,6 @@
 import axios from 'axios';
 import config from 'config';
-import { generate } from 'otplib';
+import { authenticator } from '@otplib/preset-default';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -13,7 +13,7 @@ export const getTokenFromApi = (): void => {
   const url: string = config.get('services.authProvider.url') + '/lease';
   const microservice: string = config.get('services.authProvider.microservice');
   const secret: string = config.get('services.authProvider.secret');
-  const oneTimePassword = generate({ secret });
+  const oneTimePassword = authenticator.generate(secret);
   const body = { microservice, oneTimePassword };
 
   axios
