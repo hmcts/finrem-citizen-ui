@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import { existsSync, readFileSync } from 'fs';
 import fs from 'fs-extra';
 import { set, unset } from 'lodash';
-import { authenticator } from 'otplib';
+import { generate, createGuardrails, OTPGuardrails } from 'otplib';
 import path from 'path';
 import lockfile from 'proper-lockfile';
 
@@ -285,22 +285,25 @@ async function getServiceToken(): Promise<string> {
   }
 
   // Generate S2S token using TOTP
-  const s2sSecret = process.env.S2S_SECRET || process.env.SERVICE_AUTH_SECRET;
+  const s2sSecret = process.env.FINREM_CASE_ORCHESTRATION_SERVICE_S2S_KEY
   if (!s2sSecret) {
-    throw new Error(
-      'S2S_SECRET not set.'
-    );
+    throw new Error('S2S_SECRET not set.');
   }
 
   // Use configured S2S URL or derive from environment
   const env = getEnvironment();
   const serviceEnv = env === 'preview' ? 'aat' : env;
   const s2sUrl = process.env.S2S_URL || `http://rpe-service-auth-provider-${serviceEnv}.service.core-compute-${serviceEnv}.internal`;
-  const microservice = 'finrem_citizen_ui';
+  const microservice = 'finrem_case_orchestration';  // Changed from 'finrem_citizen_ui'
+
+  // Create guardrails that allow shorter HMCTS secrets
+  const s2sGuardrails: OTPGuardrails = createGuardrails({
+    MIN_SECRET_BYTES: 1,  // Allow any length secret (HMCTS secrets are shorter than default 16 bytes)
+  });
 
   try {
-    // Generate TOTP
-    const otp = authenticator.generate(s2sSecret);
+    // Generate TOTP using otplib v13 async API
+    const otp = await generate({ secret: s2sSecret, guardrails: s2sGuardrails });
 
     // Request S2S token
     const response = await axios.post<string>(

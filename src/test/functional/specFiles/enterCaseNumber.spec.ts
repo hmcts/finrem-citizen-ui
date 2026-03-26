@@ -1,6 +1,7 @@
+import { createCase } from '@helpers/caseCreation';
+import { caseDataFactory, ErrorMessages } from '@helpers/testData';
+
 import { expect, test } from '../../fixtures/fixtures';
-import { createCase } from '../utils/helpers/caseCreation';
-import { caseDataFactory,ErrorMessages } from '../utils/helpers/testData';
 
 const { generateDigits, formatCaseNumber } = caseDataFactory;
 
@@ -19,7 +20,7 @@ async function createFinancialRemedyCase(citizenEmail: string): Promise<string> 
  * NOTE: Skipped - portal case lookup requires specific case state not set by FR_newPaperCase
  */
 test.describe('Enter Case Number - Citizen Happy Path', () => {
-  test.skip('Citizen enters valid case number and lands on access code page @PR', async ({
+  test('Citizen enters valid case number and lands on access code page @PR', async ({
     loggedInPage,
     enterCaseNumberPage,
     page,
@@ -31,7 +32,7 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
     await expect(page).toHaveURL(/\/enter-access-code$/);
   });
 
-  test.skip('Citizen enters hyphenated case number and lands on access code page @PR', async ({
+  test('Citizen enters hyphenated case number and lands on access code page @PR', async ({
     loggedInPage,
     enterCaseNumberPage,
     page,
@@ -43,7 +44,7 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
     await expect(page).toHaveURL(/\/enter-access-code$/);
   });
 
-  test('Case created via API - portal returns not found (current behavior) @PR', async ({
+  test.skip('Case created via API - portal returns not found (current behavior) @PR', async ({
     loggedInPage,
     enterCaseNumberPage,
     page,  
