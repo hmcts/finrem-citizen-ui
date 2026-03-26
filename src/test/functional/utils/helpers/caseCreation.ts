@@ -4,14 +4,21 @@ import { randomUUID } from 'crypto';
 import { existsSync, readFileSync } from 'fs';
 import fs from 'fs-extra';
 import { set, unset } from 'lodash';
-import { generate } from 'otplib';
+import { createGuardrails, generate } from 'otplib';
 import path from 'path';
 import lockfile from 'proper-lockfile';
 
 import { UserCredentials } from '../../../functional/pom/idamPage.page';
-import { loadStoredTokens } from './idamTokenGenerator';
 
-// Default password for test users - should be overridden in CI/CD environments
+// Stub for loadStoredTokens - returns null to fall through to env variables
+function loadStoredTokens(): { cookieToken: string; cookieUserId: string } | null {
+  return null;
+}
+
+// Custom guardrails to allow shorter S2S secrets (10 bytes instead of 16)
+const s2sGuardrails = createGuardrails({ MIN_SECRET_BYTES: 1 });
+
+// Default password for test users
 const DEFAULT_TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'Password1111';
 
 // Parse export-prefixed env variables
@@ -288,10 +295,12 @@ async function getServiceToken(): Promise<string> {
   }
 
   // Generate S2S token using TOTP
-  const s2sSecret = process.env.S2S_SECRET || process.env.SERVICE_AUTH_SECRET;
+  const s2sSecret = process.env.FINREM_CASE_ORCHESTRATION_SERVICE_S2S_KEY
+    || process.env.SERVICE_AUTH_SECRET 
+    || process.env.S2S_SECRET;
   if (!s2sSecret) {
     throw new Error(
-      'S2S_SECRET not set.'
+      'Missing S2S secret. Set one of: S2S_SECRET, SERVICE_AUTH_SECRET, or FINREM_CASE_ORCHESTRATION_SERVICE_S2S_KEY'
     );
   }
 
@@ -302,8 +311,8 @@ async function getServiceToken(): Promise<string> {
   const microservice = 'finrem_case_orchestration';
 
   try {
-    // Generate TOTP using otplib v13+ API
-    const otp = generate({ secret: s2sSecret });
+    // Generate TOTP using otplib with custom guardrails for shorter HMCTS secrets
+    const otp = await generate({ secret: s2sSecret, guardrails: s2sGuardrails });
 
     // Request S2S token
     const response = await axios.post<string>(

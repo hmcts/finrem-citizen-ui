@@ -1,49 +1,12 @@
-import { createHmac } from 'crypto';
 import { existsSync, readFileSync } from 'fs';
+import { createGuardrails, generate } from 'otplib';
 import path from 'path';
 
 import config from '../../config/config';
 import { axiosRequest } from './ApiHelper';
 
-/**
- * Generate TOTP code (RFC 6238) - implements our own to avoid otplib validation issues
- * HMCTS S2S secrets are shorter than otplib v13+ minimum requirement
- */
-function generateTOTP(secret: string): string {
-  // Decode base32 secret
-  const base32chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  let bits = '';
-  for (const char of secret.toUpperCase().replace(/=+$/, '')) {
-    const val = base32chars.indexOf(char);
-    if (val === -1) {continue;}
-    bits += val.toString(2).padStart(5, '0');
-  }
-  const secretBytes = Buffer.alloc(Math.floor(bits.length / 8));
-  for (let i = 0; i < secretBytes.length; i++) {
-    secretBytes[i] = parseInt(bits.slice(i * 8, i * 8 + 8), 2);
-  }
-
-  // Get current time step (30 second window)
-  const timeStep = Math.floor(Date.now() / 1000 / 30);
-  const timeBuffer = Buffer.alloc(8);
-  timeBuffer.writeBigUInt64BE(BigInt(timeStep));
-
-  // Generate HMAC-SHA1
-  const hmac = createHmac('sha1', secretBytes);
-  hmac.update(timeBuffer);
-  const hash = hmac.digest();
-
-  // Dynamic truncation
-  const offset = hash[hash.length - 1] & 0x0f;
-  const code = (
-    ((hash[offset] & 0x7f) << 24) |
-    ((hash[offset + 1] & 0xff) << 16) |
-    ((hash[offset + 2] & 0xff) << 8) |
-    (hash[offset + 3] & 0xff)
-  ) % 1000000;
-
-  return code.toString().padStart(6, '0');
-}
+// Create custom guardrails to allow shorter HMCTS S2S secrets (10 bytes instead of 16)
+const s2sGuardrails = createGuardrails({ MIN_SECRET_BYTES: 1 });
 
 // Load .env file handling both 'export KEY=VALUE' and 'KEY=VALUE' formats
 function ensureEnvLoaded(): void {
@@ -85,18 +48,19 @@ export async function getServiceToken(): Promise<string> {
     return process.env.S2S_SERVICE_TOKEN;
   }
 
-  const s2sSecret = process.env.S2S_SECRET || process.env.SERVICE_AUTH_SECRET;
+  const s2sSecret = process.env.FINREM_CASE_ORCHESTRATION_SERVICE_S2S_KEY
+    || process.env.SERVICE_AUTH_SECRET 
+    || process.env.S2S_SECRET;
   
   if (!s2sSecret) {
     throw new Error(
-      'Missing S2S_SECRET or SERVICE_AUTH_SECRET environment variable. ' +
-      'This is required for service-to-service authentication.'
+      'Missing S2S secret. Set one of: S2S_SECRET, SERVICE_AUTH_SECRET, or FINREM_CASE_ORCHESTRATION_SERVICE_S2S_KEY'
     );
   }
 
   try {
-    // Generate TOTP using our own implementation (no secret length validation)
-    const otp = generateTOTP(s2sSecret);
+    // Generate TOTP using otplib with custom guardrails for shorter HMCTS secrets
+    const otp = await generate({ secret: s2sSecret, guardrails: s2sGuardrails });
 
     // Request S2S token
     const response = await axiosRequest<string>({
