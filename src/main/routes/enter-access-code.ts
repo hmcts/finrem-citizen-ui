@@ -106,6 +106,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
     }
 
     res.render(ViewNames.EnterAccessCode);
+  });
 
   app.post(RouteNames.enterAccessCode, oidcMiddleware, async (req: Request, res: Response) => {
     // Check if user is authenticated

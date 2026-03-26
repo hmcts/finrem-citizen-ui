@@ -1,6 +1,6 @@
+import { authenticator } from '@otplib/preset-default';
 import axios from 'axios';
 import config from 'config';
-import { authenticator } from '@otplib/preset-default';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
