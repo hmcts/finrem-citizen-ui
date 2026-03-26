@@ -12,6 +12,9 @@ import {
   REFER_LIST_DATA } from '../../PayloadMutator';
 import { envTestData } from '../../test_data/EnvTestDataConfig';
 
+// Helper to wait for CCD eventual consistency
+const waitForCcdConsistency = (ms = 3000) => new Promise(resolve => setTimeout(resolve, ms));
+
 /**
  * Factory for creating contested cases in various states
  */
@@ -127,6 +130,8 @@ export class ContestedCaseFactory {
     issueDate?: string
   ): Promise<string> {
     const caseId = await this.createCase(isExpressPilot, false);
+    // Wait for CCD eventual consistency before subsequent events
+    await waitForCcdConsistency();
     await ContestedEventApi.solicitorSubmitFormACase(caseId);
     await ContestedEventApi.caseWorkerProgressFormACaseToListing(caseId, issueDate);
     return caseId;
@@ -140,6 +145,8 @@ export class ContestedCaseFactory {
     issueDate?: string
   ): Promise<string> {
     const caseId = await this.createCase(isExpressPilot, true);
+    // Wait for CCD eventual consistency before subsequent events
+    await waitForCcdConsistency();
     await ContestedEventApi.caseWorkerProgressPaperCaseToListing(caseId, issueDate);
     return caseId;
   }
