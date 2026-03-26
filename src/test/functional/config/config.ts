@@ -2,20 +2,31 @@
  * Configuration for functional test API endpoints
  */
 
-// const RUNNING_ENV = process.env.RUNNING_ENV || 'aat';
-
-// Map preview/PR environments to AAT for backend services (no PR-specific CCD exists)
-// const isPrEnv = RUNNING_ENV === 'preview' || RUNNING_ENV.startsWith('pr-');
-// const derivedEnv = isPrEnv ? 'aat' : RUNNING_ENV;
+// Determine if running in CI/pipeline (internal network) or locally (external)
+const isCI = !!process.env.CI || !!process.env.JENKINS_URL;
 
 // IDAM and S2S always use AAT (no PR-specific instances exist)
 const idamEnv = 'aat';
 
+// CCD Data Store API URL
+// - In pipeline (CI): use internal AAT URL (accessible from cluster)
+// - Locally: use external preview PR URL for testing
+const getCcdUrl = (): string => {
+  // Explicit override takes priority
+  if (process.env.CCD_DATA_STORE_API_URL) {
+    return process.env.CCD_DATA_STORE_API_URL;
+  }
+  // In CI/pipeline, use internal AAT URL
+  if (isCI) {
+    return 'http://ccd-data-store-api-aat.service.core-compute-aat.internal';
+  }
+  // Local development: use external preview URL
+  return 'https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net';
+};
+
 const config = {
-  // CCD Data Store API - always use AAT for PR environments
-  ccdDataStoreApi: 'https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net',
-  // ccdDataStoreApi: process.env.CCD_DATA_STORE_API_URL 
-  //   || `http://ccd-data-store-api-${derivedEnv}.service.core-compute-${derivedEnv}.internal`,
+  // CCD Data Store API
+  ccdDataStoreApi: getCcdUrl(),
 
   // IDAM endpoints - ALWAYS use AAT
   idamApi: process.env.IDAM_API_URL 
