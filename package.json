@@ -18,6 +18,7 @@
     "test:coverage": "jest --coverage",
     "test:routes": "jest -c jest.routes.config.js",
     "test:a11y": "echo 'placeholder'",
+    "test:playwright:a11y": "TEST_RESULTS_DIR=a11y-output playwright test --config playwright.config.mts --project chromium --grep @a11y --reporter=html",
     "test:smoke": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --config jest.smoke.config.js",
     "test:functional": "playwright test --config playwright.config.mts --project chromium --grep @PR",
     "test:full-functional": "playwright test --config playwright.config.mts --retries=2",

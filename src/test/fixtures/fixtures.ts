@@ -1,3 +1,4 @@
+import { AxeUtils } from '@hmcts/playwright-common';
 import { test as base } from '@playwright/test';
 
 import { BasePage } from '../functional/pom/basePage.page';
@@ -33,9 +34,15 @@ type MyFixtures = {
   loggedInPage: AuthSession;
   enterCaseNumberPage: EnterCaseNumberPage;
   contestedCaseWithHearing: CreatedCase;
+  axeUtils: AxeUtils; 
 };
 
 export const test = base.extend<MyFixtures>({
+   axeUtils: async ({ page }, use) => {
+    const axeUtils = new AxeUtils(page);
+    await use(axeUtils);
+  },
+  
   idamApiService: async ({}, use) => {
     await use(new IdamApiService());
   },
