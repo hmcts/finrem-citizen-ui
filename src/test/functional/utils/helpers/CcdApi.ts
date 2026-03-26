@@ -28,6 +28,17 @@ interface CcdCaseResponse {
 // Get CCD API URL - use getter to ensure config is evaluated at call time
 const getCcdApiUrl = () => config.ccdDataStoreApi;
 
+// Retry configuration for CCD eventual consistency
+const CCD_RETRY_CONFIG = {
+  maxRetries: 5,
+  initialDelayMs: 2000,
+  maxDelayMs: 10000,
+  retryableStatusCodes: [404]  // CaseNotFoundException - case not yet available
+};
+
+// Helper to wait with exponential backoff
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export class CcdApi {
 
   async getStartEventToken(
@@ -36,17 +47,45 @@ export class CcdApi {
     authToken: string,
     serviceToken: string
   ): Promise<string> {
-    const startCaseResponse = await axiosRequest<{ token: string }>({
-      method: 'get',
-      url: getCcdApiUrl() + ccdStartCasePath,
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-        ServiceAuthorization: `Bearer ${serviceToken}`,
-        'Content-Type': 'application/json'
+    let lastError: Error | null = null;
+    
+    for (let attempt = 0; attempt <= CCD_RETRY_CONFIG.maxRetries; attempt++) {
+      try {
+        const startCaseResponse = await axiosRequest<{ token: string }>({
+          method: 'get',
+          url: getCcdApiUrl() + ccdStartCasePath,
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            ServiceAuthorization: `Bearer ${serviceToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        return startCaseResponse.data.token;
+      } catch (error) {
+        lastError = error as Error;
+        const errorMessage = lastError.message || '';
+        
+        // Check if this is a retryable 404 (CCD eventual consistency)
+        const is404 = errorMessage.includes('status 404') || 
+                      errorMessage.includes('No case found');
+        
+        if (is404 && attempt < CCD_RETRY_CONFIG.maxRetries) {
+          const delayMs = Math.min(
+            CCD_RETRY_CONFIG.initialDelayMs * Math.pow(2, attempt),
+            CCD_RETRY_CONFIG.maxDelayMs
+          );
+          // eslint-disable-next-line no-console
+          console.log(`[CCD Retry] Case not found (attempt ${attempt + 1}/${CCD_RETRY_CONFIG.maxRetries + 1}), waiting ${delayMs}ms for CCD consistency...`);
+          await wait(delayMs);
+          continue;
+        }
+        
+        // Non-retryable error or max retries exceeded
+        throw lastError;
       }
-    });
-
-    return startCaseResponse.data.token;
+    }
+    
+    throw lastError!;
   }
 
   async saveCase(

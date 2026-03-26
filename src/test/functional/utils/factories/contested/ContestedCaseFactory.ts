@@ -133,6 +133,9 @@ export class ContestedCaseFactory {
     // Wait for CCD eventual consistency before subsequent events
     await waitForCcdConsistency();
     await ContestedEventApi.solicitorSubmitFormACase(caseId);
+    // Wait for CCD to propagate case data before caseworker operations
+    // Caseworker may use different CCD nodes, requiring eventual consistency
+    await waitForCcdConsistency(5000);
     await ContestedEventApi.caseWorkerProgressFormACaseToListing(caseId, issueDate);
     return caseId;
   }
@@ -145,8 +148,8 @@ export class ContestedCaseFactory {
     issueDate?: string
   ): Promise<string> {
     const caseId = await this.createCase(isExpressPilot, true);
-    // Wait for CCD eventual consistency before subsequent events
-    await waitForCcdConsistency();
+    // Wait for CCD eventual consistency before subsequent caseworker events
+    await waitForCcdConsistency(5000);
     await ContestedEventApi.caseWorkerProgressPaperCaseToListing(caseId, issueDate);
     return caseId;
   }
