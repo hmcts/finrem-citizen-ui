@@ -3,7 +3,7 @@ import { describe } from '@jest/globals';
 import { getSystemUser } from '../../../../main/app/auth/user';
 import { getCaseApi } from '../../../../main/app/case/case-api';
 import { ViewNames } from '../../../../main/common-constants';
-import { getHomePageForUser } from '../../../../main/functions/util/homepage';
+import { getHomePageForUser } from '../../../../main/functions/util/commonUtil';
 
 jest.mock('../../../../main/app/case/case-api', () => ({
   getCaseApi: jest.fn(),

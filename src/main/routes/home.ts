@@ -7,13 +7,17 @@ import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { CaseRole } from '../app/case/definition';
 import { UserDetails } from '../app/controller/AppRequest';
 import { RouteNames } from '../common-constants';
-import { getHomePageForUser } from '../functions/util/homepage';
+import { getHomePageForUser } from '../functions/util/commonUtil';
 import { oidcMiddleware } from '../middleware';
 
 export default function (app: Application): void {
   app.get(RouteNames.basePath, oidcMiddleware, async (req, res) => {
-    const homePageRouter = await getHomePageForUser(req.session);
-    res.render(homePageRouter);
+    const user = req.session.user as UserDetails;
+    const userPageDetails = await getHomePageForUser(user);
+    if(userPageDetails.caseData) {
+      req.session.caseData = userPageDetails.caseData;
+    }
+    res.render(userPageDetails.url);
   });
 
   app.get(RouteNames.caseReference, async (req, res) => {
