@@ -37,13 +37,13 @@ withPipeline(type, product, component) {
   // 2. Setup for Smoke Tests
   before('tests') {
     sh 'rm -rf smoke-output functional-output a11y-output allure-results allure-results-smoke allure-results-a11y'
-    sh 'npx playwright install chromium --with-deps'
+    sh 'npx playwright install chromium'
   }
 
   // 3. Setup for Functional Tests
   before('functionalTests') {
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
-    sh 'npx playwright install --with-deps'
+    sh 'npx playwright install'
   }
 
   afterAlways('smokeTest') {
@@ -52,7 +52,6 @@ withPipeline(type, product, component) {
 
   afterAlways('functionalTests') {
       // Run a11y tests to generate separate report (same tests, filtered by @a11y tag)
-      sh 'npx playwright install --with-deps'
       yarnBuilder.yarn('test:playwright:a11y')
       
       junit testResults: 'functional-output/playwright-functional-test-results.xml', allowEmptyResults: true
