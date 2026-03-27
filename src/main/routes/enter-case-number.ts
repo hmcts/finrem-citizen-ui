@@ -72,6 +72,7 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
     res.render(ViewNames.EnterCaseNumber, {
       errors,
       caseNumber,
+      formAction: RouteNames.enterCaseNumber,
     });
   });
 
