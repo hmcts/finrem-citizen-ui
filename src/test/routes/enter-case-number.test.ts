@@ -14,18 +14,18 @@ describe('Enter Case Number page', () => {
   });
 
   describe('on POST /enter-case-number', () => {
-    test('should redirect to oauth2/login when not authenticated with valid format', async () => {
+    test('should redirect to login when not authenticated', async () => {
       const res = await request(app).post('/enter-case-number').send({ caseNumber: '1234567890123456' }).expect(302);
 
       expect(res.status).toBe(302);
-      expect(res.header.location).toBe('/oauth2/login');
+      expect(res.header.location).toBe('/login');
     });
 
-    test('should redirect to enter-case-number for validation errors', async () => {
+    test('should redirect to login when not authenticated with validation errors', async () => {
       const res = await request(app).post('/enter-case-number').send({ caseNumber: '' }).expect(302);
 
       expect(res.status).toBe(302);
-      expect(res.header.location).toBe('/enter-case-number');
+      expect(res.header.location).toBe('/login');
     });
   });
 });
