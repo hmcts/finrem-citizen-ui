@@ -26,7 +26,7 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
 
     // Verify redirection to Access Code page
     await expect(page).toHaveURL(/\/enter-access-code$/);
-    await expect(page.locator('body')).toContainText('This is a placeholder page for the access code step');
+    await expect(page.locator('h1')).toContainText('Enter access code');
   });
 
   test('Citizen can enter formatted case number (with hyphens) @PR', async ({
@@ -42,7 +42,7 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
 
     // Verify redirection to Access Code page
     await expect(page).toHaveURL(/\/enter-access-code$/);
-    await expect(page.locator('body')).toContainText('This is a placeholder page for the access code step');
+    await expect(page.locator('h1')).toContainText('Enter access code');
   });
 });
 

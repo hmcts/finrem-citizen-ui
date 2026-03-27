@@ -81,18 +81,22 @@ export const test = base.extend<MyFixtures>({
   /**
    * CASE CREATION FIXTURE: Creates a contested case with hearing date via API.
    * This creates a real case in CCD that can be used for testing.
+   * Timeout increased to 90s to accommodate API calls and CCD consistency waits.
    */
-  contestedCaseWithHearing: async ({}, use) => {
-    const caseId = await ContestedCaseFactory.createContestedCaseWithHearing();
-    
-    // Ensure caseId is a string
-    const caseIdStr = String(caseId);
-    
-    // Format case ID with hyphens (XXXX-XXXX-XXXX-XXXX)
-    const formattedCaseId = caseIdStr.replace(/(\d{4})(?=\d)/g, '$1-');
-    
-    await use({ caseId: caseIdStr, formattedCaseId });
-  },
+  contestedCaseWithHearing: [
+    async ({}, use) => {
+      const caseId = await ContestedCaseFactory.createContestedCaseWithHearing();
+      
+      // Ensure caseId is a string
+      const caseIdStr = String(caseId);
+      
+      // Format case ID with hyphens (XXXX-XXXX-XXXX-XXXX)
+      const formattedCaseId = caseIdStr.replace(/(\d{4})(?=\d)/g, '$1-');
+      
+      await use({ caseId: caseIdStr, formattedCaseId });
+    },
+    { timeout: 90 * 1000 }
+  ],
 });
 
 export { expect } from '@playwright/test';
