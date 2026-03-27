@@ -2,6 +2,7 @@ import { AxeUtils } from '@hmcts/playwright-common';
 import { test as base } from '@playwright/test';
 
 import { BasePage } from '../functional/pom/basePage.page';
+import { EnterAccessCodePage } from '../functional/pom/enterAccessCode.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
 import { ContestedCaseFactory } from '../functional/utils/factories/contested/ContestedCaseFactory';
@@ -33,6 +34,7 @@ type MyFixtures = {
   basePage: BasePage;
   loggedInPage: AuthSession;
   enterCaseNumberPage: EnterCaseNumberPage;
+  enterAccessCodePage: EnterAccessCodePage;
   contestedCaseWithHearing: CreatedCase;
   axeUtils: AxeUtils; 
 };
@@ -76,6 +78,10 @@ export const test = base.extend<MyFixtures>({
 
   enterCaseNumberPage: async ({ page }, use) => {
     await use(new EnterCaseNumberPage(page));
+  },
+
+  enterAccessCodePage: async ({ page }, use) => {
+    await use(new EnterAccessCodePage(page));
   },
 
   /**
