@@ -17,7 +17,7 @@ export default function (app: Application): void {
     if(userPageDetails.caseData) {
       req.session.caseData = userPageDetails.caseData;
     }
-    res.render(userPageDetails.url);
+    res.redirect(userPageDetails.url);
   });
 
   app.get(RouteNames.caseReference, async (req, res) => {
