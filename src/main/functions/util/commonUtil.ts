@@ -4,7 +4,7 @@ import { LoggerInstance } from 'winston';
 import { getSystemUser } from '../../app/auth/user';
 import { getCaseApi } from '../../app/case/case-api';
 import { UserDetails } from '../../app/controller/AppRequest';
-import { ViewNames } from '../../common-constants';
+import { RouteNames } from '../../common-constants';
 
 export interface UserDefaultPageDetails {
   url: string;
@@ -22,10 +22,10 @@ export async function getHomePageForUser(userDetails: UserDetails): Promise<User
     const caseworkerUserApi = getCaseApi(systemUser, logger);
     const caseData = await caseworkerUserApi.getCaseById(caseId);
 
-    logger.info('Routing to : ', ViewNames.Dashboard);
-    return { caseData, url: ViewNames.Dashboard };
+    logger.info('Routing to : ', RouteNames.dashboard);
+    return { caseData, url: RouteNames.dashboard };
   } else {
-    logger.info('Routing to : ', ViewNames.EnterCaseNumber);
-    return { url: ViewNames.EnterCaseNumber };
+    logger.info('Routing to : ', RouteNames.enterCaseNumber);
+    return { url: RouteNames.enterCaseNumber };
   }
 }

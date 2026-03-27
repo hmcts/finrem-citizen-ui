@@ -3,7 +3,7 @@ import { describe } from '@jest/globals';
 import { getSystemUser } from '../../../../main/app/auth/user';
 import { getCaseApi } from '../../../../main/app/case/case-api';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
-import { ViewNames } from '../../../../main/common-constants';
+import { RouteNames } from '../../../../main/common-constants';
 import { getHomePageForUser } from '../../../../main/functions/util/commonUtil';
 
 jest.mock('../../../../main/app/case/case-api', () => ({
@@ -63,7 +63,7 @@ describe('getHomePageForUser', () => {
       caseData: {
         id: 'CASE123',
       },
-      url: ViewNames.Dashboard,
+      url: RouteNames.dashboard,
     };
 
     expect(mockGetExistingUserCase).toHaveBeenCalled();
@@ -83,7 +83,7 @@ describe('getHomePageForUser', () => {
       const result = await getHomePageForUser(userDetails);
 
       expect(mockGetCaseById).not.toHaveBeenCalled();
-      expect(result).toEqual({ 'url': ViewNames.EnterCaseNumber });
+      expect(result).toEqual({ 'url': RouteNames.enterCaseNumber });
     }
   );
 });
