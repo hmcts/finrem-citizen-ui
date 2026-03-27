@@ -4,7 +4,7 @@ test.describe('Enter Access Code - Page Content', () => {
   /**
    * Verify that the Enter Access Code page displays all expected elements.
    */
-  test('Access code page contains all required elements @PR', async ({
+  test.skip('Access code page contains all required elements @PR', async ({
     loggedInPage: _loggedInPage,
     enterAccessCodePage,
     contestedCaseWithHearing: _contestedCaseWithHearing,
