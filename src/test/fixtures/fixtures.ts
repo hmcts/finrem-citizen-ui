@@ -91,15 +91,14 @@ export const test = base.extend<MyFixtures>({
    */
   contestedCaseWithHearing: [
     async ({}, use) => {
-      const caseId = await ContestedCaseFactory.createContestedCaseWithHearing();
-      
-      // Ensure caseId is a string
-      const caseIdStr = String(caseId);
-      
+      // CCD IDs are explicitly converted to strings at API level (CcdApi.ts)
+      // to prevent precision loss on 16-digit numbers exceeding JavaScript's safe integer limit
+      const caseId = String(await ContestedCaseFactory.createContestedCaseWithHearing());
+
       // Format case ID with hyphens (XXXX-XXXX-XXXX-XXXX)
-      const formattedCaseId = caseIdStr.replace(/(\d{4})(?=\d)/g, '$1-');
-      
-      await use({ caseId: caseIdStr, formattedCaseId });
+      const formattedCaseId = caseId.replace(/(\d{4})(?=\d)/g, '$1-');
+
+      await use({ caseId, formattedCaseId });
     },
     { timeout: 90 * 1000 }
   ],

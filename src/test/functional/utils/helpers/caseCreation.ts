@@ -104,7 +104,7 @@ const getConfig = (): ApiConfig => {
       clientSecret: process.env.IDAM_CLIENT_SECRET || ''
     },
     ccd: {
-      dataStoreApi: `https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net`
+      dataStoreApi: 'https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net'
     }
   };
 };
