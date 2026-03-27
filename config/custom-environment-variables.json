@@ -28,7 +28,9 @@
       "clientSecret": "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET",
       "authorizationURL": "IDAM_WEB_URL",
       "tokenURL": "IDAM_API_URL",
-      "caching": "IDAM_TOKEN_CACHE"
+      "caching": "IDAM_TOKEN_CACHE",
+      "systemUsername": "IDAM_SYSTEM_USERNAME",
+      "systemPassword": "IDAM_SYSTEM_PASSWORD"
     },
     "authProvider": {
       "url": "SERVICE_AUTH_PROVIDER_URL",

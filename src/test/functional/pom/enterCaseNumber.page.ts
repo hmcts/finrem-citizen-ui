@@ -25,6 +25,9 @@ export class EnterCaseNumberPage {
     for (const element of elementsToCheck) {
       await expect(element).toBeVisible();
     }
+
+    // Verify the hint text content 
+    await expect(this.caseNumberHint).toHaveText('This is the 16 digit financial remedy case number that you received from the court. This is different to your divorce case number if you are also involved in divorce proceedings.');
   }
 
   async submitCaseNumber(caseNumber: string): Promise<void> {
