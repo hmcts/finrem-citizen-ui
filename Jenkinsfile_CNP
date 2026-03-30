@@ -91,6 +91,8 @@ withPipeline(type, product, component) {
   onPR() {
     env.JENKINS_BRANCH = "preview"
     env.RUNNING_ENV = "pr-${CHANGE_ID}"
+    env.TEST_URL = "https://finrem-citizen-ui-pr-${CHANGE_ID}.preview.platform.hmcts.net"
+    env.CCD_DATA_STORE_API_URL = "https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net"
     env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
   }
 }
