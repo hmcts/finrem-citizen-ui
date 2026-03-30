@@ -10,7 +10,7 @@ describe('Task list item component tests', () => {
 
     expect(output).toContain('Done');
     expect(output).toContain('<strong class="govuk-tag govuk-tag--green">');
-    expect(output).toContain('<a class="govuk-link govuk-task-list__link" href=/property-valuation>');
+    expect(output).toContain('<a class="govuk-link govuk-task-list__link" href="/property-valuation">');
     expect(output).toContain('Property Valuation');
   });
 
@@ -21,7 +21,7 @@ describe('Task list item component tests', () => {
 
     expect(output).toContain('Not started yet');
     expect(output).toContain('<strong class="govuk-tag govuk-tag--red">');
-    expect(output).toContain('<a class="govuk-link govuk-task-list__link" href=/property-valuation>');
+    expect(output).toContain('<a class="govuk-link govuk-task-list__link" href="/property-valuation">');
     expect(output).toContain('Property Valuation');
   });
 
@@ -32,7 +32,7 @@ describe('Task list item component tests', () => {
 
     expect(output).toContain('Optional');
     expect(output).toContain('<strong class="govuk-tag govuk-tag--blue">');
-    expect(output).toContain('<a class="govuk-link govuk-task-list__link" href=/property-valuation>');
+    expect(output).toContain('<a class="govuk-link govuk-task-list__link" href="/property-valuation">');
     expect(output).toContain('Property Valuation');
   });
 
@@ -43,7 +43,7 @@ describe('Task list item component tests', () => {
 
     expect(output).toContain('Available');
     expect(output).toContain('<strong class="govuk-tag govuk-tag--blue">');
-    expect(output).toContain('<a class="govuk-link govuk-task-list__link" href=/property-valuation>');
+    expect(output).toContain('<a class="govuk-link govuk-task-list__link" href="/property-valuation">');
     expect(output).toContain('Property Valuation');
   });
 });
