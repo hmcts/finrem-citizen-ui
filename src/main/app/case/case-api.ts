@@ -30,6 +30,7 @@ export class CaseApi {
       this.logger.error(message);
       throw new Error(message);
     }
+    this.logger.info('userCases[0]', userCases[0]);
     return String(userCases[0].id);
   }
 }

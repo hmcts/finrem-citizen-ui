@@ -16,7 +16,8 @@ export async function getHomePageForUser(userDetails: UserDetails): Promise<User
 
   const caseApi = getCaseApi(userDetails, logger);
   const caseId = await caseApi.getExistingUserCase();
-
+  logger.info('caseId returned is ', caseId);
+  
   if (caseId?.trim()) {
     const systemUser = await getSystemUser();
     const caseworkerUserApi = getCaseApi(systemUser, logger);
