@@ -28,15 +28,18 @@ interface CcdCaseResponse {
 // Get CCD API URL - use getter to ensure config is evaluated at call time
 const getCcdApiUrl = () => config.ccdDataStoreApi;
 
-// Retry configuration for CCD eventual consistency
+/**
+ * Retry configuration for CCD eventual consistency.
+ */
+const isPipeline = process.env.CI || process.env.ENVIRONMENT_NAME === 'aat';
 const CCD_RETRY_CONFIG = {
-  maxRetries: 5,
-  initialDelayMs: 2000,
-  maxDelayMs: 10000,
-  retryableStatusCodes: [404]  // CaseNotFoundException - case not yet available
+  maxRetries: isPipeline ? 8 : 5,           // 8 retries in pipeline
+  initialDelayMs: isPipeline ? 3000 : 2000, // Long initial wait
+  maxDelayMs: 15000,                        // Cap at 15s per attempt
+  retryableStatusCodes: [404]               // CaseNotFoundException
 };
 
-// Helper to wait with exponential backoff
+// Helper to wait
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export class CcdApi {
@@ -48,7 +51,7 @@ export class CcdApi {
     serviceToken: string
   ): Promise<string> {
     let lastError: Error | null = null;
-    
+
     for (let attempt = 0; attempt <= CCD_RETRY_CONFIG.maxRetries; attempt++) {
       try {
         const startCaseResponse = await axiosRequest<{ token: string }>({
@@ -61,31 +64,45 @@ export class CcdApi {
           }
         });
         return startCaseResponse.data.token;
-      } catch (error) {
-        lastError = error as Error;
-        const errorMessage = lastError.message || '';
-        
-        // Check if this is a retryable 404 (CCD eventual consistency)
-        const is404 = errorMessage.includes('status 404') || 
-                      errorMessage.includes('No case found');
-        
+      } catch (error: unknown) {
+        const parsedError =
+          error instanceof Error
+            ? (error as Error & { response?: { status?: number } })
+            : new Error(String(error));
+
+        lastError = parsedError;
+
+        const statusCode =
+          parsedError.response?.status ??
+          parsedError.message.match(/status (\d+)/)?.[1];
+
+        const is404 =
+          statusCode === 404 ||
+          statusCode === '404' ||
+          parsedError.message.includes('No case found') ||
+          parsedError.message.includes('CaseNotFoundException');
+
         if (is404 && attempt < CCD_RETRY_CONFIG.maxRetries) {
           const delayMs = Math.min(
-            CCD_RETRY_CONFIG.initialDelayMs * Math.pow(2, attempt),
+            CCD_RETRY_CONFIG.initialDelayMs * Math.pow(1.5, attempt),
             CCD_RETRY_CONFIG.maxDelayMs
           );
+
           // eslint-disable-next-line no-console
-          console.log(`[CCD Retry] Case not found (attempt ${attempt + 1}/${CCD_RETRY_CONFIG.maxRetries + 1}), waiting ${delayMs}ms for CCD consistency...`);
+          console.log(
+            `[CCD Retry] 404 Not Found (attempt ${attempt + 1}/${CCD_RETRY_CONFIG.maxRetries + 1}). ` +
+            `Case not yet consistent in DB. Waiting ${Math.round(delayMs)}ms...`
+          );
+
           await wait(delayMs);
           continue;
         }
-        
-        // Non-retryable error or max retries exceeded
-        throw lastError;
+
+        throw parsedError;
       }
     }
-    
-    throw lastError!;
+
+    throw lastError ?? new Error('Failed to get CCD start event token');
   }
 
   async saveCase(
@@ -137,12 +154,6 @@ export class CcdApi {
 
     this.makeModifications(dataModifications, data);
 
-    // Debug: log the payload data keys
-     
-    //console.log('[DEBUG] Payload fields:', Object.keys(data));
-     
-    //console.log('[DEBUG] Using credentials for user:', userName);
-
     const payload: CcdEventPayload = {
       data,
       event: {
@@ -160,8 +171,14 @@ export class CcdApi {
       payload
     );
     const caseId = saveCaseResponse.data.id;
+    
     // eslint-disable-next-line no-console
     console.info('Created case with id %s for event %s', caseId, eventId);
+
+    // Give the system 2secs to replicate after creation before returning
+    if (isPipeline) {
+        await wait(2000); 
+    }
 
     return caseId;
   }
@@ -200,7 +217,6 @@ export class CcdApi {
 
     const updatedDataObj = updateJsonFileWithEnvValues(rawData) as Record<string, JsonValue>;
 
-    // Apply the key-based mutations
     this.makeModifications(replacements, updatedDataObj);
 
     const payload: CcdEventPayload = {
@@ -219,6 +235,7 @@ export class CcdApi {
       serviceToken,
       payload
     );
+    
     if (!process.env.CI) {
       // eslint-disable-next-line no-console
       console.info('Updated case with id %s and event %s', caseId, eventId);
@@ -277,6 +294,7 @@ export class CcdApi {
       serviceToken,
       payload
     );
+    
     if (!process.env.CI) {
       // eslint-disable-next-line no-console
       console.info('Updated case with id %s and event %s', caseId, eventId);
@@ -284,9 +302,8 @@ export class CcdApi {
     return saveCaseResponse.data;
   }
 
-  /**
-   * Applies modifications to a JSON object based on the provided actions.
-   * Supports 'insert', 'delete', and 'replace' actions.
+   /**
+   * Applies modifications to JSON object based on the provided actions. 
    */
   makeModifications(dataModifications: ReplacementAction[], data: Record<string, JsonValue>): void {
     if (Array.isArray(dataModifications)) {
@@ -306,8 +323,8 @@ export class CcdApi {
     }
   }
 
-  /**
-   * Recursively replace placeholder strings in an object
+    /**
+   * Replace placeholder strings in an object
    */
   private replaceInObject(obj: Record<string, JsonValue>, placeholder: string, replacement: JsonValue): void {
     if (typeof obj !== 'object' || obj === null) {return;}
@@ -322,5 +339,4 @@ export class CcdApi {
   }
 }
 
-// Export singleton instance
 export const ccdApi = new CcdApi();
