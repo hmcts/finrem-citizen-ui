@@ -87,7 +87,6 @@ export const test = base.extend<MyFixtures>({
   /**
    * CASE CREATION FIXTURE: Creates a contested case with hearing date via API.
    * This creates a real case in CCD that can be used for testing.
-   * Timeout increased to 90s to accommodate API calls and CCD consistency waits.
    */
   contestedCaseWithHearing: [
     async ({}, use) => {
@@ -100,7 +99,7 @@ export const test = base.extend<MyFixtures>({
 
       await use({ caseId, formattedCaseId });
     },
-    { timeout: 90 * 1000 }
+    { timeout: 240 * 1000 }
   ],
 });
 

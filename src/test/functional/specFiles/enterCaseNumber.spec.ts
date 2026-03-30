@@ -9,6 +9,8 @@ const dataFactory = {
 };
 
 test.describe('Enter Case Number - Citizen Happy Path', () => {
+  test.describe.configure({ mode: 'serial' });
+
   /**
    * This test creates a real contested case via API (caseworker creates it with hearing date),
    * then logs in as a citizen and submits the case number.
@@ -53,44 +55,44 @@ test.describe('Enter Case Number Page Verification', () => {
 
   // --- VALIDATION ERROR SCENARIOS (no real case needed) ---
 
-  test('Error: Empty input @PR @a11y', async ({ enterCaseNumberPage, axeUtils: _axeUtils }) => {
+  test('Error: Empty input @PR @a11y', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber('');
     await enterCaseNumberPage.expectValidationError('Enter your case number');
-    // await _axeUtils.audit(); // temporarily skipped due to accessibility defects
+    // await _axeUtils.audit(); // skipped due to known accessibility issue
   });
 
-  test('Error: Boundary check - 15 characters (Lower Boundary - 1) @PR @a11y', async ({ enterCaseNumberPage, axeUtils: _axeUtils }) => {
+  test('Error: Boundary check - 15 characters (Lower Boundary - 1) @PR @a11y', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(15));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
-    // await _axeUtils.audit(); // temporarily skipped due to accessibility defects
+    //await axeUtils.audit(); // skipped due to known accessibility issue
   });
 
-  test('Error: Boundary check - 21 characters (Upper Boundary + 1) @PR @a11y', async ({ enterCaseNumberPage, axeUtils: _axeUtils }) => {
+  test('Error: Boundary check - 21 characters (Upper Boundary + 1) @PR @a11y', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(21));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
-    // await _axeUtils.audit(); // temporarily skipped due to accessibility defects
+    // await axeUtils.audit(); // skipped due to known accessibility issue  
   });
 
-  test('Error: Invalid format - Letters @PR @a11y', async ({ enterCaseNumberPage, axeUtils: _axeUtils }) => {
+  test('Error: Invalid format - Letters @PR @a11y', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber('1234-5678-ABCD-EFGH');
     await enterCaseNumberPage.expectValidationError(
       'Case number must only include numbers 0 to 9 and special characters such as hyphens'
     );
-    // await _axeUtils.audit(); // temporarily skipped due to accessibility defects
+    // await axeUtils.audit(); // skipped due to known accessibility issue
   });
 
-  test('Error: Case number not found @PR @a11y', async ({ enterCaseNumberPage, axeUtils: _axeUtils }) => {
+  test('Error: Case number not found @PR @a11y', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber('1111222233334444');
     await enterCaseNumberPage.expectValidationError(
       'We cannot find that case number, Enter the case number that you received from the court'
     );
-    // await _axeUtils.audit(); // temporarily skipped due to accessibility defects
+    // await axeUtils.audit(); // skipped due to known accessibility issue
   });
 
   /**
    * Note: 20-digit is valid length but won't exist in DB - tests length validation passes
    */
-  test('Success Logic: 20 digits (Upper Boundary) @PR @a11y', async ({ enterCaseNumberPage, axeUtils: _axeUtils }) => {
+  test('Success Logic: 20 digits (Upper Boundary) @PR @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(20));
 
     // Confirm that the length-specific validation is NOT triggered
@@ -98,6 +100,6 @@ test.describe('Enter Case Number Page Verification', () => {
 
     // We expect the "Not Found" error because this random 20-digit ID doesn't exist in DB
     await enterCaseNumberPage.expectValidationError('Case number must be 16 digits');
-    // await _axeUtils.audit(); // temporarily skipped due to accessibility defects
+    await axeUtils.audit();
   });
 });
