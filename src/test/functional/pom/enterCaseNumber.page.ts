@@ -10,8 +10,8 @@ export class EnterCaseNumberPage {
   readonly fieldError: Locator;
 
   constructor(readonly page: Page) {
-    this.caseNumberHeader = this.page.getByRole('heading', { name: 'Enter case number' });
-    this.caseNumberInput = this.page.getByRole('textbox', { name: 'Enter case number' });
+    this.caseNumberHeader = this.page.getByRole('heading', { name: 'Case number' });
+    this.caseNumberInput = this.page.getByRole('textbox', { name: 'Enter your case number' });
     this.caseNumberHint = this.page.locator('#caseNumber-hint');
     this.continueBtn = this.page.getByRole('button', { name: 'Continue' });
     this.errorSummary = this.page.getByRole('alert');
