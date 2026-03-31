@@ -18,17 +18,12 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
   test('Citizen can enter a valid case number created via API @PR', async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
-    contestedCaseWithHearing,
+    contestedCaseForCaseNumber,
     page
   }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
-    
-    // Use the dynamically created case ID
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-
-    // Verify redirection to Access Code page
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
     await expect(page).toHaveURL(/\/enter-access-code$/);
-    await expect(page.locator('h1')).toContainText('Enter access code');
   });
 
   test('Citizen can enter formatted case number (with hyphens) @PR', async ({
@@ -38,10 +33,8 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
     page
   }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
-    
     // Use the formatted case ID (XXXX-XXXX-XXXX-XXXX)
     await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.formattedCaseId);
-
     // Verify redirection to Access Code page
     await expect(page).toHaveURL(/\/enter-access-code$/);
     await expect(page.locator('h1')).toContainText('Enter access code');

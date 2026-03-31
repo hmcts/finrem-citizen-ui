@@ -16,8 +16,6 @@ test.describe('Enter Access Code - Page Content', () => {
     await enterAccessCodePage.verifyAccessCodePageContent();
     //await axeUtils.audit();
   });
-});
-
 
   // TODO: 
   // validation error scenarios 
@@ -28,4 +26,16 @@ test.describe('Enter Access Code - Page Content', () => {
   //
   // happy path
   // - Successful submission with valid access code
+
+  test('Citizen can enter a valid case number created via API @PR', async ({
+    loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    contestedCaseForCaseNumber,
+    page
+  }) => {
+    await enterCaseNumberPage.verifyCaseNumberPageContent();
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
+    await expect(page).toHaveURL(/\/enter-access-code$/);
+  });
+});
 

@@ -35,6 +35,7 @@ type MyFixtures = {
   loggedInPage: AuthSession;
   enterCaseNumberPage: EnterCaseNumberPage;
   enterAccessCodePage: EnterAccessCodePage;
+  contestedCaseForCaseNumber: CreatedCase;
   contestedCaseWithHearing: CreatedCase;
   axeUtils: AxeUtils; 
 };
@@ -88,15 +89,21 @@ export const test = base.extend<MyFixtures>({
    * CASE CREATION FIXTURE: Creates a contested case with hearing date via API.
    * This creates a real case in CCD that can be used for testing.
    */
+  contestedCaseForCaseNumber: [
+    async ({}, use) => {
+      const caseId = String(
+        await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)
+      );
+      const formattedCaseId = caseId.replace(/(\d{4})(?=\d)/g, '$1-');
+      await use({ caseId, formattedCaseId });
+    },
+    { timeout: 240 * 1000 }
+  ],
+
   contestedCaseWithHearing: [
     async ({}, use) => {
-      // CCD IDs are explicitly converted to strings at API level (CcdApi.ts)
-      // to prevent precision loss on 16-digit numbers exceeding JavaScript's safe integer limit
       const caseId = String(await ContestedCaseFactory.createContestedCaseWithHearing());
-
-      // Format case ID with hyphens (XXXX-XXXX-XXXX-XXXX)
       const formattedCaseId = caseId.replace(/(\d{4})(?=\d)/g, '$1-');
-
       await use({ caseId, formattedCaseId });
     },
     { timeout: 240 * 1000 }

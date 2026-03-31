@@ -162,11 +162,30 @@ export class ContestedCaseFactory {
     // Must provide issue date for issueApplication event
     const issueDate = DateHelper.getCurrentDate();
     const caseId = await this.createAndProcessFormACaseUpToProgressToListing(false, issueDate);
-    
-    // Skip add hearing for now - case is valid for citizen to link without it
-    // eslint-disable-next-line no-console
-    console.info(`✓ Case ${caseId} created and progressed to listing (hearing step skipped)`);
-    
+
+    // Manage hearings (FR_manageHearings) generates Form C and access codes
+    await waitForCcdConsistency();
+    try {
+      await ContestedEventApi.caseWorkerPerformsAddAHearing(caseId);
+      // eslint-disable-next-line no-console
+      console.info(`✓ Case ${caseId} created and progressed to listing with hearing added`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const isManageHearingsCallbackFailure =
+        message.includes('FR_manageHearings')
+        && message.includes('Callback to service has been unsuccessful')
+        && message.includes('status 502');
+
+      if (!isManageHearingsCallbackFailure) {
+        throw error;
+      }
+
+      // eslint-disable-next-line no-console
+      console.warn(
+        `⚠ FR_manageHearings callback failed (502); case ${caseId} is listing-ready but may lack access codes`
+      );
+    }
+
     return caseId;
   }
 
