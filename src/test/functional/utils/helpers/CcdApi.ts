@@ -28,11 +28,16 @@ interface CcdCaseResponse {
 // Get CCD API URL - use getter to ensure config is evaluated at call time
 const getCcdApiUrl = () => config.ccdDataStoreApi;
 
+const parseNumberEnv = (value: string | undefined, fallback: number): number => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+};
+
 // Retry configuration for CCD eventual consistency
 const CCD_RETRY_CONFIG = {
-  maxRetries: 5,
+  maxRetries: parseNumberEnv(process.env.CCD_START_EVENT_MAX_RETRIES, process.env.CI ? 3 : 5),
   initialDelayMs: 2000,
-  maxDelayMs: 10000,
+  maxDelayMs: parseNumberEnv(process.env.CCD_START_EVENT_MAX_DELAY_MS, process.env.CI ? 4000 : 10000),
   retryableStatusCodes: [404]  // CaseNotFoundException - case not yet available
 };
 
@@ -74,8 +79,18 @@ export class CcdApi {
             CCD_RETRY_CONFIG.initialDelayMs * Math.pow(2, attempt),
             CCD_RETRY_CONFIG.maxDelayMs
           );
-          // eslint-disable-next-line no-console
-          console.log(`[CCD Retry] Case not found (attempt ${attempt + 1}/${CCD_RETRY_CONFIG.maxRetries + 1}), waiting ${delayMs}ms for CCD consistency...`);
+
+          const verboseRetryLogs = process.env.CCD_VERBOSE_RETRY === 'true';
+          const shouldLogRetry =
+            verboseRetryLogs
+            || !process.env.CI
+            || attempt === 0
+            || attempt === CCD_RETRY_CONFIG.maxRetries - 1;
+
+          if (shouldLogRetry) {
+            // eslint-disable-next-line no-console
+            console.log(`[CCD Retry] Case not found (attempt ${attempt + 1}/${CCD_RETRY_CONFIG.maxRetries + 1}), waiting ${delayMs}ms for CCD consistency...`);
+          }
           await wait(delayMs);
           continue;
         }

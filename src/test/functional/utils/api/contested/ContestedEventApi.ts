@@ -51,10 +51,20 @@ export class ContestedEventApi {
     payloadPath: string,
     modifications: ReplacementAction[] = []
   ): Promise<void> {
+    const hasSystemUser =
+      !!this.systemUser.username
+      && !!this.systemUser.password
+      && this.systemUser.username !== this.caseworker.username;
+
+    const preferSystemUser = !!config.useSystemUserForCaseworkerEvents && hasSystemUser;
+
+    const primaryCredentials = preferSystemUser ? this.systemUser : this.caseworker;
+    const fallbackCredentials = preferSystemUser ? this.caseworker : this.systemUser;
+
     try {
       await ccdApi.updateCaseInCcd(
-        this.caseworker.username,
-        this.caseworker.password,
+        primaryCredentials.username,
+        primaryCredentials.password,
         caseId,
         this.caseType,
         eventId,
@@ -63,10 +73,7 @@ export class ContestedEventApi {
       );
       return;
     } catch (error) {
-      const canFallback =
-        this.systemUser.username
-        && this.systemUser.password
-        && this.systemUser.username !== this.caseworker.username;
+      const canFallback = !!fallbackCredentials.username && !!fallbackCredentials.password;
 
       if (!canFallback || !this.isCaseNotFound404(error)) {
         throw error;
@@ -74,12 +81,12 @@ export class ContestedEventApi {
 
       // eslint-disable-next-line no-console
       console.warn(
-        `[CCD Fallback] Caseworker cannot access case ${caseId} for event ${eventId}. Retrying with system user.`
+        `[CCD Fallback] Primary user cannot access case ${caseId} for event ${eventId}. Retrying with fallback user.`
       );
 
       await ccdApi.updateCaseInCcd(
-        this.systemUser.username,
-        this.systemUser.password,
+        fallbackCredentials.username,
+        fallbackCredentials.password,
         caseId,
         this.caseType,
         eventId,
@@ -204,21 +211,27 @@ export class ContestedEventApi {
   static async caseWorkerProgressToCreateGeneralApplication(
     caseId: string
   ): Promise<string> {
+    const hasSystemUser =
+      !!this.systemUser.username
+      && !!this.systemUser.password
+      && this.systemUser.username !== this.caseworker.username;
+
+    const preferSystemUser = !!config.useSystemUserForCaseworkerEvents && hasSystemUser;
+    const primaryCredentials = preferSystemUser ? this.systemUser : this.caseworker;
+    const fallbackCredentials = preferSystemUser ? this.caseworker : this.systemUser;
+
     let response;
     try {
       response = await ccdApi.updateCaseInCcd(
-        this.caseworker.username,
-        this.caseworker.password,
+        primaryCredentials.username,
+        primaryCredentials.password,
         caseId,
         this.caseType,
         ContestedEvents.createGeneralApplication.ccdCallback,
         ''
       );
     } catch (error) {
-      const canFallback =
-        this.systemUser.username
-        && this.systemUser.password
-        && this.systemUser.username !== this.caseworker.username;
+      const canFallback = !!fallbackCredentials.username && !!fallbackCredentials.password;
 
       if (!canFallback || !this.isCaseNotFound404(error)) {
         throw error;
@@ -226,12 +239,12 @@ export class ContestedEventApi {
 
       // eslint-disable-next-line no-console
       console.warn(
-        `[CCD Fallback] Caseworker cannot access case ${caseId} for event ${ContestedEvents.createGeneralApplication.ccdCallback}. Retrying with system user.`
+        `[CCD Fallback] Primary user cannot access case ${caseId} for event ${ContestedEvents.createGeneralApplication.ccdCallback}. Retrying with fallback user.`
       );
 
       response = await ccdApi.updateCaseInCcd(
-        this.systemUser.username,
-        this.systemUser.password,
+        fallbackCredentials.username,
+        fallbackCredentials.password,
         caseId,
         this.caseType,
         ContestedEvents.createGeneralApplication.ccdCallback,

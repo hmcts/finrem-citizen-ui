@@ -4,7 +4,7 @@
 
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 // Determine if running in CI/pipeline (internal network) or locally (external)
 // Check multiple Jenkins/CI env vars since different CI environments expose different vars
@@ -39,6 +39,12 @@ const getCcdUrl = (): string => {
 const config = {
   // CCD Data Store API
   ccdDataStoreApi: getCcdUrl(),
+
+  // In CI, use system user as primary for caseworker events to avoid cross-role visibility delays
+  useSystemUserForCaseworkerEvents:
+    process.env.CCD_USE_SYSTEM_USER_FOR_CASEWORKER_EVENTS
+      ? process.env.CCD_USE_SYSTEM_USER_FOR_CASEWORKER_EVENTS === 'true'
+      : isCI,
 
   // IDAM endpoints - ALWAYS use AAT
   idamApi: process.env.IDAM_API_URL 
