@@ -26,7 +26,7 @@ nodejs:
     IDAM_END_SESSION_URL: https://hmcts-access.aat.platform.hmcts.net/o/endSession
     IDAM_API_URL: https://idam-api.aat.platform.hmcts.net/o/token
     REDIS_CONNECTION_STRING: 'redis://{{ .Release.Name }}-redis-master:6379'
-    CCD_URL: 'https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net'
+    CCD_URL: 'http://ccd-data-store-api-aat.service.core-compute-aat.internal'
 
   #    CASE_TYPE: NFD-4798 # Uncomment to connect to backend PR, don't forget Jenkinsfile_CNP too
   keyVaults:

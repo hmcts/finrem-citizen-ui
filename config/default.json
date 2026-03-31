@@ -27,7 +27,7 @@
       "secret": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     },
     "case": {
-      "url": "https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net"
+      "url": "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
     }
   },
   "oidc": {
