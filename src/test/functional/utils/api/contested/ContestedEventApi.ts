@@ -10,6 +10,11 @@ import { ccdApi } from '../../helpers/CcdApi';
 export class ContestedEventApi {
   private static caseType = CaseType.Contested;
 
+  private static isCaseNotFound404(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+    return message.includes('status 404') && message.includes('No case found');
+  }
+
   /**
    * Get caseworker credentials from config
    */
@@ -31,6 +36,60 @@ export class ContestedEventApi {
   }
 
   /**
+   * System user fallback for CCD visibility issues in CI.
+   */
+  private static get systemUser() {
+    return {
+      username: config.systemUser.username,
+      password: config.systemUser.password,
+    };
+  }
+
+  private static async updateCaseworkerEvent(
+    caseId: string,
+    eventId: string,
+    payloadPath: string,
+    modifications: ReplacementAction[] = []
+  ): Promise<void> {
+    try {
+      await ccdApi.updateCaseInCcd(
+        this.caseworker.username,
+        this.caseworker.password,
+        caseId,
+        this.caseType,
+        eventId,
+        payloadPath,
+        modifications
+      );
+      return;
+    } catch (error) {
+      const canFallback =
+        this.systemUser.username
+        && this.systemUser.password
+        && this.systemUser.username !== this.caseworker.username;
+
+      if (!canFallback || !this.isCaseNotFound404(error)) {
+        throw error;
+      }
+
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[CCD Fallback] Caseworker cannot access case ${caseId} for event ${eventId}. Retrying with system user.`
+      );
+
+      await ccdApi.updateCaseInCcd(
+        this.systemUser.username,
+        this.systemUser.password,
+        caseId,
+        this.caseType,
+        eventId,
+        payloadPath,
+        modifications
+      );
+    }
+  }
+
+  /**
    * Solicitor submits Form A application
    */
   static async solicitorSubmitFormACase(caseId: string): Promise<void> {
@@ -48,11 +107,8 @@ export class ContestedEventApi {
    * Caseworker makes HWF decision
    */
   static async caseWorkerHWFDecisionMade(caseId: string): Promise<void> {
-    await ccdApi.updateCaseInCcd(
-      this.caseworker.username,
-      this.caseworker.password,
+    await this.updateCaseworkerEvent(
       caseId,
-      this.caseType,
       ContestedEvents.hwfDecision.ccdCallback,
       ''
     );
@@ -70,11 +126,8 @@ export class ContestedEventApi {
       ? [{ action: 'insert', key: 'issueDate', value: issueDate }]
       : [];
 
-    await ccdApi.updateCaseInCcd(
-      this.caseworker.username,
-      this.caseworker.password,
+    await this.updateCaseworkerEvent(
       caseId,
-      this.caseType,
       ContestedEvents.issueApplication.ccdCallback,
       '',
       modifications
@@ -85,11 +138,8 @@ export class ContestedEventApi {
    * Caseworker allocates to judge
    */
   static async caseworkerAllocateToJudge(caseId: string): Promise<void> {
-    await ccdApi.updateCaseInCcd(
-      this.caseworker.username,
-      this.caseworker.password,
+    await this.updateCaseworkerEvent(
       caseId,
-      this.caseType,
       ContestedEvents.allocateToJudge.ccdCallback,
       ''
     );
@@ -108,11 +158,8 @@ export class ContestedEventApi {
     // 2. Issue application
     await this.caseWorkerIssueApplication(caseId, true, issueDate);
     // 3. Progress to listing
-    await ccdApi.updateCaseInCcd(
-      this.caseworker.username,
-      this.caseworker.password,
+    await this.updateCaseworkerEvent(
       caseId,
-      this.caseType,
       ContestedEvents.progressToListing.ccdCallback,
       ''
     );
@@ -127,11 +174,8 @@ export class ContestedEventApi {
     issueDate?: string
   ): Promise<void> {
     await this.caseWorkerIssueApplication(caseId, false, issueDate);
-    await ccdApi.updateCaseInCcd(
-      this.caseworker.username,
-      this.caseworker.password,
+    await this.updateCaseworkerEvent(
       caseId,
-      this.caseType,
       ContestedEvents.progressToListing.ccdCallback,
       ''
     );
@@ -146,11 +190,8 @@ export class ContestedEventApi {
       { action: 'replace', key: '__HEARING_DATE__', value: hearingDate }
     ];
 
-    await ccdApi.updateCaseInCcd(
-      this.caseworker.username,
-      this.caseworker.password,
+    await this.updateCaseworkerEvent(
       caseId,
-      this.caseType,
       ContestedEvents.manageHearings.ccdCallback,
       PayloadPath.Contested.hearing,
       modifications
@@ -163,14 +204,40 @@ export class ContestedEventApi {
   static async caseWorkerProgressToCreateGeneralApplication(
     caseId: string
   ): Promise<string> {
-    const response = await ccdApi.updateCaseInCcd(
-      this.caseworker.username,
-      this.caseworker.password,
-      caseId,
-      this.caseType,
-      ContestedEvents.createGeneralApplication.ccdCallback,
-      ''
-    );
+    let response;
+    try {
+      response = await ccdApi.updateCaseInCcd(
+        this.caseworker.username,
+        this.caseworker.password,
+        caseId,
+        this.caseType,
+        ContestedEvents.createGeneralApplication.ccdCallback,
+        ''
+      );
+    } catch (error) {
+      const canFallback =
+        this.systemUser.username
+        && this.systemUser.password
+        && this.systemUser.username !== this.caseworker.username;
+
+      if (!canFallback || !this.isCaseNotFound404(error)) {
+        throw error;
+      }
+
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[CCD Fallback] Caseworker cannot access case ${caseId} for event ${ContestedEvents.createGeneralApplication.ccdCallback}. Retrying with system user.`
+      );
+
+      response = await ccdApi.updateCaseInCcd(
+        this.systemUser.username,
+        this.systemUser.password,
+        caseId,
+        this.caseType,
+        ContestedEvents.createGeneralApplication.ccdCallback,
+        ''
+      );
+    }
     // Return the general application ID from the response
     const generalApplications = response?.generalApplications as { id: string }[] | undefined;
     return generalApplications?.[0]?.id || '';
@@ -183,11 +250,8 @@ export class ContestedEventApi {
     caseId: string,
     modifications: ReplacementAction[]
   ): Promise<void> {
-    await ccdApi.updateCaseInCcd(
-      this.caseworker.username,
-      this.caseworker.password,
+    await this.updateCaseworkerEvent(
       caseId,
-      this.caseType,
       ContestedEvents.referToJudge.ccdCallback,
       '',
       modifications
@@ -201,11 +265,8 @@ export class ContestedEventApi {
     caseId: string,
     modifications: ReplacementAction[]
   ): Promise<void> {
-    await ccdApi.updateCaseInCcd(
-      this.caseworker.username,
-      this.caseworker.password,
+    await this.updateCaseworkerEvent(
       caseId,
-      this.caseType,
       ContestedEvents.gaOutcome.ccdCallback,
       '',
       modifications
@@ -219,11 +280,8 @@ export class ContestedEventApi {
     caseId: string,
     modifications: ReplacementAction[]
   ): Promise<void> {
-    await ccdApi.updateCaseInCcd(
-      this.caseworker.username,
-      this.caseworker.password,
+    await this.updateCaseworkerEvent(
       caseId,
-      this.caseType,
       ContestedEvents.gaDirections.ccdCallback,
       '',
       modifications
@@ -234,11 +292,8 @@ export class ContestedEventApi {
    * Create case flag
    */
   static async caseworkerCreateFlag(caseId: string): Promise<void> {
-    await ccdApi.updateCaseInCcd(
-      this.caseworker.username,
-      this.caseworker.password,
+    await this.updateCaseworkerEvent(
       caseId,
-      this.caseType,
       ContestedEvents.createFlag.ccdCallback,
       ''
     );

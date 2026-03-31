@@ -65,6 +65,12 @@ const config = {
     password: process.env.PLAYWRIGHT_SOLICITOR_PSWD || '',
   },
 
+  // System user credentials (fallback for cross-role CCD visibility in CI)
+  systemUser: {
+    username: process.env.IDAM_SYSTEM_USERNAME || '',
+    password: process.env.IDAM_SYSTEM_PASSWORD || '',
+  },
+
   // Citizen credentials (dynamically created in tests)
   citizen: {
     username: process.env.CITIZEN_USERNAME || '',
