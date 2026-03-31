@@ -33,7 +33,6 @@
     "@hmcts/nodejs-logging": "4.0.4",
     "@hmcts/properties-volume": "1.3.1",
     "@types/body-parser": "1.19.6",
-    "@types/config": "4.4.0",
     "@types/connect-redis": "^0.0.23",
     "@types/cookie-parser": "1.4.10",
     "@types/es6-promisify": "6.0.4",
@@ -43,7 +42,7 @@
     "@types/nunjucks": "3.2.6",
     "@types/require-directory": "2.1.7",
     "applicationinsights": "3.14.0",
-    "axios": "1.13.6",
+    "axios": "1.14.0",
     "body-parser": "2.2.2",
     "config": "4.4.1",
     "connect-redis": "^6.0.0",
@@ -112,7 +111,7 @@
     "jest": "^30.0.0",
     "jest-allure2-reporter": "*",
     "jest-circus": "*",
-    "jest-html-reporter": "4.3.0",
+    "jest-html-reporter": "4.4.0",
     "jest-junit": "16.0.0",
     "lint-staged": "16.4.0",
     "mini-css-extract-plugin": "2.10.2",
@@ -147,9 +146,11 @@
     "diff": "8.0.4",
     "qs": "6.15.0",
     "test-exclude": "8.0.0",
-    "minimatch": "10.2.4",
+    "minimatch": "10.2.5",
     "@eslint/eslintrc/ajv": "6.14.0",
     "flatted": "^3.4.0",
-    "picomatch": "4.0.4"
+    "picomatch": "4.0.4",
+    "path-to-regexp": "8.4.1",
+    "brace-expansion": "5.0.5"
   }
 }
