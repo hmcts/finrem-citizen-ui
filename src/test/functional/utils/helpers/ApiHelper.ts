@@ -1,5 +1,42 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 
+const SENSITIVE_KEY_PATTERN = /(secret|password|token|authorization|oneTimePassword|client_secret|access_token|refresh_token)/i;
+const BEARER_PATTERN = /Bearer\s+[A-Za-z0-9\-._~+/]+=*/gi;
+
+function sanitizeString(value: string): string {
+  return value.replace(BEARER_PATTERN, 'Bearer [REDACTED]');
+}
+
+function sanitizeObject(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(sanitizeObject);
+  }
+
+  if (value && typeof value === 'object') {
+    const sanitized: Record<string, unknown> = {};
+    for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+      sanitized[key] = SENSITIVE_KEY_PATTERN.test(key)
+        ? '[REDACTED]'
+        : sanitizeObject(nested);
+    }
+    return sanitized;
+  }
+
+  if (typeof value === 'string') {
+    return sanitizeString(value);
+  }
+
+  return value;
+}
+
+function formatSanitizedErrorPayload(data: unknown): string {
+  if (typeof data === 'string') {
+    return sanitizeString(data);
+  }
+
+  return JSON.stringify(sanitizeObject(data), null, 2);
+}
+
 /**
  * Wrapper around axios for consistent API requests with error handling
  */
@@ -12,9 +49,7 @@ export async function axiosRequest<T = unknown>(config: AxiosRequestConfig): Pro
     if (axiosError.response) {
       // Server responded with error status
       const { status, data } = axiosError.response;
-      const errorMessage = typeof data === 'string' 
-        ? data 
-        : JSON.stringify(data, null, 2);
+      const errorMessage = formatSanitizedErrorPayload(data);
       
       throw new Error(
         `API request failed with status ${status}:\n` +
@@ -25,12 +60,12 @@ export async function axiosRequest<T = unknown>(config: AxiosRequestConfig): Pro
       // Request made but no response received
       throw new Error(
         `No response received from ${config.url}:\n` +
-        `Error: ${axiosError.message}`
+        `Error: ${sanitizeString(axiosError.message)}`
       );
     } else {
       // Error in request setup
       const message = error instanceof Error ? error.message : String(error);
-      throw new Error(`Request setup failed: ${message}`);
+      throw new Error(`Request setup failed: ${sanitizeString(message)}`);
     }
   }
 }

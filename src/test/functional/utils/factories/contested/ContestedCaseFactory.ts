@@ -12,14 +12,62 @@ import {
   REFER_LIST_DATA } from '../../PayloadMutator';
 import { envTestData } from '../../test_data/EnvTestDataConfig';
 
-// Helper to wait for CCD eventual consistency
-const waitForCcdConsistency = (ms = 3000) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const START_EVENT_RETRY_CONFIG = {
+  maxRetries: 3,
+  initialDelayMs: 2000,
+  maxDelayMs: 10000,
+};
 
 /**
  * Factory for creating contested cases in various states
  */
 export class ContestedCaseFactory {
-  private static buildContestedCase({
+  private static isCaseNotFound404(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+    return message.includes('status 404') && message.includes('No case found');
+  }
+
+  private static async pollUntilReady<T>(
+    operation: () => Promise<T>,
+    retryLabel: string
+  ): Promise<T> {
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt <= START_EVENT_RETRY_CONFIG.maxRetries; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error;
+
+        if (!this.isCaseNotFound404(error) || attempt === START_EVENT_RETRY_CONFIG.maxRetries) {
+          throw error;
+        }
+
+        const delayMs = Math.min(
+          START_EVENT_RETRY_CONFIG.initialDelayMs * Math.pow(2, attempt),
+          START_EVENT_RETRY_CONFIG.maxDelayMs
+        );
+
+        // eslint-disable-next-line no-console
+        console.log(`[Factory Poll] ${retryLabel} not ready (attempt ${attempt + 1}/${START_EVENT_RETRY_CONFIG.maxRetries + 1}), waiting ${delayMs}ms...`);
+        await sleep(delayMs);
+      }
+    }
+
+    throw lastError;
+  }
+
+  private static async withCaseworkerStartEventRetry<T>(operation: () => Promise<T>): Promise<T> {
+    return this.pollUntilReady(operation, 'Caseworker start-event');
+  }
+
+  private static async withSolicitorStartEventRetry<T>(operation: () => Promise<T>): Promise<T> {
+    return this.pollUntilReady(operation, 'Solicitor start-event');
+  }
+
+  private static async buildContestedCase({
     isPaper,
     replacements = [],
     event,
@@ -44,7 +92,10 @@ export class ContestedCaseFactory {
       [isPaper ? 'withCaseWorkerUser' : 'withSolicitorUser']()
       .withPayload(derivedPayloadPath);
 
-    if (replacements.length) {builder.addReplacements(...replacements);}
+    if (replacements.length) {
+      await builder.addReplacements(...replacements);
+    }
+
     return builder.create();
   }
 
@@ -130,13 +181,17 @@ export class ContestedCaseFactory {
     issueDate?: string
   ): Promise<string> {
     const caseId = await this.createCase(isExpressPilot, false);
-    // Wait for CCD eventual consistency before subsequent events
-    await waitForCcdConsistency();
-    await ContestedEventApi.solicitorSubmitFormACase(caseId);
-    // Wait for CCD to propagate case data before caseworker operations
-    // Caseworker may use different CCD nodes, requiring eventual consistency
-    await waitForCcdConsistency(5000);
-    await ContestedEventApi.caseWorkerProgressFormACaseToListing(caseId, issueDate);
+
+    // Poll until the solicitor start-event token is available instead of fixed sleeps.
+    await this.withSolicitorStartEventRetry(async () => {
+      await ContestedEventApi.solicitorSubmitFormACase(caseId);
+    });
+
+    // Replace fixed waits with targeted retry for eventual consistency on caseworker start-events.
+    await this.withCaseworkerStartEventRetry(async () => {
+      await ContestedEventApi.caseWorkerProgressFormACaseToListing(caseId, issueDate);
+    });
+
     return caseId;
   }
 
@@ -148,9 +203,12 @@ export class ContestedCaseFactory {
     issueDate?: string
   ): Promise<string> {
     const caseId = await this.createCase(isExpressPilot, true);
-    // Wait for CCD eventual consistency before subsequent caseworker events
-    await waitForCcdConsistency(5000);
-    await ContestedEventApi.caseWorkerProgressPaperCaseToListing(caseId, issueDate);
+
+    // Replace fixed waits with targeted retry for eventual consistency on caseworker start-events.
+    await this.withCaseworkerStartEventRetry(async () => {
+      await ContestedEventApi.caseWorkerProgressPaperCaseToListing(caseId, issueDate);
+    });
+
     return caseId;
   }
 
@@ -164,9 +222,10 @@ export class ContestedCaseFactory {
     const caseId = await this.createAndProcessFormACaseUpToProgressToListing(false, issueDate);
 
     // Manage hearings (FR_manageHearings) generates Form C and access codes
-    await waitForCcdConsistency();
     try {
-      await ContestedEventApi.caseWorkerPerformsAddAHearing(caseId);
+      await this.withCaseworkerStartEventRetry(async () => {
+        await ContestedEventApi.caseWorkerPerformsAddAHearing(caseId);
+      });
       // eslint-disable-next-line no-console
       console.info(`✓ Case ${caseId} created and progressed to listing with hearing added`);
     } catch (error) {
@@ -207,7 +266,11 @@ export class ContestedCaseFactory {
     issueDate?: string
   ): Promise<string> {
     const caseId = await this.createCase(isExpressPilot, false);
-    await ContestedEventApi.solicitorSubmitFormACase(caseId);
+
+    await this.withSolicitorStartEventRetry(async () => {
+      await ContestedEventApi.solicitorSubmitFormACase(caseId);
+    });
+
     await ContestedEventApi.caseWorkerIssueApplication(caseId, true, issueDate);
     return caseId;
   }

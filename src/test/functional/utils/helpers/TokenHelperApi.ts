@@ -8,6 +8,12 @@ import { axiosRequest } from './ApiHelper';
 // Create custom guardrails to allow shorter HMCTS S2S secrets (10 bytes instead of 16)
 const s2sGuardrails = createGuardrails({ MIN_SECRET_BYTES: 1 });
 
+const SENSITIVE_TEXT_PATTERN = /(Bearer\s+[A-Za-z0-9\-._~+/]+=*)|(access_token\"?\s*[:=]\s*\"?[^\"\s]+\"?)|(refresh_token\"?\s*[:=]\s*\"?[^\"\s]+\"?)|(client_secret\"?\s*[:=]\s*\"?[^\"\s]+\"?)|(oneTimePassword\"?\s*[:=]\s*\"?[^\"\s]+\"?)/gi;
+
+function sanitizeErrorText(value: string): string {
+  return value.replace(SENSITIVE_TEXT_PATTERN, '[REDACTED]');
+}
+
 // Load .env file handling both 'export KEY=VALUE' and 'KEY=VALUE' formats
 function ensureEnvLoaded(): void {
   const envPath = path.resolve(process.cwd(), '.env');
@@ -54,7 +60,7 @@ export async function getServiceToken(): Promise<string> {
   
   if (!s2sSecret) {
     throw new Error(
-      'Missing S2S secret. Set one of: S2S_SECRET, SERVICE_AUTH_SECRET, or FINREM_CASE_ORCHESTRATION_SERVICE_S2S_KEY'
+      'Missing S2S secret. Set SERVICE_AUTH_SECRET (preferred), S2S_SECRET, or FINREM_CASE_ORCHESTRATION_SERVICE_S2S_KEY'
     );
   }
 
@@ -87,7 +93,7 @@ export async function getServiceToken(): Promise<string> {
     if (err.message?.includes('API request failed')) {
       throw error; // Re-throw API errors as-is
     }
-    throw new Error(`Failed to generate S2S token: ${err.message}`);
+    throw new Error(`Failed to generate S2S token: ${sanitizeErrorText(err.message || String(error))}`);
   }
 }
 

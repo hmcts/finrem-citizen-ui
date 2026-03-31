@@ -5,8 +5,17 @@ import { UserCredentials } from '../../../functional/pom/idamPage.page';
 
 // IDAM environment configuration - defaults to AAT
 const IDAM_ENV = process.env.IDAM_ENV || 'aat';
-const IDAM_WEB_URL = process.env.IDAM_WEB_URL || `https://idam-web-public.${IDAM_ENV}.platform.hmcts.net`;
-const IDAM_TESTING_SUPPORT_API_URL = process.env.IDAM_TESTING_SUPPORT_API_URL || `https://idam-testing-support-api.${IDAM_ENV}.platform.hmcts.net`;
+const stripTrailingSlash = (url: string): string => url.replace(/\/+$/, '');
+
+const IDAM_WEB_URL = stripTrailingSlash(
+  process.env.IDAM_WEB_URL || `https://idam-web-public.${IDAM_ENV}.platform.hmcts.net`
+);
+
+const IDAM_TESTING_SUPPORT_API_URL = stripTrailingSlash(
+  process.env.IDAM_TESTING_SUPPORT_API_URL
+    || process.env.IDAM_TESTING_SUPPORT_URL
+    || `https://idam-testing-support-api.${IDAM_ENV}.platform.hmcts.net`
+);
 
 // Default password for test users - should be overridden in CI/CD environments
 const DEFAULT_TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'Password1111';
