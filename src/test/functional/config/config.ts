@@ -7,7 +7,11 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Determine if running in CI/pipeline (internal network) or locally (external)
-const isCI = !!process.env.CI || !!process.env.JENKINS_URL;
+// Check multiple Jenkins/CI env vars since different CI environments expose different vars
+const isCI = !!process.env.CI 
+  || !!process.env.JENKINS_URL 
+  || !!process.env.BUILD_ID 
+  || !!process.env.JENKINS_HOME;
 
 // IDAM and S2S always use AAT (no PR-specific instances exist)
 const idamEnv = 'aat';
