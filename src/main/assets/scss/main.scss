@@ -43,3 +43,15 @@
     justify-content: flex-end;
   }
 }
+
+.govuk-service-navigation__link {
+  display: inline-block;
+  min-height: 24px;
+  padding: 4px 0;
+}
+
+.govuk-button {
+  min-height: 44px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
