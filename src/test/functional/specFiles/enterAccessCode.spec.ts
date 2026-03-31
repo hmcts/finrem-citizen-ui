@@ -9,12 +9,13 @@ test.describe('Enter Access Code - Page Content', () => {
     enterCaseNumberPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
+    axeUtils,
     page
   }) => {
     await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
     await expect(page).toHaveURL(/\/enter-access-code$/);
     await enterAccessCodePage.verifyAccessCodePageContent();
-    //await axeUtils.audit();
+    await axeUtils.audit();
   });
 
   // TODO: 

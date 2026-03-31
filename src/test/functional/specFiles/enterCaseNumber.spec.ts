@@ -42,44 +42,44 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
 });
 
 test.describe('Enter Case Number Page Verification', () => {
-  test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage, axeUtils: _axeUtils }) => {
+  test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
   });
 
   // --- VALIDATION ERROR SCENARIOS (no real case needed) ---
 
-  test('Error: Empty input @PR @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Empty input @PR @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber('');
     await enterCaseNumberPage.expectValidationError('Enter your case number');
-    // await _axeUtils.audit(); // skipped due to known accessibility issue
+    await axeUtils.audit();
   });
 
-  test('Error: Boundary check - 15 characters (Lower Boundary - 1) @PR @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Boundary check - 15 characters (Lower Boundary - 1) @PR @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(15));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
-    //await axeUtils.audit(); // skipped due to known accessibility issue
+    await axeUtils.audit();
   });
 
-  test('Error: Boundary check - 21 characters (Upper Boundary + 1) @PR @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Boundary check - 21 characters (Upper Boundary + 1) @PR @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(21));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
-    // await axeUtils.audit(); // skipped due to known accessibility issue  
+    await axeUtils.audit();
   });
 
-  test('Error: Invalid format - Letters @PR @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Invalid format - Letters @PR @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber('1234-5678-ABCD-EFGH');
     await enterCaseNumberPage.expectValidationError(
       'Case number must only include numbers 0 to 9 and special characters such as hyphens'
     );
-    // await axeUtils.audit(); // skipped due to known accessibility issue
+    await axeUtils.audit();
   });
 
-  test('Error: Case number not found @PR @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Case number not found @PR @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber('1111222233334444');
     await enterCaseNumberPage.expectValidationError(
       'We cannot find that case number, Enter the case number that you received from the court'
     );
-    // await axeUtils.audit(); // skipped due to known accessibility issue
+    await axeUtils.audit();
   });
 
   /**
