@@ -5,23 +5,13 @@
 def type = "nodejs"
 def product = "finrem"
 def component = "citizen-ui"
-def ccdDataStoreApiUrl = "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
 
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
 def secrets = [
   'finrem-${env}': [
     secret("finrem-citizen-s2s-client-secret", "SERVICE_AUTH_SECRET"),
-    secret("finrem-citizen-ui-idam-client-secret", "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET"),
-    // Caseworker credentials for case creation
-    secret("fr-caseworker-username", "USERNAME_CASEWORKER"),
-    secret("fr-caseworker-password", "PASSWORD_CASEWORKER"),
-    // Solicitor credentials for case submission
-    secret("playwright-solicitor-username", "PLAYWRIGHT_SOLICITOR_USERNAME"),
-    secret("playwright-solicitor-password", "PLAYWRIGHT_SOLICITOR_PSWD"),
-    // System user for citizen case lookup
-    secret("finrem-system-update-username", "IDAM_SYSTEM_USERNAME"),
-    secret("finrem-system-update-password", "IDAM_SYSTEM_PASSWORD")
+    secret("finrem-citizen-ui-idam-client-secret", "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET")
   ]
 ]
 
@@ -35,27 +25,35 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 }
 
 withPipeline(type, product, component) {
-  // 1. Unit-level checks (Jest, Lint, Routes) into one stage
-  env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes"
+  // 1. Unit-level checks (Jest, Lint, Routes, Jest-A11y) into one stage
+  env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes && yarn test:a11y"
   
   loadVaultSecrets(secrets)
 
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
-  // 2. Setup for Smoke and Functional Tests
+
+  // 2. Setup for Smoke Tests
   before('tests') {
-    sh 'rm -rf smoke-output functional-output a11y-output allure-results allure-results-smoke allure-results-a11y'
-    sh 'npx playwright install --with-deps'
+    sh 'rm -rf smoke-output functional-output allure-results allure-results-smoke'
+    sh 'npx playwright install chromium --with-deps'
   }
 
   // 3. Setup for Functional Tests
   before('functionalTests') {
     env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
+    sh 'npx playwright install --with-deps'
+  }
+
+  // 4. Run Playwright A11y tests
+  afterSuccess('functionalTests') {
+    sh 'npx playwright install --with-deps'
+    yarnBuilder.yarn('test:playwright:a11y')
   }
 
   afterAlways('smokeTest') {
-    junit testResults: 'smoke-output/smoke-test-results.xml', allowEmptyResults: true
+    junit testResults: 'smoke-output/smoke--test-results.xml', allowEmptyResults: true
     archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
     allure([
       includeProperties: false,
@@ -85,15 +83,10 @@ withPipeline(type, product, component) {
 
   onMaster() {
     env.JENKINS_BRANCH = "master"
-    env.RUNNING_ENV = "aat"
-    env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl
   }
 
   onPR() {
     env.JENKINS_BRANCH = "preview"
-    env.RUNNING_ENV = "pr-${CHANGE_ID}"
-    env.TEST_URL = "https://finrem-citizen-ui-pr-${CHANGE_ID}.preview.platform.hmcts.net"
-    env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl
     env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
   }
 }

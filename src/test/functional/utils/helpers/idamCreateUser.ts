@@ -3,33 +3,20 @@ import { randomUUID } from 'crypto';
 
 import { UserCredentials } from '../../../functional/pom/idamPage.page';
 
-// IDAM environment configuration - defaults to AAT
-const IDAM_ENV = process.env.IDAM_ENV || 'aat';
-const stripTrailingSlash = (url: string): string => url.replace(/\/+$/, '');
-
-const IDAM_WEB_URL = stripTrailingSlash(
-  process.env.IDAM_WEB_URL || `https://idam-web-public.${IDAM_ENV}.platform.hmcts.net`
-);
-
-const IDAM_TESTING_SUPPORT_API_URL = stripTrailingSlash(
-  process.env.IDAM_TESTING_SUPPORT_API_URL
-    || process.env.IDAM_TESTING_SUPPORT_URL
-    || `https://idam-testing-support-api.${IDAM_ENV}.platform.hmcts.net`
-);
-
-// Default password for test users - should be overridden in CI/CD environments
-const DEFAULT_TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'Password1111';
-
 export class IdamApiService {
-  private readonly createTokenEndpoint = `${IDAM_WEB_URL}/o/token`;
-  private readonly createUserEndpoint = `${IDAM_TESTING_SUPPORT_API_URL}/test/idam/users`;
+  private readonly createTokenEndpoint = 'https://idam-web-public.aat.platform.hmcts.net/o/token';
+  private readonly createUserEndpoint = 'https://idam-testing-support-api.aat.platform.hmcts.net/test/idam/users';
+  // private readonly idamWebUrl = process.env.IDAM_WEB_URL;
+  // private readonly idamTestApiUrl = process.env.IDAM_TESTING_SUPPORT_API_URL;
+  // private readonly createTokenEndpoint = `${this.idamWebUrl}/o/token`;
+  // private readonly createUserEndpoint = `${this.idamTestApiUrl}/test/idam/users`;
 
   async createCitizenUser(): Promise<UserCredentials> {
     const apiContext = await request.newContext();
 
     const user: UserCredentials = {
       username: `finrem-test-${randomUUID()}@mailinator.com`,
-      password: DEFAULT_TEST_USER_PASSWORD,
+      password: 'Password1111',
     };
 
     const accessToken = await this.getAccessToken(apiContext);

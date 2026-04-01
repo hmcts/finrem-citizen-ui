@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 // Import HMCTS common configs
 const { CommonConfig, ProjectsConfig } = await import('@hmcts/playwright-common');
 
-dotenv.config({ quiet: true });
+dotenv.config();
 
 // 1. Determine Target URL and Results Directory
 const resultsDir = process.env.TEST_RESULTS_DIR || 'functional-output';
@@ -17,10 +17,7 @@ const getBaseUrl = (): string => {
   if (env.startsWith('pr-')) {
     return `https://finrem-citizen-ui-${env}.preview.platform.hmcts.net`;
   }
-  // For AAT/demo/etc use the citizen UI, not manage-case (XUI)
-  return `https://finrem-citizen-ui.${env}.platform.hmcts.net`;
-  
-  //   return `https://manage-case.${env}.platform.hmcts.net`;
+  return `https://manage-case.${env}.platform.hmcts.net`;
 };
 
 const finalBaseUrl = getBaseUrl();

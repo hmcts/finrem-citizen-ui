@@ -1,8 +1,0 @@
-# Prevent LLM access to local secrets and environment config
-.env
-.env.*
-**/.env
-**/.env.*
-
-# Allow checked-in template only
-!.env.example
