@@ -5,6 +5,7 @@
 def type = "nodejs"
 def product = "finrem"
 def component = "citizen-ui"
+def ccdDataStoreApiUrl = "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
 
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
@@ -86,14 +87,14 @@ withPipeline(type, product, component) {
   onMaster() {
     env.JENKINS_BRANCH = "master"
     env.RUNNING_ENV = "aat"
-    env.CCD_DATA_STORE_API_URL = "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
+    env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl
   }
 
   onPR() {
     env.JENKINS_BRANCH = "preview"
     env.RUNNING_ENV = "pr-${CHANGE_ID}"
     env.TEST_URL = "https://finrem-citizen-ui-pr-${CHANGE_ID}.preview.platform.hmcts.net"
-    env.CCD_DATA_STORE_API_URL = "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
+    env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl
     env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
   }
 }
