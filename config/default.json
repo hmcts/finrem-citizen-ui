@@ -52,5 +52,4 @@
       "finrem-citizen-ui-redis-connection-string": "redis://localhost:6379"
     }
   }
-
 }
