@@ -54,13 +54,12 @@ export async function getServiceToken(): Promise<string> {
     return process.env.S2S_SERVICE_TOKEN;
   }
 
-  const s2sSecret = process.env.FINREM_CASE_ORCHESTRATION_SERVICE_S2S_KEY
-    || process.env.SERVICE_AUTH_SECRET 
+  const s2sSecret = process.env.SERVICE_AUTH_SECRET
     || process.env.S2S_SECRET;
   
   if (!s2sSecret) {
     throw new Error(
-      'Missing S2S secret. Set SERVICE_AUTH_SECRET (preferred), S2S_SECRET, or FINREM_CASE_ORCHESTRATION_SERVICE_S2S_KEY'
+      'Missing S2S secret. Set SERVICE_AUTH_SECRET or S2S_SECRET'
     );
   }
 

@@ -37,20 +37,30 @@ function formatSanitizedErrorPayload(data: unknown): string {
   return JSON.stringify(sanitizeObject(data), null, 2);
 }
 
+const TRANSIENT_STATUS_CODES = new Set([502, 503, 504]);
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 2000;
+
 /**
- * Wrapper around axios for consistent API requests with error handling
+ * Wrapper around axios for consistent API requests with error handling.
+ * Automatically retries on transient 5xx errors (502, 503, 504).
  */
-export async function axiosRequest<T = unknown>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+export async function axiosRequest<T = unknown>(config: AxiosRequestConfig, attempt = 1): Promise<AxiosResponse<T>> {
   try {
     const response = await axios(config);
     return response;
   } catch (error: unknown) {
     const axiosError = error as AxiosError;
     if (axiosError.response) {
-      // Server responded with error status
       const { status, data } = axiosError.response;
+
+      // Retry on transient infrastructure errors
+      if (TRANSIENT_STATUS_CODES.has(status) && attempt < MAX_RETRIES) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * attempt));
+        return axiosRequest<T>(config, attempt + 1);
+      }
+
       const errorMessage = formatSanitizedErrorPayload(data);
-      
       throw new Error(
         `API request failed with status ${status}:\n` +
         `URL: ${config.method?.toUpperCase()} ${config.url}\n` +

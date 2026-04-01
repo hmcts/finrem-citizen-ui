@@ -56,8 +56,8 @@ const config = {
   s2sUrl: process.env.SERVICE_AUTH_PROVIDER_URL 
     || `http://rpe-service-auth-provider-${idamEnv}.service.core-compute-${idamEnv}.internal`,
 
-  // Microservice name for S2S - use COS for CCD API access
-  microservice: process.env.S2S_MICROSERVICE || 'finrem_case_orchestration',
+  // Microservice name for S2S - must match the secret loaded via SERVICE_AUTH_SECRET
+  microservice: process.env.S2S_MICROSERVICE || 'finrem_citizen_ui',
 
   // Test user credentials (caseworker)
   caseworker: {
