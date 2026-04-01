@@ -6,8 +6,6 @@ test.describe('Accessibility Tests', () => {
 
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(2000);
     const axeUtils = new AxeUtils(page);
     await axeUtils.audit();
   });
@@ -17,8 +15,6 @@ test.describe('Accessibility Tests', () => {
 
     await page.goto('/enter-case-number');
     await page.waitForLoadState('networkidle');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(2000);
     const axeUtils = new AxeUtils(page);
     await axeUtils.audit();
   });
@@ -28,8 +24,6 @@ test.describe('Accessibility Tests', () => {
 
     await page.goto('/enter-access-code');
     await page.waitForLoadState('networkidle');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(2000);
     const axeUtils = new AxeUtils(page);
     await axeUtils.audit();
   });
