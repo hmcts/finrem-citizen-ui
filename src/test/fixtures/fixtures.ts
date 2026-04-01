@@ -1,18 +1,31 @@
+import { AxeUtils } from '@hmcts/playwright-common';
 import { test as base } from '@playwright/test';
 
 import { BasePage } from '../functional/pom/basePage.page';
+import { EnterAccessCodePage } from '../functional/pom/enterAccessCode.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
+import { ContestedCaseFactory } from '../functional/utils/factories/contested/ContestedCaseFactory';
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
 
-/** * Define the shape of the authentication session object.
+/**
+ * Define the shape of the authentication session object.
  */
 export type AuthSession = {
   user: UserCredentials;
   authStatus: 'success' | 'failure';
 };
 
-/** * Extend the base MyFixtures type to include Page Objects and Services.
+/**
+ * Created case data shape
+ */
+export type CreatedCase = {
+  caseId: string;
+  formattedCaseId: string;
+};
+
+/**
+ * Extend the base MyFixtures type to include Page Objects and Services.
  */
 type MyFixtures = {
   idamApiService: IdamApiService;
@@ -21,9 +34,18 @@ type MyFixtures = {
   basePage: BasePage;
   loggedInPage: AuthSession;
   enterCaseNumberPage: EnterCaseNumberPage;
+  enterAccessCodePage: EnterAccessCodePage;
+  contestedCaseForCaseNumber: CreatedCase;
+  contestedCaseWithHearing: CreatedCase;
+  axeUtils: AxeUtils; 
 };
 
 export const test = base.extend<MyFixtures>({
+   axeUtils: async ({ page }, use) => {
+    const axeUtils = new AxeUtils(page);
+    await use(axeUtils);
+  },
+  
   idamApiService: async ({}, use) => {
     await use(new IdamApiService());
   },
@@ -58,6 +80,34 @@ export const test = base.extend<MyFixtures>({
   enterCaseNumberPage: async ({ page }, use) => {
     await use(new EnterCaseNumberPage(page));
   },
+
+  enterAccessCodePage: async ({ page }, use) => {
+    await use(new EnterAccessCodePage(page));
+  },
+
+  /**
+   * CASE CREATION FIXTURE: Creates a contested case with hearing date via API.
+   * This creates a real case in CCD that can be used for testing.
+   */
+  contestedCaseForCaseNumber: [
+    async ({}, use) => {
+      const caseId = String(
+        await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)
+      );
+      const formattedCaseId = caseId.replace(/(\d{4})(?=\d)/g, '$1-');
+      await use({ caseId, formattedCaseId });
+    },
+    { timeout: 240 * 1000 }
+  ],
+
+  contestedCaseWithHearing: [
+    async ({}, use) => {
+      const caseId = String(await ContestedCaseFactory.createContestedCaseWithHearing());
+      const formattedCaseId = caseId.replace(/(\d{4})(?=\d)/g, '$1-');
+      await use({ caseId, formattedCaseId });
+    },
+    { timeout: 240 * 1000 }
+  ],
 });
 
 export { expect } from '@playwright/test';

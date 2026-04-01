@@ -1,37 +1,37 @@
-import { expect,Locator, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 
-export class EnterCaseNumberPage {
-  readonly caseNumberHeader: Locator;
-  readonly caseNumberInput: Locator;
-  readonly caseNumberHint: Locator;
+export class EnterAccessCodePage {
+  readonly accessCodeHeader: Locator;
+  readonly accessCodeInput: Locator;
+  readonly accessCodeHint: Locator;
   readonly continueBtn: Locator;
   readonly errorSummary: Locator;
   readonly errorSummaryTitle: Locator;
   readonly fieldError: Locator;
 
   constructor(readonly page: Page) {
-    this.caseNumberHeader = this.page.getByRole('heading', { name: 'Case number' });
-    this.caseNumberInput = this.page.getByRole('textbox', { name: 'Enter your case number' });
-    this.caseNumberHint = this.page.locator('#caseNumber-hint');
+    this.accessCodeHeader = this.page.getByRole('heading', { name: 'Enter access code' });
+    this.accessCodeInput = this.page.getByRole('textbox', { name: 'Enter access code' });
+    this.accessCodeHint = this.page.locator('#accessCode-hint');
     this.continueBtn = this.page.getByRole('button', { name: 'Continue' });
     this.errorSummary = this.page.getByRole('alert');
     this.errorSummaryTitle = this.page.getByRole('heading', { name: 'There is a problem' });
-    this.fieldError = this.page.locator('#caseNumber-error');
+    this.fieldError = this.page.locator('#accessCode-error');
   }
 
-  async verifyCaseNumberPageContent(): Promise<void> {
-    const elementsToCheck = [this.caseNumberHeader, this.caseNumberInput, this.caseNumberHint, this.continueBtn];
+  async verifyAccessCodePageContent(): Promise<void> {
+    const elementsToCheck = [this.accessCodeHeader, this.accessCodeInput, this.accessCodeHint, this.continueBtn];
 
     for (const element of elementsToCheck) {
       await expect(element).toBeVisible();
     }
   }
 
-  async submitCaseNumber(caseNumber: string): Promise<void> {
-    await this.caseNumberInput.focus();
-    await this.caseNumberInput.fill('');
-    await this.caseNumberInput.fill(caseNumber);
-    await this.caseNumberInput.press('Tab');
+  async submitAccessCode(accessCode: string): Promise<void> {
+    await this.accessCodeInput.focus();
+    await this.accessCodeInput.fill('');
+    await this.accessCodeInput.fill(accessCode);
+    await this.accessCodeInput.press('Tab');
     await this.continueBtn.waitFor({ state: 'visible' });
     await this.continueBtn.click();
   }
