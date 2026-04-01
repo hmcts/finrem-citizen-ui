@@ -73,8 +73,8 @@ const config = {
 
   // System user credentials (fallback for cross-role CCD visibility in CI)
   systemUser: {
-    username: process.env.IDAM_SYSTEM_USERNAME || '',
-    password: process.env.IDAM_SYSTEM_PASSWORD || '',
+    username: process.env['finrem-system-update-username'] || '',
+    password: process.env['finrem-system-update-password'] || '',
   },
 
   // Citizen credentials (dynamically created in tests)
