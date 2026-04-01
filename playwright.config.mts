@@ -10,9 +10,13 @@ dotenv.config({ quiet: true });
 const resultsDir = process.env.TEST_RESULTS_DIR || 'functional-output';
 
 const getBaseUrl = (): string => {
-  if (process.env.TEST_URL) {
+  const isCI = !!process.env.CI;
+
+  // TEST_URL may be an ephemeral route available only during functional runs.
+  if (isCI && process.env.TEST_URL) {
     return process.env.TEST_URL;
   }
+
   const env = process.env.RUNNING_ENV || 'aat';
   if (env.startsWith('pr-')) {
     return `https://finrem-citizen-ui-${env}.preview.platform.hmcts.net`;
