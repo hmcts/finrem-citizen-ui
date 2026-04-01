@@ -44,23 +44,31 @@
   }
 }
 
-// Target-size fixes for WCAG 2.2 compliance - using higher specificity to override GOV.UK defaults
-a.govuk-service-navigation__link,
-.govuk-service-navigation__item a.govuk-service-navigation__link {
+.govuk-service-navigation a.govuk-service-navigation__link,
+.govuk-service-navigation__item a.govuk-service-navigation__link,
+.govuk-service-navigation__wrapper .govuk-service-navigation__item a.govuk-service-navigation__link,
+a.govuk-service-navigation__link[href] {
   display: inline-block !important;
   min-height: 24px !important;
+  height: auto !important;
   padding-top: 4px !important;
   padding-bottom: 4px !important;
   line-height: 1.5 !important;
   vertical-align: middle !important;
+  box-sizing: border-box !important;
 }
 
-button.govuk-button,
+form button.govuk-button,
+button.govuk-button[type="submit"],
+button.govuk-button[data-module="govuk-button"],
 a.govuk-button,
-input.govuk-button {
+input.govuk-button,
+.govuk-button {
   min-height: 44px !important;
+  height: auto !important;
   padding-top: 12px !important;
   padding-bottom: 12px !important;
   box-sizing: border-box !important;
   line-height: 1.25 !important;
+  vertical-align: middle !important;
 }
