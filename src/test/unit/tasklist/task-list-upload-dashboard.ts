@@ -1,7 +1,6 @@
+import { describe, expect, it } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
-
-import { describe, expect, it } from '@jest/globals';
 
 import nunjucksEnv from '../../nunjucks';
 

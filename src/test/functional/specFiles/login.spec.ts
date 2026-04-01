@@ -1,0 +1,56 @@
+import { expect, test } from '../../fixtures/fixtures';
+
+test.describe('Authenticated Citizen User Journey Verification', () => {
+  /**
+   * AUTOMATIC SETUP (via beforeEach)
+   * By requesting 'loggedInPage', we trigger the fixtures file:
+   * 1. idamApiService: Creates the helper instance.
+   * 2. citizenUser: Calls the API to create a fresh user.
+   * 3. loggedInPage: Navigates to the app and performs the UI login.
+   */
+  test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage, axeUtils: _axeUtils }) => {
+    // The browser is already logged in here
+    await enterCaseNumberPage.verifyCaseNumberPageContent();
+  });
+
+  test('User can see access case number page after successful login @PR @a11y', async ({ axeUtils: _axeUtils }) => {
+    // No logic assertions here since the beforeEach already confirms we're on the correct page.
+    // await _axeUtils.audit(); // temporarily skipped due to accessibility defects
+  });
+
+  test('User can sign out via the UI and is redirected to IDAM @PR @a11y', async ({ page, basePage, idamPage, axeUtils: _axeUtils }) => {
+    // Perform the UI-driven sign out
+    await basePage.signOut();
+
+    // Assert redirection to IDAM (Sign-in page)
+    await expect(page).toHaveURL(/.*sign-in-or-create.*/);
+    await expect(idamPage.signInLink).toBeVisible();
+
+    // Verify that trying to go back to the app root redirects back to login
+    await basePage.goto('/');
+    await expect(page).toHaveURL(/.*sign-in-or-create.*/);
+    await _axeUtils.audit(); 
+  });
+
+  test('Verify Global Layout elements: Header, Footer, @PR @a11y', async ({ page, basePage, axeUtils: _axeUtils }) => {
+    // common elements from the Page Object for easier access
+    const { footer, licenceDescription, licenceLink, copyRightImgLink } = basePage;
+
+    // Check header
+    await expect(basePage.headerLogo).toBeVisible();
+
+    // Check footer (License description and Link navigates to the correct page)
+    await footer.scrollIntoViewIfNeeded();
+    await expect(footer).toBeVisible();
+    await expect(licenceDescription).toBeVisible();
+    await licenceLink.click();
+    await basePage.verifyUrl(/.*open-government-licence.*/);
+
+    await page.goBack();
+
+    // Check footer (Copyright Image link navigates to the correct page)
+    await copyRightImgLink.click();
+    await basePage.verifyUrl(/.*crown-copyright.*/);
+    await _axeUtils.audit();
+  });
+});

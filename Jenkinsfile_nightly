@@ -16,8 +16,8 @@ def component = "citizen-ui"
 
 def secrets = [
   'finrem-${env}': [
-    secret("idam-secret" ,"OAUTH2_CLIENT_FINREM"),
-    secret("finrem-idam-client-secret", "FINREM_IDAM_CLIENT_SECRET"),
+    secret("finrem-citizen-s2s-client-secret", "SERVICE_AUTH_SECRET"),
+    secret("finrem-citizen-ui-idam-client-secret", "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET"),
   ]
 ]
 
@@ -54,7 +54,7 @@ withNightlyPipeline(type, product, component) {
 
   afterAlways('fullFunctionalTest') {
     junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
-    
+
     archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
 
     allure([

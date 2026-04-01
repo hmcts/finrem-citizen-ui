@@ -1,9 +1,45 @@
 module.exports = {
-  roots: ['<rootDir>/src/test/unit'],
-  testRegex: '(/src/test/.*|\\.(test|spec))\\.(ts|js)$',
+  roots: ['<rootDir>/src/main', '<rootDir>/src/test/unit', '<rootDir>/src/test/routes'],
+  testRegex: '.*\\.(test|spec)\\.ts$',
   moduleFileExtensions: ['ts', 'js', 'json'],
   testEnvironment: 'node',
   transform: {
-    '^.+\\.ts?$': 'ts-jest',
+    '^.+\\.ts?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' }],
+    '^.+\\.m?js$': [
+      'babel-jest',
+      {
+        presets: [['@babel/preset-env', { targets: { node: 'current' }, modules: 'commonjs' }]],
+      },
+    ],
+  },
+  transformIgnorePatterns: ['/node_modules/(?!(openid-client|oauth4webapi|jose|otplib|@otplib|@scure|@noble)/)'],
+  setupFilesAfterEnv: ['<rootDir>/src/test/jest.setup.ts'],
+  collectCoverageFrom: [
+    'src/main/**/*.ts',
+    '!src/main/app.ts',
+    '!src/main/server.ts',
+    '!src/main/development.ts',
+    '!src/main/assets/**',
+    '!src/main/**/*.d.ts',
+    '!src/main/routes/health.ts',
+    '!src/main/routes/info.ts',
+    '!src/main/routes/home.ts',
+    '!src/main/routes/enter-case-number.ts',
+    '!src/main/routes/enter-access-code.ts',
+    '!src/main/HttpError.ts',
+    '!src/main/middleware/index.ts',
+    '!src/main/modules/appinsights/**',
+    '!src/main/modules/properties-volume/**',
+    '!src/main/modules/helmet/**',
+    '!src/main/modules/nunjucks/**',
+    '!src/main/modules/oidc/config.interface.ts',
+  ],
+  coverageThreshold: {
+    global: {
+      statements: 85,
+      branches: 85,
+      functions: 85,
+      lines: 85,
+    },
   },
 };

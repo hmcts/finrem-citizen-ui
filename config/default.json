@@ -10,5 +10,47 @@
       "includeSubDomains": true,
       "preload": true
     }
+  },
+  "services": {
+    "idam": {
+      "systemUsername": "dummy_user",
+      "systemPassword": "",
+      "clientID": "finrem-citizen-ui",
+      "clientSecret": "NEED TO INSERT SECRET",
+      "authorizationURL": "https://hmcts-access.aat.platform.hmcts.net/login",
+      "tokenURL": "https://idam-api.aat.platform.hmcts.net/o/token",
+      "caching": false
+    },
+    "authProvider": {
+      "url": "http://rpe-service-auth-provider-aat.service.core-compute-aat.internal",
+      "microservice": "finrem_citizen_ui",
+      "secret": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    "case": {
+      "url": "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
+    }
+  },
+  "oidc": {
+    "issuer": "https://hmcts-access.aat.platform.hmcts.net/o",
+    "clientId": "finrem-citizen-ui",
+    "callbackUrl": "http://localhost:3100/oauth2/callback",
+    "scope": "openid profile roles"
+  },
+  "session": {
+    "cookieName": "finrem_session",
+    "prefix": "finrem-session",
+    "ttlInSeconds": 5400
+  },
+  "use-ssl": false,
+  "features": {
+    "redis": "false"
+  },
+  "secrets": {
+    "finrem": {
+      "finrem-citizen-ui-idam-client-secret": "AAAAAAAAAAAA",
+      "session-secret": "finrem-local-dev-secret",
+      "finrem-citizen-ui-redis-connection-string": "redis://localhost:6379"
+    }
   }
+
 }

@@ -1,18 +1,19 @@
+import { Application } from 'express';
 import fs from 'fs';
 import path from 'path';
 
-import { Application } from 'express';
+import { RouteNames, ViewNames } from '../common-constants';
+import { oidcMiddleware } from '../middleware';
 
-export default (app: Application): void => {
-  // Task List Dashboard
-  app.get('/task-list-upload-dashboard', (req, res, next) => {
+const taskListUpload = (app: Application): void => {
+  app.get(RouteNames.taskListUpload, oidcMiddleware, (req, res, next) => {
     try {
       const filePath = path.join(__dirname, '../models/tasklist.json');
       const data = fs.readFileSync(filePath, 'utf-8');
-      res.render('task-list-upload-dashboard', JSON.parse(data));
+      res.render(ViewNames.TaskListUploadDashboard, JSON.parse(data));
     } catch (err) {
       next(err);
-      res.render('error', {});
     }
   });
 };
+export default taskListUpload;

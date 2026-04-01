@@ -1,0 +1,29 @@
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
+
+import { RouteNames } from '../common-constants';
+
+const PUBLIC_PATHS = [RouteNames.login, RouteNames.callbackUrl, RouteNames.info, '/favicon.ico'];
+const PUBLIC_PREFIXES = [RouteNames.health];
+
+export const oidcMiddleware: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
+  const requestPath = req.path || req.originalUrl;
+  const isPublicPath =
+    PUBLIC_PATHS.includes(requestPath) || PUBLIC_PREFIXES.some(prefix => requestPath.startsWith(prefix));
+
+  if (isPublicPath) {
+    return next();
+  }
+
+  if (req.session?.user) {
+    return next();
+  }
+
+  if (req.session) {
+    req.session.returnTo = req.originalUrl;
+    req.session.save(() => {
+      res.redirect(RouteNames.login);
+    });
+  } else {
+    res.redirect(RouteNames.login);
+  }
+};

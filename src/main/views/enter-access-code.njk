@@ -1,0 +1,52 @@
+{% extends "template.njk" %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% if errors and errors.accessCode %}
+        <div class="govuk-error-summary" data-module="govuk-error-summary" tabindex="-1">
+          <div role="alert">
+            <h2 class="govuk-error-summary__title">There is a problem</h2>
+            <div class="govuk-error-summary__body">
+              <ul class="govuk-list govuk-error-summary__list">
+                <li><a href="#accessCode">{{ errors.accessCode }}</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        <div class="govuk-form-group {% if errors.accessCode %}govuk-form-group--error{% endif %}">
+          <h1 class="govuk-label-wrapper">
+            <label class="govuk-label govuk-label--l" for="accessCode">
+              Enter access code
+            </label>
+          </h1>
+          <div id="accessCode-hint" class="govuk-hint">
+            This is the 8 character code that you received from the court, for example A1BCDE23
+          </div>
+          {% if errors.accessCode %}
+            <p id="accessCode-error" class="govuk-error-message">
+              <span class="govuk-visually-hidden">Error:</span> {{ errors.accessCode }}
+            </p>
+          {% endif %}
+          <input 
+            class="govuk-input {% if errors.accessCode %}govuk-input--error{% endif %}" 
+            id="accessCode" 
+            name="accessCode" 
+            type="text" 
+            value="{{ accessCode or '' }}"
+            aria-describedby="accessCode-hint{% if errors.accessCode %} accessCode-error{% endif %}"
+            spellcheck="false"
+            autocomplete="off"
+          >
+        </div>
+
+        <button type="submit" class="govuk-button" data-module="govuk-button">
+          Continue
+        </button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

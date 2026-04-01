@@ -1,11 +1,14 @@
 # Environments & Dependencies
 .env
 .env.local
+!.env.example
 node_modules/
 lib/
 .yarn/
 .yarn/*
+!.yarn/
 !.yarn/releases/
+!.yarn/releases/*
 !.yarn/plugins/
 
 # Build & Compiled Assets
@@ -28,17 +31,18 @@ version
 .settings/
 
 # Testing & Reporting (Playwright/Allure/Jest)
-allure-results/
-allure-report/
-allure-results-smoke/
-playwright-report/
-test-results/
+allure-results/*
+allure-report/*
+allure-results-smoke/*
+playwright-report/*
+test-results/*
 test-results.json
-coverage/
-smoke-output/
-functional-output/
-mochawesome-report/
+coverage/*
+smoke-output/*
+functional-output/*
+mochawesome-report/*
 junit*.xml
+a11y-output/axe-report/*
 
 # Project Specific Paths
 src/main/public/img/lib/*
@@ -49,3 +53,9 @@ src/main/views/govuk
 
 # Misc
 npm-debug.log.*
+env.local
+
+# Helm Charts
+charts/*/charts/*.tgz
+charts/*/charts/nodejs/
+charts/*/charts/redis/

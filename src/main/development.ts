@@ -1,5 +1,7 @@
 import * as express from 'express';
 
+import { RouteNames } from './common-constants';
+
 const setupDev = (app: express.Express, developmentMode: boolean): void => {
   if (developmentMode) {
     const webpackDev = require('webpack-dev-middleware');
@@ -8,7 +10,7 @@ const setupDev = (app: express.Express, developmentMode: boolean): void => {
     const compiler = webpack(webpackconfig);
     app.use(
       webpackDev(compiler, {
-        publicPath: '/',
+        publicPath: RouteNames.basePath,
       })
     );
   }

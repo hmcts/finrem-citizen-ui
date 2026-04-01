@@ -1,3 +1,6 @@
+global:
+  security:
+    allowInsecureImages: true
 nodejs:
   # Don't modify below here
   image: ${IMAGE_NAME}
@@ -12,3 +15,39 @@ nodejs:
   livenessDelay: 45
   livenessTimeout: 5
   livenessPeriod: 15
+
+  environment:
+    IDAM_TOKEN_CACHE: true
+    OAUTH_CALLBACK_URL: 'https://${SERVICE_FQDN}/oauth2/callback'
+    IDAM_CLIENT_ID: finrem-citizen-ui
+
+    # AAT IDAM even in preview
+    IDAM_WEB_URL: https://hmcts-access.aat.platform.hmcts.net/login
+    IDAM_END_SESSION_URL: https://hmcts-access.aat.platform.hmcts.net/o/endSession
+    IDAM_API_URL: https://idam-api.aat.platform.hmcts.net/o/token
+    REDIS_CONNECTION_STRING: 'redis://{{ .Release.Name }}-redis-master:6379'
+    CCD_URL: 'http://ccd-data-store-api-aat.service.core-compute-aat.internal'
+
+  #    CASE_TYPE: NFD-4798 # Uncomment to connect to backend PR, don't forget Jenkinsfile_CNP too
+  keyVaults:
+    finrem:
+      resourceGroup: finrem
+      secrets:
+        - finrem-system-update-username
+        - session-secret
+        - finrem-system-update-password
+        - finrem-citizen-ui-idam-client-secret
+        - finrem-citizen-s2s-client-secret
+        - name: app-insights-connection-string
+          alias: app-insights-connection-string
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: false
+  image:
+    registry: hmctsprod.azurecr.io
+    repository: imported/bitnami/redis
