@@ -33,37 +33,16 @@ const parseNumberEnv = (value: string | undefined, fallback: number): number => 
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 };
 
-const parseIntegerEnv = (value: string | undefined, fallback: number): number => {
-  const parsed = Number.parseInt(value ?? '', 10);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
-};
-
 // Retry configuration for CCD eventual consistency
 const CCD_RETRY_CONFIG = {
-  maxRetries: parseIntegerEnv(process.env.CCD_START_EVENT_MAX_RETRIES, process.env.CI ? 6 : 5),
-  initialDelayMs: parseNumberEnv(process.env.CCD_START_EVENT_INITIAL_DELAY_MS, process.env.CI ? 2500 : 2000),
-  maxDelayMs: parseNumberEnv(process.env.CCD_START_EVENT_MAX_DELAY_MS, process.env.CI ? 12000 : 10000),
-  jitterRatio: parseNumberEnv(process.env.CCD_START_EVENT_JITTER_RATIO, process.env.CI ? 0.2 : 0),
+  maxRetries: parseNumberEnv(process.env.CCD_START_EVENT_MAX_RETRIES, process.env.CI ? 3 : 5),
+  initialDelayMs: 2000,
+  maxDelayMs: parseNumberEnv(process.env.CCD_START_EVENT_MAX_DELAY_MS, process.env.CI ? 4000 : 10000),
   retryableStatusCodes: [404]  // CaseNotFoundException - case not yet available
 };
 
 // Helper to wait with exponential backoff
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-const getRetryDelayMs = (attempt: number): number => {
-  const baseDelay = Math.min(
-    CCD_RETRY_CONFIG.initialDelayMs * Math.pow(2, attempt),
-    CCD_RETRY_CONFIG.maxDelayMs
-  );
-
-  if (CCD_RETRY_CONFIG.jitterRatio <= 0) {
-    return baseDelay;
-  }
-
-  const jitterWindow = baseDelay * CCD_RETRY_CONFIG.jitterRatio;
-  const jitter = Math.round((Math.random() * 2 - 1) * jitterWindow);
-  return Math.max(0, baseDelay + jitter);
-};
 
 export class CcdApi {
 
@@ -90,18 +69,16 @@ export class CcdApi {
       } catch (error) {
         lastError = error as Error;
         const errorMessage = lastError.message || '';
-        const statusMatch = errorMessage.match(/status\s+(\d{3})/i);
-        const statusCode = statusMatch ? Number.parseInt(statusMatch[1], 10) : undefined;
         
         // Check if this is a retryable 404 (CCD eventual consistency)
-        const is404 = errorMessage.includes('No case found') || statusCode === 404;
-        const isRetryableStatus = statusCode
-          ? CCD_RETRY_CONFIG.retryableStatusCodes.includes(statusCode)
-          : false;
-        const isRetryable = is404 || isRetryableStatus;
+        const is404 = errorMessage.includes('status 404') || 
+                      errorMessage.includes('No case found');
         
-        if (isRetryable && attempt < CCD_RETRY_CONFIG.maxRetries) {
-          const delayMs = getRetryDelayMs(attempt);
+        if (is404 && attempt < CCD_RETRY_CONFIG.maxRetries) {
+          const delayMs = Math.min(
+            CCD_RETRY_CONFIG.initialDelayMs * Math.pow(2, attempt),
+            CCD_RETRY_CONFIG.maxDelayMs
+          );
 
           const verboseRetryLogs = process.env.CCD_VERBOSE_RETRY === 'true';
           const shouldLogRetry =
@@ -112,10 +89,7 @@ export class CcdApi {
 
           if (shouldLogRetry) {
             // eslint-disable-next-line no-console
-            console.log(
-              `[CCD Retry] Start-event token unavailable for ${ccdStartCasePath} ` +
-              `(attempt ${attempt + 1}/${CCD_RETRY_CONFIG.maxRetries + 1}), waiting ${delayMs}ms...`
-            );
+            console.log(`[CCD Retry] Case not found (attempt ${attempt + 1}/${CCD_RETRY_CONFIG.maxRetries + 1}), waiting ${delayMs}ms for CCD consistency...`);
           }
           await wait(delayMs);
           continue;
