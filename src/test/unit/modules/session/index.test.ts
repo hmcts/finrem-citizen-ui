@@ -8,22 +8,20 @@ jest.mock('@hmcts/nodejs-logging', () => ({
 
 jest.mock('connect-redis', () => ({
   __esModule: true,
-  default: {
-    RedisStore: class MockRedisStore {
-      public get = jest.fn();
-      public set = jest.fn();
-      public destroy = jest.fn();
-    },
+  RedisStore: class MockRedisStore {
+    public get = jest.fn();
+    public set = jest.fn();
+    public destroy = jest.fn();
   },
 }));
 
 const redisOnMock = jest.fn();
-const redisQuitMock = jest.fn();
+const redisConnectMock = jest.fn().mockResolvedValue(undefined);
 
-jest.mock('ioredis', () => ({
-  Redis: jest.fn().mockImplementation(() => ({
+jest.mock('redis', () => ({
+  createClient: jest.fn().mockImplementation(() => ({
     on: redisOnMock,
-    quit: redisQuitMock,
+    connect: redisConnectMock,
   })),
 }));
 
@@ -39,7 +37,7 @@ jest.mock('config', () => ({
 
 const mockSessionMiddleware = jest.requireMock('express-session') as jest.Mock;
 const configGetMock = (jest.requireMock('config') as { get: jest.Mock }).get;
-const redisModule = jest.requireMock('ioredis') as { Redis: jest.Mock };
+const redisModule = jest.requireMock('redis') as { createClient: jest.Mock };
 
 import { parseSessionSecret,Session } from '../../../../main/modules/session/index';
 
@@ -104,7 +102,7 @@ describe('Session.enableFor', () => {
 
     session.enableFor(app);
 
-    expect(redisModule.Redis).not.toHaveBeenCalled();
+    expect(redisModule.createClient).not.toHaveBeenCalled();
 
     expect(mockSessionMiddleware).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -131,7 +129,7 @@ describe('Session.enableFor', () => {
 
     session.enableFor(app);
 
-    expect(redisModule.Redis).toHaveBeenCalledWith('redis://localhost:6379');
+    expect(redisModule.createClient).toHaveBeenCalledWith({ url: 'redis://localhost:6379' });
 
     expect(mockSessionMiddleware).toHaveBeenCalledWith(
       expect.objectContaining({
