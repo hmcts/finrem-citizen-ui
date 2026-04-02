@@ -1,8 +1,8 @@
 import { APIRequestContext, request } from '@playwright/test';
 import { randomUUID } from 'crypto';
 
-import { UserCredentials } from '../../../functional/pom/idamPage.page';
 import config from '../../config/config';
+import { UserCredentials } from '../../../functional/pom/idamPage.page';
 
 // IDAM environment configuration - defaults to AAT
 const IDAM_ENV = process.env.IDAM_ENV || 'aat';
