@@ -14,10 +14,20 @@ import { envTestData } from '../../test_data/EnvTestDataConfig';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+const parseIntegerEnv = (value: string | undefined, fallback: number): number => {
+  const parsed = Number.parseInt(value ?? '', 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+};
+
+const parseNumberEnv = (value: string | undefined, fallback: number): number => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+};
+
 const START_EVENT_RETRY_CONFIG = {
-  maxRetries: 3,
-  initialDelayMs: 2000,
-  maxDelayMs: 10000,
+  maxRetries: parseIntegerEnv(process.env.CONTESTED_FACTORY_MAX_RETRIES, process.env.CI ? 5 : 3),
+  initialDelayMs: parseNumberEnv(process.env.CONTESTED_FACTORY_INITIAL_DELAY_MS, 2000),
+  maxDelayMs: parseNumberEnv(process.env.CONTESTED_FACTORY_MAX_DELAY_MS, process.env.CI ? 15000 : 10000),
 };
 
 /**
