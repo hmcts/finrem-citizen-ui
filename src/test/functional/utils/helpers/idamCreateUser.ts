@@ -1,7 +1,6 @@
 import { APIRequestContext, request } from '@playwright/test';
 import { randomUUID } from 'crypto';
 
-import config from '../../config/config';
 import { UserCredentials } from '../../../functional/pom/idamPage.page';
 
 // IDAM environment configuration - defaults to AAT
