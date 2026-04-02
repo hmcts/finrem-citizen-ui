@@ -1,7 +1,3 @@
-import fs from 'fs-extra';
-import path from 'path';
-import lockfile from 'proper-lockfile';
-
 import { CaseType, ContestedEvents, PayloadPath } from '../../../config/case-data';
 import { ReplacementAction } from '../../../types/replacement-action';
 import { ContestedEventApi } from '../../api/contested/ContestedEventApi';
@@ -24,46 +20,10 @@ const START_EVENT_RETRY_CONFIG = {
   maxDelayMs: 10000,
 };
 
-const CASE_CREATION_LOCK_PATH = path.resolve(process.cwd(), '.playwright-contested-case.lock');
-
-const CASE_CREATION_LOCK_RETRY_COUNT = parseIntegerEnv(
-  process.env.CONTESTED_FACTORY_LOCK_RETRIES,
-  process.env.CI ? 300 : 0
-);
-
-const CASE_CREATION_LOCK_RETRY_DELAY_MS = parseNumberEnv(
-  process.env.CONTESTED_FACTORY_LOCK_RETRY_DELAY_MS,
-  1000
-);
-
 /**
  * Factory for creating contested cases in various states
  */
 export class ContestedCaseFactory {
-  private static async withCaseCreationLock<T>(operation: () => Promise<T>): Promise<T> {
-    if (!process.env.CI && process.env.SERIALIZE_CONTESTED_CASE_CREATION !== 'true') {
-      return operation();
-    }
-
-    await fs.ensureFile(CASE_CREATION_LOCK_PATH);
-
-    const release = await lockfile.lock(CASE_CREATION_LOCK_PATH, {
-      realpath: false,
-      retries: {
-        retries: CASE_CREATION_LOCK_RETRY_COUNT,
-        factor: 1,
-        minTimeout: CASE_CREATION_LOCK_RETRY_DELAY_MS,
-        maxTimeout: CASE_CREATION_LOCK_RETRY_DELAY_MS,
-      },
-    });
-
-    try {
-      return await operation();
-    } finally {
-      await release();
-    }
-  }
-
   private static isCaseNotFound404(error: unknown): boolean {
     const message = error instanceof Error ? error.message : String(error);
     return message.includes('status 404') && message.includes('No case found');
@@ -208,11 +168,9 @@ export class ContestedCaseFactory {
    * Create and submit a Form A case
    */
   static async createAndProcessFormACase(): Promise<string> {
-    return this.withCaseCreationLock(async () => {
-      const caseId = await this.createBaseContestedFormA();
-      await ContestedEventApi.solicitorSubmitFormACase(caseId);
-      return caseId;
-    });
+    const caseId = await this.createBaseContestedFormA();
+    await ContestedEventApi.solicitorSubmitFormACase(caseId);
+    return caseId;
   }
 
   /**
@@ -222,19 +180,19 @@ export class ContestedCaseFactory {
     isExpressPilot = false,
     issueDate?: string
   ): Promise<string> {
-    return this.withCaseCreationLock(async () => {
-      const caseId = await this.createCase(isExpressPilot, false);
+    const caseId = await this.createCase(isExpressPilot, false);
 
-      await this.withSolicitorStartEventRetry(async () => {
-        await ContestedEventApi.solicitorSubmitFormACase(caseId);
-      });
-
-      await this.withCaseworkerStartEventRetry(async () => {
-        await ContestedEventApi.caseWorkerProgressFormACaseToListing(caseId, issueDate);
-      });
-
-      return caseId;
+    // Poll until the solicitor start-event token is available instead of fixed sleeps.
+    await this.withSolicitorStartEventRetry(async () => {
+      await ContestedEventApi.solicitorSubmitFormACase(caseId);
     });
+
+    // Replace fixed waits with targeted retry for eventual consistency on caseworker start-events.
+    await this.withCaseworkerStartEventRetry(async () => {
+      await ContestedEventApi.caseWorkerProgressFormACaseToListing(caseId, issueDate);
+    });
+
+    return caseId;
   }
 
   /**
@@ -244,15 +202,14 @@ export class ContestedCaseFactory {
     isExpressPilot = false,
     issueDate?: string
   ): Promise<string> {
-    return this.withCaseCreationLock(async () => {
-      const caseId = await this.createCase(isExpressPilot, true);
+    const caseId = await this.createCase(isExpressPilot, true);
 
-      await this.withCaseworkerStartEventRetry(async () => {
-        await ContestedEventApi.caseWorkerProgressPaperCaseToListing(caseId, issueDate);
-      });
-
-      return caseId;
+    // Replace fixed waits with targeted retry for eventual consistency on caseworker start-events.
+    await this.withCaseworkerStartEventRetry(async () => {
+      await ContestedEventApi.caseWorkerProgressPaperCaseToListing(caseId, issueDate);
     });
+
+    return caseId;
   }
 
   /**
@@ -260,43 +217,35 @@ export class ContestedCaseFactory {
    * This is the main method for creating a case ready for citizen to link
    */
   static async createContestedCaseWithHearing(): Promise<string> {
-    return this.withCaseCreationLock(async () => {
-      const issueDate = DateHelper.getCurrentDate();
-      const caseId = await this.createCase(false, false);
+    // Must provide issue date for issueApplication event
+    const issueDate = DateHelper.getCurrentDate();
+    const caseId = await this.createAndProcessFormACaseUpToProgressToListing(false, issueDate);
 
-      await this.withSolicitorStartEventRetry(async () => {
-        await ContestedEventApi.solicitorSubmitFormACase(caseId);
-      });
-
+    // Manage hearings (FR_manageHearings) generates Form C and access codes
+    try {
       await this.withCaseworkerStartEventRetry(async () => {
-        await ContestedEventApi.caseWorkerProgressFormACaseToListing(caseId, issueDate);
+        await ContestedEventApi.caseWorkerPerformsAddAHearing(caseId);
       });
+      // eslint-disable-next-line no-console
+      console.info(`✓ Case ${caseId} created and progressed to listing with hearing added`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const isManageHearingsCallbackFailure =
+        message.includes('FR_manageHearings')
+        && message.includes('Callback to service has been unsuccessful')
+        && message.includes('status 502');
 
-      try {
-        await this.withCaseworkerStartEventRetry(async () => {
-          await ContestedEventApi.caseWorkerPerformsAddAHearing(caseId);
-        });
-        // eslint-disable-next-line no-console
-        console.info(`✓ Case ${caseId} created and progressed to listing with hearing added`);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        const isManageHearingsCallbackFailure =
-          message.includes('FR_manageHearings')
-          && message.includes('Callback to service has been unsuccessful')
-          && message.includes('status 502');
-
-        if (!isManageHearingsCallbackFailure) {
-          throw error;
-        }
-
-        // eslint-disable-next-line no-console
-        console.warn(
-          `⚠ FR_manageHearings callback failed (502); case ${caseId} is listing-ready but may lack access codes`
-        );
+      if (!isManageHearingsCallbackFailure) {
+        throw error;
       }
 
-      return caseId;
-    });
+      // eslint-disable-next-line no-console
+      console.warn(
+        `⚠ FR_manageHearings callback failed (502); case ${caseId} is listing-ready but may lack access codes`
+      );
+    }
+
+    return caseId;
   }
 
   /**
