@@ -29,8 +29,8 @@
       "authorizationURL": "IDAM_WEB_URL",
       "tokenURL": "IDAM_API_URL",
       "caching": "IDAM_TOKEN_CACHE",
-      "systemUsername": "finrem-system-update-username",
-      "systemPassword": "finrem-system-update-password"
+      "systemUsername": "IDAM_SYSTEM_USERNAME",
+      "systemPassword": "IDAM_SYSTEM_PASSWORD"
     },
     "authProvider": {
       "url": "SERVICE_AUTH_PROVIDER_URL",
