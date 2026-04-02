@@ -20,8 +20,8 @@ def secrets = [
     secret("playwright-solicitor-username", "PLAYWRIGHT_SOLICITOR_USERNAME"),
     secret("playwright-solicitor-password", "PLAYWRIGHT_SOLICITOR_PSWD"),
     // System user for citizen case lookup
-    secret("finrem-system-update-username", "finrem-system-update-username"),
-    secret("finrem-system-update-password", "finrem-system-update-password")
+    secret("finrem-system-update-username", "IDAM_SYSTEM_USERNAME"),
+    secret("finrem-system-update-password", "IDAM_SYSTEM_PASSWORD")
   ]
 ]
 
