@@ -6,15 +6,16 @@ jest.mock('@hmcts/nodejs-logging', () => ({
   },
 }));
 
-jest.mock('connect-redis', () => {
-  return jest.fn().mockReturnValue(
-    class MockRedisStore {
+jest.mock('connect-redis', () => ({
+  __esModule: true,
+  default: {
+    RedisStore: class MockRedisStore {
       public get = jest.fn();
       public set = jest.fn();
       public destroy = jest.fn();
-    }
-  );
-});
+    },
+  },
+}));
 
 const redisOnMock = jest.fn();
 const redisQuitMock = jest.fn();
