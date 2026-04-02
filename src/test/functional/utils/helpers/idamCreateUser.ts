@@ -1,8 +1,8 @@
 import { APIRequestContext, request } from '@playwright/test';
 import { randomUUID } from 'crypto';
 
-import config from '../../config/config';
 import { UserCredentials } from '../../../functional/pom/idamPage.page';
+import config from '../../config/config';
 
 const stripTrailingSlash = (url: string): string => url.replace(/\/+$/, '');
 
