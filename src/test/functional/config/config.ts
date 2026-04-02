@@ -13,62 +13,12 @@ const isCI = !!process.env.CI
   || !!process.env.BUILD_ID 
   || !!process.env.JENKINS_HOME;
 
-type ServiceEnvironment = {
-  publicEnv: 'aat' | 'staging';
-  coreComputeEnv: 'aat' | 'stg';
-};
-
-const inferEnvironmentFromUrl = (url?: string): ServiceEnvironment | null => {
-  if (!url) {
-    return null;
-  }
-
-  const normalized = url.toLowerCase();
-
-  if (normalized.includes('.preview.platform.hmcts.net') || normalized.includes('-pr-')) {
-    // Preview apps run against AAT shared services.
-    return { publicEnv: 'aat', coreComputeEnv: 'aat' };
-  }
-
-  if (normalized.includes('.staging.platform.hmcts.net') || normalized.includes('.stg.platform.hmcts.net')) {
-    return { publicEnv: 'staging', coreComputeEnv: 'stg' };
-  }
-
-  if (normalized.includes('.aat.platform.hmcts.net')) {
-    return { publicEnv: 'aat', coreComputeEnv: 'aat' };
-  }
-
-  return null;
-};
-
-const inferEnvironmentFromName = (name?: string): ServiceEnvironment | null => {
-  if (!name) {
-    return null;
-  }
-
-  const normalized = name.toLowerCase();
-
-  if (normalized === 'aat' || normalized.startsWith('pr-') || normalized === 'preview') {
-    return { publicEnv: 'aat', coreComputeEnv: 'aat' };
-  }
-
-  if (normalized === 'staging' || normalized === 'stg') {
-    return { publicEnv: 'staging', coreComputeEnv: 'stg' };
-  }
-
-  return null;
-};
-
-const resolvedEnvironment: ServiceEnvironment =
-  inferEnvironmentFromName(process.env.IDAM_ENV)
-  || inferEnvironmentFromName(process.env.RUNNING_ENV)
-  || inferEnvironmentFromName(process.env.ENVIRONMENT_NAME)
-  || inferEnvironmentFromUrl(process.env.TEST_URL)
-  || { publicEnv: 'aat', coreComputeEnv: 'aat' };
+// IDAM and S2S always use AAT (no PR-specific instances exist)
+const idamEnv = 'aat';
 
 // CCD Data Store API URL
-// - In pipeline (CI): use internal URL (accessible from cluster)
-// - Locally: use external URL unless overridden
+// - In pipeline (CI): use internal AAT URL (accessible from cluster)
+// - Locally: use external AAT URL unless overridden
 const getCcdUrl = (): string => {
   // Explicit override takes priority (support common env var names)
   const ccdUrl = process.env.CCD_DATA_STORE_API_URL
@@ -78,12 +28,12 @@ const getCcdUrl = (): string => {
     return ccdUrl;
   }
 
-  // In CI/pipeline, use internal environment URL
+  // In CI/pipeline, use internal AAT URL
   if (isCI) {
-    return `http://ccd-data-store-api-${resolvedEnvironment.coreComputeEnv}.service.core-compute-${resolvedEnvironment.coreComputeEnv}.internal`;
+    return 'http://ccd-data-store-api-aat.service.core-compute-aat.internal';
   }
-  // Local development: use external environment URL
-  return `https://ccd-data-store-api-${resolvedEnvironment.publicEnv}.${resolvedEnvironment.publicEnv}.platform.hmcts.net`;
+  // Local development: use external AAT URL
+  return 'https://ccd-data-store-api-aat.aat.platform.hmcts.net';
 };
 
 const config = {
@@ -96,15 +46,15 @@ const config = {
       ? process.env.CCD_USE_SYSTEM_USER_FOR_CASEWORKER_EVENTS === 'true'
       : isCI,
 
-  // IDAM endpoints
+  // IDAM endpoints - ALWAYS use AAT
   idamApi: process.env.IDAM_API_URL 
-    || `https://idam-api.${resolvedEnvironment.publicEnv}.platform.hmcts.net`,
+    || `https://idam-api.${idamEnv}.platform.hmcts.net`,
   idamWebUrl: process.env.IDAM_WEB_URL 
-    || `https://idam-web-public.${resolvedEnvironment.publicEnv}.platform.hmcts.net`,
+    || `https://idam-web-public.${idamEnv}.platform.hmcts.net`,
 
-  // S2S endpoint
+  // S2S also uses AAT
   s2sUrl: process.env.SERVICE_AUTH_PROVIDER_URL 
-    || `http://rpe-service-auth-provider-${resolvedEnvironment.coreComputeEnv}.service.core-compute-${resolvedEnvironment.coreComputeEnv}.internal`,
+    || `http://rpe-service-auth-provider-${idamEnv}.service.core-compute-${idamEnv}.internal`,
 
   // Microservice name for S2S - must match the secret loaded via SERVICE_AUTH_SECRET
   microservice: process.env.S2S_MICROSERVICE || 'finrem_citizen_ui',
