@@ -1,20 +1,32 @@
 import { APIRequestContext, request } from '@playwright/test';
 import { randomUUID } from 'crypto';
 
+import config from '../../config/config';
 import { UserCredentials } from '../../../functional/pom/idamPage.page';
 
-// IDAM environment configuration - defaults to AAT
-const IDAM_ENV = process.env.IDAM_ENV || 'aat';
 const stripTrailingSlash = (url: string): string => url.replace(/\/+$/, '');
 
+const inferPublicEnvFromUrl = (url?: string): 'aat' | 'staging' => {
+  if (!url) {
+    return 'aat';
+  }
+
+  const normalized = url.toLowerCase();
+  return normalized.includes('.staging.platform.hmcts.net') || normalized.includes('.stg.platform.hmcts.net')
+    ? 'staging'
+    : 'aat';
+};
+
+const inferredPublicEnv = inferPublicEnvFromUrl(process.env.TEST_URL);
+
 const IDAM_WEB_URL = stripTrailingSlash(
-  process.env.IDAM_WEB_URL || `https://idam-web-public.${IDAM_ENV}.platform.hmcts.net`
+  process.env.IDAM_WEB_URL || config.idamWebUrl || `https://idam-web-public.${inferredPublicEnv}.platform.hmcts.net`
 );
 
 const IDAM_TESTING_SUPPORT_API_URL = stripTrailingSlash(
   process.env.IDAM_TESTING_SUPPORT_API_URL
     || process.env.IDAM_TESTING_SUPPORT_URL
-    || `https://idam-testing-support-api.${IDAM_ENV}.platform.hmcts.net`
+    || `https://idam-testing-support-api.${inferredPublicEnv}.platform.hmcts.net`
 );
 
 // Default password for test users - should be overridden in CI/CD environments
