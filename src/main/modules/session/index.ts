@@ -1,11 +1,10 @@
 import { Logger } from '@hmcts/nodejs-logging';
 import config from 'config';
-import connectRedis = require('connect-redis');
+import { RedisStore } from 'connect-redis';
 import type { Express } from 'express';
 import session = require('express-session');
-import { Redis } from 'ioredis';
+import { createClient } from 'redis';
 
-const RedisStore = connectRedis(session);
 const logger = Logger.getLogger('session');
 
 export function parseSessionSecret(raw: string): string | string[] {
@@ -30,7 +29,7 @@ export function parseSessionSecret(raw: string): string | string[] {
 
 type AppWithRedis = Express & {
   locals: Express['locals'] & {
-    redisClient?: Redis;
+    redisClient?: ReturnType<typeof createClient>;
   };
 };
 
@@ -67,8 +66,8 @@ export class Session {
       return;
     }
 
-const redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
-const redis = new Redis(redisConnectionString);
+    const redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
+    const redis = createClient({ url: redisConnectionString });
 
 redis.on('ready', async () => {
       logger.info('Redis session store connected and ready');
@@ -80,7 +79,7 @@ redis.on('ready', async () => {
           ts: new Date().toISOString()
         });
 
-        await redis.set(testKey, testValue, 'EX', 300);
+        await redis.set(testKey, testValue, { EX: 300 });
         logger.info(`Redis SET successful for key=${testKey}`);
 
         const value = await redis.get(testKey);
@@ -97,12 +96,17 @@ redis.on('ready', async () => {
       logger.error('Redis session store error', error);
     });
 
+    redis.connect().catch((error: unknown) => {
+      logger.error('Redis session store connection failed', error);
+    });
+
     typedApp.locals.redisClient = redis;
 
     const store = new RedisStore({
       client: redis,
       prefix: `${config.get<string>('session.prefix')}:`,
       ttl: ttlInSeconds,
+      disableTouch: false
     }) as session.Store;
 
     logger.info('Session configured with Redis store');
