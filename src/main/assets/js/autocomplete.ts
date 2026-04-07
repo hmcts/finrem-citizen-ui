@@ -44,8 +44,7 @@ function createSourceFunction(
       });
       
       populateResults(results.map(r => r.label));
-    } catch (error) {
-      console.error('Autocomplete: Failed to fetch results', error);
+    } catch {
       populateResults([]);
     }
   };
