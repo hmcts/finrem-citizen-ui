@@ -56,13 +56,7 @@ function initAutocomplete(): void {
         }
       },
       showNoOptionsFound: true,
-      showAllValues: false,
       minLength: 1,
-      defaultValue: '',
-      displayMenu: 'overlay',
-      placeholder: '',
-      confirmOnBlur: true,
-      autoselect: false,
     });
   });
 }

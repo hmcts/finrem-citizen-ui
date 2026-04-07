@@ -7,7 +7,6 @@
   position: relative;
 }
 
-// Minimal overrides - let accessible-autocomplete handle most styling
 .autocomplete__input {
   @extend .govuk-input;
   margin-bottom: 0;
