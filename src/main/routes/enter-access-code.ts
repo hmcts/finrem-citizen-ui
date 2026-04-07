@@ -210,7 +210,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       try {
         await addUserToCaseForRole(req.session.caseNumber, user.uid as string, role);
       } catch {
-        return res.redirect(RouteNames.enterAccessCode);
+        res.render(ViewNames.Error);
       } 
 
 
