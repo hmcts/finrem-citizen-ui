@@ -8,7 +8,7 @@ import { RouteNames } from '../../common-constants';
 
 export interface UserDefaultPageDetails {
   url: string;
-  caseData?: FinremCaseData
+  caseData?: FinremCaseData;
 }
 
 export async function getHomePageForUser(userDetails: UserDetails, caseType: string): Promise<UserDefaultPageDetails> {
@@ -16,7 +16,8 @@ export async function getHomePageForUser(userDetails: UserDetails, caseType: str
 
   const caseApi = getCaseApi(userDetails, logger);
 
-  const caseId = await caseApi.getExistingUserCaseByType(caseType);
+  const caseId = await caseApi.getExistingUserCase(caseType);
+
   logger.info('caseId returned is ', caseId);
 
   if (caseId?.trim()) {

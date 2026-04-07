@@ -14,8 +14,11 @@ jest.mock('axios', () => ({
     post: jest.fn(),
   },
 }));
+
 jest.mock('otplib', () => ({
-  generate: jest.fn().mockResolvedValue('12345')
+  authenticator: {
+    generate: jest.fn().mockReturnValue('12345'),
+  },
 }));
 
 jest.useFakeTimers({ legacyFakeTimers: true });
