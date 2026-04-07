@@ -40,7 +40,8 @@ describe('getHomePageForUser', () => {
       roles: ['admin'],
     });
 
-    userDetails = {  accessToken: 'token',
+    userDetails = {
+      accessToken: 'token',
       idToken: 'id',
       refreshToken: undefined,
       sub: 'test@test.com',
@@ -48,7 +49,8 @@ describe('getHomePageForUser', () => {
       givenName: 'John',
       familyName: 'Dorian',
       id: '123',
-      roles: ['citizen'] };
+      roles: ['citizen'],
+    };
   });
 
   test('should route to dashboard when caseId exists', async () => {
@@ -57,7 +59,7 @@ describe('getHomePageForUser', () => {
     mockGetExistingUserCase.mockResolvedValue('CASE123');
     mockGetCaseById.mockResolvedValue(mockCaseData);
 
-    const homepageResult = await getHomePageForUser(userDetails);
+    const homepageResult = await getHomePageForUser(userDetails, 'NFD');
 
     const expectedResult = {
       caseData: {
@@ -66,7 +68,7 @@ describe('getHomePageForUser', () => {
       url: RouteNames.dashboard,
     };
 
-    expect(mockGetExistingUserCase).toHaveBeenCalled();
+    expect(mockGetExistingUserCase).toHaveBeenCalledWith('NFD');
     expect(mockGetCaseById).toHaveBeenCalledWith('CASE123');
     expect(homepageResult).toEqual(expectedResult);
     expect(getSystemUser).toHaveBeenCalled();
@@ -75,15 +77,12 @@ describe('getHomePageForUser', () => {
   test.each([
     ['empty string', ''],
     ['undefined', undefined],
-  ])(
-    'should route to enterCaseNumber when caseId is %s',
-    async (_, caseId) => {
-      mockGetExistingUserCase.mockResolvedValue(caseId);
+  ])('should route to enterCaseNumber when caseId is %s', async (_, caseId) => {
+    mockGetExistingUserCase.mockResolvedValue(caseId);
 
-      const result = await getHomePageForUser(userDetails);
+    const homepageResult = await getHomePageForUser(userDetails, 'NFD');
 
-      expect(mockGetCaseById).not.toHaveBeenCalled();
-      expect(result).toEqual({ 'url': RouteNames.enterCaseNumber });
-    }
-  );
+    expect(mockGetCaseById).not.toHaveBeenCalled();
+    expect(homepageResult).toEqual({ url: RouteNames.enterCaseNumber });
+  });
 });
