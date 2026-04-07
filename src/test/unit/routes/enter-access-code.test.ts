@@ -169,6 +169,17 @@ describe('validateAccessCodeAgainstCase', () => {
     
     const result = validateAccessCodeAgainstCase(mockAccessCode);
     expect(result.isValid).toBe(false);
+    expect(result.error).toBe('The access code you entered has already been used, you should contact the court.');
+  });
+
+  it('should prioritize expiry check over usage check', () => {
+    const pastDate = new Date();
+    pastDate.setDate(pastDate.getDate() - 1);
+    const mockAccessCode = createMockAccessCode(pastDate.toISOString(), YesOrNo.NO);
+    
+    const result = validateAccessCodeAgainstCase(mockAccessCode);
+    expect(result.isValid).toBe(false);
+    expect(result.error).toBe('The access code you entered has expired. Contact the court to get a new code');
   });
 });
 
