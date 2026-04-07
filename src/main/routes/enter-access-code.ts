@@ -1,6 +1,10 @@
 import { Application, Request, Response } from 'express';
 
-import { AccessCodeCollection, FinremCaseData } from '../app/case/definition';
+import { getSystemUser } from '../app/auth/user';
+import { getCaseApi } from '../app/case/case-api';
+import { CaseAssignedUserRole } from '../app/case/case-roles';
+import { AccessCodeCollection, CaseRole, FinremCaseData } from '../app/case/definition';
+import { UserDetails } from '../app/controller/AppRequest';
 import { RouteNames, ViewNames } from '../common-constants';
 import { oidcMiddleware } from '../middleware';
 
@@ -27,19 +31,29 @@ export function retrieveCaseData(caseData: FinremCaseData | undefined): FinremCa
 export function getMatchingAccessCode(
   caseData: FinremCaseData,
   accessCode: string
-): AccessCodeCollection | null {
+): { match: AccessCodeCollection; role: CaseRole } | null {
   const trimmedAccessCode = accessCode.trim().toUpperCase();
-  
-  const allAccessCodes = [
-    ...(caseData.applicantAccessCodes || []),
-    ...(caseData.respondentAccessCodes || []),
-  ];
 
-  const matchingAccessCode = allAccessCodes.find(
-    (ac) => ac.value.accessCode?.toUpperCase() === trimmedAccessCode
+  const applicantCodes = caseData.applicantAccessCodes || [];
+  const respondentCodes = caseData.respondentAccessCodes || [];
+
+  const applicantMatch = applicantCodes.find(
+    ac => ac.value?.accessCode?.toUpperCase() === trimmedAccessCode
   );
 
-  return matchingAccessCode || null;
+  if (applicantMatch) {
+    return { match: applicantMatch, role: CaseRole.APPLICANT };
+  }
+
+  const respondentMatch = respondentCodes.find(
+    ac => ac.value?.accessCode?.toUpperCase() === trimmedAccessCode
+  );
+
+  if (respondentMatch) {
+    return { match: respondentMatch, role: CaseRole.RESPONDENT };
+  }
+
+  return null;
 }
 
 export function validateAccessCodeAgainstCase(
@@ -93,6 +107,39 @@ export function validateAccessCode(accessCode: string | undefined): AccessCodeEr
   return null;
 }
 
+export async function addUserToCaseForRole(caseId: string, userId: string, caseRole: CaseRole): Promise<void> {
+  try {
+    const systemUser = await getSystemUser();
+    const caseworkerUserApi = getCaseApi(systemUser, logger);
+
+    const assignments: CaseAssignedUserRole[] = [
+      {
+        case_id: caseId,
+        user_id: userId,
+        case_role: caseRole,
+      },
+    ];
+
+    await caseworkerUserApi.addUsersToCase(assignments);
+
+    logger.info('Successfully added user to case', {
+      caseId,
+      userId,
+      caseRole,
+    });
+
+  } catch (error) {
+    const err = error as Error;
+    logger.error('Error adding user to case', {
+      caseId,
+      userId,
+      caseRole,
+      error: err.message,
+    });
+    throw err;
+  }
+}
+
 export default function setupEnterAccessCodeRoute(app: Application): void {
   app.get(RouteNames.enterAccessCode, oidcMiddleware, (req: Request, res: Response) => {
     // Check if case number exists in session
@@ -140,10 +187,11 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
           accessCode: accessCode || '',
         });
       }
+      const { match, role } = matchingAccessCode;
 
       // Validate access code against case (expiry and usage)
-      const validationResult = validateAccessCodeAgainstCase(matchingAccessCode);
-      
+      const validationResult = validateAccessCodeAgainstCase(match);
+
       if (!validationResult.isValid) {
         return res.render('enter-access-code', {
           errors: { accessCode: validationResult.error! },
@@ -156,6 +204,15 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
         caseNumber: req.session.caseNumber,
         accessCode: trimmedAccessCode,
       });
+      
+      // Assigning user to case
+      const user = req.session.user as UserDetails;
+      try {
+        await addUserToCaseForRole(req.session.caseNumber, user.uid as string, role);
+      } catch {
+        return res.redirect(RouteNames.enterAccessCode);
+      } 
+
 
       // TODO: Mark access code as used in CCD (update isValid to 'No')
       // TODO: Send confirmation email if this is a new account setup

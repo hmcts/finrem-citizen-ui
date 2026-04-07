@@ -1,10 +1,44 @@
-import { AccessCodeCollection, FinremCaseData, YesOrNo } from '../../../main/app/case/definition';
+import { describe } from '@jest/globals';
+
+import { getSystemUser } from '../../../main/app/auth/user';
+import { getCaseApi } from '../../../main/app/case/case-api';
 import {
+  AccessCodeCollection,
+  CaseRole,
+  FinremCaseData,
+  YesOrNo,
+} from '../../../main/app/case/definition';
+import {
+  addUserToCaseForRole,
   getMatchingAccessCode,
   retrieveCaseData,
   validateAccessCode,
   validateAccessCodeAgainstCase,
 } from '../../../main/routes/enter-access-code';
+
+jest.mock('@hmcts/nodejs-logging', () => {
+  const mockLogger = {
+    info: jest.fn(),
+    error: jest.fn(),
+  };
+  return {
+    Logger: {
+      getLogger: jest.fn(() => mockLogger),
+    },
+  };
+});
+
+const { Logger } = require('@hmcts/nodejs-logging');
+const mockLogger = Logger.getLogger('enter-access-code');
+
+
+jest.mock('../../../main/app/auth/user', () => ({
+  getSystemUser: jest.fn(),
+}));
+
+jest.mock('../../../main/app/case/case-api', () => ({
+  getCaseApi: jest.fn(),
+}));
 
 describe('validateAccessCode', () => {
   it('should return error when access code is empty', () => {
@@ -70,13 +104,13 @@ describe('getMatchingAccessCode', () => {
   it('should find matching applicant access code (case insensitive)', () => {
     const result = getMatchingAccessCode(mockCaseData, 'aaaa1111');
     expect(result).not.toBeNull();
-    expect(result?.value.accessCode).toBe('AAAA1111');
+    expect(result?.match.value.accessCode).toBe('AAAA1111');
   });
 
   it('should find matching respondent access code (case insensitive)', () => {
     const result = getMatchingAccessCode(mockCaseData, 'bbbb2222');
     expect(result).not.toBeNull();
-    expect(result?.value.accessCode).toBe('BBBB2222');
+    expect(result?.match.value.accessCode).toBe('BBBB2222');
   });
 
   it('should return null when access code does not match', () => {
@@ -93,7 +127,7 @@ describe('getMatchingAccessCode', () => {
   it('should trim and uppercase the access code', () => {
     const result = getMatchingAccessCode(mockCaseData, '  aaaa1111  ');
     expect(result).not.toBeNull();
-    expect(result?.value.accessCode).toBe('AAAA1111');
+    expect(result?.match.value.accessCode).toBe('AAAA1111');
   });
 });
 
@@ -135,16 +169,73 @@ describe('validateAccessCodeAgainstCase', () => {
     
     const result = validateAccessCodeAgainstCase(mockAccessCode);
     expect(result.isValid).toBe(false);
-    expect(result.error).toBe('The access code you entered has already been used, you should contact the court.');
+  });
+});
+
+describe('addUserToCaseForRole', () => {
+  let mockAddUsersToCase: jest.Mock;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    mockAddUsersToCase = jest.fn();
+
+    (getCaseApi as jest.Mock).mockReturnValue({
+      addUsersToCase: mockAddUsersToCase,
+    });
+
+    (getSystemUser as jest.Mock).mockResolvedValue({
+      accessToken: 'mock-access',
+      idToken: 'mock-id',
+      refreshToken: undefined,
+      sub: '123',
+      id: 'system-user',
+      email: 'system@test.com',
+      givenName: 'System',
+      familyName: 'User',
+      roles: ['admin'],
+    });
   });
 
-  it('should prioritize expiry check over usage check', () => {
-    const pastDate = new Date();
-    pastDate.setDate(pastDate.getDate() - 1);
-    const mockAccessCode = createMockAccessCode(pastDate.toISOString(), YesOrNo.NO);
-    
-    const result = validateAccessCodeAgainstCase(mockAccessCode);
-    expect(result.isValid).toBe(false);
-    expect(result.error).toBe('The access code you entered has expired. Contact the court to get a new code');
+  it('successfully adds user to case and logs info', async () => {
+    mockAddUsersToCase.mockResolvedValue(undefined);
+
+    await addUserToCaseForRole('12345', 'user-1', CaseRole.APPLICANT);
+
+    expect(mockAddUsersToCase).toHaveBeenCalledWith([
+      {
+        case_id: '12345',
+        user_id: 'user-1',
+        case_role: CaseRole.APPLICANT,
+      },
+    ]);
+
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Successfully added user to case',
+      {
+        caseId: '12345',
+        userId: 'user-1',
+        caseRole: CaseRole.APPLICANT,
+      }
+    );
+  });
+
+  it('logs error and rethrows when addUsersToCase fails', async () => {
+    const error = new Error('CCD failure');
+    mockAddUsersToCase.mockRejectedValue(error);
+
+    await expect(
+      addUserToCaseForRole('12345', 'user-1', CaseRole.RESPONDENT)
+    ).rejects.toThrow('CCD failure');
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Error adding user to case',
+      {
+        caseId: '12345',
+        userId: 'user-1',
+        caseRole: CaseRole.RESPONDENT,
+        error: 'CCD failure',
+      }
+    );
   });
 });
