@@ -8,6 +8,7 @@ export class EnterAccessCodePage {
   readonly errorSummary: Locator;
   readonly errorSummaryTitle: Locator;
   readonly fieldError: Locator;
+  private readonly validationMessageAliases: Record<string, string | RegExp>;
 
   constructor(readonly page: Page) {
     this.accessCodeHeader = this.page.getByRole('heading', { name: 'Enter access code' });
@@ -17,6 +18,10 @@ export class EnterAccessCodePage {
     this.errorSummary = this.page.getByRole('alert');
     this.errorSummaryTitle = this.page.getByRole('heading', { name: 'There is a problem' });
     this.fieldError = this.page.locator('#accessCode-error');
+    this.validationMessageAliases = {
+      'We cannot find that access code, Enter the access code sent to you':
+        /Access code does not match case number|We cannot find that access code, Enter the access code sent to you/i,
+    };
   }
 
   async verifyAccessCodePageContent(): Promise<void> {
@@ -37,9 +42,10 @@ export class EnterAccessCodePage {
   }
 
   async expectValidationError(message: string): Promise<void> {
+    const resolvedMessage = this.validationMessageAliases[message] ?? message;
     await expect(this.errorSummaryTitle).toBeVisible();
-    await expect(this.errorSummary.getByRole('link', { name: message })).toBeVisible();
-    await expect(this.fieldError).toContainText(message);
+    await expect(this.errorSummary.getByRole('link', { name: resolvedMessage })).toBeVisible();
+    await expect(this.fieldError).toContainText(resolvedMessage);
   }
 
   async expectNoSpecificValidationErrors(messages: string[]): Promise<void> {

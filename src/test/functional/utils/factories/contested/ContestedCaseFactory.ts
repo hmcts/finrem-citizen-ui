@@ -20,6 +20,22 @@ const START_EVENT_RETRY_CONFIG = {
   maxDelayMs: 10000,
 };
 
+const ACCESS_CODE_RETRY_CONFIG = {
+  caseCreationAttempts: 1,
+  codeFetchAttemptsPerCase: 1,
+  manageHearingsReattemptsPerCase: 0,
+  initialDelayMs: 500,
+  maxDelayMs: 2000,
+  maxTotalRuntimeMs: 15000,
+};
+
+export class ManageHearingsInfraUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ManageHearingsInfraUnavailableError';
+  }
+}
+
 /**
  * Factory for creating contested cases in various states
  */
@@ -219,7 +235,7 @@ export class ContestedCaseFactory {
   static async createContestedCaseWithHearing(): Promise<string> {
     // Must provide issue date for issueApplication event
     const issueDate = DateHelper.getCurrentDate();
-    const caseId = await this.createAndProcessFormACaseUpToProgressToListing(false, issueDate);
+    const caseId = await this.createAndProcessFormACaseUpToIssueApplication(false, issueDate);
 
     // Manage hearings (FR_manageHearings) generates Form C and access codes
     try {
@@ -243,9 +259,173 @@ export class ContestedCaseFactory {
       console.warn(
         `⚠ FR_manageHearings callback failed (502); case ${caseId} is listing-ready but may lack access codes`
       );
+
+      // Fail fast on known infra callback failure; outer flow decides whether to retry with a fresh case.
+      throw new ManageHearingsInfraUnavailableError(
+        `FR_manageHearings callback failed (502) for case ${caseId}`
+      );
     }
 
     return caseId;
+  }
+
+  private static async waitForAccessCodes(
+    caseId: string,
+    deadlineEpochMs: number
+  ): Promise<{ applicantCode: string; respondentCode: string } | undefined> {
+    for (let attempt = 0; attempt < ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase; attempt++) {
+      if (Date.now() >= deadlineEpochMs) {
+        return undefined;
+      }
+
+      const applicantCode = await ContestedEventApi.getApplicantAccessCode(caseId);
+      const respondentCode = await ContestedEventApi.getRespondentAccessCode(caseId);
+
+      if (applicantCode && respondentCode) {
+        return { applicantCode, respondentCode };
+      }
+
+      // No point waiting after the last (or only) polling attempt.
+      if (attempt === ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase - 1) {
+        return undefined;
+      }
+
+      const exponentialDelay = Math.min(
+        ACCESS_CODE_RETRY_CONFIG.initialDelayMs * Math.pow(2, attempt),
+        ACCESS_CODE_RETRY_CONFIG.maxDelayMs
+      );
+      const jitter = Math.floor(Math.random() * 500);
+      const delayMs = Math.min(exponentialDelay + jitter, Math.max(0, deadlineEpochMs - Date.now()));
+
+      if (delayMs <= 0) {
+        return undefined;
+      }
+
+      // eslint-disable-next-line no-console
+      console.info(
+        `[Factory Poll] Access codes not ready for case ${caseId} (attempt ${attempt + 1}/${ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase}), waiting ${delayMs}ms...`
+      );
+      await sleep(delayMs);
+    }
+
+    return undefined;
+  }
+
+  private static async tryRebuildAccessCodesOnExistingCase(
+    caseId: string,
+    deadlineEpochMs: number
+  ): Promise<{ applicantCode: string; respondentCode: string } | undefined> {
+    for (let attempt = 0; attempt < ACCESS_CODE_RETRY_CONFIG.manageHearingsReattemptsPerCase; attempt++) {
+      if (Date.now() >= deadlineEpochMs) {
+        return undefined;
+      }
+
+      try {
+        await this.withCaseworkerStartEventRetry(async () => {
+          await ContestedEventApi.caseWorkerPerformsAddAHearing(caseId);
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        // eslint-disable-next-line no-console
+        console.warn(
+          `⚠ Reattempt FR_manageHearings failed for case ${caseId} (attempt ${attempt + 1}/${ACCESS_CODE_RETRY_CONFIG.manageHearingsReattemptsPerCase}): ${message}`
+        );
+      }
+
+      const codes = await this.waitForAccessCodes(caseId, deadlineEpochMs);
+      if (codes) {
+        return codes;
+      }
+    }
+
+    return undefined;
+  }
+
+  static async createContestedCaseWithHearingAndAccessCode(): Promise<{
+    caseId: string;
+    applicantCode: string;
+    respondentCode: string;
+  }> {
+    const startedAtEpochMs = Date.now();
+    const deadlineEpochMs = startedAtEpochMs + ACCESS_CODE_RETRY_CONFIG.maxTotalRuntimeMs;
+    let lastCaseId = '';
+    let lastFailureReason = 'No explicit failure reason captured';
+    let attemptsMade = 0;
+
+    for (let attempt = 0; attempt < ACCESS_CODE_RETRY_CONFIG.caseCreationAttempts; attempt++) {
+      if (Date.now() >= deadlineEpochMs) {
+        lastFailureReason = 'Deadline exceeded before starting next case attempt';
+        break;
+      }
+
+      attemptsMade++;
+
+      let caseId: string;
+      try {
+        caseId = await this.createContestedCaseWithHearing();
+      } catch (error) {
+        if (error instanceof ManageHearingsInfraUnavailableError) {
+          lastFailureReason = error.message;
+          // eslint-disable-next-line no-console
+          console.warn(
+            `⚠ Manage hearings unavailable during case creation (attempt ${attempt + 1}/${ACCESS_CODE_RETRY_CONFIG.caseCreationAttempts}): ${error.message}`
+          );
+          continue;
+        }
+        throw error;
+      }
+      lastCaseId = caseId;
+
+      const codes = await this.waitForAccessCodes(caseId, deadlineEpochMs);
+      if (codes) {
+        return {
+          caseId,
+          applicantCode: codes.applicantCode,
+          respondentCode: codes.respondentCode,
+        };
+      }
+      lastFailureReason = `Access codes absent after initial polling for case ${caseId}`;
+
+      const rebuiltCodes = await this.tryRebuildAccessCodesOnExistingCase(caseId, deadlineEpochMs);
+      if (rebuiltCodes) {
+        return {
+          caseId,
+          applicantCode: rebuiltCodes.applicantCode,
+          respondentCode: rebuiltCodes.respondentCode,
+        };
+      }
+      lastFailureReason = `Access codes absent after manage-hearings reattempts for case ${caseId}`;
+
+      // eslint-disable-next-line no-console
+      console.warn(
+        `⚠ Access codes missing for case ${caseId}; creating a fresh case (attempt ${attempt + 1}/${ACCESS_CODE_RETRY_CONFIG.caseCreationAttempts})`
+      );
+    }
+
+    const elapsedMs = Date.now() - startedAtEpochMs;
+
+    throw new ManageHearingsInfraUnavailableError(
+      `Unable to generate Form C access codes. elapsedMs=${elapsedMs}; configuredMaxRuntimeMs=${ACCESS_CODE_RETRY_CONFIG.maxTotalRuntimeMs}; attemptsMade=${attemptsMade}/${ACCESS_CODE_RETRY_CONFIG.caseCreationAttempts}; lastCaseId=${lastCaseId || 'n/a'}; lastFailureReason=${lastFailureReason}`
+    );
+  }
+
+  /**
+   * Get access codes for a case
+   * Usage in tests:
+   *   const caseId = await ContestedCaseFactory.createContestedCaseWithHearing();
+   *   const { applicantCode, respondentCode } = await ContestedCaseFactory.getAccessCodesForCase(caseId);
+   *   // Use codes to login via citizen UI: https://finrem-citizen-ui.aat.platform.hmcts.net/case/{caseId}
+   */
+  static async getAccessCodesForCase(caseId: string): Promise<{ applicantCode: string | undefined; respondentCode: string | undefined }> {
+    const applicantCode = await ContestedEventApi.getApplicantAccessCode(caseId);
+    const respondentCode = await ContestedEventApi.getRespondentAccessCode(caseId);
+
+    // eslint-disable-next-line no-console
+    console.info(
+      `Case ${caseId} access codes:\n  Applicant: ${applicantCode || '(not found)'}\n  Respondent: ${respondentCode || '(not found)'}`
+    );
+
+    return { applicantCode, respondentCode };
   }
 
   /**
@@ -269,6 +449,11 @@ export class ContestedCaseFactory {
 
     await this.withSolicitorStartEventRetry(async () => {
       await ContestedEventApi.solicitorSubmitFormACase(caseId);
+    });
+
+    // CCD requires HWF decision before FR_issueApplication for this flow.
+    await this.withCaseworkerStartEventRetry(async () => {
+      await ContestedEventApi.caseWorkerHWFDecisionMade(caseId);
     });
 
     await ContestedEventApi.caseWorkerIssueApplication(caseId, true, issueDate);

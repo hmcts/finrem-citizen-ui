@@ -13,12 +13,12 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
   });
 
-  test('User can see access case number page after successful login @PR @a11y', async ({ axeUtils: _axeUtils }) => {
+  test('User can see access case number page after successful login @a11y', async ({ axeUtils: _axeUtils }) => {
     // No logic assertions here since the beforeEach already confirms we're on the correct page.
     // await _axeUtils.audit(); // temporarily skipped due to accessibility defects
   });
 
-  test('User can sign out via the UI and is redirected to IDAM @PR @a11y', async ({ page, basePage, idamPage, axeUtils: _axeUtils }) => {
+  test('User can sign out via the UI and is redirected to IDAM @a11y', async ({ page, basePage, idamPage, axeUtils: _axeUtils }) => {
     // Perform the UI-driven sign out
     await basePage.signOut();
 
@@ -32,7 +32,7 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
     await _axeUtils.audit(); 
   });
 
-  test('Verify Global Layout elements: Header, Footer, @PR @a11y', async ({ page, basePage, axeUtils: _axeUtils }) => {
+  test('Verify Global Layout elements: Header, Footer, @a11y', async ({ page, basePage, axeUtils: _axeUtils }) => {
     // common elements from the Page Object for easier access
     const { footer, licenceDescription, licenceLink, copyRightImgLink } = basePage;
 

@@ -9,7 +9,7 @@ import { ContestedCaseFactory } from '../functional/utils/factories/contested/Co
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
 
 /**
- * Define the shape of the authentication session object.
+ * Authentication state returned by the login fixture.
  */
 export type AuthSession = {
   user: UserCredentials;
@@ -17,7 +17,7 @@ export type AuthSession = {
 };
 
 /**
- * Created case data shape
+ * Minimal contested-case data used by tests that only need case-number linking.
  */
 export type CreatedCase = {
   caseId: string;
@@ -25,7 +25,16 @@ export type CreatedCase = {
 };
 
 /**
- * Extend the base MyFixtures type to include Page Objects and Services.
+ * Contested-case data for access-code happy paths.
+ * Access codes are expected to exist and are produced via manage-hearings/Form C flow.
+ */
+export type CreatedCaseWithAccessCodes = CreatedCase & {
+  applicantAccessCode: string;
+  respondentAccessCode: string;
+};
+
+/**
+ * All custom fixtures available to functional specs.
  */
 type MyFixtures = {
   idamApiService: IdamApiService;
@@ -36,7 +45,7 @@ type MyFixtures = {
   enterCaseNumberPage: EnterCaseNumberPage;
   enterAccessCodePage: EnterAccessCodePage;
   contestedCaseForCaseNumber: CreatedCase;
-  contestedCaseWithHearing: CreatedCase;
+  contestedCaseWithHearing: CreatedCaseWithAccessCodes;
   axeUtils: AxeUtils; 
 };
 
@@ -58,17 +67,18 @@ export const test = base.extend<MyFixtures>({
     await use(new BasePage(page));
   },
 
-  /** DATA FIXTURE: Creates a new citizen user in IDAM.
-   * Test-scoped, a unique user is created for every test that requests 'loggedInPage'.
+  /**
+   * Creates a unique citizen user in IDAM for each test scope.
+   * Any test that depends on loggedInPage will automatically trigger this fixture.
    */
   citizenUser: async ({ idamApiService }, use) => {
     const user = await idamApiService.createCitizenUser();
     await use(user);
   },
 
-  /** LOGIN FIXTURE: Performs the login flow.
+  /**
+   * Performs citizen login and verifies the user lands on the case-number entry page.
    */
-  // TO DO: Add a post-login assertion inside the fixture to confirm successful login.
   loggedInPage: async ({ idamPage, citizenUser, basePage }, use) => {
     await basePage.goto();
     await idamPage.login(citizenUser);
@@ -91,8 +101,8 @@ export const test = base.extend<MyFixtures>({
   },
 
   /**
-   * CASE CREATION FIXTURE: Creates a contested case with hearing date via API.
-   * This creates a real case in CCD that can be used for testing.
+   * Creates a contested case for case-number checks only.
+   * This path does not require access-code generation.
    */
   contestedCaseForCaseNumber: [
     async ({}, use) => {
@@ -105,11 +115,22 @@ export const test = base.extend<MyFixtures>({
     { timeout: 240 * 1000 }
   ],
 
+  /**
+   * Creates a contested case and returns real applicant/respondent access codes.
+   * This fixture is heavier and depends on manage-hearings/Form C generation.
+   * Use only in tests that must submit valid access codes.
+   */
   contestedCaseWithHearing: [
     async ({}, use) => {
-      const caseId = String(await ContestedCaseFactory.createContestedCaseWithHearing());
-      const formattedCaseId = caseId.replace(/(\d{4})(?=\d)/g, '$1-');
-      await use({ caseId, formattedCaseId });
+      const caseData = await ContestedCaseFactory.createContestedCaseWithHearingAndAccessCode();
+      const formattedCaseId = caseData.caseId.replace(/(\d{4})(?=\d)/g, '$1-');
+
+      await use({
+        caseId: caseData.caseId,
+        formattedCaseId,
+        applicantAccessCode: caseData.applicantCode,
+        respondentAccessCode: caseData.respondentCode,
+      });
     },
     { timeout: 240 * 1000 }
   ],

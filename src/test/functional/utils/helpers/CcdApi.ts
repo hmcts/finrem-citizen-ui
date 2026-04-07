@@ -46,6 +46,31 @@ const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export class CcdApi {
 
+  async getCaseData(
+    userName: string,
+    password: string,
+    caseId: string,
+    caseType: string
+  ): Promise<CcdCaseResponse> {
+    const authToken = await getUserToken(userName, password);
+    const userId = await getUserId(authToken, userName);
+    const serviceToken = await getServiceToken();
+
+    const ccdGetCasePath = `/caseworkers/${userId}/jurisdictions/DIVORCE/case-types/${caseType}/cases/${caseId}`;
+
+    const response = await axiosRequest<CcdCaseResponse>({
+      method: 'get',
+      url: getCcdApiUrl() + ccdGetCasePath,
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        ServiceAuthorization: `Bearer ${serviceToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
+  }
+
   async getStartEventToken(
     ccdStartCasePath: string,
     ccdSaveCasePath: string,
