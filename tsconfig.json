@@ -1,5 +1,3 @@
-// Main TypeScript configuration for the backend code, excluding tests to prevent type conflicts and ensure clean separation of concerns
-// / src/main
 {
   "compilerOptions": {
     "outDir": "./src/",
@@ -11,18 +9,16 @@
     "strict": true,
     "noImplicitAny": true,
     "noImplicitThis": false,
-    "moduleResolution": "node",
-    "ignoreDeprecations": "6.0",
     "noUnusedLocals": true,
     "experimentalDecorators": true,
     "useUnknownInCatchVariables": false,
     "skipLibCheck": true,
     "types": ["node", "@playwright/test", "jest"],
     "lib": ["es2020", "dom", "dom.iterable"],
-    "baseUrl": "src/main",
     "paths": {
-      "router/*": ["router/*"],
-      "routes/*": ["routes/*"]
+      "app/*": ["./src/main/app/*"],
+      "router/*": ["./src/main/router/*"],
+      "routes/*": ["./src/main/routes/*"]
     }
   },
   "include": ["src/main/**/*"],
