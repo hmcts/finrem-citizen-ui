@@ -8,7 +8,8 @@ import { CaseRole, FinremCaseData } from './definition';
 export class CaseApi {
   constructor(
     private readonly apiClient: CaseApiClient,
-    private readonly logger: LoggerInstance) { }
+    private readonly logger: LoggerInstance
+  ) {}
 
   public async addUsersToCase(assignments: { case_id: string; user_id: string; case_role: CaseRole }[]): Promise<void> {
     await this.apiClient.addCaseUserRoles(assignments);
@@ -31,6 +32,23 @@ export class CaseApi {
       throw new Error(message);
     }
     this.logger.info('userCases[0]', userCases[0]);
+    return String(userCases[0].id);
+  }
+
+  public async getExistingUserCaseByType(caseType: string): Promise<string | undefined> {
+    const userCases = await this.apiClient.findExistingUserCases(caseType);
+
+    if (!userCases || userCases.length === 0) {
+      return undefined;
+    }
+
+    if (userCases.length > 1) {
+      const message = `More than one case found for caseType "${caseType}". Expected exactly one. Found: ${userCases.length}.`;
+      this.logger.error(message);
+      throw new Error(message);
+    }
+
+    this.logger.info(`Case found for type ${caseType}:`, userCases[0]);
     return String(userCases[0].id);
   }
 }

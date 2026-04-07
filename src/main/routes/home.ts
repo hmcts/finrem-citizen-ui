@@ -13,8 +13,10 @@ import { oidcMiddleware } from '../middleware';
 export default function (app: Application): void {
   app.get(RouteNames.basePath, oidcMiddleware, async (req, res) => {
     const user = req.session.user as UserDetails;
-    const userPageDetails = await getHomePageForUser(user);
-    if(userPageDetails.caseData) {
+
+    const userPageDetails = await getHomePageForUser(user, 'NFD');
+
+    if (userPageDetails.caseData) {
       req.session.caseData = userPageDetails.caseData;
     }
     res.redirect(userPageDetails.url);
@@ -22,11 +24,8 @@ export default function (app: Application): void {
 
   app.get(RouteNames.caseReference, async (req, res) => {
     const { caseReference } = req.params;
-
     const logger: LoggerInstance = console as unknown as LoggerInstance;
-
     const systemUser = await getSystemUser();
-
     const caseworkerUserApi = getCaseApi(systemUser, logger);
     const caseData = await caseworkerUserApi.getCaseById(caseReference);
     res.json(caseData);
@@ -45,7 +44,6 @@ export default function (app: Application): void {
     try {
       const systemUser = await getSystemUser();
       const caseworkerUserApi = getCaseApi(systemUser, logger);
-
       await caseworkerUserApi.addUsersToCase(assignments);
 
       return res.status(200).json({
@@ -66,10 +64,10 @@ export default function (app: Application): void {
   });
 
   app.get(RouteNames.retrieveCase, async (req, res) => {
-
     const logger: LoggerInstance = console as unknown as LoggerInstance;
     const caseApi = getCaseApi(req.session.user as UserDetails, logger);
-    const caseId = await caseApi.getExistingUserCase();
+
+    const caseId = await caseApi.getExistingUserCaseByType('NFD');
     res.json({ id: caseId });
   });
 }

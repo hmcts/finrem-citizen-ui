@@ -11,13 +11,14 @@ export interface UserDefaultPageDetails {
   caseData?: FinremCaseData
 }
 
-export async function getHomePageForUser(userDetails: UserDetails): Promise<UserDefaultPageDetails> {
+export async function getHomePageForUser(userDetails: UserDetails, caseType: string): Promise<UserDefaultPageDetails> {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
 
   const caseApi = getCaseApi(userDetails, logger);
-  const caseId = await caseApi.getExistingUserCase();
+
+  const caseId = await caseApi.getExistingUserCaseByType(caseType);
   logger.info('caseId returned is ', caseId);
-  
+
   if (caseId?.trim()) {
     const systemUser = await getSystemUser();
     const caseworkerUserApi = getCaseApi(systemUser, logger);
