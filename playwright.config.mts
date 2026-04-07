@@ -26,7 +26,6 @@ const getBaseUrl = (): string => {
 const finalBaseUrl = getBaseUrl();
 const isLocal = finalBaseUrl.includes('localhost');
 const displayEnv = isLocal ? 'local' : process.env.RUNNING_ENV || 'aat';
-const isCI = !!process.env.CI;
 
 // 2. Logging for clarity
 /* eslint-disable no-console */
@@ -56,9 +55,9 @@ export default defineConfig({
     ['junit', { outputFile: `${resultsDir}/functional-test-results.xml` }],
   ] as ReporterDescription[],
 
-  timeout: isCI ? 45_000 : 30_000,
+  timeout: 30_000,
   expect: {
-    timeout: isCI ? 8_000 : 6_000,
+    timeout: 5_000,
   },
 
   use: {
@@ -66,8 +65,6 @@ export default defineConfig({
     baseURL: finalBaseUrl,
     trace: 'on-first-retry',
     ignoreHTTPSErrors: true,
-    actionTimeout: 10_000,
-    navigationTimeout: 20_000,
   },
 
   // 3. Merged WebServer logic (Local development support)
