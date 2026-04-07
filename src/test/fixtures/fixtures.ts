@@ -1,5 +1,5 @@
 import { AxeUtils } from '@hmcts/playwright-common';
-import { test as base } from '@playwright/test';
+import { expect, test as base } from '@playwright/test';
 
 import { BasePage } from '../functional/pom/basePage.page';
 import { EnterAccessCodePage } from '../functional/pom/enterAccessCode.page';
@@ -70,9 +70,14 @@ export const test = base.extend<MyFixtures>({
    */
   // TO DO: Add a post-login assertion inside the fixture to confirm successful login.
   loggedInPage: async ({ idamPage, citizenUser, basePage }, use) => {
-    // Navigate and log in
     await basePage.goto();
     await idamPage.login(citizenUser);
+
+    await expect(idamPage.page.getByRole('link', { name: 'Sign out' }))
+      .toBeVisible();
+
+    await basePage.goto('/enter-case-number');
+    await expect(idamPage.page).toHaveURL(/\/enter-case-number$/);
 
     await use({ user: citizenUser, authStatus: 'success' });
   },

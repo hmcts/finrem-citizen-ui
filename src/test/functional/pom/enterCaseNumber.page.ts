@@ -20,8 +20,10 @@ export class EnterCaseNumberPage {
   }
 
   async verifyCaseNumberPageContent(): Promise<void> {
-    const elementsToCheck = [this.caseNumberHeader, this.caseNumberInput, this.caseNumberHint, this.continueBtn];
+    await expect(this.page).toHaveURL(/\/enter-case-number$/);
+    await expect(this.caseNumberHeader).toBeVisible();
 
+    const elementsToCheck = [this.caseNumberInput, this.caseNumberHint, this.continueBtn];
     for (const element of elementsToCheck) {
       await expect(element).toBeVisible();
     }
