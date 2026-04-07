@@ -1,6 +1,7 @@
 import accessibleAutocomplete from 'accessible-autocomplete';
 
 interface AutocompleteResult {
+  id: number;
   label: string;
   value: string;
 }

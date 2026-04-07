@@ -3,6 +3,7 @@ import { Application, Request, Response } from 'express';
 import documentTypes from '../models/document-types.json';
 
 interface DocumentType {
+  id: number;
   label: string;
   value: string;
   aliases: string[];
@@ -38,6 +39,7 @@ export default (app: Application): void => {
 
     res.json(
       results.map(docType => ({
+        id: docType.id,
         label: docType.label,
         value: docType.value,
       }))
