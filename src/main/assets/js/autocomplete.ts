@@ -73,7 +73,6 @@ function initAutocomplete(): void {
   autocompleteElements.forEach(element => {
     const container = element.querySelector('[id$="-container"]') as HTMLElement;
     if (!container) {
-      console.error('Autocomplete: Container element not found for', element);
       return;
     }
 
