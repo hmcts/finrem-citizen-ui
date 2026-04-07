@@ -2,7 +2,6 @@ import { LoggerInstance } from 'winston';
 
 import { UserDetails } from '../controller/AppRequest';
 import { CaseApiClient, getCaseApiClient } from './case-api-client';
-import { CASE_TYPE } from './case-type';
 import { CaseRole, FinremCaseData } from './definition';
 
 export class CaseApi {
@@ -19,15 +18,15 @@ export class CaseApi {
     return this.apiClient.getCaseById(caseId);
   }
 
-  public async getExistingUserCase(): Promise<string | undefined> {
-    const userCases = await this.apiClient.findExistingUserCases(CASE_TYPE);
+  public async getExistingUserCase(caseType: string): Promise<string | undefined> {
+    const userCases = await this.apiClient.findExistingUserCases(caseType);
 
     if (!userCases || userCases.length === 0) {
       return undefined;
     }
 
     if (userCases.length > 1) {
-      const message = `More than one case found for caseType "${CASE_TYPE}". Expected exactly one. Found: ${userCases.length}.`;
+      const message = `More than one case found for caseType "${caseType}". Expected exactly one. Found: ${userCases.length}.`;
       this.logger.error(message);
       throw new Error(message);
     }
