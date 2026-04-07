@@ -55,9 +55,9 @@ export default defineConfig({
     ['junit', { outputFile: `${resultsDir}/functional-test-results.xml` }],
   ] as ReporterDescription[],
 
-  timeout: 30 * 1000,
+  timeout: 30_000,
   expect: {
-    timeout: 5000,
+    timeout: 5_000,
   },
 
   use: {
