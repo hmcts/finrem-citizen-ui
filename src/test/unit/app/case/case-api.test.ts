@@ -151,3 +151,55 @@ describe('CaseApi.getExistingUserCase', () => {
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
 });
+
+describe('CaseApi.getExistingUserCaseByType', () => {
+  const mockApiClient = {
+    findExistingUserCases: jest.fn(),
+  };
+
+  const mockLogger = {
+    error: jest.fn().mockImplementation((msg: string) => msg),
+    info: jest.fn().mockImplementation((msg: string) => msg),
+  } as unknown as LoggerInstance;
+
+  let api: CaseApi;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient, mockLogger as unknown as LoggerInstance);
+  });
+
+  test('should return undefined when user has no cases for given type', async () => {
+    mockApiClient.findExistingUserCases.mockResolvedValue([]);
+
+    const result = await api.getExistingUserCaseByType('NFD');
+
+    expect(mockApiClient.findExistingUserCases).toHaveBeenCalledTimes(1);
+    expect(mockApiClient.findExistingUserCases).toHaveBeenCalledWith('NFD');
+    expect(result).toBeUndefined();
+  });
+
+  test('should return case id as string when exactly one case exists for given type', async () => {
+    mockApiClient.findExistingUserCases.mockResolvedValue([{ id: 987654321, state: 'Submitted' }]);
+
+    const result = await api.getExistingUserCaseByType('NFD');
+
+    expect(mockApiClient.findExistingUserCases).toHaveBeenCalledWith('NFD');
+    expect(result).toBe('987654321');
+  });
+
+  test('should log error and throw when more than one case exists for given type', async () => {
+    mockApiClient.findExistingUserCases.mockResolvedValue([
+      { id: '1111', state: 'Draft' },
+      { id: '2222', state: 'Submitted' },
+    ]);
+
+    await expect(api.getExistingUserCaseByType('NFD')).rejects.toThrow(
+      'More than one case found for caseType "NFD". Expected exactly one. Found: 2.'
+    );
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'More than one case found for caseType "NFD". Expected exactly one. Found: 2.'
+    );
+  });
+});
