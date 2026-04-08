@@ -9,7 +9,9 @@
   },
   "session": {
     "prefix": "SESSION_PREFIX",
-    "ttlInSeconds": "SESSION_TTL"
+    "ttlInSeconds": "SESSION_TTL",
+    "store": "SESSION_STORE",
+    "fileStorePath": "SESSION_FILE_STORE_PATH"
   },
   "use-ssl": "USE_SSL",
   "secrets": {

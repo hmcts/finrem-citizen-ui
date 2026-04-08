@@ -39,7 +39,9 @@
   "session": {
     "cookieName": "finrem_session",
     "prefix": "finrem-session",
-    "ttlInSeconds": 5400
+    "ttlInSeconds": 5400,
+    "store": "redis",
+    "fileStorePath": "./.sessions/local-sessions.json"
   },
   "use-ssl": false,
   "features": {

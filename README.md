@@ -57,6 +57,18 @@ Default local URL:
 
 - `http://localhost:3100`
 
+### Session Store for Local Development
+
+By default, production-style config uses Redis-backed sessions.  
+For local development you can simplify setup by using:
+
+- `SESSION_STORE=memory` for in-process session storage (default in `dev`/`test` config)
+- `SESSION_STORE=file` for file-backed sessions
+
+Optional file mode path override:
+
+- `SESSION_FILE_STORE_PATH=./.sessions/local-sessions.json`
+
 ## Run with Docker
 
 Build image:
