@@ -42,19 +42,14 @@ describe('Setup Manual Test', () => {
       const applicationUrl = getApplicationUrl();
       const useMockAccessCodes = process.env.MOCK_ACCESS_CODES === 'true';
 
-       
       console.log('\n========================================\n📋 Creating test setup...\n========================================\n');
 
-      // Create citizen user
-       
       console.log('Creating citizen user...');
       const idamService = new IdamApiService();
       const user = await idamService.createCitizenUser();
-       
+
       console.log('✓ User created\n');
 
-      // Create contested case
-       
       console.log('Creating contested case...');
       const caseDetails = useMockAccessCodes
         ? await ContestedCaseFactory.createContestedCaseWithMockedAccessCode()
@@ -76,15 +71,12 @@ describe('Setup Manual Test', () => {
               caseDetails.respondentCode
             )
           : undefined;
-       
+
       console.log('✓ Case created\n');
 
-      // Assertion to satisfy Jest (before logging to ensure test completion)
       expect(user.username).toBeTruthy();
       expect(formattedCaseId).toBeTruthy();
 
-      // Output results for manual testing (after assertions)
-       
       console.log(`
 ========================================
 ✅ Setup Complete
@@ -125,6 +117,6 @@ Usage: Log in with the credentials above, then enter the formatted case number.
 ========================================
 `);
     },
-    180_000 // 3 minute timeout to allow case factory to complete
+    180_000
   );
 });
