@@ -22,6 +22,7 @@
     "test:playwright:a11y:report": "sh -c 'yarn test:playwright:a11y; code=$?; yarn playwright show-report a11y-output/axe-report; exit $code'",
     "test:smoke": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --config jest.smoke.config.js",
     "test:functional": "npx playwright install --with-deps && playwright test --config playwright.config.mts --project chromium --grep @PR",
+    "test:functional:headed:slowmo": "PWDEBUG=1 playwright test --config playwright.config.mts --project chromium --headed --workers=1",
     "test:full-functional": "playwright test --config playwright.config.mts --project chromium --retries=2",
     "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes",

@@ -127,6 +127,14 @@ Run broader functional suite with configured retries:
 yarn test:full-functional
 ```
 
+Run one specific test in headed + slowmo mode (useful for debugging/verification):
+
+```bash
+yarn test:functional:headed:slowmo -- src/test/functional/specFiles/enterAccessCode.spec.ts:162
+```
+
+You can change the file path and line number each time to target a different test.
+
 ### Accessibility Tests (Playwright + axe)
 
 Run accessibility-tagged tests (`@a11y`, Chromium):

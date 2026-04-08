@@ -143,6 +143,7 @@ test.describe('Enter Access Code - Happy Path', () => {
   test('Citizen can enter valid applicant access code and view case summary @PR', async ({
     loggedInPage: _loggedInPage,
     basePage,
+    dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
     page
@@ -153,7 +154,7 @@ test.describe('Enter Access Code - Happy Path', () => {
     await expect(page).toHaveURL(/\/enter-access-code$/);
 
     await enterAccessCodePage.submitAccessCode(accessCode);
-    await expect(page).toHaveURL(/\/dashboard$/);
+    await dashboardPage.verifyDashboardPageContent();
   });
 
   /**
@@ -162,6 +163,7 @@ test.describe('Enter Access Code - Happy Path', () => {
   test('Success: Access code with leading/trailing whitespace is accepted @PR', async ({
     loggedInPage: _loggedInPage,
     basePage,
+    dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
     page
@@ -172,7 +174,7 @@ test.describe('Enter Access Code - Happy Path', () => {
     await expect(page).toHaveURL(/\/enter-access-code$/);
 
     await enterAccessCodePage.submitAccessCode(`  ${accessCode}  `);
-    await expect(page).toHaveURL(/\/dashboard$/);
+    await dashboardPage.verifyDashboardPageContent();
   });
 
   /**
@@ -181,6 +183,7 @@ test.describe('Enter Access Code - Happy Path', () => {
   test('Citizen can enter valid respondent access code and view case summary @PR', async ({
     loggedInPage: _loggedInPage,
     basePage,
+    dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
     page
@@ -191,7 +194,7 @@ test.describe('Enter Access Code - Happy Path', () => {
     await expect(page).toHaveURL(/\/enter-access-code$/);
 
     await enterAccessCodePage.submitAccessCode(accessCode);
-    await expect(page).toHaveURL(/\/dashboard$/);
+    await dashboardPage.verifyDashboardPageContent();
   });
 
   /**
@@ -200,6 +203,7 @@ test.describe('Enter Access Code - Happy Path', () => {
   test('Access code submission is case-insensitive @PR', async ({
     loggedInPage: _loggedInPage,
     basePage,
+    dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
     page
@@ -214,6 +218,6 @@ test.describe('Enter Access Code - Happy Path', () => {
 
     await enterAccessCodePage.submitAccessCode(lowercaseCode);
 
-    await expect(page).toHaveURL(/\/dashboard$/);
+    await dashboardPage.verifyDashboardPageContent();
   });
 });
