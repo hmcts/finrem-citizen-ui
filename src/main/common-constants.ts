@@ -1,6 +1,7 @@
 export const PublicRoutes = {
   basePath: '/',
   callbackUrl: '/oauth2/callback',
+  demoAutocomplete: '/demo/autocomplete',
   health: '/health',
   info: '/info',
   login: '/login',

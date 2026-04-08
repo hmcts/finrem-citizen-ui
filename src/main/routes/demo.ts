@@ -1,9 +1,9 @@
 import { Application } from 'express';
 
-import { ViewNames } from '../common-constants';
+import { RouteNames, ViewNames } from '../common-constants';
 
 export default (app: Application): void => {
-  app.get('/demo/autocomplete', (req, res) => {
+  app.get(RouteNames.demoAutocomplete, (req, res) => {
     res.render(ViewNames.AutocompleteDemo);
   });
 };
