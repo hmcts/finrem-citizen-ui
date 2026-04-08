@@ -1,11 +1,10 @@
 import { Logger } from '@hmcts/nodejs-logging';
 import config from 'config';
-import connectRedis = require('connect-redis');
+import connectRedis from 'connect-redis';
 import type { Express } from 'express';
 import session = require('express-session');
 import { Redis } from 'ioredis';
 
-const RedisStore = connectRedis(session);
 const logger = Logger.getLogger('session');
 
 export function parseSessionSecret(raw: string): string | string[] {
@@ -99,7 +98,7 @@ redis.on('ready', async () => {
 
     typedApp.locals.redisClient = redis;
 
-    const store = new RedisStore({
+    const store = new connectRedis({
       client: redis,
       prefix: `${config.get<string>('session.prefix')}:`,
       ttl: ttlInSeconds,
