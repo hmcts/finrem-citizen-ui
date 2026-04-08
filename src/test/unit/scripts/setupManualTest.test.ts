@@ -19,12 +19,28 @@ const getApplicationUrl = (): string => {
   return `https://finrem-citizen-ui.${env}.platform.hmcts.net`;
 };
 
+const buildMockAccessCodeInjectionUrl = (
+  applicationUrl: string,
+  caseId: string,
+  applicantCode: string,
+  respondentCode: string
+): string => {
+  const params = new URLSearchParams({
+    caseNumber: caseId,
+    applicantCode,
+    respondentCode,
+  });
+
+  return `${applicationUrl}/__test/inject-case-session?${params.toString()}`;
+};
+
 describe('Setup Manual Test', () => {
   it(
     'creates citizen user and contested case for manual testing',
     async () => {
       const appEnv = process.env.RUNNING_ENV || 'aat';
       const applicationUrl = getApplicationUrl();
+      const useMockAccessCodes = process.env.MOCK_ACCESS_CODES === 'true';
 
        
       console.log('\n========================================\n📋 Creating test setup...\n========================================\n');
@@ -40,10 +56,26 @@ describe('Setup Manual Test', () => {
       // Create contested case
        
       console.log('Creating contested case...');
-      const caseId = String(
-        await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)
-      );
+      const caseDetails = useMockAccessCodes
+        ? await ContestedCaseFactory.createContestedCaseWithMockedAccessCode()
+        : {
+            caseId: String(
+              await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)
+            ),
+            applicantCode: undefined,
+            respondentCode: undefined,
+          };
+      const caseId = caseDetails.caseId;
       const formattedCaseId = caseId.replace(/(\d{4})(?=\d)/g, '$1-');
+      const mockInjectionUrl =
+        caseDetails.applicantCode && caseDetails.respondentCode
+          ? buildMockAccessCodeInjectionUrl(
+              applicationUrl,
+              caseId,
+              caseDetails.applicantCode,
+              caseDetails.respondentCode
+            )
+          : undefined;
        
       console.log('✓ Case created\n');
 
@@ -60,6 +92,7 @@ describe('Setup Manual Test', () => {
 
 Environment: ${appEnv}
 URL: ${applicationUrl}
+Mode: ${useMockAccessCodes ? 'mock access codes enabled' : 'real case only'}
 
 Login Credentials:
   Username: ${user.username}
@@ -68,6 +101,25 @@ Login Credentials:
 Case:
   Formatted: ${formattedCaseId}
   Raw:       ${caseId}
+
+${
+  useMockAccessCodes
+    ? `Mock Access Codes:
+  Applicant: ${caseDetails.applicantCode}
+  Respondent: ${caseDetails.respondentCode}
+
+Mock Session Injection URL:
+  ${mockInjectionUrl}
+
+Mock Access Code Workflow:
+  1. Log in with the credentials above.
+  2. Open the Mock Session Injection URL in the same browser session.
+  3. You will be redirected to the access-code page.
+  4. Enter APPCODE1 or RSPCODE1 to continue.
+
+Note: this only works where ENABLE_TEST_SUPPORT_ROUTES=true.`
+    : ''
+}
 
 Usage: Log in with the credentials above, then enter the formatted case number.
 ========================================

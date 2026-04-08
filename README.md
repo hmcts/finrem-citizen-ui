@@ -162,16 +162,33 @@ Note:
 
 ### Manual Testing Setup
 
-Create a citizen user and contested case for manual testing purposes:
+Use `setup:manual-test` to create a citizen user and a real contested case with a mocked access code, for manual testing:
 
 ```bash
 yarn setup:manual-test
 ```
 
-**Purpose:** Automates the setup of test users and case data needed for manual application testing. This script:
-- Creates a new IDAM citizen user account with auto-generated credentials
-- Creates a contested Financial Remedy case via the case factory (matches what automated tests use)
-- Outputs login credentials and a formatted case number ready for manual testing
+What it does:
+- creates a new IDAM citizen user with generated credentials
+- creates a contested Financial Remedy case
+- prints the environment URL, login credentials, formatted case number, mock access codes, and a mock session injection URL
+
+Use the output like this:
+1. Run `yarn setup:manual-test`
+2. Copy the username and password from the terminal output
+3. Open the printed environment URL and log in
+4. Copy and paste the printed `Mock Session Injection URL` into the same authenticated browser session
+5. The app redirects to the access-code page with mock session data loaded
+6. Enter `APPCODE1` or `RSPCODE1` to continue through the journey
+
+`setup:manual-test` prints:
+- the applicant mock code: `APPCODE1`
+- the respondent mock code: `RSPCODE1`
+- a ready-to-open `__test/inject-case-session` URL
+
+Important:
+- This only works in environments where `ENABLE_TEST_SUPPORT_ROUTES=true`
+- It is for test/manual environments only; it does not generate real access codes in CCD
 
 **Output example:**
 ```
@@ -189,16 +206,13 @@ Case:
   Formatted: 1775-6599-1844-3356
   Raw:       1775659918443367
 
-Usage: Log in with the credentials above, then enter the formatted case number.
-```
+Mock Access Codes:
+  Applicant: APPCODE1
+  Respondent: RSPCODE1
 
-**Typical workflow:**
-1. Run `yarn setup:manual-test`
-2. Note the username, password, and formatted case number from the output
-3. Navigate to your environment URL (shown in output)
-4. Log in with the provided credentials
-5. Enter the formatted case number when prompted
-6. You now have a live case to manually test against
+Mock Session Injection URL:
+  https://finrem-citizen-ui-pr-XXX.preview.platform.hmcts.net/__test/inject-case-session?caseNumber=1775659918443367&applicantCode=APPCODE1&respondentCode=RSPCODE1
+```
 
 ## Where Test Artifacts Go
 
