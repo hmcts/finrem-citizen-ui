@@ -18,6 +18,7 @@ nodejs:
 
   environment:
     SESSION_STORE: memory
+    FEATURE_REDIS_ENABLED: 'false'
     IDAM_TOKEN_CACHE: true
     OAUTH_CALLBACK_URL: 'https://${SERVICE_FQDN}/oauth2/callback'
     IDAM_CLIENT_ID: finrem-citizen-ui

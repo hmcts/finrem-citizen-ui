@@ -1,5 +1,5 @@
 {
   "session": {
-    "store": "redis"
+    "store": "memory"
   }
 }
