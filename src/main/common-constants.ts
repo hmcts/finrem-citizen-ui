@@ -23,6 +23,7 @@ export const RouteNames = {
 } as const;
 
 export const ViewNames = {
+  AutocompleteDemo: 'autocomplete-demo',
   Dashboard: 'dashboard',
   EnterCaseNumber: 'enter-case-number',
   EnterAccessCode: 'enter-access-code',
