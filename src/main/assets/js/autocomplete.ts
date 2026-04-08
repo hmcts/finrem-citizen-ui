@@ -1,3 +1,5 @@
+/// <reference path="../../types/accessible-autocomplete.d.ts" />
+
 import accessibleAutocomplete from 'accessible-autocomplete';
 
 import { PublicRoutes } from '../../common-constants';
