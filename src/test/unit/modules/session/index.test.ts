@@ -1,4 +1,7 @@
 import express from 'express';
+import fs from 'fs-extra';
+import os from 'os';
+import path from 'path';
 
 jest.mock('@hmcts/nodejs-logging', () => ({
   Logger: {
@@ -80,6 +83,61 @@ describe('parseSessionSecret', () => {
 });
 
 describe('Session.enableFor', () => {
+  const tempDir = path.join(os.tmpdir(), `finrem-session-tests-${Date.now()}`);
+  const tempStorePath = path.join(tempDir, 'sessions.json');
+
+  async function setInStore(
+    store: {
+      set: (sid: string, sessionData: unknown, callback?: (err?: unknown) => void) => void;
+    },
+    sid: string,
+    sessionData: unknown
+  ): Promise<void> {
+    await new Promise<void>((resolve, reject) => {
+      store.set(sid, sessionData, err => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    });
+  }
+
+  async function getFromStore(
+    store: {
+      get: (sid: string, callback: (err?: unknown, sessionData?: unknown | null) => void) => void;
+    },
+    sid: string
+  ): Promise<unknown | null> {
+    return new Promise<unknown | null>((resolve, reject) => {
+      store.get(sid, (err, sessionData) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(sessionData ?? null);
+      });
+    });
+  }
+
+  async function destroyInStore(
+    store: {
+      destroy: (sid: string, callback?: (err?: unknown) => void) => void;
+    },
+    sid: string
+  ): Promise<void> {
+    await new Promise<void>((resolve, reject) => {
+      store.destroy(sid, err => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    });
+  }
+
   beforeEach(() => {
     jest.clearAllMocks();
     configHasMock.mockImplementation((key: string) => key === 'session.fileStorePath');
@@ -91,12 +149,16 @@ describe('Session.enableFor', () => {
         'session.cookieName': 'finrem_session',
         'session.prefix': 'finrem-session',
         'session.store': 'redis',
-        'session.fileStorePath': './.sessions/test-sessions.json',
+        'session.fileStorePath': tempStorePath,
         'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
       };
 
       return map[key];
     });
+  });
+
+  afterEach(async () => {
+    await fs.remove(tempDir);
   });
 
   it('configures session with in-memory store when configured', () => {
@@ -110,7 +172,7 @@ describe('Session.enableFor', () => {
         'session.cookieName': 'finrem_session',
         'session.prefix': 'finrem-session',
         'session.store': 'memory',
-        'session.fileStorePath': './.sessions/test-sessions.json',
+        'session.fileStorePath': tempStorePath,
         'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
       };
 
@@ -220,7 +282,7 @@ describe('Session.enableFor', () => {
         'session.cookieName': 'finrem_session',
         'session.prefix': 'finrem-session',
         'session.store': 'memory',
-        'session.fileStorePath': './.sessions/test-sessions.json',
+        'session.fileStorePath': tempStorePath,
         'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
       };
 
@@ -296,7 +358,7 @@ describe('Session.enableFor', () => {
         'session.cookieName': 'finrem_session',
         'session.prefix': 'finrem-session',
         'session.store': 'file',
-        'session.fileStorePath': './.sessions/test-sessions.json',
+        'session.fileStorePath': tempStorePath,
         'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
       };
 
@@ -314,6 +376,175 @@ describe('Session.enableFor', () => {
         store: expect.anything(),
       })
     );
+
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  it('uses fallback file path when session.fileStorePath is not configured', () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+
+    configHasMock.mockReturnValue(false);
+    configGetMock.mockImplementation((key: string) => {
+      const map: Record<string, unknown> = {
+        'session.ttlInSeconds': 3600,
+        'secrets.finrem.session-secret': 'test-secret',
+        'session.cookieName': 'finrem_session',
+        'session.prefix': 'finrem-session',
+        'session.store': 'file',
+        'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
+      };
+
+      return map[key];
+    });
+
+    const session = new Session();
+    const app = express();
+
+    session.enableFor(app);
+
+    expect(redisModule.Redis).not.toHaveBeenCalled();
+    expect(mockSessionMiddleware).toHaveBeenCalledWith(
+      expect.objectContaining({
+        store: expect.anything(),
+      })
+    );
+
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  it('persists, reads, and destroys sessions in file store mode', async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+
+    configGetMock.mockImplementation((key: string) => {
+      const map: Record<string, unknown> = {
+        'session.ttlInSeconds': 3600,
+        'secrets.finrem.session-secret': 'test-secret',
+        'session.cookieName': 'finrem_session',
+        'session.prefix': 'finrem-session',
+        'session.store': 'file',
+        'session.fileStorePath': tempStorePath,
+        'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
+      };
+
+      return map[key];
+    });
+
+    const session = new Session();
+    const app = express();
+
+    session.enableFor(app);
+
+    const callArg = mockSessionMiddleware.mock.calls[0][0] as {
+      store: {
+        set: (sid: string, sessionData: unknown, callback?: (err?: unknown) => void) => void;
+        get: (sid: string, callback: (err?: unknown, sessionData?: unknown | null) => void) => void;
+        destroy: (sid: string, callback?: (err?: unknown) => void) => void;
+      };
+    };
+    const store = callArg.store;
+    const sid = 'sid-1';
+    const sessionData = {
+      cookie: {
+        originalMaxAge: 3600_000,
+        expires: new Date(Date.now() + 3600_000),
+      },
+      customField: 'hello',
+    };
+
+    await setInStore(store, sid, sessionData);
+    const storedSession = (await getFromStore(store, sid)) as { customField?: string } | null;
+    expect(storedSession?.customField).toBe('hello');
+
+    await destroyInStore(store, sid);
+    const afterDestroy = await getFromStore(store, sid);
+    expect(afterDestroy).toBeNull();
+
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  it('returns null and cleans up expired sessions in file store mode', async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+
+    configGetMock.mockImplementation((key: string) => {
+      const map: Record<string, unknown> = {
+        'session.ttlInSeconds': 3600,
+        'secrets.finrem.session-secret': 'test-secret',
+        'session.cookieName': 'finrem_session',
+        'session.prefix': 'finrem-session',
+        'session.store': 'file',
+        'session.fileStorePath': tempStorePath,
+        'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
+      };
+
+      return map[key];
+    });
+
+    const session = new Session();
+    const app = express();
+
+    session.enableFor(app);
+
+    const callArg = mockSessionMiddleware.mock.calls[0][0] as {
+      store: {
+        set: (sid: string, sessionData: unknown, callback?: (err?: unknown) => void) => void;
+        get: (sid: string, callback: (err?: unknown, sessionData?: unknown | null) => void) => void;
+      };
+    };
+    const store = callArg.store;
+    const sid = 'sid-expired';
+    const expiredSessionData = {
+      cookie: {
+        originalMaxAge: 1,
+        expires: new Date(Date.now() - 5_000),
+      },
+      customField: 'expired',
+    };
+
+    await setInStore(store, sid, expiredSessionData);
+    const result = await getFromStore(store, sid);
+    expect(result).toBeNull();
+
+    const storedFileContent = await fs.readFile(tempStorePath, 'utf-8');
+    expect(storedFileContent).toBe('{}');
+
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  it('returns null for missing sessions in file store mode', async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+
+    configGetMock.mockImplementation((key: string) => {
+      const map: Record<string, unknown> = {
+        'session.ttlInSeconds': 3600,
+        'secrets.finrem.session-secret': 'test-secret',
+        'session.cookieName': 'finrem_session',
+        'session.prefix': 'finrem-session',
+        'session.store': 'file',
+        'session.fileStorePath': tempStorePath,
+        'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
+      };
+
+      return map[key];
+    });
+
+    const session = new Session();
+    const app = express();
+
+    session.enableFor(app);
+
+    const callArg = mockSessionMiddleware.mock.calls[0][0] as {
+      store: {
+        get: (sid: string, callback: (err?: unknown, sessionData?: unknown | null) => void) => void;
+      };
+    };
+    const store = callArg.store;
+
+    const result = await getFromStore(store, 'does-not-exist');
+    expect(result).toBeNull();
 
     process.env.NODE_ENV = originalEnv;
   });

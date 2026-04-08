@@ -82,8 +82,9 @@ class LocalFileSessionStore extends session.Store {
 
         if (this.isExpired(sessionData)) {
           delete store[sid];
-          void this.writeStore(store);
-          callback(undefined, null);
+          void this.writeStore(store)
+            .then(() => callback(undefined, null))
+            .catch(error => callback(error));
           return;
         }
 
