@@ -1,5 +1,6 @@
 import { Application, Request, Response } from 'express';
 
+import { RouteNames } from '../common-constants';
 import documentTypes from '../models/document-types.json';
 
 interface DocumentType {
@@ -33,7 +34,7 @@ function searchDocumentTypes(query: string): DocumentType[] {
 }
 
 export default (app: Application): void => {
-  app.get('/autocomplete', (req: Request, res: Response) => {
+  app.get(RouteNames.autocomplete, (req: Request, res: Response) => {
     const query = req.query.q as string || '';
     const results = searchDocumentTypes(query);
 
