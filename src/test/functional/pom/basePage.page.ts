@@ -52,7 +52,11 @@ export class BasePage {
    * Bypasses the CCD case-number lookup by hitting the test-support endpoint.
    * Sets session caseNumber and caseData (with mock access codes) then
    * redirects to /enter-access-code.
-   * Only available in non-production environments.
+   * Only available in environments where ENABLE_TEST_SUPPORT_ROUTES=true.
+   *
+   * The redirect assertion is co-located here so that a missing/disabled route
+   * produces an actionable error at the call site rather than a confusing URL
+   * mismatch in the calling test.
    */
   async injectCaseSession(
     caseId: string,
@@ -65,5 +69,13 @@ export class BasePage {
       respondentCode,
     });
     await this.page.goto(`/__test/inject-case-session?${params.toString()}`);
+
+    // The endpoint saves the session then redirects — wait for that redirect
+    // before returning so callers can safely assert /enter-access-code state.
+    await expect(
+      this.page,
+      '/__test/inject-case-session did not redirect to /enter-access-code. ' +
+      'Check ENABLE_TEST_SUPPORT_ROUTES=true is set in this environment.'
+    ).toHaveURL(/\/enter-access-code$/, { timeout: 10_000 });
   }
 }

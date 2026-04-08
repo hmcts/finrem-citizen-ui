@@ -146,12 +146,10 @@ test.describe('Enter Access Code - Happy Path', () => {
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
-    page
   }) => {
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await basePage.injectCaseSession(contestedCaseWithHearing.caseId, contestedCaseWithHearing.applicantAccessCode, contestedCaseWithHearing.respondentAccessCode);
-    await expect(page).toHaveURL(/\/enter-access-code$/);
 
     await enterAccessCodePage.submitAccessCode(accessCode);
     await dashboardPage.verifyDashboardPageContent();
@@ -166,12 +164,10 @@ test.describe('Enter Access Code - Happy Path', () => {
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
-    page
   }) => {
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await basePage.injectCaseSession(contestedCaseWithHearing.caseId, contestedCaseWithHearing.applicantAccessCode, contestedCaseWithHearing.respondentAccessCode);
-    await expect(page).toHaveURL(/\/enter-access-code$/);
 
     await enterAccessCodePage.submitAccessCode(`  ${accessCode}  `);
     await dashboardPage.verifyDashboardPageContent();
@@ -186,12 +182,10 @@ test.describe('Enter Access Code - Happy Path', () => {
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
-    page
   }) => {
     const accessCode = contestedCaseWithHearing.respondentAccessCode;
 
     await basePage.injectCaseSession(contestedCaseWithHearing.caseId, contestedCaseWithHearing.applicantAccessCode, contestedCaseWithHearing.respondentAccessCode);
-    await expect(page).toHaveURL(/\/enter-access-code$/);
 
     await enterAccessCodePage.submitAccessCode(accessCode);
     await dashboardPage.verifyDashboardPageContent();
@@ -206,12 +200,10 @@ test.describe('Enter Access Code - Happy Path', () => {
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
-    page
   }) => {
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await basePage.injectCaseSession(contestedCaseWithHearing.caseId, contestedCaseWithHearing.applicantAccessCode, contestedCaseWithHearing.respondentAccessCode);
-    await expect(page).toHaveURL(/\/enter-access-code$/);
 
     // Enter access code in lowercase
     const lowercaseCode = accessCode.toLowerCase();
