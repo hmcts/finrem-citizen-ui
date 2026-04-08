@@ -119,13 +119,13 @@ export const test = base.extend<MyFixtures>({
   ],
 
   /**
-   * Creates a contested case and returns real applicant/respondent access codes.
-   * This fixture is heavier and depends on manage-hearings/Form C generation.
-   * Use only in tests that must submit valid access codes.
+   * Creates a real contested case and returns deterministic mock access codes.
+   * Uses /__test/inject-case-session to bypass Form C / FR_manageHearings,
+   * so this fixture no longer depends on the manage-hearings callback.
    */
   contestedCaseWithHearing: [
     async ({}, use) => {
-      const caseData = await ContestedCaseFactory.createContestedCaseWithHearingAndAccessCode();
+      const caseData = await ContestedCaseFactory.createContestedCaseWithMockedAccessCode();
       const formattedCaseId = caseData.caseId.replace(/(\d{4})(?=\d)/g, '$1-');
 
       await use({

@@ -429,6 +429,28 @@ export class ContestedCaseFactory {
   }
 
   /**
+   * Creates a real contested case but returns deterministic mock access codes.
+   * The codes are injected into the app session via the /__test/inject-case-session
+   * endpoint rather than being generated through Form C / FR_manageHearings.
+   * Use this factory when you need to test the happy-path access-code submission
+   * flow without depending on the manage-hearings callback infrastructure.
+   */
+  static async createContestedCaseWithMockedAccessCode(): Promise<{
+    caseId: string;
+    applicantCode: string;
+    respondentCode: string;
+  }> {
+    const caseId = String(
+      await this.createAndProcessFormACaseUpToProgressToListing(false)
+    );
+    return {
+      caseId,
+      applicantCode: 'APPCODE1',
+      respondentCode: 'RSPCODE1',
+    };
+  }
+
+  /**
    * Create contested case up to HWF decision
    */
   static async createContestedCaseUpToHWFDecision(): Promise<string> {

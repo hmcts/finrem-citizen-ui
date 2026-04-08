@@ -136,24 +136,24 @@ test.describe('Enter Access Code - Validation Errors', () => {
 
 });
 
-test.describe.skip('Enter Access Code - Happy Path', () => {
+test.describe('Enter Access Code - Happy Path', () => {
   /**
    * Citizen successfully enters valid applicant access code and views case
    */
   test('Citizen can enter valid applicant access code and view case summary @PR', async ({
     loggedInPage: _loggedInPage,
-    enterCaseNumberPage,
+    basePage,
     enterAccessCodePage,
     contestedCaseWithHearing,
     page
   }) => {
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await basePage.injectCaseSession(contestedCaseWithHearing.caseId, contestedCaseWithHearing.applicantAccessCode, contestedCaseWithHearing.respondentAccessCode);
     await expect(page).toHaveURL(/\/enter-access-code$/);
 
     await enterAccessCodePage.submitAccessCode(accessCode);
-    await expect(page).toHaveURL(/\/summary$/);
+    await expect(page).toHaveURL(/\/dashboard$/);
   });
 
   /**
@@ -161,18 +161,18 @@ test.describe.skip('Enter Access Code - Happy Path', () => {
    */
   test('Success: Access code with leading/trailing whitespace is accepted @PR', async ({
     loggedInPage: _loggedInPage,
-    enterCaseNumberPage,
+    basePage,
     enterAccessCodePage,
     contestedCaseWithHearing,
     page
   }) => {
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await basePage.injectCaseSession(contestedCaseWithHearing.caseId, contestedCaseWithHearing.applicantAccessCode, contestedCaseWithHearing.respondentAccessCode);
     await expect(page).toHaveURL(/\/enter-access-code$/);
 
     await enterAccessCodePage.submitAccessCode(`  ${accessCode}  `);
-    await expect(page).toHaveURL(/\/summary$/);
+    await expect(page).toHaveURL(/\/dashboard$/);
   });
 
   /**
@@ -180,22 +180,18 @@ test.describe.skip('Enter Access Code - Happy Path', () => {
    */
   test('Citizen can enter valid respondent access code and view case summary @PR', async ({
     loggedInPage: _loggedInPage,
-    enterCaseNumberPage,
+    basePage,
     enterAccessCodePage,
     contestedCaseWithHearing,
     page
   }) => {
     const accessCode = contestedCaseWithHearing.respondentAccessCode;
 
-    // Navigate to case
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await basePage.injectCaseSession(contestedCaseWithHearing.caseId, contestedCaseWithHearing.applicantAccessCode, contestedCaseWithHearing.respondentAccessCode);
     await expect(page).toHaveURL(/\/enter-access-code$/);
 
-    // Enter valid respondent access code
     await enterAccessCodePage.submitAccessCode(accessCode);
-
-    // Should redirect to case summary page
-    await expect(page).toHaveURL(/\/summary$/);
+    await expect(page).toHaveURL(/\/dashboard$/);
   });
 
   /**
@@ -203,23 +199,21 @@ test.describe.skip('Enter Access Code - Happy Path', () => {
    */
   test('Access code submission is case-insensitive @PR', async ({
     loggedInPage: _loggedInPage,
-    enterCaseNumberPage,
+    basePage,
     enterAccessCodePage,
     contestedCaseWithHearing,
     page
   }) => {
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
-    // Navigate to case
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await basePage.injectCaseSession(contestedCaseWithHearing.caseId, contestedCaseWithHearing.applicantAccessCode, contestedCaseWithHearing.respondentAccessCode);
     await expect(page).toHaveURL(/\/enter-access-code$/);
 
-    // Enter access code in lowercase (if original is uppercase)
+    // Enter access code in lowercase
     const lowercaseCode = accessCode.toLowerCase();
 
     await enterAccessCodePage.submitAccessCode(lowercaseCode);
 
-    // Should successfully navigate to case summary
-    await expect(page).toHaveURL(/\/summary$/);
+    await expect(page).toHaveURL(/\/dashboard$/);
   });
 });

@@ -48,4 +48,23 @@ export class BasePage {
   async signOut(): Promise<void> {
     await this.signOutBtn.click();
   }
+
+  /**
+   * Bypasses the CCD case-number lookup by hitting the test-support endpoint.
+   * Sets session caseNumber and caseData (with mock access codes) then
+   * redirects to /enter-access-code.
+   * Only available in non-production environments.
+   */
+  async injectCaseSession(
+    caseId: string,
+    applicantCode: string,
+    respondentCode: string
+  ): Promise<void> {
+    const params = new URLSearchParams({
+      caseNumber: caseId,
+      applicantCode,
+      respondentCode,
+    });
+    await this.page.goto(`/__test/inject-case-session?${params.toString()}`);
+  }
 }
