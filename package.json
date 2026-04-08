@@ -25,6 +25,7 @@
     "test:functional:headed:slowmo": "PWDEBUG=1 playwright test --config playwright.config.mts --project chromium --headed --workers=1",
     "test:full-functional": "playwright test --config playwright.config.mts --project chromium --retries=2",
     "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
+    "setup:manual-test": "jest src/test/unit/scripts/setupManualTest.test.ts --runInBand --detectOpenHandles",
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes",
     "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:functional",
     "prepare": "husky install"

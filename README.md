@@ -160,6 +160,46 @@ Note:
 - The accessibility HTML report path is `a11y-output/axe-report`.
 - Running `yarn playwright show-report` without a path looks for the default `playwright-report` folder.
 
+### Manual Testing Setup
+
+Create a citizen user and contested case for manual testing purposes:
+
+```bash
+yarn setup:manual-test
+```
+
+**Purpose:** Automates the setup of test users and case data needed for manual application testing. This script:
+- Creates a new IDAM citizen user account with auto-generated credentials
+- Creates a contested Financial Remedy case via the case factory (matches what automated tests use)
+- Outputs login credentials and a formatted case number ready for manual testing
+
+**Output example:**
+```
+✅ Setup Complete
+========================================
+
+Environment: pr-293
+URL: https://finrem-citizen-ui-pr-293.preview.platform.hmcts.net
+
+Login Credentials:
+  Username: finrem-test-abc123def456@mailinator.com
+  Password: Password1111
+
+Case:
+  Formatted: 1775-6599-1844-3387
+  Raw:       1775659918443387
+
+Usage: Log in with the credentials above, then enter the formatted case number.
+```
+
+**Typical workflow:**
+1. Run `yarn setup:manual-test`
+2. Note the username, password, and formatted case number from the output
+3. Navigate to your environment URL (shown in output)
+4. Log in with the provided credentials
+5. Enter the formatted case number when prompted
+6. You now have a live case to manually test against
+
 ## Where Test Artifacts Go
 
 - Functional report artifacts: `functional-output/`

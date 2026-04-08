@@ -130,7 +130,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
     await enterAccessCodePage.submitAccessCode('XXXXXXXX');
 
     await enterAccessCodePage.expectValidationError(
-      'We cannot find that access code, Enter the access code sent to you'
+      'Access code does not match case number'
     );
   });
 
