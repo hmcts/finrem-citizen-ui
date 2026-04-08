@@ -1,5 +1,7 @@
 import accessibleAutocomplete from 'accessible-autocomplete';
 
+import { PublicRoutes } from '../../common-constants';
+
 interface AutocompleteResult {
   id: number;
   label: string;
@@ -15,7 +17,7 @@ interface AutocompleteConfig {
 
 function getAutocompleteConfig(element: Element): AutocompleteConfig {
   return {
-    apiUrl: element.getAttribute('data-url') || '/autocomplete',
+    apiUrl: element.getAttribute('data-url') || PublicRoutes.autocomplete,
     eventName: element.getAttribute('data-event') || 'autocomplete:selected',
     inputId: element.getAttribute('data-input-id') || 'autocomplete',
     inputName: element.getAttribute('data-input-name') || 'autocomplete',
