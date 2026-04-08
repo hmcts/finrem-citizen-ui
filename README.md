@@ -178,16 +178,16 @@ yarn setup:manual-test
 ✅ Setup Complete
 ========================================
 
-Environment: pr-293
-URL: https://finrem-citizen-ui-pr-293.preview.platform.hmcts.net
+Environment: pr-XXX
+URL: https://finrem-citizen-ui-pr-XXX.preview.platform.hmcts.net
 
 Login Credentials:
   Username: finrem-test-abc123def456@mailinator.com
-  Password: Password1111
+  Password: Password1234
 
 Case:
-  Formatted: 1775-6599-1844-3387
-  Raw:       1775659918443387
+  Formatted: 1775-6599-1844-3356
+  Raw:       1775659918443367
 
 Usage: Log in with the credentials above, then enter the formatted case number.
 ```

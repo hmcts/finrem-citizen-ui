@@ -5,8 +5,9 @@
  */
 
 import dotenv from 'dotenv';
-import { IdamApiService } from '../../functional/utils/helpers/idamCreateUser';
+
 import { ContestedCaseFactory } from '../../functional/utils/factories/contested/ContestedCaseFactory';
+import { IdamApiService } from '../../functional/utils/helpers/idamCreateUser';
 
 dotenv.config({ quiet: true });
 
@@ -25,25 +26,25 @@ describe('Setup Manual Test', () => {
       const appEnv = process.env.RUNNING_ENV || 'aat';
       const applicationUrl = getApplicationUrl();
 
-      // eslint-disable-next-line no-console
+       
       console.log('\n========================================\n📋 Creating test setup...\n========================================\n');
 
       // Create citizen user
-      // eslint-disable-next-line no-console
+       
       console.log('Creating citizen user...');
       const idamService = new IdamApiService();
       const user = await idamService.createCitizenUser();
-      // eslint-disable-next-line no-console
+       
       console.log('✓ User created\n');
 
       // Create contested case
-      // eslint-disable-next-line no-console
+       
       console.log('Creating contested case...');
       const caseId = String(
         await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)
       );
       const formattedCaseId = caseId.replace(/(\d{4})(?=\d)/g, '$1-');
-      // eslint-disable-next-line no-console
+       
       console.log('✓ Case created\n');
 
       // Assertion to satisfy Jest (before logging to ensure test completion)
@@ -51,7 +52,7 @@ describe('Setup Manual Test', () => {
       expect(formattedCaseId).toBeTruthy();
 
       // Output results for manual testing (after assertions)
-      // eslint-disable-next-line no-console
+       
       console.log(`
 ========================================
 ✅ Setup Complete
