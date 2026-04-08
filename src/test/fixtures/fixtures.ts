@@ -87,7 +87,10 @@ export const test = base.extend<MyFixtures>({
       .toBeVisible();
 
     await basePage.goto('/enter-case-number');
-    await expect(idamPage.page).toHaveURL(/\/enter-case-number$/);
+    // Increased timeout for IDAM authorize / redirect flow
+    await expect(idamPage.page).toHaveURL(/\/enter-case-number(?:\?.*)?$/, {
+      timeout: 30_000,
+    });
 
     await use({ user: citizenUser, authStatus: 'success' });
   },
