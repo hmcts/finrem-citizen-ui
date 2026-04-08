@@ -1,0 +1,18 @@
+// Autocomplete component styles
+// Uses accessible-autocomplete with GOV.UK styling
+
+@import '~accessible-autocomplete/dist/accessible-autocomplete.min.css';
+
+.autocomplete__input {
+  @extend .govuk-input;
+  margin-bottom: 0;
+  font-family: $govuk-font-family !important;
+}
+
+.autocomplete__menu {
+  font-family: $govuk-font-family;
+}
+
+.autocomplete__dropdown-arrow-down {
+  display: none;
+}
