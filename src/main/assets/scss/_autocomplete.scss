@@ -3,13 +3,14 @@
 
 @import '~accessible-autocomplete/dist/accessible-autocomplete.min.css';
 
-.finrem-autocomplete {
-  position: relative;
-}
-
 .autocomplete__input {
   @extend .govuk-input;
   margin-bottom: 0;
+  font-family: $govuk-font-family !important;
+}
+
+.autocomplete__menu {
+  font-family: $govuk-font-family;
 }
 
 .autocomplete__dropdown-arrow-down {
