@@ -14,8 +14,11 @@ export default function (app: Application): void {
   app.get(RouteNames.basePath, oidcMiddleware, async (req, res) => {
     const user = req.session.user as UserDetails;
     const userPageDetails = await getHomePageForUser(user);
-    if(userPageDetails.caseData) {
+    if (userPageDetails.caseData) {
       req.session.caseData = userPageDetails.caseData;
+      if (userPageDetails.caseRole) {
+        req.session.caseRole = userPageDetails.caseRole;
+      }
     }
     res.redirect(userPageDetails.url);
   });
@@ -71,5 +74,9 @@ export default function (app: Application): void {
     const caseApi = getCaseApi(req.session.user as UserDetails, logger);
     const caseId = await caseApi.getExistingUserCase();
     res.json({ id: caseId });
+  });
+
+  app.get(RouteNames.getCaseRole, async (req, res) => {
+    res.json({ caseRole: req.session.caseRole });
   });
 }

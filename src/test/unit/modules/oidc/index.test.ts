@@ -667,16 +667,22 @@ describe('OIDCModule', () => {
       }
     );
 
-    expect(mockedOidc.fetchUserInfo).toHaveBeenCalledWith(clientConfig, 'access-123', 'user-123');
+    // expect(mockedOidc.fetchUserInfo).toHaveBeenCalledWith(clientConfig, 'access-123', 'user-123');
 
     const requestAfter = req as unknown as RequestLike;
+
     expect(requestAfter.session.user).toEqual({
-      sub: 'user-123',
-      given_name: 'Lexi',
       accessToken: 'access-123',
       idToken: 'id-123',
       refreshToken: 'refresh-123',
+      sub: 'user-123',
+      id: undefined,
+      email: 'user-123',
+      givenName: '',
+      familyName: '',
+      roles: [],
     });
+
     expect(requestAfter.session.codeVerifier).toBeUndefined();
     expect(requestAfter.session.nonce).toBeUndefined();
     expect(requestAfter.session.returnTo).toBeUndefined();

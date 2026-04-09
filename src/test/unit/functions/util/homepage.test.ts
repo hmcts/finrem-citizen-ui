@@ -18,14 +18,18 @@ describe('getHomePageForUser', () => {
   let mockGetExistingUserCase: jest.Mock;
   let mockGetCaseById: jest.Mock;
   let userDetails: UserDetails;
+  let mockGetUsersRoleOnCase: jest.Mock;
 
   beforeEach(() => {
     mockGetExistingUserCase = jest.fn();
     mockGetCaseById = jest.fn();
+    mockGetUsersRoleOnCase = jest.fn();
+
 
     (getCaseApi as jest.Mock).mockReturnValue({
       getExistingUserCase: mockGetExistingUserCase,
       getCaseById: mockGetCaseById,
+      getUsersRoleOnCase: mockGetUsersRoleOnCase,
     });
 
     (getSystemUser as jest.Mock).mockResolvedValue({

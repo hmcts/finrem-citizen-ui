@@ -4,7 +4,7 @@ import { LoggerInstance } from 'winston';
 
 import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
 import { UserDetails } from '../controller/AppRequest';
-import { CaseAssignedUserRole } from './case-roles';
+import { CaseAssignedUserRole, CaseAssignedUserRoles, SearchCaseAssignedUserRolesRequest } from './case-roles';
 import { FinremCaseData, FinremCaseDetails, State } from './definition';
 
 export class CaseApiClient {
@@ -23,6 +23,16 @@ export class CaseApiClient {
     } catch (err) {
       this.logError(err as AxiosError);
       throw new Error('Case user roles could not be added.');
+    }
+  }
+
+  public async getCaseUserRoles(userRoles: SearchCaseAssignedUserRolesRequest): Promise<CaseAssignedUserRoles> {
+    try {
+      const response = await this.server.post('case-users/search', userRoles);
+      return response.data;
+    } catch (err) {
+      this.logError(err);
+      throw new Error('Case roles could not be fetched.');
     }
   }
 

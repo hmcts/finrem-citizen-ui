@@ -18,6 +18,8 @@ export const PrivateRoutes = {
   caseUserRole: '/case/:caseReference/:userId/:caseRole',
   caseReference: '/case/:caseReference',
   retrieveCase: '/retrieveCase',
+  // getCaseRole: '/getCaseRole/:caseReference/:userId',
+  getCaseRole: '/getCaseRole',
   enterCaseNumber: '/enter-case-number',
   dashboard: '/dashboard',
   enterAccessCode: '/enter-access-code',

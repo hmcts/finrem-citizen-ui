@@ -4,7 +4,6 @@ import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { AccessCodeCollection, CaseRole, FinremCaseData } from '../app/case/definition';
-import { UserDetails } from '../app/controller/AppRequest';
 import { RouteNames, ViewNames } from '../common-constants';
 import { oidcMiddleware } from '../middleware';
 
@@ -206,13 +205,18 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       });
       
       // Assigning user to case
-      const user = req.session.user as UserDetails;
+      const user = req.session.user;
+      if (!user) {
+        return res.render(ViewNames.Error);
+      }
+
       try {
-        await addUserToCaseForRole(req.session.caseNumber, user.uid as string, role);
+        await addUserToCaseForRole(req.session.caseNumber, user.id as string, role);
       } catch {
         res.render(ViewNames.Error);
       } 
 
+      req.session.caseRole = role;
 
       // TODO: Mark access code as used in CCD (update isValid to 'No')
       // TODO: Send confirmation email if this is a new account setup

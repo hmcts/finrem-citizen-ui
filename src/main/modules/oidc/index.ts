@@ -1,4 +1,5 @@
 import { Logger } from '@hmcts/nodejs-logging';
+import { UserDetails } from 'app/controller/AppRequest';
 import config from 'config';
 import type { Express, NextFunction, Request, Response } from 'express';
 import type * as OidcClientType from 'openid-client';
@@ -6,7 +7,6 @@ import type * as OidcClientType from 'openid-client';
 import { RouteNames } from '../../common-constants';
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
-
 
 const getOidcClient = async (): Promise<typeof OidcClientType> => {
   if (process.env.JEST_WORKER_ID !== undefined || process.env.NODE_ENV === 'test') {
@@ -209,14 +209,17 @@ export class OIDCModule {
           return next(err);
         }
 
-        const userInfo = await oidcClient.fetchUserInfo(this.clientConfig!, access_token, claims.sub);
-
         req.session.user = {
-          ...userInfo,
           accessToken: access_token,
           idToken: id_token,
           refreshToken: refresh_token,
-        };
+          sub: claims.sub,
+          id: claims.uid as string,
+          email: claims.sub,
+          givenName: String(claims.given_name ?? ''),
+          familyName: String(claims.family_name ?? ''),
+          roles: (claims.roles ?? []) as string[],
+        } satisfies UserDetails;
 
         req.session.save(() => {
           this.logger.info('req.session.codeVerifier inside save ', req.session.codeVerifier);

@@ -14,6 +14,11 @@ export class CaseApi {
     await this.apiClient.addCaseUserRoles(assignments);
   }
 
+  public async getUsersRoleOnCase(caseId: string, userId: string): Promise<CaseRole | undefined> {
+    const response = await this.apiClient.getCaseUserRoles({ case_ids: [caseId], user_ids: [userId] });
+    return response.case_users[0]?.case_role;
+  }
+
   public async getCaseById(caseId: string): Promise<FinremCaseData> {
     return this.apiClient.getCaseById(caseId);
   }

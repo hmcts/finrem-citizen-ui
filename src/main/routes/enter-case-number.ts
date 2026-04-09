@@ -4,7 +4,7 @@ import { Application, Request, Response } from 'express';
 
 import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
-import { FinremCaseData } from '../app/case/definition';
+import { CaseRole, FinremCaseData } from '../app/case/definition';
 import { RouteNames, ViewNames } from '../common-constants';
 import { oidcMiddleware } from '../middleware';
 
@@ -18,6 +18,7 @@ declare module 'express-session' {
     caseNumberErrors?: CaseNumberError;
     tempCaseNumber?: string;
     caseData?: FinremCaseData;
+    caseRole?: CaseRole;
   }
 }
 
