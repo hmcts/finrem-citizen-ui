@@ -1,7 +1,7 @@
 import { Application, Request, Response } from 'express';
 
 import { AccessCodeCollection, FinremCaseData, YesOrNo } from '../app/case/definition';
-import { RouteNames } from '../common-constants';
+import { RouteNames, TestRoutes } from '../common-constants';
 
 /**
  * Test-support routes — only registered when explicitly enabled.
@@ -26,7 +26,7 @@ export default function setupTestSupportRoutes(app: Application): void {
    * entries that will pass all server-side validations, then redirects to
    * /enter-access-code so the test can proceed directly to code submission.
    */
-  app.get('/__test/inject-case-session', (req: Request, res: Response) => {
+  app.get(TestRoutes.injectCaseSession, (req: Request, res: Response) => {
     const { caseNumber, applicantCode, respondentCode } = req.query;
 
     if (
