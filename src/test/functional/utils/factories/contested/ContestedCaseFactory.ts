@@ -17,7 +17,7 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const START_EVENT_RETRY_CONFIG = {
   maxRetries: 3,
   initialDelayMs: 2000,
-  maxDelayMs: 10000,
+  maxDelayMs: 15000,
 };
 
 const ACCESS_CODE_RETRY_CONFIG = {
@@ -45,6 +45,19 @@ export class ContestedCaseFactory {
     return message.includes('status 404') && message.includes('No case found');
   }
 
+  private static isRetryableError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+    // Retry on 404 (case not found), 5xx (server errors), 422 (state condition), timeouts
+    return (
+      (message.includes('status 404') && message.includes('No case found')) ||
+      message.includes('status 5') ||
+      (message.includes('status 422') && message.includes('Pre-state condition')) ||
+      message.includes('timeout') ||
+      message.includes('ECONNREFUSED') ||
+      message.includes('ECONNRESET')
+    );
+  }
+
   private static async pollUntilReady<T>(
     operation: () => Promise<T>,
     retryLabel: string
@@ -57,7 +70,7 @@ export class ContestedCaseFactory {
       } catch (error) {
         lastError = error;
 
-        if (!this.isCaseNotFound404(error) || attempt === START_EVENT_RETRY_CONFIG.maxRetries) {
+        if (!this.isRetryableError(error) || attempt === START_EVENT_RETRY_CONFIG.maxRetries) {
           throw error;
         }
 
@@ -66,8 +79,9 @@ export class ContestedCaseFactory {
           START_EVENT_RETRY_CONFIG.maxDelayMs
         );
 
+        const errorType = error instanceof Error ? error.message.split('\n')[0] : String(error);
         // eslint-disable-next-line no-console
-        console.log(`[Factory Poll] ${retryLabel} not ready (attempt ${attempt + 1}/${START_EVENT_RETRY_CONFIG.maxRetries + 1}), waiting ${delayMs}ms...`);
+        console.log(`[Factory Poll] ${retryLabel} transient error "${errorType}" (attempt ${attempt + 1}/${START_EVENT_RETRY_CONFIG.maxRetries + 1}), waiting ${delayMs}ms...`);
         await sleep(delayMs);
       }
     }
