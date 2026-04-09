@@ -53,6 +53,14 @@ Start app:
 yarn start:dev
 ```
 
+Local dev startup now loads `.env` automatically before the app config is initialised, so the same file is used by `yarn start:dev` and the checked-in VS Code debug profile.
+
+Debug in VS Code:
+
+```text
+Run and Debug -> Finrem Citizen UI
+```
+
 Default local URL:
 
 - `http://localhost:3100`
