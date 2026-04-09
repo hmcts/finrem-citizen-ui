@@ -24,7 +24,7 @@ At a high level, the user flow is:
 
 ## Prerequisites
 
-- Node.js `>=22.22.0`
+- Node.js `>=24.14.1`
 - Yarn `4.x`
 - Docker (optional, for containerized local runs)
 - Playwright browser dependencies (installed automatically by `yarn test:functional`)
