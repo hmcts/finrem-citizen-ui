@@ -53,6 +53,14 @@ Start app:
 yarn start:dev
 ```
 
+Local dev startup now loads `.env` automatically before the app config is initialised, so the same file is used by `yarn start:dev` and the checked-in VS Code debug profile.
+
+Debug in VS Code:
+
+```text
+Run and Debug -> Finrem Citizen UI
+```
+
 Default local URL:
 
 - `http://localhost:3100`
@@ -127,6 +135,14 @@ Run broader functional suite with configured retries:
 yarn test:full-functional
 ```
 
+Run one specific test in headed + slowmo mode (useful for debugging/verification):
+
+```bash
+yarn test:functional:headed:slowmo -- src/test/functional/specFiles/enterAccessCode.spec.ts:162
+```
+
+You can change the file path and line number each time to target a different test.
+
 ### Accessibility Tests (Playwright + axe)
 
 Run accessibility-tagged tests (`@a11y`, Chromium):
@@ -151,6 +167,60 @@ Note:
 
 - The accessibility HTML report path is `a11y-output/axe-report`.
 - Running `yarn playwright show-report` without a path looks for the default `playwright-report` folder.
+
+### Manual Testing Setup
+
+Use `setup:manual-test` to create a citizen user and a real contested case with a mocked access code, for manual testing:
+
+```bash
+yarn setup:manual-test
+```
+
+What it does:
+- creates a new IDAM citizen user with generated credentials
+- creates a contested Financial Remedy case
+- prints the environment URL, login credentials, formatted case number, mock access codes, and a mock session injection URL
+
+Use the output like this:
+1. Run `yarn setup:manual-test`
+2. Copy the username and password from the terminal output
+3. Open the printed environment URL and log in
+4. Copy and paste the printed `Mock Session Injection URL` into the same authenticated browser session
+5. The app redirects to the access-code page with mock session data loaded
+6. Enter `APPCODE1` or `RSPCODE1` to continue through the journey
+
+`setup:manual-test` prints:
+- the applicant mock code: `APPCODE1`
+- the respondent mock code: `RSPCODE1`
+- a ready-to-open `__test/inject-case-session` URL
+
+Important:
+- This only works in environments where `ENABLE_TEST_SUPPORT_ROUTES=true`
+- It is for test/manual environments only; it does not generate real access codes in CCD
+
+**Output example:**
+```
+✅ Setup Complete
+========================================
+
+Environment: pr-XXX
+URL: https://finrem-citizen-ui-pr-XXX.preview.platform.hmcts.net
+
+Login Credentials:
+  Username: finrem-test-abc123def456@mailinator.com
+  Password: Password1234
+
+Case:
+  Formatted: 1775-6599-1844-3356
+  Raw:       1775659918443367
+
+Mock Access Codes:
+  Applicant: APPCODE1
+  Respondent: RSPCODE1
+
+Mock Session Injection URL:
+  https://finrem-citizen-ui-pr-XXX.preview.platform.hmcts.net/__test/inject-case-session?caseNumber=1775659918443367&applicantCode=APPCODE1&respondentCode=RSPCODE1
+```
 
 ## Where Test Artifacts Go
 

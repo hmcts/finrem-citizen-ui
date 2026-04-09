@@ -15,7 +15,7 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
    * This test creates a real contested case via API (caseworker creates it with hearing date),
    * then logs in as a citizen and submits the case number.
    */
-  test('Citizen can enter a valid case number created via API @PR', async ({
+  test('Citizen can enter a valid case number created via API', async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
     contestedCaseForCaseNumber,
@@ -26,15 +26,15 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
     await expect(page).toHaveURL(/\/enter-access-code$/);
   });
 
-  test('Citizen can enter formatted case number (with hyphens) @PR', async ({
+  test('Citizen can enter formatted case number (with hyphens)', async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
-    contestedCaseWithHearing,
+    contestedCaseForCaseNumber,
     page
   }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
     // Use the formatted case ID (XXXX-XXXX-XXXX-XXXX)
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.formattedCaseId);
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.formattedCaseId);
     // Verify redirection to Access Code page
     await expect(page).toHaveURL(/\/enter-access-code$/);
     await expect(page.locator('h1')).toContainText('Enter access code');
@@ -48,28 +48,28 @@ test.describe('Enter Case Number Page Verification', () => {
 
   // --- VALIDATION ERROR SCENARIOS (no real case needed) ---
 
-  test('Error: Empty input @PR @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Empty input @a11y', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber('');
     await enterCaseNumberPage.expectValidationError('Enter your case number');
     // TODO: Re-enable once axe `target-size` (WCAG 2.5.8) violation is resolved in GOV.UK Frontend components
     // await axeUtils.audit();
   });
 
-  test('Error: Boundary check - 15 characters (Lower Boundary - 1) @PR @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Boundary check - 15 characters (Lower Boundary - 1) @a11y', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(15));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
     // TODO: Re-enable once axe `target-size` (WCAG 2.5.8) violation is resolved in GOV.UK Frontend components
     // await axeUtils.audit();
   });
 
-  test('Error: Boundary check - 21 characters (Upper Boundary + 1) @PR @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Boundary check - 21 characters (Upper Boundary + 1) @a11y', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(21));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
     // TODO: Re-enable once axe `target-size` (WCAG 2.5.8) violation is resolved in GOV.UK Frontend components
     // await axeUtils.audit();
   });
 
-  test('Error: Invalid format - Letters @PR @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Invalid format - Letters @a11y', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber('1234-5678-ABCD-EFGH');
     await enterCaseNumberPage.expectValidationError(
       'Case number must only include numbers 0 to 9 and special characters such as hyphens'
@@ -78,7 +78,7 @@ test.describe('Enter Case Number Page Verification', () => {
     // await axeUtils.audit();
   });
 
-  test('Error: Case number not found @PR @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Case number not found @a11y', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber('1111222233334444');
     await enterCaseNumberPage.expectValidationError(
       'We cannot find that case number, Enter the case number that you received from the court'
@@ -90,7 +90,7 @@ test.describe('Enter Case Number Page Verification', () => {
   /**
    * Note: 20-digit is valid length but won't exist in DB - tests length validation passes
    */
-  test('Success Logic: 20 digits (Upper Boundary) @PR @a11y', async ({ enterCaseNumberPage }) => {
+  test('Success Logic: 20 digits (Upper Boundary) @a11y', async ({ enterCaseNumberPage }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(20));
 
     // Confirm that the length-specific validation is NOT triggered

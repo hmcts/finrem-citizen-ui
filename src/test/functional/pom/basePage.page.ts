@@ -1,6 +1,5 @@
 import { expect,Locator, Page } from '@playwright/test';
 
-// Option A: Move it outside the class (Cleaner if other pages need it too)
 const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
@@ -47,5 +46,36 @@ export class BasePage {
 
   async signOut(): Promise<void> {
     await this.signOutBtn.click();
+  }
+
+  /**
+   * Bypasses the CCD case-number lookup by hitting the test-support endpoint.
+   * Sets session caseNumber and caseData (with mock access codes) then
+   * redirects to /enter-access-code.
+   * Only available in environments where ENABLE_TEST_SUPPORT_ROUTES=true.
+   *
+   * The redirect assertion is co-located here so that a missing/disabled route
+   * produces an actionable error at the call site rather than a confusing URL
+   * mismatch in the calling test.
+   */
+  async injectCaseSession(
+    caseId: string,
+    applicantCode: string,
+    respondentCode: string
+  ): Promise<void> {
+    const params = new URLSearchParams({
+      caseNumber: caseId,
+      applicantCode,
+      respondentCode,
+    });
+    await this.page.goto(`/__test/inject-case-session?${params.toString()}`);
+
+    // The endpoint saves the session then redirects — wait for that redirect
+    // before returning so callers can safely assert /enter-access-code state.
+    await expect(
+      this.page,
+      '/__test/inject-case-session did not redirect to /enter-access-code. ' +
+      'Check ENABLE_TEST_SUPPORT_ROUTES=true is set in this environment.'
+    ).toHaveURL(/\/enter-access-code$/, { timeout: 10_000 });
   }
 }

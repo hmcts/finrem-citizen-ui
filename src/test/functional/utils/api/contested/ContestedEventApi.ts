@@ -369,4 +369,38 @@ export class ContestedEventApi {
       modifications
     );
   }
+
+  /**
+   * Fetch complete case data from CCD
+   * Used to retrieve case details including access codes
+   */
+  static async getCaseData(caseId: string): Promise<Record<string, unknown>> {
+    const caseData = await ccdApi.getCaseData(
+      this.caseworker.username,
+      this.caseworker.password,
+      caseId,
+      this.caseType
+    );
+    return caseData;
+  }
+
+  /**
+   * Get applicant access code from case
+   * Returns the access code string or undefined if not found
+   */
+  static async getApplicantAccessCode(caseId: string): Promise<string | undefined> {
+    const caseData = await this.getCaseData(caseId);
+    const accessCodes = caseData.applicantAccessCodes as { id: string; value: { accessCode: string } }[] | undefined;
+    return accessCodes?.[0]?.value?.accessCode;
+  }
+
+  /**
+   * Get respondent access code from case
+   * Returns the access code string or undefined if not found
+   */
+  static async getRespondentAccessCode(caseId: string): Promise<string | undefined> {
+    const caseData = await this.getCaseData(caseId);
+    const accessCodes = caseData.respondentAccessCodes as { id: string; value: { accessCode: string } }[] | undefined;
+    return accessCodes?.[0]?.value?.accessCode;
+  }
 }

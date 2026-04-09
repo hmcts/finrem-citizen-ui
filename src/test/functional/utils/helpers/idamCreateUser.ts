@@ -27,15 +27,19 @@ export class IdamApiService {
   async createCitizenUser(): Promise<UserCredentials> {
     const apiContext = await request.newContext();
 
-    const user: UserCredentials = {
-      username: `finrem-test-${randomUUID()}@mailinator.com`,
-      password: DEFAULT_TEST_USER_PASSWORD,
-    };
+    try {
+      const user: UserCredentials = {
+        username: `finrem-test-${randomUUID()}@mailinator.com`,
+        password: DEFAULT_TEST_USER_PASSWORD,
+      };
 
-    const accessToken = await this.getAccessToken(apiContext);
-    await this.provisionUser(apiContext, accessToken, user, 'Test', 'User');
+      const accessToken = await this.getAccessToken(apiContext);
+      await this.provisionUser(apiContext, accessToken, user, 'Test', 'User');
 
-    return user;
+      return user;
+    } finally {
+      await apiContext.dispose();
+    }
   }
 
   private async getAccessToken(apiContext: APIRequestContext): Promise<string> {

@@ -77,6 +77,7 @@ export default defineConfig({
         env: {
           IDAM_SECRET: process.env.IDAM_SECRET || 'dummy-secret-for-playwright-tests',
           SESSION_SECRET: process.env.SESSION_SECRET || 'dummy-session-secret',
+          ENABLE_TEST_SUPPORT_ROUTES: 'true',
           PORT: '3100',
         },
       }

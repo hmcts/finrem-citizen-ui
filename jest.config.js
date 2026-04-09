@@ -1,6 +1,7 @@
 module.exports = {
   roots: ['<rootDir>/src/main', '<rootDir>/src/test/unit', '<rootDir>/src/test/routes'],
   testRegex: '.*\\.(test|spec)\\.ts$',
+  testPathIgnorePatterns: ['<rootDir>/src/test/unit/scripts/setupManualTest.manual.test.ts'],
   moduleFileExtensions: ['ts', 'js', 'json'],
   testEnvironment: 'node',
   transform: {

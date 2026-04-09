@@ -1,0 +1,50 @@
+{
+  "files.associations": {
+    ".env": "dotenv",
+    ".env.*": "dotenv"
+  },
+  "editor.tokenColorCustomizations": {
+    "textMateRules": [
+      {
+        "scope": [
+          "comment",
+          "punctuation.definition.comment"
+        ],
+        "settings": {
+          "foreground": "#6A9955"
+        }
+      },
+      {
+        "scope": [
+          "source.dotenv variable.other.key",
+          "source.dotenv support.type.property-name",
+          "source.dotenv entity.name.tag"
+        ],
+        "settings": {
+          "foreground": "#0F766E",
+          "fontStyle": "bold"
+        }
+      },
+      {
+        "scope": [
+          "source.dotenv keyword.operator.assignment",
+          "source.dotenv punctuation.separator.key-value"
+        ],
+        "settings": {
+          "foreground": "#64748B"
+        }
+      },
+      {
+        "scope": [
+          "source.dotenv string.unquoted",
+          "source.dotenv string.quoted",
+          "source.dotenv string.quoted.double",
+          "source.dotenv string.quoted.single"
+        ],
+        "settings": {
+          "foreground": "#B45309"
+        }
+      }
+    ]
+  }
+}

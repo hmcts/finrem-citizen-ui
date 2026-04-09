@@ -1,3 +1,4 @@
+
 export const PublicRoutes = {
   autocomplete: '/autocomplete',
   basePath: '/',
@@ -7,6 +8,10 @@ export const PublicRoutes = {
   info: '/info',
   login: '/login',
   logout: '/logout',
+} as const;
+
+export const TestRoutes = {
+  injectCaseSession: '/__test/inject-case-session',
 } as const;
 
 export const PrivateRoutes = {
