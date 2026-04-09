@@ -1,6 +1,6 @@
 import { Logger } from '@hmcts/nodejs-logging';
 import config from 'config';
-import connectRedis from 'connect-redis';
+import { RedisStore } from 'connect-redis';
 import type { Express } from 'express';
 import session = require('express-session');
 import { Redis } from 'ioredis';
@@ -66,17 +66,17 @@ export class Session {
       return;
     }
 
-const redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
-const redis = new Redis(redisConnectionString);
+    const redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
+    const redis = new Redis(redisConnectionString);
 
-redis.on('ready', async () => {
+    redis.on('ready', async () => {
       logger.info('Redis session store connected and ready');
 
       try {
         const testKey = 'debug:test:key';
         const testValue = JSON.stringify({
           message: 'hello redis',
-          ts: new Date().toISOString()
+          ts: new Date().toISOString(),
         });
 
         await redis.set(testKey, testValue, 'EX', 300);
@@ -98,7 +98,7 @@ redis.on('ready', async () => {
 
     typedApp.locals.redisClient = redis;
 
-    const store = new connectRedis({
+    const store = new RedisStore({
       client: redis,
       prefix: `${config.get<string>('session.prefix')}:`,
       ttl: ttlInSeconds,
