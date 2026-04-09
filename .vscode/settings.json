@@ -7,53 +7,42 @@
     "textMateRules": [
       {
         "scope": [
-          "source.dotenv",
-          "meta.env",
-          "meta.environment-variable"
+          "comment",
+          "punctuation.definition.comment"
         ],
         "settings": {
-          "foreground": "#D9D9D9"
+          "foreground": "#6A9955"
         }
       },
       {
         "scope": [
-          "variable.other.key",
-          "entity.name.tag",
-          "support.type.property-name"
+          "source.dotenv variable.other.key",
+          "source.dotenv support.type.property-name",
+          "source.dotenv entity.name.tag"
         ],
         "settings": {
-          "foreground": "#4EC9B0",
+          "foreground": "#0F766E",
           "fontStyle": "bold"
         }
       },
       {
         "scope": [
-          "punctuation.separator.key-value",
-          "keyword.operator.assignment"
+          "source.dotenv keyword.operator.assignment",
+          "source.dotenv punctuation.separator.key-value"
         ],
         "settings": {
-          "foreground": "#C586C0"
+          "foreground": "#64748B"
         }
       },
       {
         "scope": [
-          "string.unquoted",
-          "string.quoted",
-          "string.quoted.double",
-          "string.quoted.single"
+          "source.dotenv string.unquoted",
+          "source.dotenv string.quoted",
+          "source.dotenv string.quoted.double",
+          "source.dotenv string.quoted.single"
         ],
         "settings": {
-          "foreground": "#CE9178"
-        }
-      },
-      {
-        "scope": [
-          "comment.line",
-          "punctuation.definition.comment"
-        ],
-        "settings": {
-          "foreground": "#6A9955",
-          "fontStyle": "italic"
+          "foreground": "#B45309"
         }
       }
     ]
