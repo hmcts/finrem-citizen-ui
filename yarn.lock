@@ -5889,28 +5889,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"allure-js-commons@npm:3.7.0":
-  version: 3.7.0
-  resolution: "allure-js-commons@npm:3.7.0"
+"allure-js-commons@npm:3.7.1":
+  version: 3.7.1
+  resolution: "allure-js-commons@npm:3.7.1"
   dependencies:
     md5: "npm:^2.3.0"
   peerDependencies:
-    allure-playwright: 3.7.0
+    allure-playwright: 3.7.1
   peerDependenciesMeta:
     allure-playwright:
       optional: true
-  checksum: 10/2ac3173e68194f323a4b45647bd4e8a489f0ab2b91b9612f8803e065f132dedc378e7c1f74b4caf458dad4a96c2d6fc375427e6965e73550fae2e558014486a4
+  checksum: 10/02cd37174e9026280cb1d2fda0e4d2ca1a6d13c5a89bfe00655c0a6450b5e7c8da25d01c0d9397da1d4b1893ad1d8794722f3ffa513f864d9758cdbce1610de7
   languageName: node
   linkType: hard
 
 "allure-playwright@npm:^3.5.0":
-  version: 3.7.0
-  resolution: "allure-playwright@npm:3.7.0"
+  version: 3.7.1
+  resolution: "allure-playwright@npm:3.7.1"
   dependencies:
-    allure-js-commons: "npm:3.7.0"
+    allure-js-commons: "npm:3.7.1"
   peerDependencies:
     "@playwright/test": ">=1.53.0"
-  checksum: 10/bb99ebb5a99939a39f2a0c4f95def193732e5e7611657cc02b42e8179b9644695b482839c1f08d0d0918d6c6226a9c52bf78ab3e3557262dc955c19a9f41cdae
+  checksum: 10/3388ca5c94379ddae90fd7a9d9c1c0110630411b9ed24701137964c3d56e835279316447177eec430ff9bb5f5fc46d7fca7c38fc9818a65b0e83822f4e23d266
   languageName: node
   linkType: hard
 
@@ -7888,8 +7888,8 @@ __metadata:
   linkType: hard
 
 "eslint-plugin-jest@npm:^29.0.0":
-  version: 29.15.1
-  resolution: "eslint-plugin-jest@npm:29.15.1"
+  version: 29.15.2
+  resolution: "eslint-plugin-jest@npm:29.15.2"
   dependencies:
     "@typescript-eslint/utils": "npm:^8.0.0"
   peerDependencies:
@@ -7904,7 +7904,7 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10/436ae3c695f0dfe443e19d0ad94ede6e78adfaf47ba89db7046ac77b0e82127ad12ac2ed50846ef9f360d6c1bd5f0d2841b7fe5ff6e246eb069b0e85197a42fd
+  checksum: 10/c7bc4dc705e5613e51a1d19bb924a439db9897c67e694f091e29dbacaa218b758040aacbb8d3f9136f2af0171ad69c1c49736b5e3f30098bdf44d4c1e93c6381
   languageName: node
   linkType: hard
 
@@ -8631,7 +8631,7 @@ __metadata:
     otplib: "npm:13.4.0"
     pa11y: "npm:^9.1.1"
     postcss: "npm:^8.4.27"
-    prettier: "npm:3.8.1"
+    prettier: "npm:3.8.2"
     proper-lockfile: "npm:^4.1.2"
     raw-loader: "npm:4.0.2"
     require-directory: "npm:2.1.1"
@@ -8649,7 +8649,7 @@ __metadata:
     ts-node: "npm:10.9.2"
     tsconfig-paths: "npm:4.2.0"
     typescript: "npm:6.0.2"
-    webpack: "npm:5.106.0"
+    webpack: "npm:5.106.1"
     webpack-cli: "npm:7.0.2"
     webpack-dev-middleware: "npm:8.0.3"
     webpack-node-externals: "npm:3.0.0"
@@ -12391,12 +12391,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:3.8.1":
-  version: 3.8.1
-  resolution: "prettier@npm:3.8.1"
+"prettier@npm:3.8.2":
+  version: 3.8.2
+  resolution: "prettier@npm:3.8.2"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10/3da1cf8c1ef9bea828aa618553696c312e951f810bee368f6887109b203f18ee869fe88f66e65f9cf60b7cb1f2eae859892c860a300c062ff8ec69c381fc8dbd
+  checksum: 10/fd784175bc600c07eb2c44d7ec4ee7133f95f26492adad61b6a15c06f438b858181faf096ab74163d7f49500ad80cff4479c6abb084e161a2e85a9df5974ecd1
   languageName: node
   linkType: hard
 
@@ -14765,9 +14765,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"webpack@npm:5.106.0":
-  version: 5.106.0
-  resolution: "webpack@npm:5.106.0"
+"webpack@npm:5.106.1":
+  version: 5.106.1
+  resolution: "webpack@npm:5.106.1"
   dependencies:
     "@types/eslint-scope": "npm:^3.7.7"
     "@types/estree": "npm:^1.0.8"
@@ -14799,7 +14799,7 @@ __metadata:
       optional: true
   bin:
     webpack: bin/webpack.js
-  checksum: 10/0062ac6c45a1839e1432e8602e1428b71c1e1a1abf2739d62afabf86e69fb253b44d0243a6e403cc2dba2cb21ca145b40c1f67087ba75ab915f778d7e3f5e72c
+  checksum: 10/f72b556872fd2855ded996011e279a20c90b8a9e82211b3afc414b3a73bc39cccb22066964b63ca32c07cbff796c6c4198cf7294c6b071115aeaecaa3469fd27
   languageName: node
   linkType: hard
 
