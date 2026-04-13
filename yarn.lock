@@ -7988,7 +7988,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^10.0.0":
+"eslint@npm:^10.2.0":
   version: 10.2.0
   resolution: "eslint@npm:10.2.0"
   dependencies:
@@ -8595,7 +8595,7 @@ __metadata:
     css-loader: "npm:7.1.4"
     debug: "npm:4.4.3"
     dotenv: "npm:^17.3.1"
-    eslint: "npm:^10.0.0"
+    eslint: "npm:^10.2.0"
     eslint-config-prettier: "npm:^10.1.8"
     eslint-plugin-jest: "npm:^29.0.0"
     eslint-plugin-simple-import-sort: "npm:^13.0.0"
