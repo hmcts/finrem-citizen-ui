@@ -5856,7 +5856,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ajv@npm:6.14.0, ajv@npm:^6.12.5, ajv@npm:^6.14.0":
+"ajv@npm:^6.12.5, ajv@npm:^6.14.0":
   version: 6.14.0
   resolution: "ajv@npm:6.14.0"
   dependencies:
@@ -5868,7 +5868,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ajv@npm:^8.0.0, ajv@npm:^8.0.1, ajv@npm:^8.9.0":
+"ajv@npm:^8.0.0, ajv@npm:^8.0.1, ajv@npm:^8.18.0, ajv@npm:^8.9.0":
   version: 8.18.0
   resolution: "ajv@npm:8.18.0"
   dependencies:
@@ -7988,7 +7988,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^10.0.0":
+"eslint@npm:^10.2.0":
   version: 10.2.0
   resolution: "eslint@npm:10.2.0"
   dependencies:
@@ -8579,6 +8579,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^8.53.1"
     "@typescript-eslint/parser": "npm:^8.53.1"
     accessible-autocomplete: "npm:^3.0.1"
+    ajv: "npm:^8.18.0"
     allure-commandline: "npm:^2.37.0"
     allure-playwright: "npm:^3.5.0"
     applicationinsights: "npm:3.14.0"
@@ -8594,7 +8595,7 @@ __metadata:
     css-loader: "npm:7.1.4"
     debug: "npm:4.4.3"
     dotenv: "npm:^17.3.1"
-    eslint: "npm:^10.0.0"
+    eslint: "npm:^10.2.0"
     eslint-config-prettier: "npm:^10.1.8"
     eslint-plugin-jest: "npm:^29.0.0"
     eslint-plugin-simple-import-sort: "npm:^13.0.0"
