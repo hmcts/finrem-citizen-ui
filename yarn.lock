@@ -5856,7 +5856,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ajv@npm:8.18.0, ajv@npm:^8.0.0, ajv@npm:^8.0.1, ajv@npm:^8.9.0":
+"ajv@npm:8.18.0, ajv@npm:^8.0.0, ajv@npm:^8.0.1, ajv@npm:^8.18.0, ajv@npm:^8.9.0":
   version: 8.18.0
   resolution: "ajv@npm:8.18.0"
   dependencies:
@@ -8579,6 +8579,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^8.53.1"
     "@typescript-eslint/parser": "npm:^8.53.1"
     accessible-autocomplete: "npm:^3.0.1"
+    ajv: "npm:^8.18.0"
     allure-commandline: "npm:^2.37.0"
     allure-playwright: "npm:^3.5.0"
     applicationinsights: "npm:3.14.0"
