@@ -82,7 +82,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",
-    "@babel/eslint-parser": "7.28.6",
     "@babel/preset-env": "^7.26.9",
     "@eslint/compat": "^2.0.3",
     "@hmcts/playwright-common": "^1.1.2",
@@ -96,8 +95,8 @@
     "@types/proper-lockfile": "^4.1.4",
     "@types/serve-favicon": "^2.5.7",
     "@types/supertest": "^7.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.53.1",
-    "@typescript-eslint/parser": "^8.53.1",
+    "@typescript-eslint/eslint-plugin": "^8.58.1",
+    "@typescript-eslint/parser": "^8.58.1",
     "allure-commandline": "^2.37.0",
     "allure-playwright": "^3.5.0",
     "axios-debug-log": "1.0.0",
@@ -157,7 +156,7 @@
     "qs": "6.15.1",
     "test-exclude": "8.0.0",
     "minimatch": "10.2.5",
-    "@eslint/eslintrc/ajv": "6.14.0",
+    "@eslint/eslintrc": "^2.1.4",
     "flatted": "^3.4.0",
     "picomatch": "4.0.4",
     "path-to-regexp": "8.4.2"
