@@ -158,7 +158,6 @@
     "qs": "6.15.1",
     "test-exclude": "8.0.0",
     "minimatch": "10.2.5",
-    "@eslint/eslintrc/ajv": "8.18.0",
     "flatted": "^3.4.0",
     "picomatch": "4.0.4",
     "path-to-regexp": "8.4.2"
