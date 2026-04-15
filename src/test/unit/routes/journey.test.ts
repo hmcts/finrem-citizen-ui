@@ -41,7 +41,7 @@ describe('Journey Routes', () => {
       handler = mockGet.mock.calls.find((call) => call[0] === '/journey/:stepId')[1];
       mockReq = {
         params: { stepId: 'step1' },
-        session: {} as any,
+        session: {} as unknown as Request['session'],
       };
       mockRes = {
         render: jest.fn(),
@@ -68,7 +68,7 @@ describe('Journey Routes', () => {
     });
 
     it('should use session data if available', () => {
-      mockReq.session = { journeyData: { step3Answer: 'yes' } } as any;
+      mockReq.session = { journeyData: { step3Answer: 'yes' } } as unknown as Request['session'];
       mockReq.params = { stepId: 'step2' };
       handler(mockReq as Request, mockRes as Response);
       expect(mockRes.render).toHaveBeenCalledWith('journey/step2', {
@@ -76,6 +76,18 @@ describe('Journey Routes', () => {
         errors: {},
         values: { step3Answer: 'yes' },
         previousStep: 'step1',
+      });
+    });
+
+    it('should handle missing session gracefully', () => {
+      mockReq.session = undefined;
+      mockReq.params = { stepId: 'step1' };
+      handler(mockReq as Request, mockRes as Response);
+      expect(mockRes.render).toHaveBeenCalledWith('journey/step1', {
+        data: {},
+        errors: {},
+        values: {},
+        previousStep: null,
       });
     });
   });
@@ -90,7 +102,7 @@ describe('Journey Routes', () => {
       handler = mockPost.mock.calls.find((call) => call[0] === '/journey/:stepId')[1];
       mockReq = {
         params: { stepId: 'step1' },
-        session: {} as any,
+        session: {} as unknown as Request['session'],
         body: {},
       };
       mockRes = {
@@ -145,6 +157,21 @@ describe('Journey Routes', () => {
       mockReq.params = { stepId: 'step8-complete' };
       handler(mockReq as Request, mockRes as Response);
       expect(mockRes.redirect).toHaveBeenCalledWith('/journey/step8-complete');
+    });
+
+    it('should handle missing session gracefully in POST', () => {
+      mockReq.session = undefined;
+      mockReq.params = { stepId: 'step1' };
+      handler(mockReq as Request, mockRes as Response);
+      expect(mockRes.redirect).toHaveBeenCalledWith('/journey/step2');
+    });
+
+    it('should not modify data when step has no persist function', () => {
+      mockReq.params = { stepId: 'step2' };
+      mockReq.body = { someField: 'value' };
+      handler(mockReq as Request, mockRes as Response);
+      expect(mockReq.session?.journeyData).toEqual({});
+      expect(mockRes.redirect).toHaveBeenCalledWith('/journey/step3-question');
     });
   });
 
