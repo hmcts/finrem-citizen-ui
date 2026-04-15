@@ -2,7 +2,7 @@ import { expect, test } from '../../fixtures/fixtures';
 
 test.describe('Enter Access Code - Page Content', () => {
   // Verify that the Enter Access Code page displays all expected elements.
-  test('Access code page contains all required elements @PR @a11y', async ({
+  test('Access code page contains all required elements @a11y', async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
     enterAccessCodePage,
@@ -21,7 +21,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
   /**
    * Verify empty access code input validation
    */
-  test('Error: Access code is empty @PR', async ({
+  test('Error: Access code is empty', async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
     enterAccessCodePage,
@@ -40,7 +40,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
   /**
    * Verify access code length validation (too short)
    */
-  test('Error: Access code is too short @PR', async ({
+  test('Error: Access code is too short', async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
     enterAccessCodePage,
@@ -58,7 +58,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
   /**
    * Verify access code length validation (too long)
    */
-  test('Error: Access code is too long @PR', async ({
+  test('Error: Access code is too long', async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
     enterAccessCodePage,
@@ -76,7 +76,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
   /**
    * Verify access code format validation (special characters not allowed)
    */
-  test('Error: Access code contains invalid characters @PR', async ({
+  test('Error: Access code contains invalid characters', async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
     enterAccessCodePage,
@@ -96,7 +96,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
   /**
    * Verify access code format validation (spaces not allowed)
    */
-  test('Error: Access code contains spaces @PR', async ({
+  test('Error: Access code contains spaces', async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
     enterAccessCodePage,
@@ -116,7 +116,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
   /**
    * Verify invalid access code not found in system
    */
-  test('Error: Access code not found in case @PR', async ({
+  test('Error: Access code not found in case', async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
     enterAccessCodePage,
@@ -140,7 +140,7 @@ test.describe('Enter Access Code - Happy Path', () => {
   /**
    * Citizen successfully enters valid applicant access code and views case
    */
-  test('Citizen can enter valid applicant access code and view case summary @PR', async ({
+  test('Citizen can enter valid applicant access code and view case summary', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
@@ -158,7 +158,7 @@ test.describe('Enter Access Code - Happy Path', () => {
   /**
    * Verify whitespace is trimmed from access code
    */
-  test('Success: Access code with leading/trailing whitespace is accepted @PR', async ({
+  test('Success: Access code with leading/trailing whitespace is accepted', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
@@ -176,7 +176,7 @@ test.describe('Enter Access Code - Happy Path', () => {
   /**
    * Citizen successfully enters valid respondent access code and views case
    */
-  test('Citizen can enter valid respondent access code and view case summary @PR', async ({
+  test('Citizen can enter valid respondent access code and view case summary', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
@@ -194,7 +194,7 @@ test.describe('Enter Access Code - Happy Path', () => {
   /**
    * Access codes are case-insensitive
    */
-  test('Access code submission is case-insensitive @PR', async ({
+  test('Access code submission is case-insensitive', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
