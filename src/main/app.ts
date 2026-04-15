@@ -1,9 +1,9 @@
 import * as bodyParser from 'body-parser';
-import * as path from 'path';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import RateLimit from 'express-rate-limit';
 import { glob } from 'glob';
+import * as path from 'path';
 
 import { ViewNames } from './common-constants';
 import { HTTPError } from './HttpError';
