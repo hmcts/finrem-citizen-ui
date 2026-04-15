@@ -210,7 +210,10 @@ export class ContestedCaseFactory {
     isExpressPilot = false,
     issueDate?: string
   ): Promise<string> {
-    const caseId = await this.createCase(isExpressPilot, false);
+    const caseId = await this.pollUntilReady(
+      () => this.createCase(isExpressPilot, false),
+      'Form A case creation'
+    );
 
     // Poll until the solicitor start-event token is available instead of fixed sleeps.
     await this.withSolicitorStartEventRetry(async () => {
@@ -232,7 +235,10 @@ export class ContestedCaseFactory {
     isExpressPilot = false,
     issueDate?: string
   ): Promise<string> {
-    const caseId = await this.createCase(isExpressPilot, true);
+    const caseId = await this.pollUntilReady(
+      () => this.createCase(isExpressPilot, true),
+      'Paper case creation'
+    );
 
     // Replace fixed waits with targeted retry for eventual consistency on caseworker start-events.
     await this.withCaseworkerStartEventRetry(async () => {
