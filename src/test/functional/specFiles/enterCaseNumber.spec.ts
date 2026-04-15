@@ -1,4 +1,4 @@
-import { expect, test } from '../../fixtures/fixtures';
+import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
 
 const dataFactory = {
   generateDigits: (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join(''),
@@ -51,19 +51,19 @@ test.describe('Enter Case Number Page Verification', () => {
   test('Error: Empty input @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber('');
     await enterCaseNumberPage.expectValidationError('Enter your case number');
-    await axeUtils.audit({ disableRules: 'target-size' });
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   test('Error: Boundary check - 15 characters (Lower Boundary - 1) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(15));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
-    await axeUtils.audit({ disableRules: 'target-size' });
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   test('Error: Boundary check - 21 characters (Upper Boundary + 1) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(21));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
-    await axeUtils.audit({ disableRules: 'target-size' });
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   test('Error: Invalid format - Letters @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
@@ -71,7 +71,7 @@ test.describe('Enter Case Number Page Verification', () => {
     await enterCaseNumberPage.expectValidationError(
       'Case number must only include numbers 0 to 9 and special characters such as hyphens'
     );
-    await axeUtils.audit({ disableRules: 'target-size' });
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   test('Error: Case number not found @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
@@ -79,7 +79,7 @@ test.describe('Enter Case Number Page Verification', () => {
     await enterCaseNumberPage.expectValidationError(
       'We cannot find that case number, Enter the case number that you received from the court'
     );
-    await axeUtils.audit({ disableRules: 'target-size' });
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   /**
@@ -93,6 +93,6 @@ test.describe('Enter Case Number Page Verification', () => {
 
     // We expect the "Not Found" error because this random 20-digit ID doesn't exist in DB
     await enterCaseNumberPage.expectValidationError('Case number must be 16 digits');
-    await axeUtils.audit({ disableRules: 'target-size' });
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 });

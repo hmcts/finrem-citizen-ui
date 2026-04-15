@@ -1,4 +1,4 @@
-import { expect, test } from '../../fixtures/fixtures';
+import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
 
 test.describe('Enter Access Code - Page Content', () => {
   // Verify that the Enter Access Code page displays all expected elements.
@@ -13,7 +13,7 @@ test.describe('Enter Access Code - Page Content', () => {
     await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
     await expect(page).toHaveURL(/\/enter-access-code$/);
     await enterAccessCodePage.verifyAccessCodePageContent();
-    await axeUtils.audit({ disableRules: 'target-size' });
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 });
 

@@ -10,6 +10,17 @@ import { ContestedCaseFactory } from '../functional/utils/factories/contested/Co
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
 
 /**
+ * Shared axe audit options used by all @a11y tests.
+ *
+ * `target-size` (axe rule id, WCAG 2.5.8) is disabled because the violation
+ * originates in standard GOV.UK Frontend components (.govuk-service-navigation__link,
+ * .govuk-button) whose rendered height/spacing falls below the 24px minimum at the
+ * version currently in use (govuk-frontend v6.1.0). This is not something we can
+ * fix in this codebase. Re-evaluate when upgrading govuk-frontend.
+ */
+export const DEFAULT_AXE_OPTIONS = { disableRules: 'target-size' } as const;
+
+/**
  * The result of a completed login attempt.
  * Passed to tests via the `loggedInPage` fixture so they can reference the
  * logged-in user's credentials without repeating the login flow.

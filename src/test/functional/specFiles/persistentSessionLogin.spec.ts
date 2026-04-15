@@ -1,4 +1,4 @@
-import { expect, test } from '../../fixtures/fixtures';
+import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
 
 test.describe('Persistent Session After Re-login', () => {
   /**
@@ -34,7 +34,7 @@ test.describe('Persistent Session After Re-login', () => {
 
     // Verify user lands directly on dashboard, no case number or access code required
     await dashboardPage.verifyDashboardPageContent();
-    await axeUtils.audit({ disableRules: 'target-size' });
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   /**
@@ -67,7 +67,7 @@ test.describe('Persistent Session After Re-login', () => {
     await expect(newPage).toHaveURL(/\/dashboard$/);
 
     // Audit the stable dashboard state in the original tab.
-    await axeUtils.audit({ disableRules: 'target-size' });
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
 
     await newPage.close();
   });
@@ -101,6 +101,6 @@ test.describe('Persistent Session After Re-login', () => {
 
     // Verify user lands back on dashboard without re-entering case/access code
     await dashboardPage.verifyDashboardPageContent();
-    await axeUtils.audit({ disableRules: 'target-size' });
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 });

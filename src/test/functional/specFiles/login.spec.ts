@@ -1,4 +1,4 @@
-import { expect, test } from '../../fixtures/fixtures';
+import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
 
 test.describe('Authenticated Citizen User Journey Verification', () => {
   /**
@@ -15,7 +15,7 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
 
   test('User can see access case number page after successful login @a11y', async ({ axeUtils: _axeUtils }) => {
     // No logic assertions here since the beforeEach already confirms we're on the correct page.
-    await _axeUtils.audit({ disableRules: 'target-size' });
+    await _axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   test('User can sign out via the UI and is redirected to IDAM @a11y', async ({ page, basePage, idamPage, axeUtils: _axeUtils }) => {
@@ -29,7 +29,7 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
     // Verify that trying to go back to the app root redirects back to login
     await basePage.goto('/');
     await expect(page).toHaveURL(/.*sign-in-or-create.*/);
-    await _axeUtils.audit({ disableRules: 'target-size' }); 
+    await _axeUtils.audit(DEFAULT_AXE_OPTIONS); 
   });
 
   test('Verify Global Layout elements: Header, Footer, @a11y', async ({ page, basePage, axeUtils: _axeUtils }) => {
@@ -51,6 +51,6 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
     // Check footer (Copyright Image link navigates to the correct page)
     await copyRightImgLink.click();
     await basePage.verifyUrl(/.*crown-copyright.*/);
-    await _axeUtils.audit({ disableRules: 'target-size' });
+    await _axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 });
