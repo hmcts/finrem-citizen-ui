@@ -48,49 +48,44 @@ test.describe('Enter Case Number Page Verification', () => {
 
   // --- VALIDATION ERROR SCENARIOS (no real case needed) ---
 
-  test('Error: Empty input @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Empty input @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber('');
     await enterCaseNumberPage.expectValidationError('Enter your case number');
-    // TODO: Re-enable once axe `target-size` (WCAG 2.5.8) violation is resolved in GOV.UK Frontend components
-    // await axeUtils.audit();
+    await axeUtils.audit({ disableRules: 'target-size' });
   });
 
-  test('Error: Boundary check - 15 characters (Lower Boundary - 1) @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Boundary check - 15 characters (Lower Boundary - 1) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(15));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
-    // TODO: Re-enable once axe `target-size` (WCAG 2.5.8) violation is resolved in GOV.UK Frontend components
-    // await axeUtils.audit();
+    await axeUtils.audit({ disableRules: 'target-size' });
   });
 
-  test('Error: Boundary check - 21 characters (Upper Boundary + 1) @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Boundary check - 21 characters (Upper Boundary + 1) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(21));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
-    // TODO: Re-enable once axe `target-size` (WCAG 2.5.8) violation is resolved in GOV.UK Frontend components
-    // await axeUtils.audit();
+    await axeUtils.audit({ disableRules: 'target-size' });
   });
 
-  test('Error: Invalid format - Letters @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Invalid format - Letters @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber('1234-5678-ABCD-EFGH');
     await enterCaseNumberPage.expectValidationError(
       'Case number must only include numbers 0 to 9 and special characters such as hyphens'
     );
-    // TODO: Re-enable once axe `target-size` (WCAG 2.5.8) violation is resolved in GOV.UK Frontend components
-    // await axeUtils.audit();
+    await axeUtils.audit({ disableRules: 'target-size' });
   });
 
-  test('Error: Case number not found @a11y', async ({ enterCaseNumberPage }) => {
+  test('Error: Case number not found @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber('1111222233334444');
     await enterCaseNumberPage.expectValidationError(
       'We cannot find that case number, Enter the case number that you received from the court'
     );
-    // TODO: Re-enable once axe `target-size` (WCAG 2.5.8) violation is resolved in GOV.UK Frontend components
-    // await axeUtils.audit();
+    await axeUtils.audit({ disableRules: 'target-size' });
   });
 
   /**
    * Note: 20-digit is valid length but won't exist in DB - tests length validation passes
    */
-  test('Success Logic: 20 digits (Upper Boundary) @a11y', async ({ enterCaseNumberPage }) => {
+  test('Success Logic: 20 digits (Upper Boundary) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(20));
 
     // Confirm that the length-specific validation is NOT triggered
@@ -98,7 +93,6 @@ test.describe('Enter Case Number Page Verification', () => {
 
     // We expect the "Not Found" error because this random 20-digit ID doesn't exist in DB
     await enterCaseNumberPage.expectValidationError('Case number must be 16 digits');
-    // TODO: Re-enable once axe `target-size` (WCAG 2.5.8) violation is resolved in GOV.UK Frontend components
-    // await axeUtils.audit();
+    await axeUtils.audit({ disableRules: 'target-size' });
   });
 });

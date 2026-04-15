@@ -7,13 +7,13 @@ test.describe('Enter Access Code - Page Content', () => {
     enterCaseNumberPage,
     enterAccessCodePage,
     contestedCaseForCaseNumber,
-    page
+    page,
+    axeUtils,
   }) => {
     await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
     await expect(page).toHaveURL(/\/enter-access-code$/);
     await enterAccessCodePage.verifyAccessCodePageContent();
-    // TODO: Re-enable once axe `target-size` (WCAG 2.5.8) violation is resolved in GOV.UK Frontend components
-    // await axeUtils.audit();
+    await axeUtils.audit({ disableRules: 'target-size' });
   });
 });
 
