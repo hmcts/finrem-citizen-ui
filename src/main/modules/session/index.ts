@@ -1,6 +1,6 @@
 import { Logger } from '@hmcts/nodejs-logging';
 import config from 'config';
-import { RedisStore } from 'connect-redis';
+import connectRedis from 'connect-redis';
 import type { Express } from 'express';
 import session = require('express-session');
 import { Redis } from 'ioredis';
@@ -98,6 +98,7 @@ export class Session {
 
     typedApp.locals.redisClient = redis;
 
+    const RedisStore = connectRedis(session);
     const store = new RedisStore({
       client: redis,
       prefix: `${config.get<string>('session.prefix')}:`,

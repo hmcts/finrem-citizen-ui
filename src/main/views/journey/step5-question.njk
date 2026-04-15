@@ -1,0 +1,61 @@
+{% extends "template.njk" %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% if errors.step5Answer %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: [
+            {
+              text: errors.step5Answer,
+              href: "#step5Answer"
+            }
+          ]
+        }) }}
+      {% endif %}
+
+      <h1 class="govuk-heading-xl">Step 5 - Question</h1>
+      
+      <form method="POST" action="/journey/step5-question">
+        {{ govukRadios({
+          name: "step5Answer",
+          fieldset: {
+            legend: {
+              text: "Do you want to continue?",
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          items: [
+            {
+              value: "yes",
+              text: "Yes",
+              checked: values.step5Answer === "yes"
+            },
+            {
+              value: "no",
+              text: "No",
+              checked: values.step5Answer === "no"
+            }
+          ],
+          errorMessage: {
+            text: errors.step5Answer
+          } if errors.step5Answer
+        }) }}
+
+        {{ govukButton({
+          text: "Continue"
+        }) }}
+      </form>
+      
+      {% if previousStep %}
+        <p class="govuk-body">
+          <a href="/journey/{{ previousStep }}" class="govuk-link">Back</a>
+        </p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

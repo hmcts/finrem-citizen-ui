@@ -1,0 +1,22 @@
+{% extends "template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <div class="govuk-panel govuk-panel--confirmation">
+        <h1 class="govuk-panel__title">
+          Journey Complete
+        </h1>
+        <div class="govuk-panel__body">
+          You have successfully completed the journey
+        </div>
+      </div>
+
+      <p class="govuk-body">
+        <a href="/journey" class="govuk-link">Start journey again</a>
+      </p>
+    </div>
+  </div>
+{% endblock %}

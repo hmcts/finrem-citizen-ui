@@ -1,0 +1,22 @@
+{% extends "template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">Step 2</h1>
+      
+      <form method="POST" action="/journey/step2">
+        {{ govukButton({
+          text: "Continue"
+        }) }}
+      </form>
+      
+      {% if previousStep %}
+        <p class="govuk-body">
+          <a href="/journey/{{ previousStep }}" class="govuk-link">Back</a>
+        </p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
