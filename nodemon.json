@@ -1,6 +1,8 @@
 {
-  "watch": ["src/main"],
+  "watch": ["src"],
   "ext": "ts,js",
-  "ignore": ["src/**/*.spec.ts"],
-  "exec": "./bin/generate-ssl-options.sh && ts-node -r dotenv/config ./src/main/server.ts"
+  "ignore": ["**/*.spec.ts", "node_modules"],
+  "exec": "./bin/generate-ssl-options.sh && ts-node -r dotenv/config ./src/main/server.ts",
+  "restartable": "rs",
+  "delay": "500"
 }
