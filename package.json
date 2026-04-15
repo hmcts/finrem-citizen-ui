@@ -161,7 +161,6 @@
     "minimatch": "10.2.5",
     "flatted": "^3.4.0",
     "picomatch": "4.0.4",
-    "path-to-regexp": "8.4.2",
-    "follow-redirects": "^1.15.12"
+    "path-to-regexp": "8.4.2"
   }
 }
