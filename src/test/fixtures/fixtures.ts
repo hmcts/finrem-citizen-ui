@@ -6,6 +6,7 @@ import { DashboardPage } from '../functional/pom/dashboardPage.page';
 import { EnterAccessCodePage } from '../functional/pom/enterAccessCode.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
+import { ClickTracker } from '../functional/utils/coverage/clickTracker';
 import { ContestedCaseFactory } from '../functional/utils/factories/contested/ContestedCaseFactory';
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
 
@@ -67,6 +68,8 @@ type MyFixtures = {
   contestedCaseWithHearing: CreatedCaseWithAccessCodes;
   /** Axe accessibility test utilities bound to the current page. */
   axeUtils: AxeUtils;
+  /** Click tracker for UI coverage metrics. */
+  clickTracker: ClickTracker;
 };
 
 export const test = base.extend<MyFixtures>({
@@ -74,6 +77,16 @@ export const test = base.extend<MyFixtures>({
   axeUtils: async ({ page }, use) => {
     const axeUtils = new AxeUtils(page);
     await use(axeUtils);
+  },
+
+  // Initialize click tracker at test start, save report at test end.
+  clickTracker: async ({ page }, use, testInfo) => {
+    const tracker = new ClickTracker(page, testInfo.title);
+    await tracker.startTracking();
+    await use(tracker);
+    
+    // Save report after test completes (whether passed or failed)
+    await tracker.saveReport('coverage');
   },
 
   // Provides a raw IDAM API client; injected into fixtures that need to manage users.

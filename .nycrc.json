@@ -1,0 +1,32 @@
+{
+  "all": true,
+  "instrument": true,
+  "sourceMap": true,
+  "reporter": [
+    "text",
+    "text-summary",
+    "html",
+    "json",
+    "lcov"
+  ],
+  "report-dir": "./coverage/code-coverage",
+  "temp-dir": "./coverage/.nyc_output",
+  "extension": [
+    ".ts",
+    ".tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "coverage",
+    "dist",
+    "src/test",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.d.ts"
+  ],
+  "check-coverage": false,
+  "lines": 70,
+  "functions": 70,
+  "branches": 70,
+  "statements": 70
+}

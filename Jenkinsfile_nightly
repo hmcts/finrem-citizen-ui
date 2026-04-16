@@ -47,6 +47,8 @@ withNightlyPipeline(type, product, component) {
   }
 
   before('fullFunctionalTest') {
+    sh 'rm -rf functional-output allure-results coverage'
+    sh 'npx playwright install --with-deps'
     env.FULL_FUNCTIONAL_TESTS_COMMAND = "test:full-functional"
   }
 
@@ -64,9 +66,23 @@ withNightlyPipeline(type, product, component) {
       reportBuildPolicy: 'ALWAYS',
       results: [[path: 'allure-results']]
     ])
-}
+    
+    // Generate UI click coverage report
+    sh 'export BUILD_NUMBER="${BUILD_NUMBER}" && yarn test:coverage-report || true'
+    
+    // Generate code coverage report
+    sh 'export BUILD_NUMBER="${BUILD_NUMBER}" && yarn test:code-coverage:ci || true'
+    
+    // Archive all coverage artifacts
+    archiveArtifacts artifacts: 'coverage/**', allowEmptyArchive: true
+    
+    // Log report locations
+    sh '''echo "Reports generated:"; 
+           ls -lh coverage/reports/*.html 2>/dev/null || echo "UI coverage report not found";
+           ls -lh coverage/code-coverage/*.html 2>/dev/null || echo "Code coverage report not found"'''
+  }
 
-  // 4. Ensure A11y also runs nightly
+  // Ensure A11y also runs nightly
   afterSuccess('fullFunctionalTest') {
     yarnBuilder.yarn('playwright install chromium')
     yarnBuilder.yarn('test:a11y')
