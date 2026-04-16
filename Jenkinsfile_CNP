@@ -49,8 +49,8 @@ withPipeline(type, product, component) {
     sh 'yarn playwright install --with-deps'
   }
 
-  // 3. Setup for Functional Tests - runs the full suite
-  before('functionalTests') {
+  // 3. Override the default deployed functional test command for preview.
+  before('functionalTest:preview') {
     env.FUNCTIONAL_TESTS_COMMAND = "test:full-functional"
   }
 
@@ -66,7 +66,7 @@ withPipeline(type, product, component) {
     ])
   }
 
-  afterAlways('functionalTests') {
+  afterAlways('functionalTest:preview') {
      
       junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
       allure([
@@ -94,6 +94,5 @@ withPipeline(type, product, component) {
     env.RUNNING_ENV = "pr-${CHANGE_ID}"
     env.TEST_URL = "https://finrem-citizen-ui-pr-${CHANGE_ID}.preview.platform.hmcts.net"
     env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl
-    env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
   }
 }
