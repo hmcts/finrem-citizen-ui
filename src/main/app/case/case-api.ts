@@ -18,13 +18,6 @@ export class CaseApi {
     return this.apiClient.getCaseById(caseId);
   }
 
-  public async getCaseAccessCodesById(caseId: string): Promise<{
-    applicantAccessCode?: string;
-    respondentAccessCode?: string;
-  }> {
-    return this.apiClient.getCaseAccessCodesById(caseId);
-  }
-
   public async getExistingUserCase(): Promise<string | undefined> {
     const userCases = await this.apiClient.findExistingUserCases(CASE_TYPE);
 

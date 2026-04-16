@@ -72,25 +72,6 @@ describe('CaseApi', () => {
 
     expect(mockLogger.error).toHaveBeenCalledWith('API Error', 'Error');
   });
-
-  test('Should return applicant and respondent access codes for caseId passed', async () => {
-    mockedAxios.get.mockResolvedValue({
-      data: {
-        data: {
-          id: '1234',
-          applicantAccessCodes: [{ value: { accessCode: 'APPCODE1' } }],
-          respondentAccessCodes: [{ value: { accessCode: 'RSPCODE1' } }],
-        },
-      },
-    });
-
-    const accessCodes = await api.getCaseAccessCodesById('1234');
-
-    expect(accessCodes).toStrictEqual({
-      applicantAccessCode: 'APPCODE1',
-      respondentAccessCode: 'RSPCODE1',
-    });
-  });
 });
 
 describe('getCaseApiClient', () => {
