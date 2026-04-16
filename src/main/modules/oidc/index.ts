@@ -45,7 +45,6 @@ export class OIDCModule {
       clientSecret = config.get<string>('secrets.finrem.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET');
     }
 
-    // NOSONAR: hardcoded strings are test-only placeholders for validation, not actual secrets
     if (!clientSecret || clientSecret === 'PLACEHOLDER_IDAM_SECRET' || clientSecret === 'AAAAAAAAAAAA') {
       this.logger.error('CRITICAL: IDAM Client Secret is missing or still set to placeholder!');
     }
