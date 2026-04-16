@@ -1,10 +1,9 @@
 import * as bodyParser from 'body-parser';
-import * as path from 'path';
-import config = require('config');
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import RateLimit from 'express-rate-limit';
 import { glob } from 'glob';
+import * as path from 'path';
 
 import { ViewNames } from './common-constants';
 import { HTTPError } from './HttpError';
@@ -35,7 +34,7 @@ const logger = Logger.getLogger('app');
 new PropertiesVolume().enableFor(app);
 new AppInsights().enable();
 new Nunjucks(developmentMode).enableFor(app);
-new Helmet(config.get('security')).enableFor(app);
+new Helmet(developmentMode).enableFor(app);
 
 app.get('/favicon.ico', limiter, (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));

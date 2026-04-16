@@ -170,7 +170,7 @@ Note:
 
 ### Manual Testing Setup
 
-Use `setup:manual-test` to create a citizen user and a real contested case with a mocked access code, for manual testing:
+Use `setup:manual-test` to create a citizen user and a real contested case with a mocked access code, for manual testing, on preview environments:
 
 ```bash
 yarn setup:manual-test
