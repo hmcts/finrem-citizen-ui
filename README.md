@@ -123,15 +123,20 @@ yarn test:smoke
 
 ### Functional Tests (Playwright)
 
-Run PR-tagged functional suite (`@PR`, Chromium):
+> **`test:functional` is for local testing only.**  
+> It installs Playwright browsers automatically then runs only tests tagged `@PR`, giving fast feedback on the current PR's changes.
 
 ```bash
 yarn test:functional
 ```
 
-Run broader functional suite with configured retries:
+> **`test:full-functional` is what runs in CI (Jenkins).**  
+> It runs the entire functional suite with 2 retries. Playwright must already be installed before this command (handled by the Jenkins pipeline).
+
+Run the full functional suite (as CI does):
 
 ```bash
+yarn playwright install --with-deps   # one-time, if not already installed
 yarn test:full-functional
 ```
 

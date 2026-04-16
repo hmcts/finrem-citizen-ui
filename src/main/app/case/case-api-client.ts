@@ -36,6 +36,18 @@ export class CaseApiClient {
     }
   }
 
+  public async getCaseAccessCodesById(caseId: string): Promise<{
+    applicantAccessCode?: string;
+    respondentAccessCode?: string;
+  }> {
+    const caseData = await this.getCaseById(caseId);
+
+    return {
+      applicantAccessCode: caseData.applicantAccessCodes?.[0]?.value?.accessCode,
+      respondentAccessCode: caseData.respondentAccessCodes?.[0]?.value?.accessCode,
+    };
+  }
+
   public async findExistingUserCases(caseType: string): Promise<CcdV1Response[] | false> {
     const query = {
       query: { match_all: {} },

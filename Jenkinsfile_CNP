@@ -46,12 +46,12 @@ withPipeline(type, product, component) {
   // 2. Setup for Smoke and Functional Tests
   before('tests') {
     sh 'rm -rf smoke-output functional-output a11y-output allure-results allure-results-smoke allure-results-a11y'
-    sh 'npx playwright install --with-deps'
+    sh 'yarn playwright install --with-deps'
   }
 
-  // 3. Setup for Functional Tests
+  // 3. Setup for Functional Tests - runs the full suite
   before('functionalTests') {
-    env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
+    env.FUNCTIONAL_TESTS_COMMAND = "test:full-functional"
   }
 
   afterAlways('smokeTest') {
