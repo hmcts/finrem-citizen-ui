@@ -45,34 +45,19 @@ withPipeline(type, product, component) {
   }
   // 2. Setup for Smoke and Functional Tests
   before('tests') {
-    sh 'rm -rf smoke-output functional-output a11y-output allure-results allure-results-smoke allure-results-a11y'
+    sh 'rm -rf smoke-output functional-output a11y-output'
     sh 'yarn playwright install --with-deps'
   }
 
   afterAlways('smokeTest') {
     junit testResults: 'smoke-output/smoke-test-results.xml', allowEmptyResults: true
     archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
-    allure([
-      includeProperties: false,
-      jdk: '',
-      properties: [],
-      reportBuildPolicy: 'ALWAYS',
-      results: [[path: 'allure-results-smoke']]
-    ])
   }
 
   afterAlways('functionalTest:preview') {
-     
-      junit testResults: 'functional-output/functional-test-result.xml', allowEmptyResults: true
-      allure([
-          includeProperties: false,
-          jdk: '',
-          properties: [],
-          reportBuildPolicy: 'ALWAYS',
-          results: [[path: 'allure-results']]
-      ])
-      archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
-    }
+    junit testResults: 'functional-output/functional-test-result.xml', allowEmptyResults: true
+    archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
+  }
 
   enableSlackNotifications('#finrem-dev')
   enableAksStagingDeployment()

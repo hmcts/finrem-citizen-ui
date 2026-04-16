@@ -51,7 +51,6 @@ export default defineConfig({
   reporter: [
     ...((CommonConfig.recommended.reporter as ReporterDescription[]) || []),
     ['html', { outputFolder: `${resultsDir}/functional-test-report` }],
-    ['allure-playwright', { resultsDir: 'allure-results' }],
     ['junit', { outputFile: `${resultsDir}/functional-test-result.xml` }],
   ] as ReporterDescription[],
 
