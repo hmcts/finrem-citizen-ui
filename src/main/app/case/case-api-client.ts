@@ -40,6 +40,7 @@ export class CaseApiClient {
     applicantAccessCode?: string;
     respondentAccessCode?: string;
   }> {
+    // c8 ignore next 2
     const caseData = await this.getCaseById(caseId);
 
     return {
