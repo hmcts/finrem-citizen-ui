@@ -49,11 +49,6 @@ withPipeline(type, product, component) {
     sh 'yarn playwright install --with-deps'
   }
 
-  // 3. Override the default deployed functional test command for preview.
-  before('functionalTest:preview') {
-    env.FUNCTIONAL_TESTS_COMMAND = "test:full-functional"
-  }
-
   afterAlways('smokeTest') {
     junit testResults: 'smoke-output/smoke-test-results.xml', allowEmptyResults: true
     archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
@@ -68,7 +63,7 @@ withPipeline(type, product, component) {
 
   afterAlways('functionalTest:preview') {
      
-      junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
+      junit testResults: 'functional-output/functional-test-result.xml', allowEmptyResults: true
       allure([
           includeProperties: false,
           jdk: '',
