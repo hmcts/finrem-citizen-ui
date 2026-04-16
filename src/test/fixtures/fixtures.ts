@@ -229,17 +229,22 @@ export const test = base.extend<MyFixtures>({
   ],
 
   /**
-   * Creates a real contested case and injects deterministic mock access codes
-   * directly via /__test/inject-case-session in 'test-support.ts', bypassing the Form C /
-   * FR_manageHearings callback entirely.  This makes the fixture faster and
-   * removes the dependency on manage-hearings being available in the environment.
+   * Creates a contested case for the access-code journey using a mock-first strategy.
+   *
+   * Default: mock codes (APPCODE1/RSPCODE1) via /__test/inject-case-session,
+   * which avoids Form C / FR_manageHearings instability and keeps tests deterministic.
+   *
+   * Optional real integration mode (happy path only): set
+   *   ACCESS_CODE_REAL_INTEGRATION=true
+   * to generate real Form C access codes at hearing time and fetch them from case details.
    *
    * Both applicant and respondent access codes are returned so tests can verify
    * each role's happy path without sharing state.
    */
   contestedCaseWithHearing: [
     async ({}, use) => {
-      const caseData = await ContestedCaseFactory.createContestedCaseWithMockedAccessCode();
+      const useRealIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
+      const caseData = await ContestedCaseFactory.createCaseForAccessCodeJourney(useRealIntegration);
       const formattedCaseId = caseData.caseId.replace(/(\d{4})(?=\d)/g, '$1-');
 
       await use({
