@@ -25,7 +25,7 @@
     "test:functional:headed:slowmo": "PWDEBUG=1 playwright test --config playwright.config.mts --project chromium --headed --workers=1",
     "test:full-functional": "playwright test --config playwright.config.mts --project chromium --retries=2",
     "test:full-functional:coverage": "playwright test --config playwright.config.mts --project chromium --retries=2 && NODE_OPTIONS=--max-old-space-size=4096 node -e \"const { CoverageReportGenerator } = require('./src/test/functional/utils/coverage/reportGenerator.ts'); new CoverageReportGenerator().generate();\"",
-    "test:coverage-report": "node -e \"const { CoverageReportGenerator } = require('./src/test/functional/utils/coverage/reportGenerator.ts'); new CoverageReportGenerator().generate(); console.log('Report generated at coverage/reports/ui-coverage.html');\"",
+    "test:coverage-report": "node -e \"const { CoverageReportGenerator } = require('./src/test/functional/utils/coverage/reportGenerator.ts'); new CoverageReportGenerator().generate();\"",
     "test:code-coverage": "nyc report --reporter=html --reporter=json --reporter=text-summary",
     "test:code-coverage:ci": "nyc report --reporter=html --reporter=json && mv coverage/code-coverage/index.html coverage/code-coverage/coverage-${BUILD_NUMBER:-$(date +%s)}.html",
     "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
