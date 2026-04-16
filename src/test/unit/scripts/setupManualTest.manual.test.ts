@@ -40,8 +40,7 @@ describe('Setup Manual Test', () => {
     async () => {
       const appEnv = process.env.RUNNING_ENV || 'aat';
       const applicationUrl = getApplicationUrl();
-      const useRealIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
-      const useMockAccessCodes = !useRealIntegration && process.env.MOCK_ACCESS_CODES !== 'false';
+      const useMockAccessCodes = process.env.MOCK_ACCESS_CODES === 'true';
 
       console.log('\n========================================\n📋 Creating test setup...\n========================================\n');
 
@@ -52,17 +51,15 @@ describe('Setup Manual Test', () => {
       console.log('✓ User created\n');
 
       console.log('Creating contested case...');
-      const caseDetails = useRealIntegration
-        ? await ContestedCaseFactory.createContestedCaseWithHearingAndAccessCode()
-        : useMockAccessCodes
-          ? await ContestedCaseFactory.createContestedCaseWithMockedAccessCode()
-          : {
-              caseId: String(
-                await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)
-              ),
-              applicantCode: undefined,
-              respondentCode: undefined,
-            };
+      const caseDetails = useMockAccessCodes
+        ? await ContestedCaseFactory.createContestedCaseWithMockedAccessCode()
+        : {
+            caseId: String(
+              await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)
+            ),
+            applicantCode: undefined,
+            respondentCode: undefined,
+          };
       const caseId = caseDetails.caseId;
       const formattedCaseId = caseId.replace(/(\d{4})(?=\d)/g, '$1-');
       const mockInjectionUrl =
@@ -87,7 +84,7 @@ describe('Setup Manual Test', () => {
 
 Environment: ${appEnv}
 URL: ${applicationUrl}
-Mode: ${useRealIntegration ? 'real integration (Form C at hearing)' : useMockAccessCodes ? 'mock access codes enabled' : 'real case only'}
+Mode: ${useMockAccessCodes ? 'mock access codes enabled' : 'real case only'}
 
 Login Credentials:
   Username: ${user.username}

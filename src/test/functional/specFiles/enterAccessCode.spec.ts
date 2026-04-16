@@ -136,16 +136,11 @@ test.describe('Enter Access Code - Validation Errors', () => {
 
 });
 
-// MOCK: The contestedCaseWithHearing fixture creates a real CCD case but uses hardcoded
-// access codes (APPCODE1 / RSPCODE1) injected via /__test/inject-case-session.
-// No Form C or FR_manageHearings hearing flow is required.
-// To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
 test.describe('Enter Access Code - Happy Path', () => {
   /**
    * Citizen successfully enters valid applicant access code and views case
-   * [mock] Uses hardcoded access codes injected via test session endpoint.
    */
-  test('[mock] Citizen can enter valid applicant access code and view case summary', async ({
+  test('Citizen can enter valid applicant access code and view case summary', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
@@ -162,9 +157,8 @@ test.describe('Enter Access Code - Happy Path', () => {
 
   /**
    * Verify whitespace is trimmed from access code
-   * [mock] Uses hardcoded access codes injected via test session endpoint.
    */
-  test('[mock] Success: Access code with leading/trailing whitespace is accepted', async ({
+  test('Success: Access code with leading/trailing whitespace is accepted', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
@@ -181,9 +175,8 @@ test.describe('Enter Access Code - Happy Path', () => {
 
   /**
    * Citizen successfully enters valid respondent access code and views case
-   * [mock] Uses hardcoded access codes injected via test session endpoint.
    */
-  test('[mock] Citizen can enter valid respondent access code and view case summary', async ({
+  test('Citizen can enter valid respondent access code and view case summary', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
@@ -200,9 +193,8 @@ test.describe('Enter Access Code - Happy Path', () => {
 
   /**
    * Access codes are case-insensitive
-   * [mock] Uses hardcoded access codes injected via test session endpoint.
    */
-  test('[mock] Access code submission is case-insensitive', async ({
+  test('Access code submission is case-insensitive', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
