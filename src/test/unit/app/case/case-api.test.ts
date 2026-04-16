@@ -24,6 +24,7 @@ const userDetails: UserDetails = {
 describe('CaseApi', () => {
   const mockApiClient = {
     getCaseById: jest.fn(),
+    getCaseAccessCodesById: jest.fn(),
   };
 
   const mockLogger = {
@@ -39,6 +40,7 @@ describe('CaseApi', () => {
 
   afterEach(() => {
     mockApiClient.getCaseById.mockClear();
+    mockApiClient.getCaseAccessCodesById.mockClear();
   });
 
   test('Should return case for caseId passed', async () => {
@@ -53,6 +55,20 @@ describe('CaseApi', () => {
     mockApiClient.getCaseById.mockRejectedValue(new Error('Case could not be retrieved.'));
 
     await expect(api.getCaseById('1234')).rejects.toThrow('Case could not be retrieved.');
+  });
+
+  test('Should return access codes for caseId passed', async () => {
+    const expectedAccessCodes = {
+      applicantAccessCode: 'APPCODE1',
+      respondentAccessCode: 'RSPCODE1',
+    };
+
+    mockApiClient.getCaseAccessCodesById.mockResolvedValue(expectedAccessCodes);
+
+    const actualAccessCodes = await api.getCaseAccessCodesById('1234');
+
+    expect(actualAccessCodes).toStrictEqual(expectedAccessCodes);
+    expect(mockApiClient.getCaseAccessCodesById).toHaveBeenCalledWith('1234');
   });
 });
 
