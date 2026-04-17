@@ -471,6 +471,27 @@ export class ContestedCaseFactory {
   }
 
   /**
+   * Creates a case for the access-code journey.
+   * Default is mock-first (fast, deterministic, no manage-hearings dependency).
+   * Set useRealIntegration=true only for dedicated happy-path integration tests.
+   */
+  static async createCaseForAccessCodeJourney(
+    useRealIntegration = false
+  ): Promise<{
+    caseId: string;
+    applicantCode: string;
+    respondentCode: string;
+  }> {
+    if (useRealIntegration) {
+      // Real integration path: Form C/access codes are generated via hearing flow (FR_manageHearings).
+      return this.createContestedCaseWithHearingAndAccessCode();
+    }
+
+    // Default path: mock access codes and inject into test session.
+    return this.createContestedCaseWithMockedAccessCode();
+  }
+
+  /**
    * Create contested case up to HWF decision
    */
   static async createContestedCaseUpToHWFDecision(): Promise<string> {

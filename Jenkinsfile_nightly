@@ -53,18 +53,9 @@ withNightlyPipeline(type, product, component) {
   enableFullFunctionalTest(200)
 
   afterAlways('fullFunctionalTest') {
-    junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
-
+    junit testResults: 'functional-output/functional-test-result.xml', allowEmptyResults: true
     archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
-
-    allure([
-      includeProperties: false,
-      jdk: '',
-      properties: [],
-      reportBuildPolicy: 'ALWAYS',
-      results: [[path: 'allure-results']]
-    ])
-}
+  }
 
   // 4. Ensure A11y also runs nightly
   afterSuccess('fullFunctionalTest') {
