@@ -27,7 +27,7 @@
     "test:full-functional": "playwright test --config playwright.config.mts --project chromium --retries=2",
     "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
     "setup:manual-test": "MOCK_ACCESS_CODES=true jest -c jest.manual.config.js --runTestsByPath src/test/unit/scripts/setupManualTest.manual.test.ts --runInBand --detectOpenHandles",
-    "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:coverage",
+    "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes",
     "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:coverage && yarn test:functional",
     "prepare": "husky install"
   },
