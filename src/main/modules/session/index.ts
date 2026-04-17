@@ -42,12 +42,14 @@ export class Session {
     const rawSecret = config.get<string>('secrets.finrem.session-secret');
     const secret = parseSessionSecret(rawSecret);
 
+    const cookieOptions: session.CookieOptions = {
+      maxAge: ttlInSeconds * 1000,
+      sameSite: secure ? 'none' : 'lax',
+      secure,
+    };
+
     const sessionOptions: session.SessionOptions = {
-      cookie: {
-        maxAge: ttlInSeconds * 1000,
-        sameSite: secure ? 'none' : 'lax',
-        secure,
-      },
+      cookie: cookieOptions,
       name: config.get<string>('session.cookieName'),
       resave: false,
       rolling: true,
@@ -56,7 +58,7 @@ export class Session {
     };
 
     logger.info(
-      `Session cookie settings: sameSite=${sessionOptions.cookie?.sameSite} secure=${sessionOptions.cookie?.secure}`
+      `Session cookie settings: sameSite=${cookieOptions.sameSite} secure=${cookieOptions.secure}`
     );
 
     if (isTest) {
