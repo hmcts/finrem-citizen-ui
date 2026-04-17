@@ -11,14 +11,17 @@ export type UploadStep = {
 };
 
 export const uploadSteps: Record<UploadStepId, UploadStep> = {
+
   'before-you-start': {
     template: 'upload-journey/before-you-start',
     next: () => 'confidentiality',
     previous: () => null,
   },
-  confidentiality: {
+
+  'confidentiality': {
     template: 'upload-journey/confidentiality',
     next: () => null,
     previous: () => 'before-you-start',
   },
+  
 };
