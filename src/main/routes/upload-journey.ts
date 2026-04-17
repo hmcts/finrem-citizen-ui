@@ -2,8 +2,6 @@ import type { Application, Request, Response } from 'express';
 
 import { UploadJourneyData, UploadStepId, uploadSteps } from '../upload-journey/config';
 
-const SESSION_KEY = 'uploadJourneyData';
-
 declare module 'express-session' {
   interface SessionData {
     uploadJourneyData?: UploadJourneyData;
@@ -11,12 +9,12 @@ declare module 'express-session' {
 }
 
 function getData(req: Request): UploadJourneyData {
-  return req.session?.[SESSION_KEY] ?? {};
+  return req.session?.uploadJourneyData ?? {};
 }
 
 function setData(req: Request, data: UploadJourneyData): void {
   if (req.session) {
-    req.session[SESSION_KEY] = data;
+    req.session.uploadJourneyData = data;
   }
 }
 
