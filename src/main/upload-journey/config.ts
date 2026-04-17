@@ -1,8 +1,6 @@
 export type UploadStepId = 'before-you-start' | 'confidentiality';
 
-export type UploadJourneyData = {
-  acknowledgedConfidentiality?: boolean;
-};
+export type UploadJourneyData = Record<string, never>;
 
 export type UploadStep = {
   template: string;
@@ -20,17 +18,6 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
   },
   confidentiality: {
     template: 'upload-journey/confidentiality',
-    validate: (body) => {
-      const errors: Record<string, string> = {};
-      if (!body.acknowledgedConfidentiality) {
-        errors.acknowledgedConfidentiality = 'You must acknowledge the confidentiality statement';
-      }
-      return errors;
-    },
-    persist: (body, data) => ({
-      ...data,
-      acknowledgedConfidentiality: body.acknowledgedConfidentiality === 'true',
-    }),
     next: () => null,
     previous: () => 'before-you-start',
   },

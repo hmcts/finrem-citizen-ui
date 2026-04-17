@@ -42,7 +42,7 @@ describe('Upload Journey Routes', () => {
       };
     });
 
-    it('should render valid step with session data', () => {
+    it('should render valid step', () => {
       handler(mockReq as Request, mockRes as Response);
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/before-you-start', {
         data: {},
@@ -51,13 +51,12 @@ describe('Upload Journey Routes', () => {
         previousStep: null,
       });
 
-      mockReq.session = { uploadJourneyData: { acknowledgedConfidentiality: true } } as unknown as Request['session'];
       mockReq.params = { stepId: 'confidentiality' };
       handler(mockReq as Request, mockRes as Response);
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/confidentiality', {
-        data: { acknowledgedConfidentiality: true },
+        data: {},
         errors: {},
-        values: { acknowledgedConfidentiality: true },
+        values: {},
         previousStep: 'before-you-start',
       });
     });
@@ -97,23 +96,55 @@ describe('Upload Journey Routes', () => {
       expect(mockRes.status).toHaveBeenCalledWith(404);
     });
 
-    it('should handle validation and redirect', () => {
+    it('should redirect to next step', () => {
       handler(mockReq as Request, mockRes as Response);
       expect(mockRes.redirect).toHaveBeenCalledWith('/upload-journey/confidentiality');
 
       mockReq.params = { stepId: 'confidentiality' };
-      mockReq.body = { acknowledgedConfidentiality: '' };
       handler(mockReq as Request, mockRes as Response);
+      expect(mockRes.redirect).toHaveBeenCalledWith('/upload-journey/confidentiality');
+    });
+
+    it('should render errors when validation fails', () => {
+      // Temporarily mock a step with validation to test error path
+      const { uploadSteps } = require('../../../main/upload-journey/config');
+      const originalValidate = uploadSteps.confidentiality.validate;
+      uploadSteps.confidentiality.validate = (body: Record<string, unknown>) => {
+        return body.testField ? {} : { testField: 'Test error' };
+      };
+
+      mockReq.params = { stepId: 'confidentiality' };
+      mockReq.body = {};
+      handler(mockReq as Request, mockRes as Response);
+      
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/confidentiality', {
         data: {},
-        errors: { acknowledgedConfidentiality: 'You must acknowledge the confidentiality statement' },
-        values: { acknowledgedConfidentiality: '' },
+        errors: { testField: 'Test error' },
+        values: {},
         previousStep: 'before-you-start',
       });
 
-      mockReq.body = { acknowledgedConfidentiality: 'true' };
+      // Restore original
+      uploadSteps.confidentiality.validate = originalValidate;
+    });
+
+    it('should persist data when step has persist function', () => {
+      // Temporarily mock a step with persist to test persist path
+      const { uploadSteps } = require('../../../main/upload-journey/config');
+      const originalPersist = uploadSteps.confidentiality.persist;
+      uploadSteps.confidentiality.persist = (body: Record<string, unknown>, data: Record<string, unknown>) => ({
+        ...data,
+        testData: body.testField,
+      });
+
+      mockReq.params = { stepId: 'confidentiality' };
+      mockReq.body = { testField: 'test-value' };
       handler(mockReq as Request, mockRes as Response);
-      expect(mockReq.session?.uploadJourneyData).toEqual({ acknowledgedConfidentiality: true });
+      
+      expect(mockReq.session?.uploadJourneyData).toEqual({ testData: 'test-value' });
+
+      // Restore original
+      uploadSteps.confidentiality.persist = originalPersist;
     });
 
     it('should handle missing session', () => {

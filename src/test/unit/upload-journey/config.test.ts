@@ -13,22 +13,13 @@ describe('Upload Journey Configuration', () => {
   });
 
   describe('confidentiality', () => {
-    const step = uploadSteps.confidentiality;
-
-    it('should have correct template and navigation', () => {
+    it('should have correct configuration', () => {
+      const step = uploadSteps.confidentiality;
       expect(step.template).toBe('upload-journey/confidentiality');
       expect(step.next!({})).toBeNull();
       expect(step.previous!({})).toBe('before-you-start');
-    });
-
-    it('should validate and persist acknowledgement', () => {
-      expect(step.validate!({})).toEqual({
-        acknowledgedConfidentiality: 'You must acknowledge the confidentiality statement',
-      });
-      expect(step.validate!({ acknowledgedConfidentiality: 'true' })).toEqual({});
-      expect(step.persist!({ acknowledgedConfidentiality: 'true' }, {})).toEqual({
-        acknowledgedConfidentiality: true,
-      });
+      expect(step.validate).toBeUndefined();
+      expect(step.persist).toBeUndefined();
     });
   });
 });
