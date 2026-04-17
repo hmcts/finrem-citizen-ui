@@ -45,19 +45,39 @@ withPipeline(type, product, component) {
   }
   // 2. Setup for Smoke and Functional Tests
   before('tests') {
-    sh 'rm -rf smoke-output functional-output a11y-output'
-    sh 'yarn playwright install --with-deps'
+    sh 'rm -rf smoke-output functional-output a11y-output allure-results allure-results-smoke allure-results-a11y'
+    sh 'npx playwright install --with-deps'
+  }
+
+  // 3. Setup for Functional Tests
+  before('functionalTests') {
+    env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
   }
 
   afterAlways('smokeTest') {
     junit testResults: 'smoke-output/smoke-test-results.xml', allowEmptyResults: true
     archiveArtifacts artifacts: 'smoke-output/**', allowEmptyArchive: true
+    allure([
+      includeProperties: false,
+      jdk: '',
+      properties: [],
+      reportBuildPolicy: 'ALWAYS',
+      results: [[path: 'allure-results-smoke']]
+    ])
   }
 
-  afterAlways('functionalTest:preview') {
-    junit testResults: 'functional-output/functional-test-result.xml', allowEmptyResults: true
-    archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
-  }
+  afterAlways('functionalTests') {
+     
+      junit testResults: 'functional-output/functional-test-results.xml', allowEmptyResults: true
+      allure([
+          includeProperties: false,
+          jdk: '',
+          properties: [],
+          reportBuildPolicy: 'ALWAYS',
+          results: [[path: 'allure-results']]
+      ])
+      archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
+    }
 
   enableSlackNotifications('#finrem-dev')
   enableAksStagingDeployment()
@@ -74,5 +94,6 @@ withPipeline(type, product, component) {
     env.RUNNING_ENV = "pr-${CHANGE_ID}"
     env.TEST_URL = "https://finrem-citizen-ui-pr-${CHANGE_ID}.preview.platform.hmcts.net"
     env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl
+    env.ENABLE_FULL_FUNCTIONAL_TESTS = "true"
   }
 }

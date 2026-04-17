@@ -71,7 +71,6 @@ export class Session {
     const redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
     const redis = new Redis(redisConnectionString);
 
-    // c8 ignore next 30
     redis.on('ready', async () => {
       logger.info('Redis session store connected and ready');
 

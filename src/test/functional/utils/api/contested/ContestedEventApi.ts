@@ -385,33 +385,13 @@ export class ContestedEventApi {
   }
 
   /**
-   * Reads access-code values from the case record by taking index 0 from
-   * applicant/respondent access-code collections.
-  
-   * - This is intended for test automation/manual test setup only.
-   * - It is not a reliable source of truth for application flows.
-   * - It returns a code associated with the just-created test case data and
-   *   does not guarantee a "latest" access code if multiple codes exist.
-   */
-  static async getCaseAccessCodesById(caseId: string): Promise<{
-    applicantAccessCode?: string;
-    respondentAccessCode?: string;
-  }> {
-    const caseData = await this.getCaseData(caseId);
-
-    return {
-      applicantAccessCode: (caseData.applicantAccessCodes as { id: string; value: { accessCode: string } }[] | undefined)?.[0]?.value?.accessCode,
-      respondentAccessCode: (caseData.respondentAccessCodes as { id: string; value: { accessCode: string } }[] | undefined)?.[0]?.value?.accessCode,
-    };
-  }
-
-  /**
    * Get applicant access code from case
    * Returns the access code string or undefined if not found
    */
   static async getApplicantAccessCode(caseId: string): Promise<string | undefined> {
-    const accessCodes = await this.getCaseAccessCodesById(caseId);
-    return accessCodes.applicantAccessCode;
+    const caseData = await this.getCaseData(caseId);
+    const accessCodes = caseData.applicantAccessCodes as { id: string; value: { accessCode: string } }[] | undefined;
+    return accessCodes?.[0]?.value?.accessCode;
   }
 
   /**
@@ -419,7 +399,8 @@ export class ContestedEventApi {
    * Returns the access code string or undefined if not found
    */
   static async getRespondentAccessCode(caseId: string): Promise<string | undefined> {
-    const accessCodes = await this.getCaseAccessCodesById(caseId);
-    return accessCodes.respondentAccessCode;
+    const caseData = await this.getCaseData(caseId);
+    const accessCodes = caseData.respondentAccessCodes as { id: string; value: { accessCode: string } }[] | undefined;
+    return accessCodes?.[0]?.value?.accessCode;
   }
 }
