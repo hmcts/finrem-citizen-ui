@@ -40,7 +40,7 @@
     "@types/cookie-parser": "1.4.10",
     "@types/es6-promisify": "6.0.4",
     "@types/express": "5.0.6",
-    "@types/express-session": "1.19.0",
+    "@types/express-session": "1.18.2",
     "@types/lodash": "4.17.24",
     "@types/nunjucks": "3.2.6",
     "accessible-autocomplete": "^3.0.1",
