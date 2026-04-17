@@ -1,6 +1,6 @@
 module.exports = {
   roots: ['<rootDir>/src/main', '<rootDir>/src/test/unit', '<rootDir>/src/test/routes'],
-  testRegex: '.*\\.(test|spec)\\.ts$',
+  testRegex: String.raw`.*\.(test|spec)\.ts$`,
   testPathIgnorePatterns: ['<rootDir>/src/test/unit/scripts/setupManualTest.manual.test.ts'],
   moduleFileExtensions: ['ts', 'js', 'json'],
   testEnvironment: 'node',
@@ -25,8 +25,6 @@ module.exports = {
     '!src/main/routes/health.ts',
     '!src/main/routes/info.ts',
     '!src/main/routes/home.ts',
-    '!src/main/routes/enter-case-number.ts',
-    '!src/main/routes/enter-access-code.ts',
     '!src/main/HttpError.ts',
     '!src/main/middleware/index.ts',
     '!src/main/modules/appinsights/**',
