@@ -7,6 +7,7 @@ import { AccessCodeCollection, CaseRole, FinremCaseData } from '../app/case/defi
 import { UserDetails } from '../app/controller/AppRequest';
 import { RouteNames, ViewNames } from '../common-constants';
 import { oidcMiddleware } from '../middleware';
+import { notifyInvalidAccessCode } from '../app/notify/govNotify';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -62,7 +63,7 @@ export function validateAccessCodeAgainstCase(
   // Check if access code has expired
   const validUntilDate = new Date(matchingAccessCode.value.validUntil);
   const now = new Date();
-  
+
   if (now > validUntilDate) {
     return {
       isValid: false,
@@ -172,7 +173,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
     try {
       // Retrieve case data from session
       const caseData = retrieveCaseData(req.session.caseData);
-      
+
       if (!caseData) {
         logger.error('Case data not found in session');
         return res.redirect(RouteNames.enterCaseNumber);
@@ -182,6 +183,19 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       const matchingAccessCode = getMatchingAccessCode(caseData, trimmedAccessCode);
 
       if (!matchingAccessCode) {
+        const data = {
+          caseReferenceNumber: req.session.caseNumber,
+          accessCode: trimmedAccessCode,
+          user: "John Doe",
+          email: "vamshidhar.chitti@HMCTS.NET"
+        };
+        notifyInvalidAccessCode(data)
+          .then(() => {
+            logger.info("Notification sent");
+          })
+          .catch((err) => {
+            logger.info("Error sending notification", err);
+          });
         return res.render('enter-access-code', {
           errors: { accessCode: 'Access code does not match case number' },
           accessCode: accessCode || '',
@@ -204,24 +218,24 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
         caseNumber: req.session.caseNumber,
         accessCode: trimmedAccessCode,
       });
-      
+
       // Assigning user to case
       const user = req.session.user as UserDetails;
       try {
         await addUserToCaseForRole(req.session.caseNumber, user.uid as string, role);
       } catch {
         res.render(ViewNames.Error);
-      } 
+      }
 
 
       // TODO: Mark access code as used in CCD (update isValid to 'No')
       // TODO: Send confirmation email if this is a new account setup
-      
+
       return res.redirect(RouteNames.dashboard);
     } catch (error) {
       const err = error as Error;
       logger.error('Error validating access code', { error: err.message });
-      
+
       // Handle case not found or other CCD errors
       return res.render('enter-access-code', {
         errors: { accessCode: 'Access code does not match case number' },
