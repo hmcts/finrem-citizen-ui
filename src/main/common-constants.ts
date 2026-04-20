@@ -22,7 +22,7 @@ export const PrivateRoutes = {
   dashboard: '/dashboard',
   enterAccessCode: '/enter-access-code',
   taskListUpload: '/task-list-upload-dashboard',
-  uploadJourney: '/upload-journey',
+  uploadJourney: '/upload',
 } as const;
 
 export const RouteNames = {

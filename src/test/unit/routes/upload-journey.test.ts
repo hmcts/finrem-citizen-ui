@@ -18,14 +18,14 @@ describe('Upload Journey Routes', () => {
   });
 
   it('should register all routes', () => {
-    expect(mockGet).toHaveBeenCalledWith('/upload-journey/:stepId', expect.any(Function));
-    expect(mockPost).toHaveBeenCalledWith('/upload-journey/:stepId', expect.any(Function));
-    expect(mockGet).toHaveBeenCalledWith('/upload-journey', expect.any(Function));
+    expect(mockGet).toHaveBeenCalledWith('/upload/:stepId', expect.any(Function));
+    expect(mockPost).toHaveBeenCalledWith('/upload/:stepId', expect.any(Function));
+    expect(mockGet).toHaveBeenCalledWith('/upload', expect.any(Function));
   });
 
-  describe('GET /upload-journey/:stepId', () => {
+  describe('GET /upload/:stepId', () => {
     it('should render valid step', () => {
-      const handler = mockGet.mock.calls.find((call) => call[0] === '/upload-journey/:stepId')[1];
+      const handler = mockGet.mock.calls.find((call) => call[0] === '/upload/:stepId')[1];
       const mockReq = {
         params: { stepId: 'before-you-start' },
         session: {} as unknown as Request['session'],
@@ -47,7 +47,7 @@ describe('Upload Journey Routes', () => {
     });
 
     it('should return 404 for invalid step', () => {
-      const handler = mockGet.mock.calls.find((call) => call[0] === '/upload-journey/:stepId')[1];
+      const handler = mockGet.mock.calls.find((call) => call[0] === '/upload/:stepId')[1];
       const mockReq = {
         params: { stepId: 'invalid-step' },
         session: {} as unknown as Request['session'],
@@ -65,9 +65,9 @@ describe('Upload Journey Routes', () => {
     });
   });
 
-  describe('POST /upload-journey/:stepId', () => {
+  describe('POST /upload/:stepId', () => {
     it('should return 404 for invalid step', () => {
-      const handler = mockPost.mock.calls.find((call) => call[0] === '/upload-journey/:stepId')[1];
+      const handler = mockPost.mock.calls.find((call) => call[0] === '/upload/:stepId')[1];
       const mockReq = {
         params: { stepId: 'invalid-step' },
         session: {} as unknown as Request['session'],
@@ -86,7 +86,7 @@ describe('Upload Journey Routes', () => {
     });
 
     it('should redirect to next step', () => {
-      const handler = mockPost.mock.calls.find((call) => call[0] === '/upload-journey/:stepId')[1];
+      const handler = mockPost.mock.calls.find((call) => call[0] === '/upload/:stepId')[1];
       const mockReq = {
         params: { stepId: 'before-you-start' },
         session: {} as unknown as Request['session'],
@@ -101,14 +101,14 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as Request, mockRes as Response);
       
-      expect(mockRes.redirect).toHaveBeenCalledWith('/upload-journey/confidentiality');
+      expect(mockRes.redirect).toHaveBeenCalledWith('/upload/confidentiality');
     });
 
     it('should handle validation errors', () => {
       const { uploadSteps } = require('../../../main/upload-journey/config');
       uploadSteps['confidentiality'].validate = () => ({ error: 'Test error' });
 
-      const handler = mockPost.mock.calls.find((call) => call[0] === '/upload-journey/:stepId')[1];
+      const handler = mockPost.mock.calls.find((call) => call[0] === '/upload/:stepId')[1];
       const mockReq = {
         params: { stepId: 'confidentiality' },
         session: {} as unknown as Request['session'],
@@ -130,7 +130,7 @@ describe('Upload Journey Routes', () => {
       const { uploadSteps } = require('../../../main/upload-journey/config');
       uploadSteps['confidentiality'].persist = (body: Record<string, unknown>) => ({ data: body.test });
 
-      const handler = mockPost.mock.calls.find((call) => call[0] === '/upload-journey/:stepId')[1];
+      const handler = mockPost.mock.calls.find((call) => call[0] === '/upload/:stepId')[1];
       const mockReq = {
         params: { stepId: 'confidentiality' },
         session: {} as unknown as Request['session'],
@@ -149,7 +149,7 @@ describe('Upload Journey Routes', () => {
     });
 
     it('should handle missing session', () => {
-      const handler = mockPost.mock.calls.find((call) => call[0] === '/upload-journey/:stepId')[1];
+      const handler = mockPost.mock.calls.find((call) => call[0] === '/upload/:stepId')[1];
       const mockReq = {
         params: { stepId: 'before-you-start' },
         session: undefined,
@@ -165,13 +165,13 @@ describe('Upload Journey Routes', () => {
     });
   });
 
-  describe('GET /upload-journey', () => {
+  describe('GET /upload', () => {
     it('should redirect to first step', () => {
       setupUploadJourneyRoute(app);
-      const handler = mockGet.mock.calls.find((call) => call[0] === '/upload-journey')[1];
+      const handler = mockGet.mock.calls.find((call) => call[0] === '/upload')[1];
       const mockRes = { redirect: jest.fn() } as Partial<Response>;
       handler({} as Request, mockRes as Response);
-      expect(mockRes.redirect).toHaveBeenCalledWith('/upload-journey/before-you-start');
+      expect(mockRes.redirect).toHaveBeenCalledWith('/upload/before-you-start');
     });
   });
 });

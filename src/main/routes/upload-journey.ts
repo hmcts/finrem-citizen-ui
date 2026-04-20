@@ -20,7 +20,7 @@ function setData(req: Request, data: UploadJourneyData): void {
 
 export default function setupUploadJourneyRoute(app: Application): void {
 
-  app.get('/upload-journey/:stepId', (req: Request, res: Response) => {
+  app.get('/upload/:stepId', (req: Request, res: Response) => {
     const step = uploadSteps[req.params.stepId as UploadStepId];
     if (!step) {
       return res.status(404).send('Step not found');
@@ -37,7 +37,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
     });
   });
 
-  app.post('/upload-journey/:stepId', (req: Request, res: Response) => {
+  app.post('/upload/:stepId', (req: Request, res: Response) => {
     const step = uploadSteps[req.params.stepId as UploadStepId];
     if (!step) {
       return res.status(404).send('Step not found');
@@ -61,14 +61,14 @@ export default function setupUploadJourneyRoute(app: Application): void {
 
     const nextStep = step.next ? step.next(newData) : null;
     if (nextStep) {
-      return res.redirect(`/upload-journey/${nextStep}`);
+      return res.redirect(`/upload/${nextStep}`);
     }
 
-    res.redirect(`/upload-journey/${req.params.stepId}`);
+    res.redirect(`/upload/${req.params.stepId}`);
   });
 
-  app.get('/upload-journey', (req: Request, res: Response) => {
-    res.redirect('/upload-journey/before-you-start');
+  app.get('/upload', (req: Request, res: Response) => {
+    res.redirect('/upload/before-you-start');
   });
   
 }
