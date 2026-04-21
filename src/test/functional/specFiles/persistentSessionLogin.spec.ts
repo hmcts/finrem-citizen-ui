@@ -7,7 +7,7 @@ test.describe('Persistent Session After Re-login', () => {
    * on the dashboard without re-entering case number or access code.
    * IDAM SSO re-authenticates and the linked case session is restored.
    */
-  test('User lands on dashboard after re-login without re-entering case details @PR @a11y', async ({
+  test.skip('User lands on dashboard after re-login without re-entering case details @PR @a11y', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,

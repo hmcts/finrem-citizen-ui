@@ -1,0 +1,108 @@
+{% extends "template.njk" %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% if previousStep %}
+        <a href="/upload/{{ previousStep }}" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
+      {% else %}
+        <a href="/dashboard" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
+      {% endif %}
+
+      <h1 class="govuk-heading-l">Before you start</h1>
+
+      <p class="govuk-body">You should:</p>
+
+      <ul class="govuk-list govuk-list--bullet">
+        <li>check the court order you have received</li>
+        <li>prepare all of the documents you wish to upload</li>
+      </ul>
+
+      <h2 class="govuk-heading-m">Naming your documents</h2>
+
+      <p class="govuk-body">
+        To help the court identify and assess your documents, make sure you name them appropriately, 
+        for example, [name]-bankstatement-[month][year].
+      </p>
+
+      <p class="govuk-body">
+        Some of your documents may be automatically renamed when you upload them. 
+        We will tell you if your document will be renamed as you upload them.
+      </p>
+
+      <h2 class="govuk-heading-m">After you have submitted</h2>
+
+      <p class="govuk-body">
+        Once you have uploaded your documents, they will be added to your case file and the court 
+        will be able to view them. You will receive an email confirmation that they have been added 
+        to your case.
+      </p>
+
+      <p class="govuk-body">
+        You will be able to view any documents you have uploaded on your online account.
+      </p>
+
+      <p class="govuk-body">
+        For full transparency between you and the other party, you will need to send any documents 
+        you upload here to them, or to their solicitor if they have one. Neither party can see the 
+        other's documents on their online account, and the court will not normally serve documents on 
+        them for you.
+      </p>
+
+      <details class="govuk-details" data-module="govuk-details">
+        <summary class="govuk-details__summary">
+          <span class="govuk-details__summary-text">
+            I am not able to send documents to the other party
+          </span>
+        </summary>
+        <div class="govuk-details__text">
+          You must email the court as soon as possible if you are not able to send the documents to 
+          the other party. This could be because you do not have their contact details, or there is a 
+          court order in place preventing contact.
+        </div>
+      </details>
+
+      <form method="post">
+        <button type="submit" class="govuk-button govuk-button--start" data-module="govuk-button">
+          Start now
+          <svg class="govuk-button__start-icon" xmlns="http://www.w3.org/2000/svg" width="17.5" height="19" viewBox="0 0 33 40" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M0 0h13l20 20-20 20H0l20-20z"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+      <aside class="govuk-prototype-kit-common-templates-related-items" role="complementary">
+        <h2 class="govuk-heading-s govuk-!-margin-top-9" id="subsection-title">
+          Getting help
+        </h2>
+        <details class="govuk-details" data-module="govuk-details">
+          <summary class="govuk-details__summary">
+            <span class="govuk-details__summary-text">
+              Contact us for help
+            </span>
+          </summary>
+          <div class="govuk-details__text">
+            <h3 class="govuk-heading-s">Email</h3>
+            <p class="govuk-body">
+              <a href="mailto:FRCexample@justice.gov.uk" class="govuk-link">FRCexample@justice.gov.uk</a>
+            </p>
+            
+            <h3 class="govuk-heading-s">Telephone</h3>
+            <p class="govuk-body">
+              0300 123 5577<br>
+              Monday to Friday, 8.30am to 5pm
+            </p>
+            
+            <p class="govuk-body">
+              <a href="#" class="govuk-link" target="_blank" rel="noopener noreferrer">
+                Find out about call charges (opens in new tab)
+              </a>
+            </p>
+          </div>
+        </details>
+      </aside>
+    </div>
+  </div>
+{% endblock %}

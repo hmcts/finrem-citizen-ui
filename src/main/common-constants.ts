@@ -22,6 +22,7 @@ export const PrivateRoutes = {
   dashboard: '/dashboard',
   enterAccessCode: '/enter-access-code',
   taskListUpload: '/task-list-upload-dashboard',
+  uploadJourney: '/upload',
 } as const;
 
 export const RouteNames = {
@@ -36,5 +37,7 @@ export const ViewNames = {
   EnterAccessCode: 'enter-access-code',
   Error: 'error',
   NotFound: 'not-found',
-  TaskListUploadDashboard: 'task-list-upload-dashboard'
+  TaskListUploadDashboard: 'task-list-upload-dashboard',
+  UploadJourneyBeforeYouStart: 'upload-journey/before-you-start',
+  UploadJourneyConfidentiality: 'upload-journey/confidentiality',
 };
