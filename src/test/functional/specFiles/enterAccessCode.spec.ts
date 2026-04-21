@@ -141,6 +141,14 @@ test.describe('Enter Access Code - Validation Errors', () => {
 // No Form C or FR_manageHearings hearing flow is required.
 // To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
 test.describe('Enter Access Code - Happy Path', () => {
+  test.beforeEach(async ({ request }) => {
+    const response = await request.get('/__test/inject-case-session');
+    test.skip(
+      response.status() === 404,
+      '[mock] tests require /__test/inject-case-session (ENABLE_TEST_SUPPORT_ROUTES=true)'
+    );
+  });
+
   /**
    * Citizen successfully enters valid applicant access code and views case
    * [mock] Uses hardcoded access codes injected via test session endpoint.

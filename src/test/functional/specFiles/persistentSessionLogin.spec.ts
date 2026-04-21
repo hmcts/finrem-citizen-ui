@@ -5,6 +5,14 @@ import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
 // No Form C or FR_manageHearings hearing flow is required.
 // To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
 test.describe('Persistent Session After Re-login', () => {
+  test.beforeEach(async ({ request }) => {
+    const response = await request.get('/__test/inject-case-session');
+    test.skip(
+      response.status() === 404,
+      '[mock] tests require /__test/inject-case-session (ENABLE_TEST_SUPPORT_ROUTES=true)'
+    );
+  });
+
   /**
    * Verify that after logging in, entering case number and access code,
    * signing out, and navigating back to the dashboard, the user lands directly
