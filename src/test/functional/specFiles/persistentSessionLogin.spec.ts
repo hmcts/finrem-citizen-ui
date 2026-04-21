@@ -1,11 +1,20 @@
 import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
 
+const isLocalRun = !process.env.CI;
+const isAatTarget =
+  process.env.RUNNING_ENV === 'aat' ||
+  process.env.TEST_URL?.includes('.aat.platform.hmcts.net') === true;
+
 // MOCK: All tests in this describe use the contestedCaseWithHearing fixture with hardcoded
 // access codes (APPCODE1 / RSPCODE1) injected via /__test/inject-case-session.
 // No Form C or FR_manageHearings hearing flow is required.
 // To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
 test.describe('Persistent Session After Re-login', () => {
   test.beforeEach(async ({ request }) => {
+    if (isLocalRun && isAatTarget) {
+      test.skip(true, '[mock] skipped for local runs targeting AAT');
+    }
+
     const response = await request.get('/__test/inject-case-session');
     test.skip(
       response.status() === 404,
