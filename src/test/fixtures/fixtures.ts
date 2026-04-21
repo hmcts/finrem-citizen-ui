@@ -2,13 +2,13 @@ import { AxeUtils } from '@hmcts/playwright-common';
 import { expect, test as base } from '@playwright/test';
 
 import { BasePage } from '../functional/pom/basePage.page';
+import { BeforeYouStartPage } from '../functional/pom/beforeYouStart.page';
 import { DashboardPage } from '../functional/pom/dashboardPage.page';
 import { EnterAccessCodePage } from '../functional/pom/enterAccessCode.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
 import { ContestedCaseFactory } from '../functional/utils/factories/contested/ContestedCaseFactory';
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
-import { BeforeYouStartPage } from '../functional/pom/beforeYouStart.page';
 
 
 
