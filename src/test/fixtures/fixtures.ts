@@ -80,7 +80,39 @@ type MyFixtures = {
   axeUtils: AxeUtils;
 };
 
-export const test = base.extend<MyFixtures>({
+/**
+ * Worker-scoped option that mock describe blocks set to `true` via `test.use()`.
+ * Consumed by the `mockTestSupport` auto fixture which enforces the skip logic.
+ */
+type MockOptions = {
+  useMockTestSupport: boolean;
+  /**
+   * Auto fixture that guards /__test/inject-case-session-dependent tests.
+   * Activated when `useMockTestSupport` is set to `true` via `test.use()`.
+   */
+  mockTestSupport: void;
+};
+
+export const test = base.extend<MyFixtures & MockOptions>({
+  useMockTestSupport: [false, { option: true }],
+
+  // Guards mock tests that depend on /__test/inject-case-session.
+  // Skip locally when targeting AAT; skip anywhere the route is absent (404).
+  mockTestSupport: [async ({ request, useMockTestSupport }, use) => {
+    if (!useMockTestSupport) {
+      await use();
+      return;
+    }
+
+    const response = await request.get('/__test/inject-case-session');
+    base.skip(
+      response.status() === 404,
+      '[mock] tests require /__test/inject-case-session (ENABLE_TEST_SUPPORT_ROUTES=true)'
+    );
+
+    await use();
+  }, { auto: true }],
+
   // Bind Axe to the current Playwright page so any test can run accessibility audits.
   axeUtils: async ({ page }, use) => {
     const axeUtils = new AxeUtils(page);
