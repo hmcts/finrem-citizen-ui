@@ -1,5 +1,6 @@
+import { randomUUID } from 'node:crypto';
+
 import { APIRequestContext, request } from '@playwright/test';
-import { randomUUID } from 'crypto';
 
 import { UserCredentials } from '../../../functional/pom/idamPage.page';
 
@@ -20,6 +21,14 @@ const IDAM_TESTING_SUPPORT_API_URL = stripTrailingSlash(
 // Default password for test users - should be overridden in CI/CD environments
 const DEFAULT_TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'Password1111';
 
+const IDAM_RETRY_CONFIG = {
+  maxRetries: 2,
+  initialDelayMs: 1_000,
+  maxDelayMs: 4_000,
+};
+
+const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+
 export class IdamApiService {
   private readonly createTokenEndpoint = `${IDAM_WEB_URL}/o/token`;
   private readonly createUserEndpoint = `${IDAM_TESTING_SUPPORT_API_URL}/test/idam/users`;
@@ -33,13 +42,57 @@ export class IdamApiService {
         password: DEFAULT_TEST_USER_PASSWORD,
       };
 
-      const accessToken = await this.getAccessToken(apiContext);
-      await this.provisionUser(apiContext, accessToken, user, 'Test', 'User');
+      await this.withRetry(async () => {
+        const accessToken = await this.getAccessToken(apiContext);
+        await this.provisionUser(apiContext, accessToken, user, 'Test', 'User');
+      }, 'IDAM test user provisioning');
 
       return user;
     } finally {
       await apiContext.dispose();
     }
+  }
+
+  private isRetryableError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+    return (
+      message.includes('ECONNRESET') ||
+      message.includes('ECONNREFUSED') ||
+      message.includes('ETIMEDOUT') ||
+      message.includes('socket hang up') ||
+      /IDAM (Token|User Creation) Error: 5\d\d/.test(message)
+    );
+  }
+
+  private async withRetry<T>(operation: () => Promise<T>, label: string): Promise<T> {
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt <= IDAM_RETRY_CONFIG.maxRetries; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error;
+
+        if (!this.isRetryableError(error) || attempt === IDAM_RETRY_CONFIG.maxRetries) {
+          throw error;
+        }
+
+        const delayMs = Math.min(
+          IDAM_RETRY_CONFIG.initialDelayMs * Math.pow(2, attempt),
+          IDAM_RETRY_CONFIG.maxDelayMs
+        );
+
+        const message = error instanceof Error ? error.message : String(error);
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[IdamApiService] ${label} transient failure "${message}" ` +
+          `(attempt ${attempt + 1}/${IDAM_RETRY_CONFIG.maxRetries + 1}), retrying in ${delayMs}ms`
+        );
+        await sleep(delayMs);
+      }
+    }
+
+    throw lastError;
   }
 
   private async getAccessToken(apiContext: APIRequestContext): Promise<string> {
