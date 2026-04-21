@@ -13,11 +13,12 @@ test.describe('Persistent Session After Re-login', () => {
    * [mock] Uses hardcoded access codes injected via test session endpoint.
    */
   test('[mock] User lands on dashboard after re-login without re-entering case details @PR @a11y', async ({
-    loggedInPage: _loggedInPage,
+    loggedInPage,
     basePage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
+    idamPage,
     page,
     axeUtils,
   }) => {
@@ -34,7 +35,10 @@ test.describe('Persistent Session After Re-login', () => {
     await basePage.signOut();
     await expect(page).toHaveURL(/.*sign-in-or-create.*/);
 
-    // Navigate back to the app — IDAM SSO re-authenticates the user
+    // Re-authenticate via IDAM — explicit sign-out requires explicit re-login (no silent SSO)
+    await idamPage.login(loggedInPage.user);
+
+    // Navigate to dashboard — linked case session should be restored without re-entering case details
     await page.goto('/dashboard');
 
     // Verify user lands directly on dashboard, no case number or access code required
