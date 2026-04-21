@@ -1,6 +1,83 @@
-import { describe, expect, it } from '@jest/globals';
+import { beforeEach, describe, expect, it } from '@jest/globals';
+import express, { NextFunction, Request, Response } from 'express';
+import request from 'supertest';
 
-import { validateCaseNumber } from '../../../main/routes/enter-case-number';
+import { getSystemUser } from '../../../main/app/auth/user';
+import { getCaseApi } from '../../../main/app/case/case-api';
+import { FinremCaseData } from '../../../main/app/case/definition';
+import setupEnterCaseNumberRoute, { validateCaseNumber } from '../../../main/routes/enter-case-number';
+
+jest.mock('../../../main/middleware', () => ({
+  oidcMiddleware: (_req: Request, _res: Response, next: NextFunction) => next(),
+}));
+
+jest.mock('config', () => ({
+  get: jest.fn(() => 'http://ccd.test.local'),
+}));
+
+jest.mock('@hmcts/nodejs-logging', () => {
+  const mockLogger = {
+    info: jest.fn(),
+    error: jest.fn(),
+  };
+  return {
+    Logger: {
+      getLogger: jest.fn(() => mockLogger),
+    },
+  };
+});
+
+jest.mock('../../../main/app/auth/user', () => ({
+  getSystemUser: jest.fn(),
+}));
+
+jest.mock('../../../main/app/case/case-api', () => ({
+  getCaseApi: jest.fn(),
+}));
+
+const { Logger } = require('@hmcts/nodejs-logging');
+const mockLogger = Logger.getLogger('enter-case-number');
+
+type SessionLike = {
+  user?: { accessToken?: string };
+  caseNumber?: string;
+  caseNumberErrors?: { caseNumber?: string };
+  tempCaseNumber?: string;
+  caseData?: FinremCaseData;
+  save: (cb?: (err?: Error) => void) => void;
+  [key: string]: unknown;
+};
+
+const buildTestApp = (
+  sessionOverrides: Partial<SessionLike> = {},
+  saveErr?: Error
+) => {
+  const testApp = express();
+  testApp.use(express.json());
+  testApp.use(express.urlencoded({ extended: false }));
+
+  testApp.use((req: Request, _res: Response, next: NextFunction) => {
+    const session: SessionLike = {
+      save: (cb?: (err?: Error) => void) => {
+        cb?.(saveErr);
+      },
+      ...sessionOverrides,
+    };
+    (req as unknown as { session: SessionLike }).session = session;
+    next();
+  });
+
+  testApp.use((_req: Request, res: Response, next: NextFunction) => {
+    (res as unknown as { render: (view: string, locals?: unknown) => void }).render = (
+      view: string,
+      locals?: unknown
+    ) => res.status(200).json({ view, locals });
+    next();
+  });
+
+  setupEnterCaseNumberRoute(testApp);
+  return testApp;
+};
 
 describe('Enter Case Number Validation', () => {
   describe('Required validation', () => {
@@ -142,5 +219,92 @@ describe('Enter Case Number Validation', () => {
       expect(result).not.toBeNull();
       expect(result?.caseNumber).toBe('Case number must be between 16 and 20 characters');
     });
+  });
+});
+
+describe('Enter Case Number Route Handlers', () => {
+  let mockGetCaseById: jest.Mock;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    mockGetCaseById = jest.fn();
+
+    (getCaseApi as jest.Mock).mockReturnValue({
+      getCaseById: mockGetCaseById,
+    });
+
+    (getSystemUser as jest.Mock).mockResolvedValue({
+      accessToken: 'mock-access',
+      id: 'system-user',
+      sub: '123',
+      email: 'system@test.com',
+      givenName: 'System',
+      familyName: 'User',
+      roles: ['admin'],
+    });
+  });
+
+  it('GET /enter-case-number renders view with session errors and temp value', async () => {
+    const res = await request(
+      buildTestApp({
+        caseNumberErrors: { caseNumber: 'Bad case number' },
+        tempCaseNumber: '1234-5678-0123-4567',
+      })
+    ).get('/enter-case-number');
+
+    expect(res.status).toBe(200);
+    expect(res.body.view).toBe('enter-case-number');
+    expect(res.body.locals).toEqual({
+      errors: { caseNumber: 'Bad case number' },
+      caseNumber: '1234-5678-0123-4567',
+    });
+  });
+
+  it('POST /enter-case-number stores validation errors and redirects when input is invalid', async () => {
+    const res = await request(buildTestApp()).post('/enter-case-number').send({ caseNumber: '' });
+
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/enter-case-number');
+  });
+
+  it('POST /enter-case-number redirects to oauth login when user is unauthenticated', async () => {
+    const res = await request(buildTestApp({ user: {} })).post('/enter-case-number').send({ caseNumber: '1234567890123456' });
+
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/oauth2/login');
+  });
+
+  it('POST /enter-case-number stores caseData and redirects to enter-access-code on CCD success', async () => {
+    mockGetCaseById.mockResolvedValue({ id: '1234567890123456' });
+
+    const res = await request(buildTestApp({ user: { accessToken: 'token' } }))
+      .post('/enter-case-number')
+      .send({ caseNumber: '1234-5678-0123-4567' });
+
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/enter-access-code');
+    expect(mockGetCaseById).toHaveBeenCalledWith('1234567801234567');
+  });
+
+  it('POST /enter-case-number sets form error and redirects when CCD lookup fails', async () => {
+    mockGetCaseById.mockRejectedValue(new Error('Not found'));
+
+    const res = await request(buildTestApp({ user: { accessToken: 'token' } }))
+      .post('/enter-case-number')
+      .send({ caseNumber: '1234-5678-0123-4567' });
+
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/enter-case-number');
+  });
+
+  it('POST /enter-case-number logs session save error but still redirects', async () => {
+    const saveError = new Error('save failed');
+
+    const res = await request(buildTestApp({}, saveError)).post('/enter-case-number').send({ caseNumber: '' });
+
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/enter-case-number');
+    expect(mockLogger.error).toHaveBeenCalled();
   });
 });

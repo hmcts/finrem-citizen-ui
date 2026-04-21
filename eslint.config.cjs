@@ -6,6 +6,10 @@ const simpleImportSort = require('eslint-plugin-simple-import-sort');
 
 module.exports = [
   {
+    ignores: ['coverage/lcov-report/**'],
+  },
+
+  {
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
