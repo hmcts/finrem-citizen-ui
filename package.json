@@ -21,13 +21,14 @@
     "test:playwright:a11y": "TEST_RESULTS_DIR=a11y-output PLAYWRIGHT_HTML_OUTPUT_DIR=a11y-output/axe-report PLAYWRIGHT_HTML_OPEN=never playwright test --config playwright.config.mts --project chromium --grep @a11y --reporter=html",
     "test:playwright:a11y:report": "sh -c 'yarn test:playwright:a11y; code=$?; yarn playwright show-report a11y-output/axe-report; exit $code'",
     "test:smoke": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --config jest.smoke.config.js",
-    "test:functional": "npx playwright install --with-deps && playwright test --config playwright.config.mts --project chromium --grep @PR",
+    "test:functional": "yarn playwright install --with-deps && playwright test --config playwright.config.mts --project chromium --retries=2",
+    "test:functional:pr": "yarn playwright install --with-deps && playwright test --config playwright.config.mts --project chromium --grep @PR",
     "test:functional:headed:slowmo": "PWDEBUG=1 playwright test --config playwright.config.mts --project chromium --headed --workers=1",
     "test:full-functional": "playwright test --config playwright.config.mts --project chromium --retries=2",
     "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
     "setup:manual-test": "MOCK_ACCESS_CODES=true jest -c jest.manual.config.js --runTestsByPath src/test/unit/scripts/setupManualTest.manual.test.ts --runInBand --detectOpenHandles",
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes",
-    "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:functional",
+    "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:coverage && yarn test:functional",
     "prepare": "husky install"
   },
   "dependencies": {

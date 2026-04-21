@@ -1,4 +1,6 @@
 import { describe } from '@jest/globals';
+import express, { NextFunction, Request, Response } from 'express';
+import request from 'supertest';
 
 import { getSystemUser } from '../../../main/app/auth/user';
 import { getCaseApi } from '../../../main/app/case/case-api';
@@ -8,13 +10,17 @@ import {
   FinremCaseData,
   YesOrNo,
 } from '../../../main/app/case/definition';
-import {
+import setupEnterAccessCodeRoute, {
   addUserToCaseForRole,
   getMatchingAccessCode,
   retrieveCaseData,
   validateAccessCode,
   validateAccessCodeAgainstCase,
 } from '../../../main/routes/enter-access-code';
+
+jest.mock('../../../main/middleware', () => ({
+  oidcMiddleware: (_req: Request, _res: Response, next: NextFunction) => next(),
+}));
 
 jest.mock('@hmcts/nodejs-logging', () => {
   const mockLogger = {
@@ -248,5 +254,153 @@ describe('addUserToCaseForRole', () => {
         error: 'CCD failure',
       }
     );
+  });
+});
+
+// ─── Route handler tests ───────────────────────────────────────────────────────
+
+const futureDate = () => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() + 1);
+  return d.toISOString();
+};
+
+const buildMockCaseData = (
+  applicantCode = 'APPCODE1',
+  respondentCode = 'RSPCODE1',
+  isValid: YesOrNo = YesOrNo.YES,
+  validUntil = futureDate()
+): FinremCaseData =>
+  ({
+    applicantAccessCodes: [
+      { id: '1', value: { accessCode: applicantCode, createdAt: '2024-01-01', validUntil, isValid } },
+    ],
+    respondentAccessCodes: [
+      { id: '2', value: { accessCode: respondentCode, createdAt: '2024-01-01', validUntil, isValid } },
+    ],
+  } as unknown as FinremCaseData);
+
+const buildTestApp = (sessionOverrides: Record<string, unknown> = {}) => {
+  const testApp = express();
+  testApp.use(express.json());
+  testApp.use(express.urlencoded({ extended: false }));
+
+  testApp.use((req: Request, _res: Response, next: NextFunction) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (req as any).session = {
+      user: { uid: 'user-1', accessToken: 'token' },
+      save: (cb?: (err?: Error) => void) => {
+        cb?.();
+      },
+      ...sessionOverrides,
+    };
+    next();
+  });
+
+  testApp.use((_req: Request, res: Response, next: NextFunction) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (res as any).render = (view: string, locals?: unknown) => res.status(200).json({ view, locals });
+    next();
+  });
+
+  setupEnterAccessCodeRoute(testApp);
+  return testApp;
+};
+
+describe('GET /enter-access-code route handler', () => {
+  it('redirects to enter-case-number when no caseNumber in session', async () => {
+    const res = await request(buildTestApp()).get('/enter-access-code');
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/enter-case-number');
+  });
+
+  it('renders enter-access-code view when caseNumber is in session', async () => {
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456' })).get('/enter-access-code');
+    expect(res.status).toBe(200);
+    expect(res.body.view).toBe('enter-access-code');
+  });
+});
+
+describe('POST /enter-access-code route handler', () => {
+  let mockAddUsersToCase: jest.Mock;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockAddUsersToCase = jest.fn().mockResolvedValue(undefined);
+    (getCaseApi as jest.Mock).mockReturnValue({ addUsersToCase: mockAddUsersToCase });
+    (getSystemUser as jest.Mock).mockResolvedValue({
+      accessToken: 'mock-access', sub: '123', id: 'system-user',
+      email: 'system@test.com', givenName: 'System', familyName: 'User', roles: ['admin'],
+    });
+  });
+
+  it('redirects to enter-case-number when no caseNumber in session', async () => {
+    const res = await request(buildTestApp()).post('/enter-access-code').send({ accessCode: 'APPCODE1' });
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/enter-case-number');
+  });
+
+  it('renders with validation errors for empty access code', async () => {
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456' }))
+      .post('/enter-access-code').send({ accessCode: '' });
+    expect(res.status).toBe(200);
+    expect(res.body.locals.errors.accessCode).toBe('Enter your access code');
+  });
+
+  it('renders with validation errors for wrong-length access code', async () => {
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456' }))
+      .post('/enter-access-code').send({ accessCode: 'SHORT' });
+    expect(res.status).toBe(200);
+    expect(res.body.locals.errors.accessCode).toBe('Access code must be 8 characters');
+  });
+
+  it('redirects to enter-case-number when caseData missing from session', async () => {
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456' }))
+      .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/enter-case-number');
+  });
+
+  it('renders error when access code does not match case data', async () => {
+    const caseData = buildMockCaseData();
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+      .post('/enter-access-code').send({ accessCode: 'NOMATCH1' });
+    expect(res.status).toBe(200);
+    expect(res.body.locals.errors.accessCode).toBe('Access code does not match case number');
+  });
+
+  it('renders error when access code has expired', async () => {
+    const pastDate = new Date();
+    pastDate.setFullYear(pastDate.getFullYear() - 1);
+    const caseData = buildMockCaseData('APPCODE1', 'RSPCODE1', YesOrNo.YES, pastDate.toISOString());
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+      .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
+    expect(res.status).toBe(200);
+    expect(res.body.locals.errors.accessCode).toContain('expired');
+  });
+
+  it('renders error when access code has already been used', async () => {
+    const caseData = buildMockCaseData('APPCODE1', 'RSPCODE1', YesOrNo.NO);
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+      .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
+    expect(res.status).toBe(200);
+    expect(res.body.locals.errors.accessCode).toContain('already been used');
+  });
+
+  it('redirects to dashboard on successful access code submission', async () => {
+    const caseData = buildMockCaseData();
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+      .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/dashboard');
+  });
+
+  it('renders error view when addUserToCaseForRole throws', async () => {
+    mockAddUsersToCase.mockRejectedValue(new Error('CCD down'));
+    const caseData = buildMockCaseData();
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+      .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
+    expect(res.status).toBe(200);
+    expect(res.body.view).toBe('error');
   });
 });

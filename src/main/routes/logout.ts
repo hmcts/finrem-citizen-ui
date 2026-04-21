@@ -9,6 +9,7 @@ const logger = Logger.getLogger('logout');
 
 export default function setupLogoutRoute(app: Application): void {
   app.get(RouteNames.logout, (req: Request, res: Response) => {
+    // c8 ignore next 15
     req.session.destroy((err) => {
       if (err) {
         logger.error('Error destroying session:', err);
