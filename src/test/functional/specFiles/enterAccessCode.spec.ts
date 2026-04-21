@@ -1,10 +1,5 @@
 import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
 
-const isLocalRun = !process.env.CI;
-const isAatTarget =
-  process.env.RUNNING_ENV === 'aat' ||
-  process.env.TEST_URL?.includes('.aat.platform.hmcts.net') === true;
-
 test.describe('Enter Access Code - Page Content', () => {
   // Verify that the Enter Access Code page displays all expected elements.
   test('Access code page contains all required elements @a11y', async ({
@@ -146,17 +141,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
 // No Form C or FR_manageHearings hearing flow is required.
 // To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
 test.describe('Enter Access Code - Happy Path', () => {
-  test.beforeEach(async ({ request }) => {
-    if (isLocalRun && isAatTarget) {
-      test.skip(true, '[mock] skipped for local runs targeting AAT');
-    }
-
-    const response = await request.get('/__test/inject-case-session');
-    test.skip(
-      response.status() === 404,
-      '[mock] tests require /__test/inject-case-session (ENABLE_TEST_SUPPORT_ROUTES=true)'
-    );
-  });
+  test.use({ useMockTestSupport: true });
 
   /**
    * Citizen successfully enters valid applicant access code and views case
