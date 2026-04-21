@@ -8,6 +8,8 @@ import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
 import { ContestedCaseFactory } from '../functional/utils/factories/contested/ContestedCaseFactory';
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
+import { BeforeYouStartPage } from '../functional/pom/beforeYouStart.page';
+
 
 
 /**
@@ -79,6 +81,8 @@ type MyFixtures = {
   contestedCaseWithHearing: CreatedCaseWithAccessCodes;
   /** Axe accessibility test utilities bound to the current page. */
   axeUtils: AxeUtils;
+  /** for the before you start screen. */
+  beforeYouStartPage: BeforeYouStartPage;
 };
 
 export const test = base.extend<MyFixtures>({
@@ -106,6 +110,11 @@ export const test = base.extend<MyFixtures>({
   // Page-object for the case dashboard, used by tests that navigate post-login.
   dashboardPage: async ({ page }, use) => {
     await use(new DashboardPage(page));
+  },
+  
+  // Page-object for the before you start page, used by tests that navigate from the dashboard to the upload journey.
+  beforeYouStartPage: async ({ page }, use) => {
+    await use(new BeforeYouStartPage(page));
   },
 
   /**

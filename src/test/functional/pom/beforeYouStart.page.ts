@@ -16,5 +16,6 @@ export class BeforeYouStartPage {
     await expect(this.page).toHaveURL(/\/upload\/before-you-start(?:\?.*)?$/);
     await expect(this.beforeYouStartHeader).toBeVisible();
     await expect(this.startNowButton).toBeVisible();
+    await expect(this.contactUsForHelpLink).toBeVisible();
   }
 }
