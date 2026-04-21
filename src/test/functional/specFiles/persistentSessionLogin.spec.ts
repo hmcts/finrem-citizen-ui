@@ -24,6 +24,9 @@ test.describe('Persistent Session After Re-login', () => {
     page,
     axeUtils,
   }) => {
+    // Two full login cycles: loggedInPage fixture + explicit re-login after sign-out.
+    // Longer timeout required for login flow
+    test.setTimeout(90_000);
     // Inject mock session and link case
     await basePage.injectCaseSession(
       contestedCaseWithHearing.caseId,
