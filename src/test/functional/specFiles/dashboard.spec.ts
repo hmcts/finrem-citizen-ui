@@ -2,23 +2,24 @@ import { DEFAULT_AXE_OPTIONS, test } from '../../fixtures/fixtures';
 
 
 test.describe('Dashboard upload journey @PR', () => {
+  test.beforeEach(async ({ loggedInPage: _loggedInPage, dashboardPage }) => {
+    // Ensure logged-in session and navigate to dashboard for each test
+    await dashboardPage.navigateToDashboard();
+  });
+
   test('Dashboard sections and upload document button visible and accessible @PR @a11y', async ({
-    loggedInPage: _loggedInPage,
     dashboardPage,
     axeUtils,
   }) => {
-    await dashboardPage.navigateToDashboard();
     await dashboardPage.verifyDashboardPageContent();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   test('Before-you-start sections and help details are visible and accessible @PR @a11y', async ({
-    loggedInPage: _loggedInPage,
     dashboardPage,
     beforeYouStartPage,
     axeUtils,
   }) => {
-    await dashboardPage.navigateToDashboard();
     await dashboardPage.clickGoToDocumentUpload();
 
     await beforeYouStartPage.verifyBeforeYouStartPageContent();
@@ -29,12 +30,10 @@ test.describe('Dashboard upload journey @PR', () => {
   });
 
   test('Before-you-start supports back navigation and start-now progression @PR @a11y', async ({
-    loggedInPage: _loggedInPage,
     dashboardPage,
     beforeYouStartPage,
     axeUtils,
   }) => {
-    await dashboardPage.navigateToDashboard();
     await dashboardPage.verifyDashboardPageContent();
     await dashboardPage.clickGoToDocumentUpload();
 

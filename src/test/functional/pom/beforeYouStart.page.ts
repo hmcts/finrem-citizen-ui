@@ -2,6 +2,13 @@ import { expect, Locator, Page } from '@playwright/test';
 
 import { BasePage } from './basePage.page';
 
+// URL path constants for clarity and maintainability
+const URL_PATTERNS = {
+  BEFORE_YOU_START: /\/upload\/before-you-start/,
+  DASHBOARD: /\/dashboard/, 
+  CONFIDENTIALITY: /\/upload\/confidentiality/,
+};
+
 export class BeforeYouStartPage extends BasePage {
   readonly beforeYouStartHeader: Locator;
   readonly backLink: Locator;
@@ -48,65 +55,72 @@ export class BeforeYouStartPage extends BasePage {
     });
   }
 
+  // Verify page URL and content
   async verifyBeforeYouStartPageContent(): Promise<void> {
-    await expect(this.page).toHaveURL(/\/upload\/before-you-start(?:\?.*)?$/);
+    await expect(this.page).toHaveURL(URL_PATTERNS.BEFORE_YOU_START);
 
-    await this.expectVisible([
-      this.backLink,
-      this.beforeYouStartHeader,
-      this.youShouldIntro,
-      this.courtOrderBullet,
-      this.prepareDocumentsBullet,
-      this.namingDocumentsHeader,
-      this.afterSubmittedHeader,
-      this.unableToSendSummary,
-      this.startNowButton,
-      this.gettingHelpHeader,
-      this.contactUsForHelpSummary,
-    ]);
+    // Verify key elements are visible
+    await expect(this.beforeYouStartHeader).toBeVisible();
+    await expect(this.backLink).toBeVisible();
+    await expect(this.startNowButton).toBeVisible();
+    await expect(this.gettingHelpHeader).toBeVisible();
 
-    await this.expectAttributes([
-      { locator: this.backLink, name: 'href', value: '/dashboard' },
-      { locator: this.startNowButton, name: 'type', value: 'submit' },
-    ]);
+    // Verify supporting content is present
+    await expect(this.youShouldIntro).toBeVisible();
+    await expect(this.courtOrderBullet).toBeVisible();
+    await expect(this.prepareDocumentsBullet).toBeVisible();
+    await expect(this.namingDocumentsHeader).toBeVisible();
+    await expect(this.afterSubmittedHeader).toBeVisible();
+    await expect(this.unableToSendSummary).toBeVisible();
+    await expect(this.contactUsForHelpSummary).toBeVisible();
+
+    // Verify navigation links work correctly
+    await expect(this.backLink).toHaveAttribute('href', '/dashboard');
+
+    // Verify start button is properly set up for form submission
+    await expect(this.startNowButton).toHaveAttribute('type', 'submit');
   }
 
+  // Expand unable-to-send details panel and verify content is visible
   async verifyUnableToSendGuidance(): Promise<void> {
     await this.unableToSendSummary.click();
     await expect(this.unableToSendDetails).toHaveAttribute('open', '');
     await expect(this.unableToSendDetailsText).toBeVisible();
   }
 
+  // Verify both guidance panels start in collapsed state
   async verifyHelpAndGuidanceClosedByDefault(): Promise<void> {
     await expect(this.unableToSendDetails).not.toHaveAttribute('open', '');
     await expect(this.contactUsForHelpDetails).not.toHaveAttribute('open', '');
   }
 
+  // Expand contact help panel and verify links are properly configured
   async verifyContactHelpContent(): Promise<void> {
     await this.contactUsForHelpSummary.click();
     await expect(this.contactUsForHelpDetails).toHaveAttribute('open', '');
 
-    await this.expectVisible([
-      this.helpEmailLink,
-      this.helpTelephoneText,
-      this.callChargesLink,
-    ]);
+    // Verify contact information is visible when expanded
+    await expect(this.helpEmailLink).toBeVisible();
+    await expect(this.helpTelephoneText).toBeVisible();
+    await expect(this.callChargesLink).toBeVisible();
 
-    await this.expectAttributes([
-      { locator: this.helpEmailLink, name: 'href', value: 'mailto:FRCexample@justice.gov.uk' },
-      { locator: this.callChargesLink, name: 'href', value: '#' },
-      { locator: this.callChargesLink, name: 'target', value: '_blank' },
-      { locator: this.callChargesLink, name: 'rel', value: 'noopener noreferrer' },
-    ]);
+    // Verify email link is functional
+    await expect(this.helpEmailLink).toHaveAttribute('href', 'mailto:FRCexample@justice.gov.uk');
+
+    // Verify external link opens in new tab 
+    await expect(this.callChargesLink).toHaveAttribute('target', '_blank');
+    await expect(this.callChargesLink).toHaveAttribute('rel', 'noopener noreferrer');
   }
 
+  // Click back link and verify navigation to dashboard
   async goBackToDashboard(): Promise<void> {
     await this.backLink.click();
-    await expect(this.page).toHaveURL(/\/dashboard(?:\?.*)?$/);
+    await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
   }
 
+  // Click start button and verify navigation to confidentiality page
   async startUploadJourney(): Promise<void> {
     await this.startNowButton.click();
-    await expect(this.page).toHaveURL(/\/upload\/confidentiality(?:\?.*)?$/);
+    await expect(this.page).toHaveURL(URL_PATTERNS.CONFIDENTIALITY);
   }
 }

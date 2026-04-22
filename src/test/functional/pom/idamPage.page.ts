@@ -89,8 +89,8 @@ export class IdamPage {
 
     try {
       await this.page.evaluate(() => {
-        window.localStorage.clear();
-        window.sessionStorage.clear();
+        globalThis.localStorage.clear();
+        globalThis.sessionStorage.clear();
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

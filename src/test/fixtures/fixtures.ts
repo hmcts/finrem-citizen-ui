@@ -63,25 +63,18 @@ type MyFixtures = {
   idamApiService: IdamApiService;
   /** A freshly created IDAM citizen user scoped to the current test. */
   citizenUser: UserCredentials;
-  /** Page-object wrapper around the IDAM login UI. */
   idamPage: IdamPage;
-  /** Generic base page wrapper (headings, footer etc.). */
   basePage: BasePage;
-  /** Page-object wrapper for the case dashboard. */
   dashboardPage: DashboardPage;
   /** Completes the full OIDC login flow (landing on the dashboard) */
   loggedInPage: AuthSession;
-  /** Page-object wrapper for the enter-case-number screen. */
   enterCaseNumberPage: EnterCaseNumberPage;
-  /** Page-object wrapper for the enter-access-code screen. */
   enterAccessCodePage: EnterAccessCodePage;
   /** A real contested case used solely for case-number linking tests (no access codes). */
   contestedCaseForCaseNumber: CreatedCase;
   /** A real contested case pre-loaded with deterministic mock access codes. */
   contestedCaseWithHearing: CreatedCaseWithAccessCodes;
-  /** Axe accessibility test utilities bound to the current page. */
   axeUtils: AxeUtils;
-  /** for the before you start screen. */
   beforeYouStartPage: BeforeYouStartPage;
 };
 
@@ -118,33 +111,26 @@ export const test = base.extend<MyFixtures & MockOptions>({
     await use();
   }, { auto: true }],
 
-  // Bind Axe to the current Playwright page so any test can run accessibility audits.
   axeUtils: async ({ page }, use) => {
     const axeUtils = new AxeUtils(page);
     await use(axeUtils);
   },
 
-  // Provides a raw IDAM API client; injected into fixtures that need to manage users.
   idamApiService: async ({}, use) => {
     await use(new IdamApiService());
   },
 
-  // Page-object for the IDAM login screen; used by loggedInPage to drive authentication.
   idamPage: async ({ page }, use) => {
     await use(new IdamPage(page));
   },
 
-  // Generic page helpers shared across multiple screens (e.g. main headings, footer).
   basePage: async ({ page }, use) => {
     await use(new BasePage(page));
   },
 
-  // Page-object for the case dashboard, used by tests that navigate post-login.
   dashboardPage: async ({ page }, use) => {
     await use(new DashboardPage(page));
   },
-  
-  // Page-object for the before you start page, used by tests that navigate from the dashboard to the upload journey.
   beforeYouStartPage: async ({ page }, use) => {
     await use(new BeforeYouStartPage(page));
   },

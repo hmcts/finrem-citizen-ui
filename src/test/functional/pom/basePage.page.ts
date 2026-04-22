@@ -27,23 +27,26 @@ export class BasePage {
     this.signOutBtn = page.getByRole('link', { name: 'Sign out' });
   }
 
+  // Assert current page URL matches expected pattern
   async verifyUrl(path: string | RegExp): Promise<void> {
     await expect(this.page).toHaveURL(path);
   }
 
-  // Uses the ROUTES constant defined above
+  // Navigate to specified route (defaults to home)
   async goto(path: string = ROUTES.HOME): Promise<void> {
     await this.page.goto(path);
   }
 
+  // Clear cookies, localStorage, and sessionStorage
   async clearSession(): Promise<void> {
     await this.page.context().clearCookies();
     await this.page.evaluate(() => {
-      window.localStorage.clear();
-      window.sessionStorage.clear();
+      globalThis.localStorage.clear();
+      globalThis.sessionStorage.clear();
     });
   }
 
+  // Click the sign out link
   async signOut(): Promise<void> {
     await this.signOutBtn.click();
   }
@@ -79,12 +82,14 @@ export class BasePage {
     ).toHaveURL(/\/enter-access-code$/, { timeout: 10_000 });
   }
 
+  // Assert multiple locators are visible
   protected async expectVisible(locators: Locator[]): Promise<void> {
     for (const locator of locators) {
       await expect(locator).toBeVisible();
     }
   }
 
+  // Assert multiple locator attributes have expected values
   protected async expectAttributes(
     assertions: { locator: Locator; name: string; value: string }[]
   ): Promise<void> {
