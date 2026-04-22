@@ -21,7 +21,6 @@ function setData(req: Request, data: UploadJourneyData): void {
 }
 
 export default function setupUploadJourneyRoute(app: Application): void {
-
   app.get(`${RouteNames.uploadJourney}/:stepId`, oidcMiddleware, (req: Request, res: Response) => {
     const step = uploadSteps[req.params.stepId as UploadStepId];
     if (!step) {
@@ -36,6 +35,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
       errors: {},
       values: data,
       previousStep,
+      cancelUrl: RouteNames.dashboard,
     });
   });
 
@@ -55,6 +55,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
         errors,
         values: { ...data, ...req.body },
         previousStep,
+        cancelUrl: RouteNames.dashboard,
       });
     }
 
@@ -72,5 +73,4 @@ export default function setupUploadJourneyRoute(app: Application): void {
   app.get(RouteNames.uploadJourney, oidcMiddleware, (req: Request, res: Response) => {
     res.redirect(`${RouteNames.uploadJourney}/before-you-start`);
   });
-  
 }

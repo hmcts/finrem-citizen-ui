@@ -1,16 +1,98 @@
+{% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
+
 {% extends "template.njk" %}
 
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       {% if previousStep %}
-        <a href="/upload/{{ previousStep }}" class="govuk-back-link">Back</a>
+        <a href="/upload/{{ previousStep }}" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
+      {% else %}
+        <a href="/dashboard" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
       {% endif %}
 
-      <h1 class="govuk-heading-xl">Confidentiality</h1>
+      <h1 class="govuk-heading-l">Keeping information confidential for safety reasons</h1>
 
-      <p class="govuk-body">This is a placeholder page for the confidentiality statement.</p>
+      <p class="govuk-body">
+        If you have <a href="https://www.gov.uk/government/publications/form-c8-confidential-contact-details-family-procedure-rules-2010-rule-291" 
+        target="_blank" rel="noopener noreferrer">applied to the court to keep your contact details confidential using form C8 (opens in new tab)</a>, 
+        you must make sure that any document, either submitted now or at a later date, does not contain the information you wish to keep private.
+      </p>
 
+      <p class="govuk-body">
+        You must redact (black out the text) any such information if you need to keep it 
+        private from the other party. You can either do this:
+      </p>
+
+      <ul class="govuk-list govuk-list--bullet">
+        <li>by hand, and then scanning or taking a photo of the redacted document and uploading it</li>
+        <li>using a dedicated digital permanent redaction tool</li>
+      </ul>
+
+      <p class="govuk-body">
+        Court staff are not able to check any documents you submit to the court for any unintentional disclosure of your details.
+      </p>
+
+      <p class="govuk-body">
+        Confidential information could be, for example:
+      </p>
+
+      <ul class="govuk-list govuk-list--bullet">
+        <li>addresses</li>
+        <li>any specific location details shown on bank statements or other documents</li>
+        <li>phone numbers</li>
+      </ul>
+
+      <p class="govuk-body">
+        Do not redact any financial amounts or payee details.
+      </p>
+
+      {{ govukWarningText({
+        text: "Once you submit your documents they will be on the court record. They could be seen by the other party or referred to in a hearing.",
+        iconFallbackText: "Warning"
+      }) }}
+
+      <form method="post">
+        <div class="govuk-button-group">
+          <button type="submit" class="govuk-button" data-module="govuk-button">
+            Continue
+          </button>
+          <a class="govuk-link" href="{{ cancelUrl }}">Cancel</a>
+        </div>
+      </form>
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+      <aside class="govuk-prototype-kit-common-templates-related-items" role="complementary">
+        <h2 class="govuk-heading-s govuk-!-margin-top-9" id="subsection-title">
+          Getting help
+        </h2>
+        <details class="govuk-details" data-module="govuk-details">
+          <summary class="govuk-details__summary">
+            <span class="govuk-details__summary-text">
+              Contact us for help
+            </span>
+          </summary>
+          <div class="govuk-details__text">
+            <h3 class="govuk-heading-s">Email</h3>
+            <p class="govuk-body">
+              <a href="mailto:FRCexample@justice.gov.uk" class="govuk-link">FRCexample@justice.gov.uk</a>
+            </p>
+            
+            <h3 class="govuk-heading-s">Telephone</h3>
+            <p class="govuk-body">
+              0300 123 5577<br>
+              Monday to Friday, 8.30am to 5pm
+            </p>
+            
+            <p class="govuk-body">
+              <a href="https://www.gov.uk/call-charges" class="govuk-link" target="_blank" rel="noopener noreferrer">
+                Find out about call charges (opens in new tab)
+              </a>
+            </p>
+          </div>
+        </details>
+      </aside>
     </div>
   </div>
 {% endblock %}
