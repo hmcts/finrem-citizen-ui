@@ -16,11 +16,13 @@ export default function (app: Application): void {
   app.get(RouteNames.basePath, oidcMiddleware, async (req, res) => {
     const user = req.session.user as UserDetails;
     const caseApi = getCaseApi(req.session.user as UserDetails, logger);
-    const nfdCase = await caseApi.getExistingUserCase(CaseType.NFD);
-    if (nfdCase !== undefined) {
-      req.session.hasNFDCase = true;
+    if(req.session.hasNFDCase === undefined) {
+      const nfdCase = await caseApi.getExistingUserCase(CaseType.NFD);
+      if (nfdCase !== undefined) {
+        req.session.hasNFDCase = true;
+      }
+      console.log("req.session.hasNFDCase:", req.session.hasNFDCase)
     }
-    console.log("req.session.hasNFDCase:", req.session.hasNFDCase)
     const userPageDetails = await getHomePageForUser(user);
     if(userPageDetails.caseData) {
       req.session.caseData = userPageDetails.caseData;
