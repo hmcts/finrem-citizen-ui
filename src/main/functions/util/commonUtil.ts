@@ -1,10 +1,9 @@
-import type { Request } from 'express';
-import type { LoggerInstance } from 'winston';
-
-import { FinremCaseData } from 'app/case/definition';
+import { Request } from 'express';
+import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../../app/auth/user';
 import { getCaseApi } from '../../app/case/case-api';
+import { FinremCaseData } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
 import { RouteNames } from '../../common-constants';
 
