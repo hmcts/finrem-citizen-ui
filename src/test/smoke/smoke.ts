@@ -29,4 +29,9 @@ describe('Smoke Test - Page Availability', () => {
     const response = await axios.get(`${testUrl}/dashboard`, axiosConfig);
     expect([200, 302]).toContain(response.status);
   });
+
+  test('Before You Start page loads', async () => {
+    const response = await axios.get(`${testUrl}/upload/before-you-start`, axiosConfig);
+    expect([200, 302]).toContain(response.status);
+  });
 });
