@@ -4,15 +4,23 @@ import { LoggerInstance } from 'winston';
 import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
-import { CaseRole } from '../app/case/definition';
+import {CaseRole, CaseType} from '../app/case/definition';
 import { UserDetails } from '../app/controller/AppRequest';
 import { RouteNames } from '../common-constants';
 import { getHomePageForUser } from '../functions/util/commonUtil';
 import { oidcMiddleware } from '../middleware';
+import {CASE_TYPE} from "../app/case/case-type";
 
 export default function (app: Application): void {
+  const logger: LoggerInstance = console as unknown as LoggerInstance;
   app.get(RouteNames.basePath, oidcMiddleware, async (req, res) => {
     const user = req.session.user as UserDetails;
+    const caseApi = getCaseApi(req.session.user as UserDetails, logger);
+    const nfdCase = await caseApi.getExistingUserCase(CaseType.NFD);
+    if (nfdCase !== undefined) {
+      req.session.hasNFDCase = true;
+    }
+    console.log("req.session.hasNFDCase:", req.session.hasNFDCase)
     const userPageDetails = await getHomePageForUser(user);
     if(userPageDetails.caseData) {
       req.session.caseData = userPageDetails.caseData;
@@ -69,7 +77,7 @@ export default function (app: Application): void {
 
     const logger: LoggerInstance = console as unknown as LoggerInstance;
     const caseApi = getCaseApi(req.session.user as UserDetails, logger);
-    const caseId = await caseApi.getExistingUserCase();
+    const caseId = await caseApi.getExistingUserCase(CASE_TYPE);
     res.json({ id: caseId });
   });
 }

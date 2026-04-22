@@ -5,6 +5,7 @@ import { getSystemUser } from '../../app/auth/user';
 import { getCaseApi } from '../../app/case/case-api';
 import { UserDetails } from '../../app/controller/AppRequest';
 import { RouteNames } from '../../common-constants';
+import {CASE_TYPE} from "../../app/case/case-type";
 
 export interface UserDefaultPageDetails {
   url: string;
@@ -15,9 +16,9 @@ export async function getHomePageForUser(userDetails: UserDetails): Promise<User
   const logger: LoggerInstance = console as unknown as LoggerInstance;
 
   const caseApi = getCaseApi(userDetails, logger);
-  const caseId = await caseApi.getExistingUserCase();
+  const caseId = await caseApi.getExistingUserCase(CASE_TYPE);
   logger.info('caseId returned is ', caseId);
-  
+
   if (caseId?.trim()) {
     const systemUser = await getSystemUser();
     const caseworkerUserApi = getCaseApi(systemUser, logger);
