@@ -34,6 +34,10 @@ export class DashboardPage {
 		}
 	}
 
+	async navigateToDashboard(): Promise<void> {
+		await this.page.goto('/dashboard');
+	}
+
 	async verifyDashboardPageContent(): Promise<void> {
 		await expect(this.page).toHaveURL(/\/dashboard(?:\?.*)?$/);
 

@@ -5,10 +5,9 @@ test.describe('Dashboard upload journey @PR', () => {
   test('Dashboard sections and upload document button visible and accessible @PR @a11y', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
-    page,
     axeUtils,
   }) => {
-    await page.goto('/dashboard');
+    await dashboardPage.navigateToDashboard();
     await dashboardPage.verifyDashboardPageContent();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
@@ -17,10 +16,9 @@ test.describe('Dashboard upload journey @PR', () => {
     loggedInPage: _loggedInPage,
     dashboardPage,
     beforeYouStartPage,
-    page,
     axeUtils,
   }) => {
-    await page.goto('/dashboard');
+    await dashboardPage.navigateToDashboard();
     await dashboardPage.clickGoToDocumentUpload();
 
     await beforeYouStartPage.verifyBeforeYouStartPageContent();
@@ -34,10 +32,9 @@ test.describe('Dashboard upload journey @PR', () => {
     loggedInPage: _loggedInPage,
     dashboardPage,
     beforeYouStartPage,
-    page,
     axeUtils,
   }) => {
-    await page.goto('/dashboard');
+    await dashboardPage.navigateToDashboard();
     await dashboardPage.clickGoToDocumentUpload();
 
     await beforeYouStartPage.verifyBeforeYouStartPageContent();
