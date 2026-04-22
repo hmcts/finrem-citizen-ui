@@ -14,7 +14,7 @@ test.describe('Persistent Session After Re-login', () => {
    * IDAM SSO re-authenticates and the linked case session is restored.
    * [mock] Uses hardcoded access codes injected via test session endpoint.
    */
-  test('[mock] User lands on dashboard after re-login without re-entering case details @PR @a11y', async ({
+  test('[mock] User lands on dashboard after re-login without re-entering case details @a11y', async ({
     loggedInPage,
     basePage,
     dashboardPage,
@@ -56,7 +56,7 @@ test.describe('Persistent Session After Re-login', () => {
    * within the same authenticated session.
    * [mock] Uses hardcoded access codes injected via test session endpoint.
    */
-  test('[mock] Case session persists across multiple tabs in same browser context @PR @a11y', async ({
+  test('[mock] Case session persists across multiple tabs in same browser context @a11y', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
@@ -93,7 +93,7 @@ test.describe('Persistent Session After Re-login', () => {
    * (page.reload() is not used because a hard reload clears in-memory mock session state)
    * [mock] Uses hardcoded access codes injected via test session endpoint.
    */
-  test('[mock] Case session persists when navigating away and back to dashboard @PR @a11y', async ({
+  test('[mock] Case session persists when navigating away and back to dashboard @a11y', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
