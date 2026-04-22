@@ -78,4 +78,18 @@ export class BasePage {
       'Check ENABLE_TEST_SUPPORT_ROUTES=true is set in this environment.'
     ).toHaveURL(/\/enter-access-code$/, { timeout: 10_000 });
   }
+
+  protected async expectVisible(locators: Locator[]): Promise<void> {
+    for (const locator of locators) {
+      await expect(locator).toBeVisible();
+    }
+  }
+
+  protected async expectAttributes(
+    assertions: { locator: Locator; name: string; value: string }[]
+  ): Promise<void> {
+    for (const assertion of assertions) {
+      await expect(assertion.locator).toHaveAttribute(assertion.name, assertion.value);
+    }
+  }
 }

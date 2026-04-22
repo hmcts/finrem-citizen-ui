@@ -1,6 +1,7 @@
 import { expect, Locator, Page } from '@playwright/test';
+import { BasePage } from './basePage.page';
 
-export class BeforeYouStartPage {
+export class BeforeYouStartPage extends BasePage {
   readonly beforeYouStartHeader: Locator;
   readonly backLink: Locator;
   readonly youShouldIntro: Locator;
@@ -21,6 +22,7 @@ export class BeforeYouStartPage {
   
 
   constructor(readonly page: Page) {
+    super(page);
     this.beforeYouStartHeader = this.page.getByRole('heading', { name: 'Before you start' });
     this.backLink = this.page.getByRole('link', { name: 'Back' });
     this.youShouldIntro = this.page.getByText('You should:', { exact: true });
@@ -28,7 +30,7 @@ export class BeforeYouStartPage {
     this.prepareDocumentsBullet = this.page.getByText('prepare all of the documents you wish to upload', { exact: true });
     this.namingDocumentsHeader = this.page.getByRole('heading', { name: 'Naming your documents' });
     this.afterSubmittedHeader = this.page.getByRole('heading', { name: 'After you have submitted' });
-    this.unableToSendSummary = this.page.getByText('I am not able to send documents to the other party', { exact: true });
+    this.unableToSendSummary = this.page.locator('summary', { hasText: 'I am not able to send documents to the other party' });
     this.unableToSendDetails = this.page.locator('details', { has: this.unableToSendSummary });
     this.unableToSendDetailsText = this.page.getByText(
       'You must email the court as soon as possible if you are not able to send the documents to the other party.',
@@ -36,27 +38,13 @@ export class BeforeYouStartPage {
     );
     this.startNowButton = this.page.getByRole('button', { name: 'Start now' });
     this.gettingHelpHeader = this.page.getByRole('heading', { name: 'Getting help' });
-    this.contactUsForHelpSummary = this.page.getByText('Contact us for help', { exact: true });
+    this.contactUsForHelpSummary = this.page.locator('summary', { hasText: 'Contact us for help' });
     this.contactUsForHelpDetails = this.page.locator('details', { has: this.contactUsForHelpSummary });
     this.helpEmailLink = this.page.getByRole('link', { name: 'FRCexample@justice.gov.uk' });
     this.helpTelephoneText = this.page.getByText('0300 123 5577');
     this.callChargesLink = this.page.getByRole('link', {
       name: 'Find out about call charges (opens in new tab)',
     });
-  }
-
-  private async expectVisible(locators: Locator[]): Promise<void> {
-    for (const locator of locators) {
-      await expect(locator).toBeVisible();
-    }
-  }
-
-  private async expectAttributes(
-    assertions: { locator: Locator; name: string; value: string }[]
-  ): Promise<void> {
-    for (const assertion of assertions) {
-      await expect(assertion.locator).toHaveAttribute(assertion.name, assertion.value);
-    }
   }
 
   async verifyBeforeYouStartPageContent(): Promise<void> {
