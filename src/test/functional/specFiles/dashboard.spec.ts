@@ -35,14 +35,17 @@ test.describe('Dashboard upload journey @PR', () => {
     axeUtils,
   }) => {
     await dashboardPage.navigateToDashboard();
+    await dashboardPage.verifyDashboardPageContent();
     await dashboardPage.clickGoToDocumentUpload();
 
     await beforeYouStartPage.verifyBeforeYouStartPageContent();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+
     await beforeYouStartPage.goBackToDashboard();
     await dashboardPage.verifyDashboardPageContent();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
 
     await dashboardPage.clickGoToDocumentUpload();
     await beforeYouStartPage.startUploadJourney();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 });
