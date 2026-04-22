@@ -24,4 +24,9 @@ describe('Smoke Test - Page Availability', () => {
     const response = await axios.get(`${testUrl}/enter-access-code`, axiosConfig);
     expect([200, 302]).toContain(response.status);
   });
+
+  test('Dashboard page loads', async () => {
+    const response = await axios.get(`${testUrl}/dashboard`, axiosConfig);
+    expect([200, 302]).toContain(response.status);
+  });
 });
