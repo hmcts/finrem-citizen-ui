@@ -5,6 +5,8 @@ import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
 // No Form C or FR_manageHearings hearing flow is required.
 // To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
 test.describe('Persistent Session After Re-login', () => {
+  test.use({ useMockTestSupport: true });
+
   /**
    * Verify that after logging in, entering case number and access code,
    * signing out, and navigating back to the dashboard, the user lands directly
@@ -22,6 +24,9 @@ test.describe('Persistent Session After Re-login', () => {
     page,
     axeUtils,
   }) => {
+    // Two full login cycles: loggedInPage fixture + explicit re-login after sign-out.
+    // Longer timeout required for login flow
+    test.setTimeout(90_000);
     // Inject mock session and link case
     await basePage.injectCaseSession(
       contestedCaseWithHearing.caseId,

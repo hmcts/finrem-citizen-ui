@@ -1,4 +1,11 @@
+import https from 'node:https';
+
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+
+// Disable keep-alive so concurrent requests don't accumulate error listeners on
+// shared pooled sockets, which triggers MaxListenersExceededWarning in test workers.
+const httpsAgent = new https.Agent({ keepAlive: false });
+const axiosInstance = axios.create({ httpsAgent });
 
 const SENSITIVE_KEY_PATTERN = /(secret|password|token|authorization|oneTimePassword|client_secret|access_token|refresh_token)/i;
 const BEARER_PATTERN = /Bearer\s+[A-Za-z0-9\-._~+/]+=*/gi;
@@ -47,7 +54,7 @@ const RETRY_DELAY_MS = 2000;
  */
 export async function axiosRequest<T = unknown>(config: AxiosRequestConfig, attempt = 1): Promise<AxiosResponse<T>> {
   try {
-    const response = await axios(config);
+    const response = await axiosInstance(config);
     return response;
   } catch (error: unknown) {
     const axiosError = error as AxiosError;

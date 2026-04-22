@@ -458,29 +458,33 @@ export class IdamApiService {
   async createCitizenUser(): Promise<UserCredentials> {
     const apiContext = await request.newContext();
 
-    const user: UserCredentials = {
-      username: `finrem-test-${randomUUID()}@mailinator.com`,
-      password: DEFAULT_TEST_USER_PASSWORD,
-    };
+    try {
+      const user: UserCredentials = {
+        username: `finrem-test-${randomUUID()}@mailinator.com`,
+        password: DEFAULT_TEST_USER_PASSWORD,
+      };
 
-    // IDAM Testing Support API doesn't require OAuth token for user creation
-    const response = await apiContext.post(this.createUserEndpoint, {
-      headers: { 'Content-Type': 'application/json' },
-      data: {
-        password: user.password,
-        user: {
-          email: user.username,
-          forename: 'Test',
-          surname: 'User',
-          roleNames: ['citizen'],
+      // IDAM Testing Support API doesn't require OAuth token for user creation
+      const response = await apiContext.post(this.createUserEndpoint, {
+        headers: { 'Content-Type': 'application/json' },
+        data: {
+          password: user.password,
+          user: {
+            email: user.username,
+            forename: 'Test',
+            surname: 'User',
+            roleNames: ['citizen'],
+          },
         },
-      },
-    });
+      });
 
-    if (!response.ok()) {
-      throw new Error(`User Creation Error: ${response.status()} - ${await response.text()}`);
+      if (!response.ok()) {
+        throw new Error(`User Creation Error: ${response.status()} - ${await response.text()}`);
+      }
+
+      return user;
+    } finally {
+      await apiContext.dispose();
     }
-
-    return user;
   }
 }
