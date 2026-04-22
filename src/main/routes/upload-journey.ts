@@ -35,7 +35,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
       errors: {},
       values: data,
       previousStep,
-      cancelUrl: RouteNames.taskListUpload,
+      cancelUrl: RouteNames.dashboard,
     });
   });
 
@@ -55,7 +55,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
         errors,
         values: { ...data, ...req.body },
         previousStep,
-        cancelUrl: RouteNames.taskListUpload,
+        cancelUrl: RouteNames.dashboard,
       });
     }
 

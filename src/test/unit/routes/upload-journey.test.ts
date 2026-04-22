@@ -52,7 +52,7 @@ describe('Upload Journey Routes', () => {
         errors: {},
         values: {},
         previousStep: null,
-        cancelUrl: RouteNames.taskListUpload,
+        cancelUrl: RouteNames.dashboard,
       });
     });
 
