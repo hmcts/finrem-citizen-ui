@@ -59,20 +59,19 @@ export class BeforeYouStartPage extends BasePage {
   async verifyBeforeYouStartPageContent(): Promise<void> {
     await expect(this.page).toHaveURL(URL_PATTERNS.BEFORE_YOU_START);
 
-    // Verify key elements are visible
-    await expect(this.beforeYouStartHeader).toBeVisible();
-    await expect(this.backLink).toBeVisible();
-    await expect(this.startNowButton).toBeVisible();
-    await expect(this.gettingHelpHeader).toBeVisible();
-
-    // Verify supporting content is present
-    await expect(this.youShouldIntro).toBeVisible();
-    await expect(this.courtOrderBullet).toBeVisible();
-    await expect(this.prepareDocumentsBullet).toBeVisible();
-    await expect(this.namingDocumentsHeader).toBeVisible();
-    await expect(this.afterSubmittedHeader).toBeVisible();
-    await expect(this.unableToSendSummary).toBeVisible();
-    await expect(this.contactUsForHelpSummary).toBeVisible();
+    await this.expectVisible([
+      this.beforeYouStartHeader,
+      this.backLink,
+      this.startNowButton,
+      this.gettingHelpHeader,
+      this.youShouldIntro,
+      this.courtOrderBullet,
+      this.prepareDocumentsBullet,
+      this.namingDocumentsHeader,
+      this.afterSubmittedHeader,
+      this.unableToSendSummary,
+      this.contactUsForHelpSummary,
+    ]);
 
     // Verify navigation links work correctly
     await expect(this.backLink).toHaveAttribute('href', '/dashboard');
