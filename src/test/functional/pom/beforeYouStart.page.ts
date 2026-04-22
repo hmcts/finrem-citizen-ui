@@ -1,4 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test';
+
 import { BasePage } from './basePage.page';
 
 export class BeforeYouStartPage extends BasePage {

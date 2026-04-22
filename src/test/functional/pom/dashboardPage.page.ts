@@ -1,14 +1,19 @@
 import { expect, Locator, Page } from '@playwright/test';
 
-export class DashboardPage {
+import { BasePage } from './basePage.page';
+
+export class DashboardPage extends BasePage {
 	readonly dashboardHeader: Locator;
 	readonly placeholderBodyText: Locator;
 	readonly redirectedBodyText: Locator;
 	readonly uploadDocumentsHeader: Locator;
 	readonly uploadDocumentsText: Locator;
 	readonly goToDocumentUploadButton: Locator;
+	readonly unableToSendSummary: Locator;
+	readonly contactUsForHelpSummary: Locator;
 
 	constructor(readonly page: Page) {
+		super(page);
 		this.dashboardHeader = this.page.getByRole('heading', { name: 'Financial Remedy Dashboard' });
 		this.placeholderBodyText = this.page.getByText('This is a placeholder dashboard page.');
 		this.redirectedBodyText = this.page.getByText(
@@ -17,22 +22,14 @@ export class DashboardPage {
 		this.uploadDocumentsHeader = this.page.getByRole('heading', { name: 'Upload documents' });
 		this.uploadDocumentsText = this.page.getByText('Upload documents to support your financial remedy case.');
 		this.goToDocumentUploadButton = this.page.getByRole('button', { name: 'Go to document upload' });
-
+		this.unableToSendSummary = this.page.getByRole('button', { 
+			name: 'I am not able to send documents to the other party' 
+		});
+		this.contactUsForHelpSummary = this.page.locator('summary', { 
+			hasText: 'Contact us for help' 
+		});
 	}
 
-	private async expectVisible(locators: Locator[]): Promise<void> {
-		for (const locator of locators) {
-			await expect(locator).toBeVisible();
-		}
-	}
-
-	private async expectAttributes(
-		assertions: { locator: Locator; name: string; value: string }[]
-	): Promise<void> {
-		for (const assertion of assertions) {
-			await expect(assertion.locator).toHaveAttribute(assertion.name, assertion.value);
-		}
-	}
 
 	async navigateToDashboard(): Promise<void> {
 		await this.page.goto('/dashboard');
