@@ -16,20 +16,20 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
   [UploadStepNames.BeforeYouStart]: {
     template: 'upload-journey/before-you-start',
-    next: () => 'confidentiality',
+    next: () => UploadStepNames.Confidentiality,
     previous: () => null,
   },
 
   [UploadStepNames.Confidentiality]: {
     template: 'upload-journey/confidentiality',
-    next: () => 'fdr',
-    previous: () => 'before-you-start',
+    next: () => UploadStepNames.FDR,
+    previous: () => UploadStepNames.BeforeYouStart,
   },
 
   [UploadStepNames.FDR]: {
     template: 'upload-journey/fdr',
     next: () => null,
-    previous: () => 'confidentiality',
+    previous: () => UploadStepNames.Confidentiality,
   },
   
 };
