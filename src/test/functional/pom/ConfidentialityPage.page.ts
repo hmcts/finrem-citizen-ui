@@ -1,5 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test';
- 
+
 import { BasePage } from './basePage.page';
 
 // URL path constants for clarity and maintainability
