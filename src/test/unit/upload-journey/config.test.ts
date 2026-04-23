@@ -1,5 +1,5 @@
-import { uploadSteps } from '../../../main/upload-journey/config';
 import { UploadStepNames } from '../../../main/common-constants';
+import { uploadSteps } from '../../../main/upload-journey/config';
 
 describe('Upload Journey Configuration', () => {
   describe(UploadStepNames.BeforeYouStart, () => {
