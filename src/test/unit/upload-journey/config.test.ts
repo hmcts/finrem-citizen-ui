@@ -14,7 +14,7 @@ describe('Upload Journey Configuration', () => {
 
   describe('confidentiality', () => {
     it('should have correct configuration', () => {
-      const step = uploadSteps.confidentiality;
+      const step = uploadSteps['confidentiality'];
       expect(step.template).toBe('upload-journey/confidentiality');
       expect(step.next!({})).toBeNull();
       expect(step.previous!({})).toBe('before-you-start');
