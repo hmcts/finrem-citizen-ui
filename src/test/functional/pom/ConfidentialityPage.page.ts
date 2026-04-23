@@ -76,4 +76,88 @@ export class ConfidentialityPage extends BasePage {
     this.callChargesLink = this.page.getByRole('link', {
       name: 'Find out about call charges (opens in new tab)',
     });
-  }}
+  }
+
+    // AC1: Verify page URL and core layout elements
+  async verifyConfidentialityPageContent(): Promise<void> {
+    await expect(this.page).toHaveURL(URL_PATTERNS.CONFIDENTIALITY);
+ 
+    await this.expectVisible([
+      this.headerLogo,
+      this.navigationLink,
+      this.signOutBtn,
+      this.pageHeader,
+      this.backLink,
+      this.continueButton,
+      this.cancelLink,
+      this.gettingHelpHeader,
+      this.contactUsForHelpSummary,
+    ]);
+  }
+
+    // AC2: Verify form C8 link is present and points to the correct GOV.UK URL
+  async verifyFormC8Link(): Promise<void> {
+    await expect(this.formC8Link).toBeVisible();
+    await expect(this.formC8Link).toHaveAttribute('href','https://www.gov.uk/government/publications/form-c8-confidential-contact-details-family-procedure-rules-2010-rule-291');
+    await expect(this.formC8Link).toHaveAttribute('target', '_blank');
+    await expect(this.formC8Link).toHaveAttribute('rel', 'noopener noreferrer');
+  }
+
+    // AC3: Verify redaction instructions are displayed
+  async verifyRedactionInstructions(): Promise<void> {
+    await expect(this.redactionInstructions).toBeVisible();
+  }
+
+    // AC4: Verify court staff disclaimer is displayed
+  async verifyCourtStaffDisclaimer(): Promise<void> {
+    await expect(this.courtStaffDisclaimer).toBeVisible();
+  }
+
+    // AC5: Verify confidential information examples and do-not-redact guidance
+  async verifyConfidentialInformationExamples(): Promise<void> {
+    await this.expectVisible([
+      this.confidentialExamplesIntro,
+      this.exampleAddresses,
+      this.exampleLocationDetails,
+      this.examplePhoneNumbers,
+      this.doNotRedactText,
+    ]);
+  }
+
+    // AC6: Verify warning message about documents being on the court record
+  async verifyCourtRecordWarning(): Promise<void> {
+    await expect(this.warningMessage).toBeVisible();
+  }
+
+  // AC7: Verify link after clicking continue button and that it navigates to the correct page(cuurently the same confidentiality page as the form is not implemented yet)
+
+   // AC8: Click Cancel and verify navigation to the dashboard
+  async cancelToDashboard(): Promise<void> {
+    await this.cancelLink.click();
+    await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
+  }
+
+    // AC9: Expand contact help panel and verify all contact details
+  async verifyContactHelpContent(): Promise<void> {
+    await this.contactUsForHelpSummary.click();
+    await expect(this.contactUsForHelpDetails).toHaveAttribute('open', '');
+    
+    // Verify contact information is visible when expanded
+    await this.expectVisible([
+      this.helpEmailLink,
+      this.helpTelephoneText,
+      this.helpOpeningHours,
+      this.callChargesLink,
+    ]);
+
+    await expect(this.helpEmailLink).toHaveAttribute('href', 'mailto:FRCexample@justice.gov.uk');
+    await expect(this.callChargesLink).toHaveAttribute('target', '_blank');
+    await expect(this.callChargesLink).toHaveAttribute('rel', 'noopener noreferrer');
+  }
+
+    // Verify the contact help panel starts collapsed
+  async verifyContactHelpClosedByDefault(): Promise<void> {
+    await expect(this.contactUsForHelpDetails).not.toHaveAttribute('open', '');
+  }
+
+}
