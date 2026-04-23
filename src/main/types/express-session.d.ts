@@ -1,3 +1,5 @@
+import type { FinremCaseData } from '../app/case/definition';
+
 export {};
 
 declare module 'express-session' {
@@ -12,5 +14,6 @@ declare module 'express-session' {
     returnTo?: string;
     codeVerifier?: string;
     nonce?: string;
+    caseData?: FinremCaseData;
   }
 }
