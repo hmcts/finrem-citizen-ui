@@ -2,7 +2,7 @@ import { expect, Locator, Page } from '@playwright/test';
 
 import { BasePage } from './basePage.page';
 
-// URL path constants for clarity and maintainability
+// URL path constants
 const URL_PATTERNS = {
   BEFORE_YOU_START: /\/upload\/before-you-start/,
   DASHBOARD: /\/dashboard/, 

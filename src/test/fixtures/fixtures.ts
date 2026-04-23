@@ -8,6 +8,10 @@ import { EnterAccessCodePage } from '../functional/pom/enterAccessCode.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
 import { ContestedCaseFactory } from '../functional/utils/factories/contested/ContestedCaseFactory';
+import {
+  AssertionHelpers,
+  createAssertionHelpers,
+} from '../functional/utils/helpers/assertionHelpers';
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
 
 
@@ -76,6 +80,7 @@ type MyFixtures = {
   contestedCaseWithHearing: CreatedCaseWithAccessCodes;
   axeUtils: AxeUtils;
   beforeYouStartPage: BeforeYouStartPage;
+  assertionHelpers: AssertionHelpers;
 };
 
 /**
@@ -114,6 +119,10 @@ export const test = base.extend<MyFixtures & MockOptions>({
   axeUtils: async ({ page }, use) => {
     const axeUtils = new AxeUtils(page);
     await use(axeUtils);
+  },
+
+  assertionHelpers: async ({}, use) => {
+    await use(createAssertionHelpers());
   },
 
   idamApiService: async ({}, use) => {
@@ -273,7 +282,7 @@ export const test = base.extend<MyFixtures & MockOptions>({
     async ({}, use) => {
       const useRealIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
       const caseData = await ContestedCaseFactory.createCaseForAccessCodeJourney(useRealIntegration);
-      const formattedCaseId = caseData.caseId.replace(/(\d{4})(?=\d)/g, '$1-');
+      const formattedCaseId = caseData.caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
 
       await use({
         caseId: caseData.caseId,
