@@ -1,4 +1,4 @@
-export type UploadStepId = 'before-you-start' | 'confidentiality';
+export type UploadStepId = 'before-you-start' | 'confidentiality' | 'fdr';
 
 export type UploadJourneyData = Record<string, never>;
 
@@ -20,8 +20,14 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
   'confidentiality': {
     template: 'upload-journey/confidentiality',
-    next: () => null,
+    next: () => 'fdr',
     previous: () => 'before-you-start',
+  },
+
+  'fdr': {
+    template: 'upload-journey/fdr',
+    next: () => null,
+    previous: () => 'confidentiality',
   },
   
 };
