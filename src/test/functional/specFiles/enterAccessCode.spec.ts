@@ -15,6 +15,20 @@ test.describe('Enter Access Code - Page Content', () => {
     await enterAccessCodePage.verifyAccessCodePageContent();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
+
+  test('Global header and footer are visible on enter access code page @a11y', async ({
+    loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    contestedCaseForCaseNumber,
+    page,
+    basePage,
+    axeUtils,
+  }) => {
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
+    await expect(page).toHaveURL(/\/enter-access-code$/);
+    await basePage.verifyGlobalHeaderAndFooter();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  });
 });
 
 test.describe('Enter Access Code - Validation Errors', () => {

@@ -46,6 +46,16 @@ test.describe('Enter Case Number Page Verification', () => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
   });
 
+  test('Global header and footer are visible on enter case number page @a11y', async ({
+    enterCaseNumberPage,
+    basePage,
+    axeUtils,
+  }) => {
+    await enterCaseNumberPage.verifyCaseNumberPageContent();
+    await basePage.verifyGlobalHeaderAndFooter();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  });
+
   // --- VALIDATION ERROR SCENARIOS (no real case needed) ---
 
   test('Error: Empty input @a11y', async ({ enterCaseNumberPage, axeUtils }) => {

@@ -15,6 +15,16 @@ test.describe('Dashboard upload journey', () => {
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
+  test('Global header and footer are visible on dashboard @a11y', async ({
+    dashboardPage,
+    basePage,
+    axeUtils,
+  }) => {
+    await dashboardPage.verifyDashboardPageContent();
+    await basePage.verifyGlobalHeaderAndFooter();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  });
+
   test('Before-you-start sections and help details are visible and accessible @a11y', async ({
     dashboardPage,
     beforeYouStartPage,

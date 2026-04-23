@@ -7,6 +7,25 @@ import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
 test.describe('Persistent Session After Re-login', () => {
   test.use({ useMockTestSupport: true });
 
+  test('[mock] Global header and footer are visible on dashboard @a11y', async ({
+    loggedInPage: _loggedInPage,
+    basePage,
+    dashboardPage,
+    enterAccessCodePage,
+    contestedCaseWithHearing,
+    axeUtils,
+  }) => {
+    await basePage.injectCaseSession(
+      contestedCaseWithHearing.caseId,
+      contestedCaseWithHearing.applicantAccessCode,
+      contestedCaseWithHearing.respondentAccessCode
+    );
+    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    await dashboardPage.verifyDashboardPageContent();
+    await basePage.verifyGlobalHeaderAndFooter();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  });
+
   /**
    * Verify that after logging in, entering case number and access code,
    * signing out, and navigating back to the dashboard, the user lands directly
