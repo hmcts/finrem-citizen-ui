@@ -45,4 +45,5 @@ export const ViewNames = {
 export const UploadStepNames = {
   BeforeYouStart: 'before-you-start',
   Confidentiality: 'confidentiality',
+  FDR: 'fdr',
 };
