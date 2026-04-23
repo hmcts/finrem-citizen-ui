@@ -33,23 +33,16 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
   });
 
   test('Verify Global Layout elements: Header, Footer, @a11y', async ({ page, basePage, axeUtils: _axeUtils }) => {
-    // common elements from the Page Object for easier access
-    const { footer, licenceDescription, licenceLink, copyRightImgLink } = basePage;
+    // Verify shared header/footer visibility
+    await basePage.verifyGlobalHeaderAndFooter();
 
-    // Check header
-    await expect(basePage.headerLogo).toBeVisible();
-
-    // Check footer (License description and Link navigates to the correct page)
-    await footer.scrollIntoViewIfNeeded();
-    await expect(footer).toBeVisible();
-    await expect(licenceDescription).toBeVisible();
-    await licenceLink.click();
+    // Verify footer links navigate correctly
+    await basePage.licenceLink.click();
     await basePage.verifyUrl(/.*open-government-licence.*/);
 
     await page.goBack();
 
-    // Check footer (Copyright Image link navigates to the correct page)
-    await copyRightImgLink.click();
+    await basePage.copyRightImgLink.click();
     await basePage.verifyUrl(/.*crown-copyright.*/);
     await _axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
