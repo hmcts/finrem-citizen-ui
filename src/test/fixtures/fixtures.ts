@@ -4,10 +4,15 @@ import { expect, test as base } from '@playwright/test';
 import { BasePage } from '../functional/pom/basePage.page';
 import { BeforeYouStartPage } from '../functional/pom/beforeYouStart.page';
 import { DashboardPage } from '../functional/pom/dashboardPage.page';
+import { ConfidentialityGuidancePage } from '../functional/pom/confidentialityGuidance.page';
 import { EnterAccessCodePage } from '../functional/pom/enterAccessCode.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
 import { ContestedCaseFactory } from '../functional/utils/factories/contested/ContestedCaseFactory';
+import {
+  AssertionHelpers,
+  createAssertionHelpers,
+} from '../functional/utils/helpers/assertionHelpers';
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
 
 
@@ -70,12 +75,14 @@ type MyFixtures = {
   loggedInPage: AuthSession;
   enterCaseNumberPage: EnterCaseNumberPage;
   enterAccessCodePage: EnterAccessCodePage;
+  confidentialityGuidancePage: ConfidentialityGuidancePage;
   /** A real contested case used solely for case-number linking tests (no access codes). */
   contestedCaseForCaseNumber: CreatedCase;
   /** A real contested case pre-loaded with deterministic mock access codes. */
   contestedCaseWithHearing: CreatedCaseWithAccessCodes;
   axeUtils: AxeUtils;
   beforeYouStartPage: BeforeYouStartPage;
+  assertionHelpers: AssertionHelpers;
 };
 
 /**
@@ -114,6 +121,10 @@ export const test = base.extend<MyFixtures & MockOptions>({
   axeUtils: async ({ page }, use) => {
     const axeUtils = new AxeUtils(page);
     await use(axeUtils);
+  },
+
+  assertionHelpers: async ({}, use) => {
+    await use(createAssertionHelpers());
   },
 
   idamApiService: async ({}, use) => {
@@ -236,6 +247,11 @@ export const test = base.extend<MyFixtures & MockOptions>({
   // Page-object for the enter-access-code screen; used by access-code tests.
   enterAccessCodePage: async ({ page }, use) => {
     await use(new EnterAccessCodePage(page));
+  },
+
+  // Page-object for the confidentiality guidance screen.
+  confidentialityGuidancePage: async ({ page }, use) => {
+    await use(new ConfidentialityGuidancePage(page));
   },
 
   /**

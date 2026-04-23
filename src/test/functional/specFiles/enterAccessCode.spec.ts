@@ -7,6 +7,7 @@ test.describe('Enter Access Code - Page Content', () => {
     enterCaseNumberPage,
     enterAccessCodePage,
     contestedCaseForCaseNumber,
+    assertionHelpers: _assertionHelpers,
     page,
     axeUtils,
   }) => {
@@ -40,6 +41,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
     enterCaseNumberPage,
     enterAccessCodePage,
     contestedCaseForCaseNumber,
+    assertionHelpers: _assertionHelpers,
     page
   }) => {
     await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
@@ -167,6 +169,7 @@ test.describe('Enter Access Code - Happy Path', () => {
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
+    assertionHelpers: _assertionHelpers,
   }) => {
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 

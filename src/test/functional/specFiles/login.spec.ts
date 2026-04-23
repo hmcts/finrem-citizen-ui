@@ -8,7 +8,7 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
    * 2. citizenUser: Calls the API to create a fresh user.
    * 3. loggedInPage: Navigates to the app and performs the UI login.
    */
-  test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage, axeUtils: _axeUtils }) => {
+  test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage, assertionHelpers: _assertionHelpers, axeUtils: _axeUtils }) => {
     // The browser is already logged in here
     await enterCaseNumberPage.verifyCaseNumberPageContent();
   });

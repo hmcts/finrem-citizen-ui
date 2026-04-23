@@ -19,6 +19,7 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
     contestedCaseForCaseNumber,
+    assertionHelpers: _assertionHelpers,
     page
   }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
@@ -30,6 +31,7 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
     contestedCaseForCaseNumber,
+    assertionHelpers: _assertionHelpers,
     page
   }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
@@ -42,7 +44,7 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
 });
 
 test.describe('Enter Case Number Page Verification', () => {
-  test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage }) => {
+  test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage, assertionHelpers: _assertionHelpers }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
   });
 

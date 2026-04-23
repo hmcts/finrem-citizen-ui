@@ -13,6 +13,7 @@ test.describe('Persistent Session After Re-login', () => {
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
+    assertionHelpers: _assertionHelpers,
     axeUtils,
   }) => {
     await basePage.injectCaseSession(
