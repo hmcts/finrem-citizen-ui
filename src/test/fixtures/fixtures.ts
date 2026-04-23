@@ -3,7 +3,6 @@ import { expect, test as base } from '@playwright/test';
 
 import { BasePage } from '../functional/pom/basePage.page';
 import { BeforeYouStartPage } from '../functional/pom/beforeYouStart.page';
-import { ConfidentialityGuidancePage } from '../functional/pom/confidentialityGuidance.page';
 import { DashboardPage } from '../functional/pom/dashboardPage.page';
 import { EnterAccessCodePage } from '../functional/pom/enterAccessCode.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
@@ -77,7 +76,6 @@ type MyFixtures = {
   contestedCaseWithHearing: CreatedCaseWithAccessCodes;
   axeUtils: AxeUtils;
   beforeYouStartPage: BeforeYouStartPage;
-  confidentialityGuidancePage: ConfidentialityGuidancePage;
 };
 
 /**
@@ -135,10 +133,6 @@ export const test = base.extend<MyFixtures & MockOptions>({
   },
   beforeYouStartPage: async ({ page }, use) => {
     await use(new BeforeYouStartPage(page));
-  },
-
-  confidentialityGuidancePage: async ({ page }, use) => {
-    await use(new ConfidentialityGuidancePage(page));
   },
 
   /**
