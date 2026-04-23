@@ -2,12 +2,15 @@ import { AxeUtils } from '@hmcts/playwright-common';
 import { expect, test as base } from '@playwright/test';
 
 import { BasePage } from '../functional/pom/basePage.page';
+import { BeforeYouStartPage } from '../functional/pom/beforeYouStart.page';
 import { DashboardPage } from '../functional/pom/dashboardPage.page';
 import { EnterAccessCodePage } from '../functional/pom/enterAccessCode.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
 import { ContestedCaseFactory } from '../functional/utils/factories/contested/ContestedCaseFactory';
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
+
+
 
 /**
  * Shared axe audit options used by all @a11y tests.
@@ -60,24 +63,19 @@ type MyFixtures = {
   idamApiService: IdamApiService;
   /** A freshly created IDAM citizen user scoped to the current test. */
   citizenUser: UserCredentials;
-  /** Page-object wrapper around the IDAM login UI. */
   idamPage: IdamPage;
-  /** Generic base page wrapper (headings, footer etc.). */
   basePage: BasePage;
-  /** Page-object wrapper for the case dashboard. */
   dashboardPage: DashboardPage;
   /** Completes the full OIDC login flow (landing on the dashboard) */
   loggedInPage: AuthSession;
-  /** Page-object wrapper for the enter-case-number screen. */
   enterCaseNumberPage: EnterCaseNumberPage;
-  /** Page-object wrapper for the enter-access-code screen. */
   enterAccessCodePage: EnterAccessCodePage;
   /** A real contested case used solely for case-number linking tests (no access codes). */
   contestedCaseForCaseNumber: CreatedCase;
   /** A real contested case pre-loaded with deterministic mock access codes. */
   contestedCaseWithHearing: CreatedCaseWithAccessCodes;
-  /** Axe accessibility test utilities bound to the current page. */
   axeUtils: AxeUtils;
+  beforeYouStartPage: BeforeYouStartPage;
 };
 
 /**
@@ -113,30 +111,28 @@ export const test = base.extend<MyFixtures & MockOptions>({
     await use();
   }, { auto: true }],
 
-  // Bind Axe to the current Playwright page so any test can run accessibility audits.
   axeUtils: async ({ page }, use) => {
     const axeUtils = new AxeUtils(page);
     await use(axeUtils);
   },
 
-  // Provides a raw IDAM API client; injected into fixtures that need to manage users.
   idamApiService: async ({}, use) => {
     await use(new IdamApiService());
   },
 
-  // Page-object for the IDAM login screen; used by loggedInPage to drive authentication.
   idamPage: async ({ page }, use) => {
     await use(new IdamPage(page));
   },
 
-  // Generic page helpers shared across multiple screens (e.g. main headings, footer).
   basePage: async ({ page }, use) => {
     await use(new BasePage(page));
   },
 
-  // Page-object for the case dashboard, used by tests that navigate post-login.
   dashboardPage: async ({ page }, use) => {
     await use(new DashboardPage(page));
+  },
+  beforeYouStartPage: async ({ page }, use) => {
+    await use(new BeforeYouStartPage(page));
   },
 
   /**
