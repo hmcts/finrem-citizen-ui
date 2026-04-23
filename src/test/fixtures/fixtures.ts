@@ -4,7 +4,6 @@ import { expect, test as base } from '@playwright/test';
 import { BasePage } from '../functional/pom/basePage.page';
 import { BeforeYouStartPage } from '../functional/pom/beforeYouStart.page';
 import { DashboardPage } from '../functional/pom/dashboardPage.page';
-import { ConfidentialityGuidancePage } from '../functional/pom/confidentialityGuidance.page';
 import { EnterAccessCodePage } from '../functional/pom/enterAccessCode.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
@@ -75,7 +74,6 @@ type MyFixtures = {
   loggedInPage: AuthSession;
   enterCaseNumberPage: EnterCaseNumberPage;
   enterAccessCodePage: EnterAccessCodePage;
-  confidentialityGuidancePage: ConfidentialityGuidancePage;
   /** A real contested case used solely for case-number linking tests (no access codes). */
   contestedCaseForCaseNumber: CreatedCase;
   /** A real contested case pre-loaded with deterministic mock access codes. */
@@ -249,11 +247,6 @@ export const test = base.extend<MyFixtures & MockOptions>({
     await use(new EnterAccessCodePage(page));
   },
 
-  // Page-object for the confidentiality guidance screen.
-  confidentialityGuidancePage: async ({ page }, use) => {
-    await use(new ConfidentialityGuidancePage(page));
-  },
-
   /**
    * Creates a real contested case via the Form A → progress-to-listing pipeline.
    * Access codes are NOT generated — this fixture is only for tests that verify
@@ -289,7 +282,7 @@ export const test = base.extend<MyFixtures & MockOptions>({
     async ({}, use) => {
       const useRealIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
       const caseData = await ContestedCaseFactory.createCaseForAccessCodeJourney(useRealIntegration);
-      const formattedCaseId = caseData.caseId.replace(/(\d{4})(?=\d)/g, '$1-');
+      const formattedCaseId = caseData.caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
 
       await use({
         caseId: caseData.caseId,
