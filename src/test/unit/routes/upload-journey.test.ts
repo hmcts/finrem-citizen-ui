@@ -1,6 +1,6 @@
 import { Application, Request, Response } from 'express';
 
-import { RouteNames } from '../../../main/common-constants';
+import { RouteNames, UploadStepNames } from '../../../main/common-constants';
 import setupUploadJourneyRoute from '../../../main/routes/upload-journey';
 
 describe('Upload Journey Routes', () => {
@@ -36,7 +36,7 @@ describe('Upload Journey Routes', () => {
     it('should render valid step', () => {
       const handler = mockGet.mock.calls.find(call => call[0] === `${RouteNames.uploadJourney}/:stepId`)[2];
       const mockReq = {
-        params: { stepId: 'before-you-start' },
+        params: { stepId: UploadStepNames.BeforeYouStart },
         session: {} as unknown as Request['session'],
       } as Partial<Request>;
       const mockRes = {
@@ -98,7 +98,7 @@ describe('Upload Journey Routes', () => {
     it('should redirect to next step', () => {
       const handler = mockPost.mock.calls.find(call => call[0] === `${RouteNames.uploadJourney}/:stepId`)[2];
       const mockReq = {
-        params: { stepId: 'before-you-start' },
+        params: { stepId: UploadStepNames.BeforeYouStart },
         session: {} as unknown as Request['session'],
         body: {},
       } as Partial<Request>;
@@ -116,11 +116,11 @@ describe('Upload Journey Routes', () => {
 
     it('should handle validation errors', () => {
       const { uploadSteps } = require('../../../main/upload-journey/config');
-      uploadSteps['confidentiality'].validate = () => ({ error: 'Test error' });
+      uploadSteps[UploadStepNames.Confidentiality].validate = () => ({ error: 'Test error' });
 
       const handler = mockPost.mock.calls.find(call => call[0] === `${RouteNames.uploadJourney}/:stepId`)[2];
       const mockReq = {
-        params: { stepId: 'confidentiality' },
+        params: { stepId: UploadStepNames.Confidentiality },
         session: {} as unknown as Request['session'],
         body: {},
       } as Partial<Request>;
@@ -133,16 +133,16 @@ describe('Upload Journey Routes', () => {
 
       expect(mockRes.render).toHaveBeenCalled();
 
-      delete uploadSteps['confidentiality'].validate;
+      delete uploadSteps[UploadStepNames.Confidentiality].validate;
     });
 
     it('should persist data', () => {
       const { uploadSteps } = require('../../../main/upload-journey/config');
-      uploadSteps['confidentiality'].persist = (body: Record<string, unknown>) => ({ data: body.test });
+      uploadSteps[UploadStepNames.Confidentiality].persist = (body: Record<string, unknown>) => ({ data: body.test });
 
       const handler = mockPost.mock.calls.find(call => call[0] === `${RouteNames.uploadJourney}/:stepId`)[2];
       const mockReq = {
-        params: { stepId: 'confidentiality' },
+        params: { stepId: UploadStepNames.Confidentiality },
         session: {} as unknown as Request['session'],
         body: { test: 'value' },
       } as Partial<Request>;
@@ -155,13 +155,13 @@ describe('Upload Journey Routes', () => {
 
       expect(mockReq.session?.uploadJourneyData).toEqual({ data: 'value' });
 
-      delete uploadSteps['confidentiality'].persist;
+      delete uploadSteps[UploadStepNames.Confidentiality].persist;
     });
 
     it('should handle missing session', () => {
       const handler = mockPost.mock.calls.find(call => call[0] === `${RouteNames.uploadJourney}/:stepId`)[2];
       const mockReq = {
-        params: { stepId: 'before-you-start' },
+        params: { stepId: UploadStepNames.BeforeYouStart },
         session: undefined,
         body: {},
       } as Partial<Request>;
