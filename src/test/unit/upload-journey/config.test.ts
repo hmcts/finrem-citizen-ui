@@ -16,8 +16,19 @@ describe('Upload Journey Configuration', () => {
     it('should have correct configuration', () => {
       const step = uploadSteps['confidentiality'];
       expect(step.template).toBe('upload-journey/confidentiality');
-      expect(step.next!({})).toBeNull();
+      expect(step.next!({})).toBe('fdr');
       expect(step.previous!({})).toBe('before-you-start');
+      expect(step.validate).toBeUndefined();
+      expect(step.persist).toBeUndefined();
+    });
+  });
+
+  describe('fdr', () => {
+    it('should have correct configuration', () => {
+      const step = uploadSteps['fdr'];
+      expect(step.template).toBe('upload-journey/fdr');
+      expect(step.next!({})).toBeNull();
+      expect(step.previous!({})).toBe('confidentiality');
       expect(step.validate).toBeUndefined();
       expect(step.persist).toBeUndefined();
     });
