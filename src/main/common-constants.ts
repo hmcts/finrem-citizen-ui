@@ -41,3 +41,8 @@ export const ViewNames = {
   UploadJourneyBeforeYouStart: 'upload-journey/before-you-start',
   UploadJourneyConfidentiality: 'upload-journey/confidentiality',
 };
+
+export const UploadStepNames = {
+  BeforeYouStart: 'before-you-start',
+  Confidentiality: 'confidentiality',
+};
