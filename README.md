@@ -246,6 +246,104 @@ Mock Session Injection URL:
 - Page objects: `src/test/functional/pom/`
 - Shared Playwright fixtures: `src/test/fixtures/fixtures.ts`
 
+## Writing Functional Tests: Fixtures and Helpers
+
+Functional tests should stay thin and readable:
+
+- Use fixtures for setup and dependency injection.
+- Keep selectors/assertions in POM classes where possible.
+- Use shared helpers for repeated assertion patterns.
+
+### 1) Import `test` and `expect` from shared fixtures
+
+Always import from `src/test/fixtures/fixtures.ts` in functional specs (not directly from Playwright) so shared fixtures are available:
+
+```ts
+import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
+```
+
+### 2) Use injected fixtures in test arguments
+
+Fixtures are injected by name in the test function parameter list.
+
+Common fixtures:
+
+- `loggedInPage`: completed login session and test user
+- `dashboardPage`, `beforeYouStartPage`, `enterCaseNumberPage`, `enterAccessCodePage`: page objects
+- `confidentialityGuidancePage`: confidentiality page object
+- `assertionHelpers`: shared helper functions
+- `axeUtils`: accessibility auditing utility
+
+Example:
+
+```ts
+test('example', async ({
+  loggedInPage: _loggedInPage,
+  dashboardPage,
+}) => {
+  await assertionHelpers.expectExactTextsVisible(confidentialityGuidancePage.page, [
+    'Confidential information could be, for example:',
+  ]);
+  await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+});
+```
+
+### 3) Prefer POM methods over inline locators
+
+If an assertion is specific to a page, place it in that page object under `src/test/functional/pom/` and call it from the spec.
+
+Good:
+
+```ts
+await confidentialityGuidancePage.verifyPurposeAndGuidanceLink();
+```
+
+Avoid (in spec files), unless truly one-off:
+
+```ts
+await expect(page.getByRole('heading', { name: 'Getting help' })).toBeVisible();
+```
+
+### 4) Shared helper: `assertionHelpers`
+
+Location: `src/test/functional/utils/helpers/assertionHelpers.ts`
+
+
+- `expectExactTextsVisible(page, texts)`
+
+Use this for repeated exact text assertions where text appears. For mixed-content blocks (for example text combined with links or line breaks), prefer scoped `toContainText(...)` assertions in the POM.
+
+Example:
+
+```ts
+await assertionHelpers.expectExactTextsVisible(page, [
+  'addresses',
+  'phone numbers',
+]);
+```
+
+### 5) Keep tests DRY with `beforeEach`
+
+Extract repeat navigation/setup into a shared helper function inside the spec (or into a POM method if page-specific):
+
+```ts
+test.beforeEach(async ({ loggedInPage: _loggedInPage, dashboardPage, beforeYouStartPage, page }) => {
+  await dashboardPage.navigateToDashboard();
+  await dashboardPage.clickGoToDocumentUpload();
+  await beforeYouStartPage.startNowButton.click();
+  await expect(page).toHaveURL(/\/upload\/confidentiality/);
+});
+```
+
+### 6) Quick authoring checklist
+
+- Import from shared fixtures.
+- Inject only the fixtures needed for that test.
+- Put page-specific logic in POM classes.
+- Use `assertionHelpers` for repeated generic assertions.
+- Use robust locators (`getByRole`, scoped locators, `toContainText` for mixed content).
+- Keep test titles user-behavior focused and descriptive.
+
 ## Linting
 
 Code style and quality are enforced with:

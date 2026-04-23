@@ -2,7 +2,7 @@ import { DEFAULT_AXE_OPTIONS, test } from '../../fixtures/fixtures';
 
 
 test.describe('Dashboard upload journey', () => {
-  test.beforeEach(async ({ loggedInPage: _loggedInPage, dashboardPage }) => {
+  test.beforeEach(async ({ loggedInPage: _loggedInPage, dashboardPage, assertionHelpers: _assertionHelpers }) => {
     // Ensure logged-in session and navigate to dashboard for each test
     await dashboardPage.navigateToDashboard();
   });
@@ -12,6 +12,16 @@ test.describe('Dashboard upload journey', () => {
     axeUtils,
   }) => {
     await dashboardPage.verifyDashboardPageContent();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  });
+
+  test('Global header and footer are visible on dashboard @a11y', async ({
+    dashboardPage,
+    basePage,
+    axeUtils,
+  }) => {
+    await dashboardPage.verifyDashboardPageContent();
+    await basePage.verifyGlobalHeaderAndFooter();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 

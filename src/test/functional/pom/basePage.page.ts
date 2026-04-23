@@ -51,6 +51,20 @@ export class BasePage {
     await this.signOutBtn.click();
   }
 
+  // Verify shared GOV.UK header and footer chrome present on authenticated pages
+  async verifyGlobalHeaderAndFooter(): Promise<void> {
+    await this.expectVisible([
+      this.headerLogo,
+      this.serviceNav,
+      this.navigationLink,
+      this.signOutBtn,
+      this.footer,
+      this.licenceDescription,
+      this.licenceLink,
+      this.copyRightImgLink,
+    ]);
+  }
+
   /**
    * Bypasses the CCD case-number lookup by hitting the test-support endpoint.
    * Sets session caseNumber and caseData (with mock access codes) then
