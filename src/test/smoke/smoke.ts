@@ -1,3 +1,5 @@
+/// <reference types="node" />
+import { describe, expect, test } from '@jest/globals';
 import axios from 'axios';
 
 const testUrl = process.env.TEST_URL || 'http://localhost:3100';
@@ -5,7 +7,7 @@ const testUrl = process.env.TEST_URL || 'http://localhost:3100';
 const axiosConfig = {
   headers: { 'Accept-Encoding': 'gzip' },
   maxRedirects: 0,
-  // We allow 200 (OK) or 302 (Redirect, e.g., to a login page)
+  // We allow 200 (OK) or 302 (Redirect)
   validateStatus: (status: number) => status === 200 || status === 302,
 };
 
@@ -32,6 +34,11 @@ describe('Smoke Test - Page Availability', () => {
 
   test('Before You Start page loads', async () => {
     const response = await axios.get(`${testUrl}/upload/before-you-start`, axiosConfig);
+    expect([200, 302]).toContain(response.status);
+  });
+
+  test('Confidentiality Guidance page loads', async () => {
+    const response = await axios.get(`${testUrl}/upload/confidentiality`, axiosConfig);
     expect([200, 302]).toContain(response.status);
   });
 });
