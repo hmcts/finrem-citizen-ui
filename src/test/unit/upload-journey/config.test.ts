@@ -1,34 +1,35 @@
+import { UploadStepNames } from '../../../main/common-constants';
 import { uploadSteps } from '../../../main/upload-journey/config';
 
 describe('Upload Journey Configuration', () => {
-  describe('before-you-start', () => {
+  describe(UploadStepNames.BeforeYouStart, () => {
     it('should have correct configuration', () => {
-      const step = uploadSteps['before-you-start'];
+      const step = uploadSteps[UploadStepNames.BeforeYouStart];
       expect(step.template).toBe('upload-journey/before-you-start');
-      expect(step.next!({})).toBe('confidentiality');
+      expect(step.next!({})).toBe(UploadStepNames.Confidentiality);
       expect(step.previous!({})).toBeNull();
       expect(step.validate).toBeUndefined();
       expect(step.persist).toBeUndefined();
     });
   });
 
-  describe('confidentiality', () => {
+  describe(UploadStepNames.Confidentiality, () => {
     it('should have correct configuration', () => {
-      const step = uploadSteps['confidentiality'];
+      const step = uploadSteps[UploadStepNames.Confidentiality];
       expect(step.template).toBe('upload-journey/confidentiality');
-      expect(step.next!({})).toBe('fdr');
-      expect(step.previous!({})).toBe('before-you-start');
+      expect(step.next!({})).toBe(UploadStepNames.FDR);
+      expect(step.previous!({})).toBe(UploadStepNames.BeforeYouStart);
       expect(step.validate).toBeUndefined();
       expect(step.persist).toBeUndefined();
     });
   });
 
-  describe('fdr', () => {
+  describe(UploadStepNames.FDR, () => {
     it('should have correct configuration', () => {
-      const step = uploadSteps['fdr'];
+      const step = uploadSteps[UploadStepNames.FDR];
       expect(step.template).toBe('upload-journey/fdr');
       expect(step.next!({})).toBeNull();
-      expect(step.previous!({})).toBe('confidentiality');
+      expect(step.previous!({})).toBe(UploadStepNames.Confidentiality);
       expect(step.validate).toBeUndefined();
       expect(step.persist).toBeUndefined();
     });

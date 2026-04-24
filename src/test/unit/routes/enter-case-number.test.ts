@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import express, { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 
@@ -50,7 +50,8 @@ type SessionLike = {
 
 const buildTestApp = (
   sessionOverrides: Partial<SessionLike> = {},
-  saveErr?: Error
+  saveErr?: Error,
+  onSessionCreated?: (session: SessionLike) => void
 ) => {
   const testApp = express();
   testApp.use(express.json());
@@ -63,6 +64,7 @@ const buildTestApp = (
       },
       ...sessionOverrides,
     };
+    onSessionCreated?.(session);
     (req as unknown as { session: SessionLike }).session = session;
     next();
   });
@@ -223,18 +225,18 @@ describe('Enter Case Number Validation', () => {
 });
 
 describe('Enter Case Number Route Handlers', () => {
-  let mockGetCaseById: jest.Mock;
+  let mockGetCaseById: jest.MockedFunction<(caseId: string) => Promise<unknown>>;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockGetCaseById = jest.fn();
+    mockGetCaseById = jest.fn() as unknown as jest.MockedFunction<(caseId: string) => Promise<unknown>>;
 
-    (getCaseApi as jest.Mock).mockReturnValue({
+    jest.mocked(getCaseApi).mockReturnValue({
       getCaseById: mockGetCaseById,
-    });
+    } as unknown as ReturnType<typeof getCaseApi>);
 
-    (getSystemUser as jest.Mock).mockResolvedValue({
+    jest.mocked(getSystemUser).mockResolvedValue({
       accessToken: 'mock-access',
       id: 'system-user',
       sub: '123',
@@ -242,7 +244,7 @@ describe('Enter Case Number Route Handlers', () => {
       givenName: 'System',
       familyName: 'User',
       roles: ['admin'],
-    });
+    } as unknown as Awaited<ReturnType<typeof getSystemUser>>);
   });
 
   it('GET /enter-case-number renders view with session errors and temp value', async () => {
@@ -285,6 +287,32 @@ describe('Enter Case Number Route Handlers', () => {
     expect(res.status).toBe(302);
     expect(res.header.location).toBe('/enter-access-code');
     expect(mockGetCaseById).toHaveBeenCalledWith('1234567801234567');
+  });
+
+  it('POST /enter-case-number transitions session state with caseNumber and caseData on CCD success', async () => {
+    const loadedCaseData = { id: '1234567890123456' };
+    mockGetCaseById.mockResolvedValue(loadedCaseData);
+
+    let capturedSession: SessionLike | undefined;
+
+    const res = await request(
+      buildTestApp(
+        { user: { accessToken: 'token' } },
+        undefined,
+        session => {
+          capturedSession = session;
+        }
+      )
+    )
+      .post('/enter-case-number')
+      .send({ caseNumber: '1234-5678-0123-4567' });
+
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/enter-access-code');
+    expect(capturedSession?.caseNumber).toBe('1234-5678-0123-4567');
+    expect(capturedSession?.caseData).toEqual(loadedCaseData);
+    expect(capturedSession?.caseNumberErrors).toBeUndefined();
+    expect(capturedSession?.tempCaseNumber).toBeUndefined();
   });
 
   it('POST /enter-case-number sets form error and redirects when CCD lookup fails', async () => {

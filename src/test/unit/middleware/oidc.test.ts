@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import type { NextFunction, Request, Response } from 'express';
 
 import { RouteNames } from '../../../main/common-constants';
@@ -53,7 +54,7 @@ describe('oidcMiddleware', () => {
       originalUrl: '/protected?query=1',
       session: {
         user: undefined,
-        save: jest.fn(callback => callback()),
+        save: jest.fn((callback: (err?: unknown) => void) => callback()),
       },
     } as unknown as Request;
 
@@ -66,7 +67,7 @@ describe('oidcMiddleware', () => {
     oidcMiddleware(req, res, next);
 
     expect(next).not.toHaveBeenCalled();
-    expect(req.session!.returnTo).toBe('/protected?query=1');
+    expect((req.session as { returnTo?: string })!.returnTo).toBe('/protected?query=1');
     expect(req.session!.save).toHaveBeenCalled(); // Verify save was called
     expect(res.redirect).toHaveBeenCalledWith(RouteNames.login);
   });

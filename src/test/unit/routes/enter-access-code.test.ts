@@ -1,4 +1,4 @@
-import { describe } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import express, { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 
@@ -190,18 +190,18 @@ describe('validateAccessCodeAgainstCase', () => {
 });
 
 describe('addUserToCaseForRole', () => {
-  let mockAddUsersToCase: jest.Mock;
+  let mockAddUsersToCase: jest.MockedFunction<(users: unknown[]) => Promise<void>>;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockAddUsersToCase = jest.fn();
+    mockAddUsersToCase = jest.fn() as unknown as jest.MockedFunction<(users: unknown[]) => Promise<void>>;
 
-    (getCaseApi as jest.Mock).mockReturnValue({
+    jest.mocked(getCaseApi).mockReturnValue({
       addUsersToCase: mockAddUsersToCase,
-    });
+    } as unknown as ReturnType<typeof getCaseApi>);
 
-    (getSystemUser as jest.Mock).mockResolvedValue({
+    jest.mocked(getSystemUser).mockResolvedValue({
       accessToken: 'mock-access',
       idToken: 'mock-id',
       refreshToken: undefined,
@@ -211,7 +211,7 @@ describe('addUserToCaseForRole', () => {
       givenName: 'System',
       familyName: 'User',
       roles: ['admin'],
-    });
+    } as unknown as Awaited<ReturnType<typeof getSystemUser>>);
   });
 
   it('successfully adds user to case and logs info', async () => {
@@ -322,16 +322,17 @@ describe('GET /enter-access-code route handler', () => {
 });
 
 describe('POST /enter-access-code route handler', () => {
-  let mockAddUsersToCase: jest.Mock;
+  let mockAddUsersToCase: jest.MockedFunction<(users: unknown[]) => Promise<void>>;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAddUsersToCase = jest.fn().mockResolvedValue(undefined);
-    (getCaseApi as jest.Mock).mockReturnValue({ addUsersToCase: mockAddUsersToCase });
-    (getSystemUser as jest.Mock).mockResolvedValue({
+    mockAddUsersToCase = jest.fn() as unknown as jest.MockedFunction<(users: unknown[]) => Promise<void>>;
+    mockAddUsersToCase.mockResolvedValue(undefined);
+    jest.mocked(getCaseApi).mockReturnValue({ addUsersToCase: mockAddUsersToCase } as unknown as ReturnType<typeof getCaseApi>);
+    jest.mocked(getSystemUser).mockResolvedValue({
       accessToken: 'mock-access', sub: '123', id: 'system-user',
       email: 'system@test.com', givenName: 'System', familyName: 'User', roles: ['admin'],
-    });
+    } as unknown as Awaited<ReturnType<typeof getSystemUser>>);
   });
 
   it('redirects to enter-case-number when no caseNumber in session', async () => {
