@@ -1,10 +1,26 @@
 import { DEFAULT_AXE_OPTIONS, test } from '../../fixtures/fixtures';
+
+async function navigateToConfidentialityPage(
+  dashboardPage: {
+    navigateToDashboard: () => Promise<void>;
+    clickGoToDocumentUpload: () => Promise<void>;
+  },
+  beforeYouStartPage: {
+    startUploadJourney: () => Promise<void>;
+  },
+  basePage: {
+    verifyGlobalHeaderAndFooter: () => Promise<void>;
+  }
+): Promise<void> {
+  await dashboardPage.navigateToDashboard();
+  await dashboardPage.clickGoToDocumentUpload();
+  await beforeYouStartPage.startUploadJourney();
+  await basePage.verifyGlobalHeaderAndFooter();
+}
  
 test.describe('Confidentiality page @PR', () => {
-  test.beforeEach(async ({ loggedInPage: _loggedInPage, dashboardPage, beforeYouStartPage }) => {
-    await dashboardPage.navigateToDashboard();
-    await dashboardPage.clickGoToDocumentUpload();
-    await beforeYouStartPage.startUploadJourney();
+  test.beforeEach(async ({ loggedInPage: _loggedInPage, dashboardPage, beforeYouStartPage, basePage }) => {
+    await navigateToConfidentialityPage(dashboardPage, beforeYouStartPage, basePage);
   });
  
   // AC1: Page renders with correct URL and key layout elements
@@ -51,8 +67,18 @@ test.describe('Confidentiality page @PR', () => {
     await confidentialityPage.verifyCourtRecordWarning();
   });
  
-  // AC7 + AC8: Continue and Cancel navigation
-  test('Continue and Cancel buttons navigate correctly @PR @a11y', async ({
+  // AC7: Continue navigates to next upload step
+  test('Continue button navigates to upload step @PR @a11y', async ({
+    confidentialityPage,
+    axeUtils,
+  }) => {
+    await confidentialityPage.verifyConfidentialityPageContent();
+    await confidentialityPage.clickContinueAndExpectUploadStep();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  });
+
+  // AC8: Cancel returns to dashboard
+  test('Cancel button returns to dashboard @PR @a11y', async ({
     dashboardPage,
     confidentialityPage,
     axeUtils,
@@ -60,8 +86,7 @@ test.describe('Confidentiality page @PR', () => {
     await confidentialityPage.verifyConfidentialityPageContent();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
  
-    // AC8: Cancel returns to dashboard
-    await confidentialityPage.cancelToDashboard();
+    await confidentialityPage.clickCancelAndExpectDashboard();
     await dashboardPage.verifyDashboardPageContent();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });

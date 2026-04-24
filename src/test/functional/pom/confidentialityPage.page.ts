@@ -6,6 +6,13 @@ import { BasePage } from './basePage.page';
 const URL_PATTERNS = {
   CONFIDENTIALITY: /\/upload\/confidentiality/,
   DASHBOARD: /\/dashboard/,
+  UPLOAD: /\/upload/,
+};
+
+const EXTERNAL_LINKS = {
+  FORM_C8:
+    'https://www.gov.uk/government/publications/form-c8-confidential-contact-details-family-procedure-rules-2010-rule-291',
+  CALL_CHARGES: 'https://www.gov.uk/call-charges',
 };
 
 export class ConfidentialityPage extends BasePage {
@@ -81,9 +88,10 @@ export class ConfidentialityPage extends BasePage {
     // AC1: Verify page URL and core layout elements
   async verifyConfidentialityPageContent(): Promise<void> {
     await expect(this.page).toHaveURL(URL_PATTERNS.CONFIDENTIALITY);
+    await this.verifyGlobalHeaderAndFooter();
  
     await this.expectVisible([
-      this.headerLogo,
+      this.serviceNav,
       this.navigationLink,
       this.signOutBtn,
       this.pageHeader,
@@ -98,7 +106,7 @@ export class ConfidentialityPage extends BasePage {
     // AC2: Verify form C8 link is present and points to the correct GOV.UK URL
   async verifyFormC8Link(): Promise<void> {
     await expect(this.formC8Link).toBeVisible();
-    await expect(this.formC8Link).toHaveAttribute('href','https://www.gov.uk/government/publications/form-c8-confidential-contact-details-family-procedure-rules-2010-rule-291');
+    await expect(this.formC8Link).toHaveAttribute('href', EXTERNAL_LINKS.FORM_C8);
     await expect(this.formC8Link).toHaveAttribute('target', '_blank');
     await expect(this.formC8Link).toHaveAttribute('rel', 'noopener noreferrer');
   }
@@ -129,18 +137,44 @@ export class ConfidentialityPage extends BasePage {
     await expect(this.warningMessage).toBeVisible();
   }
 
-  // AC7: Verify link after clicking continue button and that it navigates to the correct page(cuurently the same confidentiality page as the form is not implemented yet)
+  // AC7: Continue to the next step in the upload journey
+  async clickContinueAndExpectUploadStep(): Promise<void> {
+    await this.continueButton.click();
+    await expect(this.page).toHaveURL(URL_PATTERNS.UPLOAD);
+  }
 
-   // AC8: Click Cancel and verify navigation to the dashboard
-  async cancelToDashboard(): Promise<void> {
+  // AC8: Click Cancel and verify navigation to the dashboard
+  async clickCancelAndExpectDashboard(): Promise<void> {
     await this.cancelLink.click();
     await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
   }
 
-    // AC9: Expand contact help panel and verify all contact details
-  async verifyContactHelpContent(): Promise<void> {
-    await this.contactUsForHelpSummary.click();
+  // Backwards-compatible alias used by existing specs
+  async cancelToDashboard(): Promise<void> {
+    await this.clickCancelAndExpectDashboard();
+  }
+
+  // Keep panel expansion idempotent so tests do not accidentally toggle it closed.
+  async expandContactHelpIfCollapsed(): Promise<void> {
+    const isExpanded = await this.contactUsForHelpDetails.getAttribute('open');
+    if (isExpanded === null) {
+      await this.contactUsForHelpSummary.click();
+    }
     await expect(this.contactUsForHelpDetails).toHaveAttribute('open', '');
+  }
+
+  // Collapse helper for tests that need to assert both closed/open behavior.
+  async collapseContactHelpIfExpanded(): Promise<void> {
+    const isExpanded = await this.contactUsForHelpDetails.getAttribute('open');
+    if (isExpanded !== null) {
+      await this.contactUsForHelpSummary.click();
+    }
+    await expect(this.contactUsForHelpDetails).not.toHaveAttribute('open', '');
+  }
+
+  // AC9: Expand contact help panel and verify all contact details
+  async verifyContactHelpContent(): Promise<void> {
+    await this.expandContactHelpIfCollapsed();
     
     // Verify contact information is visible when expanded
     await this.expectVisible([
@@ -151,6 +185,7 @@ export class ConfidentialityPage extends BasePage {
     ]);
 
     await expect(this.helpEmailLink).toHaveAttribute('href', 'mailto:FRCexample@justice.gov.uk');
+    await expect(this.callChargesLink).toHaveAttribute('href', EXTERNAL_LINKS.CALL_CHARGES);
     await expect(this.callChargesLink).toHaveAttribute('target', '_blank');
     await expect(this.callChargesLink).toHaveAttribute('rel', 'noopener noreferrer');
   }
