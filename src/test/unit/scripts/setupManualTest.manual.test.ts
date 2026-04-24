@@ -4,6 +4,7 @@
  * Output: Login credentials and case number to use in the application.
  */
 
+import { describe, expect, it } from '@jest/globals';
 import dotenv from 'dotenv';
 
 import { ContestedCaseFactory } from '../../functional/utils/factories/contested/ContestedCaseFactory';
@@ -42,6 +43,12 @@ describe('Setup Manual Test', () => {
       const applicationUrl = getApplicationUrl();
       const useRealIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
       const useMockAccessCodes = !useRealIntegration && process.env.MOCK_ACCESS_CODES !== 'false';
+      let modeLabel = 'real case only';
+      if (useRealIntegration) {
+        modeLabel = 'real integration (Form C at hearing)';
+      } else if (useMockAccessCodes) {
+        modeLabel = 'mock access codes enabled';
+      }
 
       console.log('\n========================================\n📋 Creating test setup...\n========================================\n');
 
@@ -52,19 +59,20 @@ describe('Setup Manual Test', () => {
       console.log('✓ User created\n');
 
       console.log('Creating contested case...');
-      const caseDetails = useRealIntegration
-        ? await ContestedCaseFactory.createContestedCaseWithHearingAndAccessCode()
-        : useMockAccessCodes
-          ? await ContestedCaseFactory.createContestedCaseWithMockedAccessCode()
-          : {
-              caseId: String(
-                await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)
-              ),
-              applicantCode: undefined,
-              respondentCode: undefined,
-            };
+      let caseDetails;
+      if (useRealIntegration) {
+        caseDetails = await ContestedCaseFactory.createContestedCaseWithHearingAndAccessCode();
+      } else if (useMockAccessCodes) {
+        caseDetails = await ContestedCaseFactory.createContestedCaseWithMockedAccessCode();
+      } else {
+        caseDetails = {
+          caseId: String(await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)),
+          applicantCode: undefined,
+          respondentCode: undefined,
+        };
+      }
       const caseId = caseDetails.caseId;
-      const formattedCaseId = caseId.replace(/(\d{4})(?=\d)/g, '$1-');
+      const formattedCaseId = caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
       const mockInjectionUrl =
         caseDetails.applicantCode && caseDetails.respondentCode
           ? buildMockAccessCodeInjectionUrl(
@@ -87,7 +95,7 @@ describe('Setup Manual Test', () => {
 
 Environment: ${appEnv}
 URL: ${applicationUrl}
-Mode: ${useRealIntegration ? 'real integration (Form C at hearing)' : useMockAccessCodes ? 'mock access codes enabled' : 'real case only'}
+Mode: ${modeLabel}
 
 Login Credentials:
   Username: ${user.username}
