@@ -37,7 +37,7 @@ export class ConfidentialityPage extends BasePage {
   readonly helpOpeningHours: Locator;
   readonly callChargesLink: Locator;
 
-    constructor(readonly page: Page) {
+  constructor(readonly page: Page) {
     super(page);
     this.pageHeader = this.page.getByRole('heading', {
       name: 'Keeping information confidential for safety reasons',
@@ -137,10 +137,21 @@ export class ConfidentialityPage extends BasePage {
     await expect(this.warningMessage).toBeVisible();
   }
 
-  // AC7: Continue to the next step in the upload journey
+  // AC7: Assert Continue button is visible and enabled
+  async verifyContinueButton(): Promise<void> {
+    await expect(this.continueButton).toBeVisible();
+    await expect(this.continueButton).toBeEnabled();
+  }
+
+  // AC7: Click Continue and assert navigation to next upload step
   async clickContinueAndExpectUploadStep(): Promise<void> {
     await this.continueButton.click();
     await expect(this.page).toHaveURL(URL_PATTERNS.UPLOAD);
+  }
+
+  // AC8: Assert Cancel link is visible
+  async verifyCancelLink(): Promise<void> {
+    await expect(this.cancelLink).toBeVisible();
   }
 
   // AC8: Click Cancel and verify navigation to the dashboard
@@ -149,11 +160,7 @@ export class ConfidentialityPage extends BasePage {
     await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
   }
 
-  // Backwards-compatible alias used by existing specs
-  async cancelToDashboard(): Promise<void> {
-    await this.clickCancelAndExpectDashboard();
-  }
-
+  // Keep panel expansion, so tests do not accidentally toggle it closed
   async expandContactHelpIfCollapsed(): Promise<void> {
     const isExpanded = await this.contactUsForHelpDetails.getAttribute('open');
     if (isExpanded === null) {

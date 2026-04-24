@@ -67,25 +67,23 @@ test.describe('Confidentiality page @PR', () => {
     await confidentialityPage.verifyCourtRecordWarning();
   });
  
-  // AC7: Continue navigates to next upload step
+  // AC7: Continue button is visible, enabled, and navigates to the next upload step
   test('Continue button navigates to upload step @PR @a11y', async ({
     confidentialityPage,
     axeUtils,
   }) => {
-    await confidentialityPage.verifyConfidentialityPageContent();
+    await confidentialityPage.verifyContinueButton();
     await confidentialityPage.clickContinueAndExpectUploadStep();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
-  // AC8: Cancel returns to dashboard
+  // AC8: Cancel link is visible and returns user to the dashboard
   test('Cancel button returns to dashboard @PR @a11y', async ({
     dashboardPage,
     confidentialityPage,
     axeUtils,
   }) => {
-    await confidentialityPage.verifyConfidentialityPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
- 
+    await confidentialityPage.verifyCancelLink();
     await confidentialityPage.clickCancelAndExpectDashboard();
     await dashboardPage.verifyDashboardPageContent();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
