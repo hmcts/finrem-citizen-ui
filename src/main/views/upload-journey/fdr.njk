@@ -1,0 +1,21 @@
+{% extends "template.njk" %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% if previousStep %}
+        <a href="/upload/{{ previousStep }}" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
+      {% endif %}
+
+      <h1 class="govuk-heading-l">FDR</h1>
+
+      <p class="govuk-body">This is a placeholder page for FDR content.</p>
+
+      <form method="post">
+        <button type="submit" class="govuk-button" data-module="govuk-button">
+          Continue
+        </button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

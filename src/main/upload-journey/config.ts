@@ -1,4 +1,6 @@
-export type UploadStepId = 'before-you-start' | 'confidentiality';
+import { UploadStepNames } from '../common-constants';
+
+export type UploadStepId = typeof UploadStepNames[keyof typeof UploadStepNames];
 
 export type UploadJourneyData = Record<string, never>;
 
@@ -12,16 +14,22 @@ export type UploadStep = {
 
 export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
-  'before-you-start': {
+  [UploadStepNames.BeforeYouStart]: {
     template: 'upload-journey/before-you-start',
-    next: () => 'confidentiality',
+    next: () => UploadStepNames.Confidentiality,
     previous: () => null,
   },
 
-  'confidentiality': {
+  [UploadStepNames.Confidentiality]: {
     template: 'upload-journey/confidentiality',
+    next: () => UploadStepNames.FDR,
+    previous: () => UploadStepNames.BeforeYouStart,
+  },
+
+  [UploadStepNames.FDR]: {
+    template: 'upload-journey/fdr',
     next: () => null,
-    previous: () => 'before-you-start',
+    previous: () => UploadStepNames.Confidentiality,
   },
   
 };

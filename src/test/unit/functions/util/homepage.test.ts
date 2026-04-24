@@ -1,10 +1,16 @@
-import { describe } from '@jest/globals';
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { Request } from 'express';
+import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../../../../main/app/auth/user';
 import { getCaseApi } from '../../../../main/app/case/case-api';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { RouteNames } from '../../../../main/common-constants';
-import { getHomePageForUser } from '../../../../main/functions/util/commonUtil';
+import { getHomePageForUser, loadCaseAndReloadSession } from '../../../../main/functions/util/commonUtil';
+
+jest.mock('config', () => ({
+  get: jest.fn(() => 'http://ccd.test.local'),
+}));
 
 jest.mock('../../../../main/app/case/case-api', () => ({
   getCaseApi: jest.fn(),
@@ -14,21 +20,30 @@ jest.mock('../../../../main/app/auth/user', () => ({
   getSystemUser: jest.fn(),
 }));
 
+type MinimalCaseData = { id: string };
+type HomePageCaseApiMock = {
+  getExistingUserCase: jest.MockedFunction<() => Promise<string | undefined>>;
+  getCaseById: jest.MockedFunction<(caseId: string) => Promise<MinimalCaseData>>;
+};
+type ReloadSessionCaseApiMock = {
+  getCaseById: jest.MockedFunction<(caseId: string) => Promise<MinimalCaseData>>;
+};
+
+const createCaseData = (id: string): MinimalCaseData => ({ id });
+
 describe('getHomePageForUser', () => {
-  let mockGetExistingUserCase: jest.Mock;
-  let mockGetCaseById: jest.Mock;
+  let mockGetExistingUserCase: jest.MockedFunction<() => Promise<string | undefined>>;
+  let mockGetCaseById: jest.MockedFunction<(caseId: string) => Promise<MinimalCaseData>>;
   let userDetails: UserDetails;
 
   beforeEach(() => {
-    mockGetExistingUserCase = jest.fn();
-    mockGetCaseById = jest.fn();
-
-    (getCaseApi as jest.Mock).mockReturnValue({
+    mockGetExistingUserCase = jest.fn() as unknown as jest.MockedFunction<() => Promise<string | undefined>>;
+    mockGetCaseById = jest.fn() as unknown as jest.MockedFunction<(caseId: string) => Promise<MinimalCaseData>>;
+    const caseApiMock: HomePageCaseApiMock = {
       getExistingUserCase: mockGetExistingUserCase,
       getCaseById: mockGetCaseById,
-    });
-
-    (getSystemUser as jest.Mock).mockResolvedValue({
+    };
+    const systemUser: UserDetails = {
       accessToken: 'mock-access',
       idToken: 'mock-id',
       refreshToken: undefined,
@@ -38,7 +53,11 @@ describe('getHomePageForUser', () => {
       givenName: 'System',
       familyName: 'User',
       roles: ['admin'],
-    });
+    };
+
+    jest.mocked(getCaseApi).mockReturnValue(caseApiMock as unknown as ReturnType<typeof getCaseApi>);
+
+    jest.mocked(getSystemUser).mockResolvedValue(systemUser);
 
     userDetails = {  accessToken: 'token',
       idToken: 'id',
@@ -52,7 +71,7 @@ describe('getHomePageForUser', () => {
   });
 
   test('should route to dashboard when caseId exists', async () => {
-    const mockCaseData = { id: 'CASE123' };
+    const mockCaseData = createCaseData('CASE123');
 
     mockGetExistingUserCase.mockResolvedValue('CASE123');
     mockGetCaseById.mockResolvedValue(mockCaseData);
@@ -72,12 +91,12 @@ describe('getHomePageForUser', () => {
     expect(getSystemUser).toHaveBeenCalled();
   });
 
-  test.each([
+  test.each<[string, string | undefined]>([
     ['empty string', ''],
     ['undefined', undefined],
   ])(
     'should route to enterCaseNumber when caseId is %s',
-    async (_, caseId) => {
+    async (_label, caseId) => {
       mockGetExistingUserCase.mockResolvedValue(caseId);
 
       const result = await getHomePageForUser(userDetails);
@@ -86,4 +105,103 @@ describe('getHomePageForUser', () => {
       expect(result).toEqual({ 'url': RouteNames.enterCaseNumber });
     }
   );
+});
+
+describe('loadCaseAndReloadSession', () => {
+  let mockGetCaseById: jest.MockedFunction<(caseId: string) => Promise<MinimalCaseData>>;
+  let mockLogger: LoggerInstance;
+  let mockReq: Request;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetCaseById = jest.fn() as unknown as jest.MockedFunction<(caseId: string) => Promise<MinimalCaseData>>;
+    const caseApiMock: ReloadSessionCaseApiMock = {
+      getCaseById: mockGetCaseById,
+    };
+    const systemUser: UserDetails = {
+      accessToken: 'mock-access',
+      idToken: 'mock-id',
+      refreshToken: undefined,
+      sub: '123',
+      id: 'system-user',
+      email: 'system@test.com',
+      givenName: 'System',
+      familyName: 'User',
+      roles: ['admin'],
+    };
+
+    jest.mocked(getCaseApi).mockReturnValue(caseApiMock as unknown as ReturnType<typeof getCaseApi>);
+
+    jest.mocked(getSystemUser).mockResolvedValue(systemUser);
+
+    mockLogger = {
+      info: jest.fn(),
+      error: jest.fn(),
+    } as unknown as LoggerInstance;
+
+    mockReq = {
+      session: {},
+    } as unknown as Request;
+  });
+
+  test('loads case by normalised case reference and stores caseData in session', async () => {
+    const caseData = createCaseData('1234567890123456');
+    mockGetCaseById.mockResolvedValue(caseData);
+
+    const result = await loadCaseAndReloadSession(mockReq, '1234-5678-9012-3456', mockLogger);
+
+    expect(getSystemUser).toHaveBeenCalled();
+    expect(getCaseApi).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'system-user' }),
+      mockLogger
+    );
+    expect(mockGetCaseById).toHaveBeenCalledWith('1234567890123456');
+    expect(result).toEqual(caseData);
+    expect((mockReq.session as { caseData?: unknown }).caseData).toEqual(caseData);
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Loading case 1234567890123456 from CCD backend: http://ccd.test.local'
+    );
+    expect(mockLogger.info).toHaveBeenCalledWith('Case 1234567890123456 successfully loaded from CCD');
+  });
+
+  test('loads case when case reference contains no hyphens', async () => {
+    const caseData = createCaseData('1234567890123456');
+    mockGetCaseById.mockResolvedValue(caseData);
+
+    await loadCaseAndReloadSession(mockReq, '1234567890123456', mockLogger);
+
+    expect(mockGetCaseById).toHaveBeenCalledWith('1234567890123456');
+    expect((mockReq.session as { caseData?: unknown }).caseData).toEqual(caseData);
+  });
+
+  test('logs and rethrows when case cannot be loaded from CCD', async () => {
+    const ccdError = new Error('CCD unavailable');
+    mockGetCaseById.mockRejectedValue(ccdError);
+
+    await expect(
+      loadCaseAndReloadSession(mockReq, '1234-5678-9012-3456', mockLogger)
+    ).rejects.toThrow('CCD unavailable');
+
+    expect((mockReq.session as { caseData?: unknown }).caseData).toBeUndefined();
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Failed to load case 1234567890123456 from CCD:',
+      ccdError
+    );
+  });
+
+  test('logs and rethrows when getting system user fails', async () => {
+    const systemUserError = new Error('IDAM unavailable');
+    jest.mocked(getSystemUser).mockRejectedValue(systemUserError);
+
+    await expect(
+      loadCaseAndReloadSession(mockReq, '1234-5678-9012-3456', mockLogger)
+    ).rejects.toThrow('IDAM unavailable');
+
+    expect(getCaseApi).not.toHaveBeenCalled();
+    expect((mockReq.session as { caseData?: unknown }).caseData).toBeUndefined();
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Failed to load case 1234567890123456 from CCD:',
+      systemUserError
+    );
+  });
 });

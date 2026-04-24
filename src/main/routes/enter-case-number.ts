@@ -2,10 +2,9 @@ import 'express-session';
 
 import { Application, Request, Response } from 'express';
 
-import { getSystemUser } from '../app/auth/user';
-import { getCaseApi } from '../app/case/case-api';
 import { FinremCaseData } from '../app/case/definition';
 import { RouteNames, ViewNames } from '../common-constants';
+import { loadCaseAndReloadSession } from '../functions/util/commonUtil';
 import { oidcMiddleware } from '../middleware';
 
 const { Logger } = require('@hmcts/nodejs-logging');
@@ -105,19 +104,9 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
     }
 
     // Validate case exists in CCD backend
-    const ccdUrl = require('config').get('services.case.url');
-    logger.info(`User authenticated - validating case ${caseId} against CCD backend: ${ccdUrl}`);
     try {
-      const systemUser = await getSystemUser();
-      const caseApi = getCaseApi(systemUser, logger);
-      const caseData = await caseApi.getCaseById(caseId);
-      logger.info(`Case ${caseId} found in CCD`);
-
-      // Store case data in session for later use
-      req.session.caseData = caseData;
-    } catch (error) {
-      logger.error(`Case ${caseId} not found in CCD:`, error);
-
+      await loadCaseAndReloadSession(req, caseId, logger);
+    } catch {
       // Case doesn't exist or user doesn't have access
       req.session.caseNumberErrors = {
         caseNumber: 'We cannot find that case number, Enter the case number that you received from the court',
