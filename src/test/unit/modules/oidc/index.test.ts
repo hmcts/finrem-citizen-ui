@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import config from 'config';
 import type { Express, NextFunction, Request, Response } from 'express';
 import * as oidcClient from 'openid-client';
@@ -7,8 +8,8 @@ import { OIDCAuthenticationError, OIDCCallbackError } from '../../../../main/mod
 import { OIDCModule } from '../../../../main/modules/oidc/index';
 
 const mockLogger = {
-  info: jest.fn<void, [string]>(),
-  error: jest.fn<void, [string, unknown?]>(),
+  info: jest.fn(),
+  error: jest.fn(),
 };
 
 jest.mock('@hmcts/nodejs-logging', () => ({
@@ -62,7 +63,7 @@ type RequestLike = {
 };
 
 type ResponseLike = {
-  redirect: jest.Mock<void, [string]>;
+  redirect: jest.Mock;
 };
 
 type RouteHandler = (req: Request, res: Response, next: NextFunction) => void | Promise<void>;
@@ -144,7 +145,7 @@ describe('OIDCModule', () => {
 
   const makeRes = (): Response => {
     const response: ResponseLike = {
-      redirect: jest.fn<void, [string]>(),
+      redirect: jest.fn(),
     };
 
     return response as unknown as Response;
@@ -154,9 +155,9 @@ describe('OIDCModule', () => {
     const middleware: SetupMiddleware[] = [];
     const routes: Record<string, RouteHandler> = {};
 
-    const setMock = jest.fn<void, [string, boolean]>();
-    const useMock = jest.fn<void, [SetupMiddleware]>();
-    const getMock = jest.fn<void, [string, RouteHandler]>();
+    const setMock = jest.fn();
+    const useMock = jest.fn() as unknown as jest.MockedFunction<(fn: SetupMiddleware) => void>;
+    const getMock = jest.fn() as unknown as jest.MockedFunction<(path: string, handler: RouteHandler) => void>;
 
     const app: TestApp = {
       set: setMock as unknown as Express['set'],
@@ -357,7 +358,7 @@ describe('OIDCModule', () => {
     module.enableFor(app as unknown as Express);
 
     const middleware = app.__middleware[0];
-    const next = jest.fn<void, [unknown?]>();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
     await middleware(makeReq(), makeRes(), next);
 
@@ -376,7 +377,7 @@ describe('OIDCModule', () => {
     module.enableFor(app as unknown as Express);
 
     const middleware = app.__middleware[0];
-    const next = jest.fn<void, [unknown?]>();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
     await middleware(makeReq(), makeRes(), next);
 
@@ -393,7 +394,7 @@ describe('OIDCModule', () => {
     module.enableFor(app as unknown as Express);
 
     const middleware = app.__middleware[0];
-    const next = jest.fn<void, [unknown?]>();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
     await middleware(makeReq(), makeRes(), next);
 
@@ -409,7 +410,7 @@ describe('OIDCModule', () => {
     const handler = app.__routes[RouteNames.logout];
     const req = makeReq();
     const res = makeRes();
-    const next = jest.fn<void, [unknown?]>();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
     await handler(req, res, next);
 
@@ -444,7 +445,7 @@ describe('OIDCModule', () => {
       },
     });
     const res = makeRes();
-    const next = jest.fn<void, [unknown?]>();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
     await handler(req, res, next);
 
@@ -478,7 +479,7 @@ describe('OIDCModule', () => {
       },
     });
     const res = makeRes();
-    const next = jest.fn<void, [unknown?]>();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
     await handler(req, res, next);
 
@@ -518,7 +519,7 @@ describe('OIDCModule', () => {
       },
     });
     const res = makeRes();
-    const next = jest.fn<void, [unknown?]>();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
     await handler(req, res, next);
 
@@ -560,7 +561,7 @@ describe('OIDCModule', () => {
     const handler = app.__routes[RouteNames.login];
     const req = makeReq();
     const res = makeRes();
-    const next = jest.fn<void, [unknown?]>();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
     await handler(req, res, next);
 
@@ -600,7 +601,7 @@ describe('OIDCModule', () => {
     const handler = app.__routes[RouteNames.login];
     const req = makeReq();
     const res = makeRes();
-    const next = jest.fn<void, [unknown?]>();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
     await handler(req, res, next);
 
@@ -653,7 +654,7 @@ describe('OIDCModule', () => {
       },
     });
     const res = makeRes();
-    const next = jest.fn<void, [unknown?]>();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
     await handler(req, res, next);
 
@@ -718,7 +719,7 @@ describe('OIDCModule', () => {
       },
     });
     const res = makeRes();
-    const next = jest.fn<void, [unknown?]>();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
     await handler(req, res, next);
 
@@ -753,7 +754,7 @@ describe('OIDCModule', () => {
       },
     });
     const res = makeRes();
-    const next = jest.fn<void, [unknown?]>();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
     await handler(req, res, next);
 
@@ -788,7 +789,7 @@ describe('OIDCModule', () => {
       },
     });
     const res = makeRes();
-    const next = jest.fn<void, [unknown?]>();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
     await handler(req, res, next);
 
