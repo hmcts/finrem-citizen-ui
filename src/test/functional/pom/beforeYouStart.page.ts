@@ -98,17 +98,12 @@ export class BeforeYouStartPage extends BasePage {
     await this.contactUsForHelpSummary.click();
     await expect(this.contactUsForHelpDetails).toHaveAttribute('open', '');
 
-    // Verify contact information is visible when expanded
-    await expect(this.helpEmailLink).toBeVisible();
-    await expect(this.helpTelephoneText).toBeVisible();
-    await expect(this.callChargesLink).toBeVisible();
-
-    // Verify email link is functional
-    await expect(this.helpEmailLink).toHaveAttribute('href', 'mailto:FRCexample@justice.gov.uk');
-
-    // Verify external link opens in new tab 
-    await expect(this.callChargesLink).toHaveAttribute('target', '_blank');
-    await expect(this.callChargesLink).toHaveAttribute('rel', 'noopener noreferrer');
+    await this.expectVisible([this.helpEmailLink, this.helpTelephoneText, this.callChargesLink]);
+    await this.expectAttributes([
+      { locator: this.helpEmailLink, name: 'href', value: 'mailto:FRCexample@justice.gov.uk' },
+      { locator: this.callChargesLink, name: 'target', value: '_blank' },
+      { locator: this.callChargesLink, name: 'rel', value: 'noopener noreferrer' },
+    ]);
   }
 
   // Click back link and verify navigation to dashboard

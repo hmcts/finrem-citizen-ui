@@ -1,4 +1,6 @@
-import { expect,Locator, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
+
+import { AttributeAssertion, expectAttributes, expectVisible } from '../utils/helpers/pomAssertions';
 
 const ROUTES = {
   HOME: '/',
@@ -51,12 +53,9 @@ export class BasePage {
     await this.signOutBtn.click();
   }
 
-  // Assert shared header and footer chrome is visible
+  // Assert shared header and footer is visible
   async verifyGlobalHeaderAndFooter(): Promise<void> {
-    await expect(this.headerLogo).toBeVisible();
-    await expect(this.footer).toBeVisible();
-    await expect(this.licenceLink).toBeVisible();
-    await expect(this.copyRightImgLink).toBeVisible();
+    await this.expectVisible([this.headerLogo, this.footer, this.licenceLink, this.copyRightImgLink]);
   }
 
   /**
@@ -92,17 +91,11 @@ export class BasePage {
 
   // Assert multiple locators are visible
   protected async expectVisible(locators: Locator[]): Promise<void> {
-    for (const locator of locators) {
-      await expect(locator).toBeVisible();
-    }
+    await expectVisible(locators);
   }
 
   // Assert multiple locator attributes have expected values
-  protected async expectAttributes(
-    assertions: { locator: Locator; name: string; value: string }[]
-  ): Promise<void> {
-    for (const assertion of assertions) {
-      await expect(assertion.locator).toHaveAttribute(assertion.name, assertion.value);
-    }
+  protected async expectAttributes(assertions: AttributeAssertion[]): Promise<void> {
+    await expectAttributes(assertions);
   }
 }

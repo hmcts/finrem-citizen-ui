@@ -105,10 +105,12 @@ export class ConfidentialityPage extends BasePage {
 
     // AC2: Verify form C8 link is present and points to the correct GOV.UK URL
   async verifyFormC8Link(): Promise<void> {
-    await expect(this.formC8Link).toBeVisible();
-    await expect(this.formC8Link).toHaveAttribute('href', EXTERNAL_LINKS.FORM_C8);
-    await expect(this.formC8Link).toHaveAttribute('target', '_blank');
-    await expect(this.formC8Link).toHaveAttribute('rel', 'noopener noreferrer');
+    await this.expectVisible([this.formC8Link]);
+    await this.expectAttributes([
+      { locator: this.formC8Link, name: 'href', value: EXTERNAL_LINKS.FORM_C8 },
+      { locator: this.formC8Link, name: 'target', value: '_blank' },
+      { locator: this.formC8Link, name: 'rel', value: 'noopener noreferrer' },
+    ]);
   }
 
     // AC3: Verify redaction instructions are displayed
@@ -191,9 +193,11 @@ export class ConfidentialityPage extends BasePage {
     ]);
 
     await expect(this.helpEmailLink).toHaveAttribute('href', 'mailto:FRCexample@justice.gov.uk');
-    await expect(this.callChargesLink).toHaveAttribute('href', EXTERNAL_LINKS.CALL_CHARGES);
-    await expect(this.callChargesLink).toHaveAttribute('target', '_blank');
-    await expect(this.callChargesLink).toHaveAttribute('rel', 'noopener noreferrer');
+    await this.expectAttributes([
+      { locator: this.callChargesLink, name: 'href', value: EXTERNAL_LINKS.CALL_CHARGES },
+      { locator: this.callChargesLink, name: 'target', value: '_blank' },
+      { locator: this.callChargesLink, name: 'rel', value: 'noopener noreferrer' },
+    ]);
   }
 
     // Verify the contact help panel starts collapsed
