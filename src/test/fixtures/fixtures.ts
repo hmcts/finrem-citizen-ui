@@ -81,6 +81,7 @@ type MyFixtures = {
   contestedCaseWithHearing: CreatedCaseWithAccessCodes;
   axeUtils: AxeUtils;
   beforeYouStartPage: BeforeYouStartPage;
+  confidentialityPage: ConfidentialityPage;
   assertionHelpers: AssertionHelpers;
 };
 
