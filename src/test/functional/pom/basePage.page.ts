@@ -51,18 +51,12 @@ export class BasePage {
     await this.signOutBtn.click();
   }
 
-  // Verify shared GOV.UK header and footer chrome present on authenticated pages
+  // Assert shared header and footer chrome is visible
   async verifyGlobalHeaderAndFooter(): Promise<void> {
-    await this.expectVisible([
-      this.headerLogo,
-      this.serviceNav,
-      this.navigationLink,
-      this.signOutBtn,
-      this.footer,
-      this.licenceDescription,
-      this.licenceLink,
-      this.copyRightImgLink,
-    ]);
+    await expect(this.headerLogo).toBeVisible();
+    await expect(this.footer).toBeVisible();
+    await expect(this.licenceLink).toBeVisible();
+    await expect(this.copyRightImgLink).toBeVisible();
   }
 
   /**

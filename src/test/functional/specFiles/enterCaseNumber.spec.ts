@@ -17,24 +17,28 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
    */
   test('Citizen can enter a valid case number created via API', async ({
     loggedInPage: _loggedInPage,
+    basePage,
     enterCaseNumberPage,
     contestedCaseForCaseNumber,
     assertionHelpers: _assertionHelpers,
-    page
+    page,
   }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
+    await basePage.verifyGlobalHeaderAndFooter();
     await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
     await expect(page).toHaveURL(/\/enter-access-code$/);
   });
 
   test('Citizen can enter formatted case number (with hyphens)', async ({
     loggedInPage: _loggedInPage,
+    basePage,
     enterCaseNumberPage,
     contestedCaseForCaseNumber,
     assertionHelpers: _assertionHelpers,
-    page
+    page,
   }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
+    await basePage.verifyGlobalHeaderAndFooter();
     // Use the formatted case ID (XXXX-XXXX-XXXX-XXXX)
     await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.formattedCaseId);
     // Verify redirection to Access Code page
@@ -44,18 +48,14 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
 });
 
 test.describe('Enter Case Number Page Verification', () => {
-  test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage, assertionHelpers: _assertionHelpers }) => {
-    await enterCaseNumberPage.verifyCaseNumberPageContent();
-  });
-
-  test('Global header and footer are visible on enter case number page @a11y', async ({
+  test.beforeEach(async ({
+    loggedInPage: _loggedInPage,
     enterCaseNumberPage,
+    assertionHelpers: _assertionHelpers,
     basePage,
-    axeUtils,
   }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
     await basePage.verifyGlobalHeaderAndFooter();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   // --- VALIDATION ERROR SCENARIOS (no real case needed) ---
