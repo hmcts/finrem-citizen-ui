@@ -1,17 +1,19 @@
 import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
+import { BasePage } from '../pom/basePage.page';
+import { DashboardPage } from '../pom/dashboardPage.page';
+import { EnterAccessCodePage } from '../pom/enterAccessCode.page';
+
+interface CaseWithHearing {
+  caseId: string;
+  applicantAccessCode: string;
+  respondentAccessCode: string;
+}
 
 async function navigateToLinkedDashboard(
-  basePage: {
-    injectCaseSession: (caseId: string, applicantCode: string, respondentCode: string) => Promise<void>;
-    verifyGlobalHeaderAndFooter: () => Promise<void>;
-  },
-  enterAccessCodePage: { submitAccessCode: (accessCode: string) => Promise<void> },
-  dashboardPage: { verifyDashboardPageContent: () => Promise<void> },
-  contestedCaseWithHearing: {
-    caseId: string;
-    applicantAccessCode: string;
-    respondentAccessCode: string;
-  }
+  basePage: BasePage,
+  enterAccessCodePage: EnterAccessCodePage,
+  dashboardPage: DashboardPage,
+  contestedCaseWithHearing: CaseWithHearing
 ): Promise<void> {
   await basePage.injectCaseSession(
     contestedCaseWithHearing.caseId,

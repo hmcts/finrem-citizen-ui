@@ -1,16 +1,12 @@
 import { DEFAULT_AXE_OPTIONS, test } from '../../fixtures/fixtures';
+import { BasePage } from '../pom/basePage.page';
+import { BeforeYouStartPage } from '../pom/beforeYouStart.page';
+import { DashboardPage } from '../pom/dashboardPage.page';
 
 async function navigateToConfidentialityPage(
-  dashboardPage: {
-    navigateToDashboard: () => Promise<void>;
-    clickGoToDocumentUpload: () => Promise<void>;
-  },
-  beforeYouStartPage: {
-    startUploadJourney: () => Promise<void>;
-  },
-  basePage: {
-    verifyGlobalHeaderAndFooter: () => Promise<void>;
-  }
+  dashboardPage: DashboardPage,
+  beforeYouStartPage: BeforeYouStartPage,
+  basePage: BasePage
 ): Promise<void> {
   await dashboardPage.navigateToDashboard();
   await dashboardPage.clickGoToDocumentUpload();
