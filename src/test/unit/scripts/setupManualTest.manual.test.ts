@@ -72,7 +72,7 @@ describe('Setup Manual Test', () => {
         };
       }
       const caseId = caseDetails.caseId;
-      const formattedCaseId = caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
+      const formattedCaseId = caseId.replace(/(\d{4})(?=\d)/g, '$1-');
       const mockInjectionUrl =
         caseDetails.applicantCode && caseDetails.respondentCode
           ? buildMockAccessCodeInjectionUrl(
