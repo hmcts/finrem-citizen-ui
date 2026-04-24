@@ -8,9 +8,16 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
    * 2. citizenUser: Calls the API to create a fresh user.
    * 3. loggedInPage: Navigates to the app and performs the UI login.
    */
-  test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage, assertionHelpers: _assertionHelpers, axeUtils: _axeUtils }) => {
+  test.beforeEach(async ({
+    loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    assertionHelpers: _assertionHelpers,
+    axeUtils: _axeUtils,
+    basePage,
+  }) => {
     // The browser is already logged in here
     await enterCaseNumberPage.verifyCaseNumberPageContent();
+    await basePage.verifyGlobalHeaderAndFooter();
   });
 
   test('User can see access case number page after successful login @a11y', async ({ axeUtils: _axeUtils }) => {
@@ -33,9 +40,6 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
   });
 
   test('Verify Global Layout elements: Header, Footer, @a11y', async ({ page, basePage, axeUtils: _axeUtils }) => {
-    // Verify shared header/footer visibility
-    await basePage.verifyGlobalHeaderAndFooter();
-
     // Verify footer links navigate correctly
     await basePage.licenceLink.click();
     await basePage.verifyUrl(/.*open-government-licence.*/);

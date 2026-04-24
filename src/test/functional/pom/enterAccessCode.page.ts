@@ -1,5 +1,7 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+import { expectVisible } from '../utils/helpers/pomAssertions';
+
 export class EnterAccessCodePage {
   readonly accessCodeHeader: Locator;
   readonly accessCodeInput: Locator;
@@ -25,11 +27,7 @@ export class EnterAccessCodePage {
   }
 
   async verifyAccessCodePageContent(): Promise<void> {
-    const elementsToCheck = [this.accessCodeHeader, this.accessCodeInput, this.accessCodeHint, this.continueBtn];
-
-    for (const element of elementsToCheck) {
-      await expect(element).toBeVisible();
-    }
+    await expectVisible([this.accessCodeHeader, this.accessCodeInput, this.accessCodeHint, this.continueBtn]);
   }
 
   async submitAccessCode(accessCode: string): Promise<void> {
@@ -43,8 +41,10 @@ export class EnterAccessCodePage {
 
   async expectValidationError(message: string): Promise<void> {
     const resolvedMessage = this.validationMessageAliases[message] ?? message;
-    await expect(this.errorSummaryTitle).toBeVisible();
-    await expect(this.errorSummary.getByRole('link', { name: resolvedMessage })).toBeVisible();
+    await expectVisible([
+      this.errorSummaryTitle,
+      this.errorSummary.getByRole('link', { name: resolvedMessage }),
+    ]);
     await expect(this.fieldError).toContainText(resolvedMessage);
   }
 

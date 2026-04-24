@@ -1,4 +1,29 @@
 import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
+import { BasePage } from '../pom/basePage.page';
+import { DashboardPage } from '../pom/dashboardPage.page';
+import { EnterAccessCodePage } from '../pom/enterAccessCode.page';
+
+interface CaseWithHearing {
+  caseId: string;
+  applicantAccessCode: string;
+  respondentAccessCode: string;
+}
+
+async function navigateToLinkedDashboard(
+  basePage: BasePage,
+  enterAccessCodePage: EnterAccessCodePage,
+  dashboardPage: DashboardPage,
+  contestedCaseWithHearing: CaseWithHearing
+): Promise<void> {
+  await basePage.injectCaseSession(
+    contestedCaseWithHearing.caseId,
+    contestedCaseWithHearing.applicantAccessCode,
+    contestedCaseWithHearing.respondentAccessCode
+  );
+  await basePage.verifyGlobalHeaderAndFooter();
+  await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+  await dashboardPage.verifyDashboardPageContent();
+}
 
 // MOCK: All tests in this describe use the contestedCaseWithHearing fixture with hardcoded
 // access codes (APPCODE1 / RSPCODE1) injected via /__test/inject-case-session.
@@ -6,26 +31,6 @@ import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
 // To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
 test.describe('Persistent Session After Re-login', () => {
   test.use({ useMockTestSupport: true });
-
-  test('[mock] Global header and footer are visible on dashboard @a11y', async ({
-    loggedInPage: _loggedInPage,
-    basePage,
-    dashboardPage,
-    enterAccessCodePage,
-    contestedCaseWithHearing,
-    assertionHelpers: _assertionHelpers,
-    axeUtils,
-  }) => {
-    await basePage.injectCaseSession(
-      contestedCaseWithHearing.caseId,
-      contestedCaseWithHearing.applicantAccessCode,
-      contestedCaseWithHearing.respondentAccessCode
-    );
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
-    await dashboardPage.verifyDashboardPageContent();
-    await basePage.verifyGlobalHeaderAndFooter();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
-  });
 
   /**
    * Verify that after logging in, entering case number and access code,
@@ -47,14 +52,7 @@ test.describe('Persistent Session After Re-login', () => {
     // Two full login cycles: loggedInPage fixture + explicit re-login after sign-out.
     // Longer timeout required for login flow
     test.setTimeout(90_000);
-    // Inject mock session and link case
-    await basePage.injectCaseSession(
-      contestedCaseWithHearing.caseId,
-      contestedCaseWithHearing.applicantAccessCode,
-      contestedCaseWithHearing.respondentAccessCode
-    );
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
-    await dashboardPage.verifyDashboardPageContent();
+    await navigateToLinkedDashboard(basePage, enterAccessCodePage, dashboardPage, contestedCaseWithHearing);
 
     // Sign out — IDAM redirects to its sign-in page
     await basePage.signOut();
@@ -85,14 +83,7 @@ test.describe('Persistent Session After Re-login', () => {
     context,
     axeUtils,
   }) => {
-    // Inject mock session and link case in first tab
-    await basePage.injectCaseSession(
-      contestedCaseWithHearing.caseId,
-      contestedCaseWithHearing.applicantAccessCode,
-      contestedCaseWithHearing.respondentAccessCode
-    );
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
-    await dashboardPage.verifyDashboardPageContent();
+    await navigateToLinkedDashboard(basePage, enterAccessCodePage, dashboardPage, contestedCaseWithHearing);
 
     // Open a new tab in the same browser context (shares cookies/session)
     const newPage = await context.newPage();
@@ -122,14 +113,7 @@ test.describe('Persistent Session After Re-login', () => {
     page,
     axeUtils,
   }) => {
-    // Inject mock session and link case
-    await basePage.injectCaseSession(
-      contestedCaseWithHearing.caseId,
-      contestedCaseWithHearing.applicantAccessCode,
-      contestedCaseWithHearing.respondentAccessCode
-    );
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
-    await dashboardPage.verifyDashboardPageContent();
+    await navigateToLinkedDashboard(basePage, enterAccessCodePage, dashboardPage, contestedCaseWithHearing);
 
     // Navigate away then back to dashboard within the same authenticated session
     await page.goto('/');

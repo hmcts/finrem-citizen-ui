@@ -46,8 +46,7 @@ export class DashboardPage extends BasePage {
       this.uploadDocumentsText,
     ]);
 
-    // Verify button navigates to correct page
-    await expect(this.goToDocumentUploadButton).toHaveAttribute('href', '/upload/before-you-start');
+    await this.expectAttributes([{ locator: this.goToDocumentUploadButton, name: 'href', value: '/upload/before-you-start' }]);
   }
 
   // Click the document upload button
