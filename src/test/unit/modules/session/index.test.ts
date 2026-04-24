@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import express from 'express';
 
 jest.mock('@hmcts/nodejs-logging', () => ({
@@ -37,7 +38,7 @@ jest.mock('config', () => ({
 }));
 
 const mockSessionMiddleware = jest.requireMock('express-session') as jest.Mock;
-const configGetMock = (jest.requireMock('config') as { get: jest.Mock }).get;
+const configGetMock = (jest.requireMock('config') as { get: jest.MockedFunction<(key: string) => unknown> }).get;
 const redisModule = jest.requireMock('ioredis') as { Redis: jest.Mock };
 
 import { parseSessionSecret,Session } from '../../../../main/modules/session/index';
