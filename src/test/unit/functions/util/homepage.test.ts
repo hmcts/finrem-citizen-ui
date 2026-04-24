@@ -4,7 +4,6 @@ import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../../../../main/app/auth/user';
 import { getCaseApi } from '../../../../main/app/case/case-api';
-import { FinremCaseData } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { RouteNames } from '../../../../main/common-constants';
 import { getHomePageForUser, loadCaseAndReloadSession } from '../../../../main/functions/util/commonUtil';
@@ -21,17 +20,25 @@ jest.mock('../../../../main/app/auth/user', () => ({
   getSystemUser: jest.fn(),
 }));
 
-type HomePageCaseApiMock = Pick<ReturnType<typeof getCaseApi>, 'getExistingUserCase' | 'getCaseById'>;
-type ReloadSessionCaseApiMock = Pick<ReturnType<typeof getCaseApi>, 'getCaseById'>;
+type MinimalCaseData = { id: string };
+type HomePageCaseApiMock = {
+  getExistingUserCase: jest.MockedFunction<() => Promise<string | undefined>>;
+  getCaseById: jest.MockedFunction<(caseId: string) => Promise<MinimalCaseData>>;
+};
+type ReloadSessionCaseApiMock = {
+  getCaseById: jest.MockedFunction<(caseId: string) => Promise<MinimalCaseData>>;
+};
+
+const createCaseData = (id: string): MinimalCaseData => ({ id });
 
 describe('getHomePageForUser', () => {
   let mockGetExistingUserCase: jest.MockedFunction<() => Promise<string | undefined>>;
-  let mockGetCaseById: jest.MockedFunction<(caseId: string) => Promise<FinremCaseData>>;
+  let mockGetCaseById: jest.MockedFunction<(caseId: string) => Promise<MinimalCaseData>>;
   let userDetails: UserDetails;
 
   beforeEach(() => {
     mockGetExistingUserCase = jest.fn() as unknown as jest.MockedFunction<() => Promise<string | undefined>>;
-    mockGetCaseById = jest.fn() as unknown as jest.MockedFunction<(caseId: string) => Promise<FinremCaseData>>;
+    mockGetCaseById = jest.fn() as unknown as jest.MockedFunction<(caseId: string) => Promise<MinimalCaseData>>;
     const caseApiMock: HomePageCaseApiMock = {
       getExistingUserCase: mockGetExistingUserCase,
       getCaseById: mockGetCaseById,
@@ -48,7 +55,7 @@ describe('getHomePageForUser', () => {
       roles: ['admin'],
     };
 
-    jest.mocked(getCaseApi).mockReturnValue(caseApiMock as ReturnType<typeof getCaseApi>);
+    jest.mocked(getCaseApi).mockReturnValue(caseApiMock as unknown as ReturnType<typeof getCaseApi>);
 
     jest.mocked(getSystemUser).mockResolvedValue(systemUser);
 
@@ -64,7 +71,7 @@ describe('getHomePageForUser', () => {
   });
 
   test('should route to dashboard when caseId exists', async () => {
-    const mockCaseData = { id: 'CASE123' } as unknown as FinremCaseData;
+    const mockCaseData = createCaseData('CASE123');
 
     mockGetExistingUserCase.mockResolvedValue('CASE123');
     mockGetCaseById.mockResolvedValue(mockCaseData);
@@ -101,13 +108,13 @@ describe('getHomePageForUser', () => {
 });
 
 describe('loadCaseAndReloadSession', () => {
-  let mockGetCaseById: jest.MockedFunction<(caseId: string) => Promise<FinremCaseData>>;
+  let mockGetCaseById: jest.MockedFunction<(caseId: string) => Promise<MinimalCaseData>>;
   let mockLogger: LoggerInstance;
   let mockReq: Request;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCaseById = jest.fn() as unknown as jest.MockedFunction<(caseId: string) => Promise<FinremCaseData>>;
+    mockGetCaseById = jest.fn() as unknown as jest.MockedFunction<(caseId: string) => Promise<MinimalCaseData>>;
     const caseApiMock: ReloadSessionCaseApiMock = {
       getCaseById: mockGetCaseById,
     };
@@ -123,7 +130,7 @@ describe('loadCaseAndReloadSession', () => {
       roles: ['admin'],
     };
 
-    jest.mocked(getCaseApi).mockReturnValue(caseApiMock as ReturnType<typeof getCaseApi>);
+    jest.mocked(getCaseApi).mockReturnValue(caseApiMock as unknown as ReturnType<typeof getCaseApi>);
 
     jest.mocked(getSystemUser).mockResolvedValue(systemUser);
 
@@ -138,7 +145,7 @@ describe('loadCaseAndReloadSession', () => {
   });
 
   test('loads case by normalised case reference and stores caseData in session', async () => {
-    const caseData = { id: '1234567890123456' } as unknown as FinremCaseData;
+    const caseData = createCaseData('1234567890123456');
     mockGetCaseById.mockResolvedValue(caseData);
 
     const result = await loadCaseAndReloadSession(mockReq, '1234-5678-9012-3456', mockLogger);
@@ -158,7 +165,7 @@ describe('loadCaseAndReloadSession', () => {
   });
 
   test('loads case when case reference contains no hyphens', async () => {
-    const caseData = { id: '1234567890123456' } as unknown as FinremCaseData;
+    const caseData = createCaseData('1234567890123456');
     mockGetCaseById.mockResolvedValue(caseData);
 
     await loadCaseAndReloadSession(mockReq, '1234567890123456', mockLogger);
