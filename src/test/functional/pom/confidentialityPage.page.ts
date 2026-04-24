@@ -6,6 +6,7 @@ import { BasePage } from './basePage.page';
 const URL_PATTERNS = {
   CONFIDENTIALITY: /\/upload\/confidentiality/,
   DASHBOARD: /\/dashboard/,
+  FDR: /\/upload\/fdr/,
 };
 
 export class ConfidentialityPage extends BasePage {
@@ -129,7 +130,12 @@ export class ConfidentialityPage extends BasePage {
     await expect(this.warningMessage).toBeVisible();
   }
 
-  // AC7: Verify link after clicking continue button and that it navigates to the correct page(cuurently the same confidentiality page as the form is not implemented yet)
+  // AC7: Continue navigates to FDR page
+  async continueToFdrPage(): Promise<void> {
+    await expect(this.continueButton).toBeVisible();
+    await this.continueButton.click();
+    await expect(this.page).toHaveURL(URL_PATTERNS.FDR);
+  }
 
    // AC8: Click Cancel and verify navigation to the dashboard
   async cancelToDashboard(): Promise<void> {

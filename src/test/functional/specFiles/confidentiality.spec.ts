@@ -50,9 +50,18 @@ test.describe('Confidentiality page @PR', () => {
   }) => {
     await confidentialityPage.verifyCourtRecordWarning();
   });
+
+  // AC7: Continue navigation
+  test('Continue button navigates to FDR page @PR @a11y', async ({
+    confidentialityPage,
+    axeUtils,
+  }) => {
+    await confidentialityPage.continueToFdrPage();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  });
  
-  // AC7 + AC8: Continue and Cancel navigation
-  test('Continue and Cancel buttons navigate correctly @PR @a11y', async ({
+  // AC8: Cancel navigation
+  test('Cancel buttons navigate correctly @PR @a11y', async ({
     dashboardPage,
     confidentialityPage,
     axeUtils,
