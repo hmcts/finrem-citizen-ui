@@ -154,7 +154,6 @@ export class ConfidentialityPage extends BasePage {
     await this.clickCancelAndExpectDashboard();
   }
 
-  // Keep panel expansion idempotent so tests do not accidentally toggle it closed.
   async expandContactHelpIfCollapsed(): Promise<void> {
     const isExpanded = await this.contactUsForHelpDetails.getAttribute('open');
     if (isExpanded === null) {
@@ -163,7 +162,7 @@ export class ConfidentialityPage extends BasePage {
     await expect(this.contactUsForHelpDetails).toHaveAttribute('open', '');
   }
 
-  // Collapse helper for tests that need to assert both closed/open behavior.
+  // Collapse helper for tests to assert closed/open behavior
   async collapseContactHelpIfExpanded(): Promise<void> {
     const isExpanded = await this.contactUsForHelpDetails.getAttribute('open');
     if (isExpanded !== null) {
