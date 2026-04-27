@@ -1,1 +1,3 @@
-{}
+{
+  "rateLimitWindowMs": 900000
+}

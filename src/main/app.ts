@@ -24,7 +24,7 @@ const env = process.env.NODE_ENV || 'development';
 const developmentMode = env === 'development';
 
 const limiter = RateLimit({
-  windowMs: config.get<number>('rateLimitWindowMs'),
+  windowMs: Number(config.get('rateLimitWindowMs')), // 900000ms = 15 minutes
   max: 100,
 });
 

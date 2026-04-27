@@ -42,5 +42,6 @@
     "caseDocumentManagement": {
       "url": "CASE_DOCUMENT_MANAGEMENT_URL"
     }
-  }
+  },
+  "rateLimitWindowMs": "RATE_LIMIT_WINDOW_MS"
 }
