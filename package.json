@@ -138,6 +138,7 @@
     "flatted": "^3.4.0",
     "picomatch": "4.0.4",
     "path-to-regexp": "8.4.2",
-    "protobufjs": "8.0.1"
+    "protobufjs": "8.0.1",
+    "uuid": "14.0.0"
   }
 }

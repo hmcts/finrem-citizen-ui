@@ -1,0 +1,208 @@
+import { expect, Locator, Page } from '@playwright/test';
+
+import { BasePage } from './basePage.page';
+
+// URL path constants 
+const URL_PATTERNS = {
+  CONFIDENTIALITY: /\/upload\/confidentiality/,
+  DASHBOARD: /\/dashboard/,
+  UPLOAD: /\/upload/,
+};
+
+const EXTERNAL_LINKS = {
+  FORM_C8:
+    'https://www.gov.uk/government/publications/form-c8-confidential-contact-details-family-procedure-rules-2010-rule-291',
+  CALL_CHARGES: 'https://www.gov.uk/call-charges',
+};
+
+export class ConfidentialityPage extends BasePage {
+  readonly pageHeader: Locator;
+  readonly backLink: Locator;
+  readonly formC8Link: Locator;
+  readonly redactionInstructions: Locator;
+  readonly courtStaffDisclaimer: Locator;
+  readonly confidentialExamplesIntro: Locator;
+  readonly exampleAddresses: Locator;
+  readonly exampleLocationDetails: Locator;
+  readonly examplePhoneNumbers: Locator;
+  readonly doNotRedactText: Locator;
+  readonly warningMessage: Locator;
+  readonly continueButton: Locator;
+  readonly cancelLink: Locator;
+  readonly gettingHelpHeader: Locator;
+  readonly contactUsForHelpSummary: Locator;
+  readonly contactUsForHelpDetails: Locator;
+  readonly helpEmailLink: Locator;
+  readonly helpTelephoneText: Locator;
+  readonly helpOpeningHours: Locator;
+  readonly callChargesLink: Locator;
+
+  constructor(readonly page: Page) {
+    super(page);
+    this.pageHeader = this.page.getByRole('heading', {
+      name: 'Keeping information confidential for safety reasons',
+    });
+    this.backLink = this.page.getByRole('link', { name: 'Back' });
+    this.formC8Link = this.page.getByRole('link', {
+      name: 'applied to the court to keep your contact details confidential using form C8 (opens in new tab)',
+    });
+    this.redactionInstructions = this.page.getByText(
+      'You must redact (black out the text) any such information if you need to keep it private from the other party.',
+      { exact: false }
+    );
+    this.courtStaffDisclaimer = this.page.getByText(
+      'Court staff are not able to check any documents you submit to the court for any unintentional disclosure of your details.',
+      { exact: false }
+    );
+    this.confidentialExamplesIntro = this.page.getByText(
+      'Confidential information could be, for example:',
+      { exact: true }
+    );
+    this.exampleAddresses = this.page.getByText('addresses', { exact: true });
+    this.exampleLocationDetails = this.page.getByText(
+      'any specific location details shown on bank statements or other documents',
+      { exact: true }
+    );
+    this.examplePhoneNumbers = this.page.getByText('phone numbers', { exact: true });
+    this.doNotRedactText = this.page.getByText(
+      'Do not redact any financial amounts or payee details.',
+      { exact: true }
+    );
+    this.warningMessage = this.page.getByText(
+      'Once you submit your documents they will be on the court record. They could be seen by the other party or referred to in a hearing.',
+      { exact: false }
+    );
+    this.continueButton = this.page.getByRole('button', { name: 'Continue' });
+    this.cancelLink = this.page.getByRole('link', { name: 'Cancel' });
+    this.gettingHelpHeader = this.page.getByRole('heading', { name: 'Getting help' });
+    this.contactUsForHelpSummary = this.page.locator('summary', { hasText: 'Contact us for help' });
+    this.contactUsForHelpDetails = this.page.locator('details', { has: this.contactUsForHelpSummary });
+    this.helpEmailLink = this.page.getByRole('link', { name: 'FRCexample@justice.gov.uk' });
+    this.helpTelephoneText = this.page.getByText('0300 123 5577');
+    this.helpOpeningHours = this.page.getByText('Monday to Friday, 8.30am to 5pm', { exact: false });
+    this.callChargesLink = this.page.getByRole('link', {
+      name: 'Find out about call charges (opens in new tab)',
+    });
+  }
+
+    // AC1: Verify page URL and core layout elements
+  async verifyConfidentialityPageContent(): Promise<void> {
+    await expect(this.page).toHaveURL(URL_PATTERNS.CONFIDENTIALITY);
+    await this.verifyGlobalHeaderAndFooter();
+ 
+    await this.expectVisible([
+      this.serviceNav,
+      this.navigationLink,
+      this.signOutBtn,
+      this.pageHeader,
+      this.backLink,
+      this.continueButton,
+      this.cancelLink,
+      this.gettingHelpHeader,
+      this.contactUsForHelpSummary,
+    ]);
+  }
+
+    // AC2: Verify form C8 link is present and points to the correct GOV.UK URL
+  async verifyFormC8Link(): Promise<void> {
+    await this.expectVisible([this.formC8Link]);
+    await this.expectAttributes([
+      { locator: this.formC8Link, name: 'href', value: EXTERNAL_LINKS.FORM_C8 },
+      { locator: this.formC8Link, name: 'target', value: '_blank' },
+      { locator: this.formC8Link, name: 'rel', value: 'noopener noreferrer' },
+    ]);
+  }
+
+    // AC3: Verify redaction instructions are displayed
+  async verifyRedactionInstructions(): Promise<void> {
+    await expect(this.redactionInstructions).toBeVisible();
+  }
+
+    // AC4: Verify court staff disclaimer is displayed
+  async verifyCourtStaffDisclaimer(): Promise<void> {
+    await expect(this.courtStaffDisclaimer).toBeVisible();
+  }
+
+    // AC5: Verify confidential information examples and do-not-redact guidance
+  async verifyConfidentialInformationExamples(): Promise<void> {
+    await this.expectVisible([
+      this.confidentialExamplesIntro,
+      this.exampleAddresses,
+      this.exampleLocationDetails,
+      this.examplePhoneNumbers,
+      this.doNotRedactText,
+    ]);
+  }
+
+    // AC6: Verify warning message about documents being on the court record
+  async verifyCourtRecordWarning(): Promise<void> {
+    await expect(this.warningMessage).toBeVisible();
+  }
+
+  // AC7: Assert Continue button is visible and enabled
+  async verifyContinueButton(): Promise<void> {
+    await expect(this.continueButton).toBeVisible();
+    await expect(this.continueButton).toBeEnabled();
+  }
+
+  // AC7: Click Continue and assert navigation to next upload step
+  async clickContinueAndExpectUploadStep(): Promise<void> {
+    await this.continueButton.click();
+    await expect(this.page).toHaveURL(URL_PATTERNS.UPLOAD);
+  }
+
+  // AC8: Assert Cancel link is visible
+  async verifyCancelLink(): Promise<void> {
+    await expect(this.cancelLink).toBeVisible();
+  }
+
+  // AC8: Click Cancel and verify navigation to the dashboard
+  async clickCancelAndExpectDashboard(): Promise<void> {
+    await this.cancelLink.click();
+    await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
+  }
+
+  // Keep panel expansion, so tests do not accidentally toggle it closed
+  async expandContactHelpIfCollapsed(): Promise<void> {
+    const isExpanded = await this.contactUsForHelpDetails.getAttribute('open');
+    if (isExpanded === null) {
+      await this.contactUsForHelpSummary.click();
+    }
+    await expect(this.contactUsForHelpDetails).toHaveAttribute('open', '');
+  }
+
+  // Collapse helper for tests to assert closed/open behavior
+  async collapseContactHelpIfExpanded(): Promise<void> {
+    const isExpanded = await this.contactUsForHelpDetails.getAttribute('open');
+    if (isExpanded !== null) {
+      await this.contactUsForHelpSummary.click();
+    }
+    await expect(this.contactUsForHelpDetails).not.toHaveAttribute('open', '');
+  }
+
+  // AC9: Expand contact help panel and verify all contact details
+  async verifyContactHelpContent(): Promise<void> {
+    await this.expandContactHelpIfCollapsed();
+    
+    // Verify contact information is visible when expanded
+    await this.expectVisible([
+      this.helpEmailLink,
+      this.helpTelephoneText,
+      this.helpOpeningHours,
+      this.callChargesLink,
+    ]);
+
+    await expect(this.helpEmailLink).toHaveAttribute('href', 'mailto:FRCexample@justice.gov.uk');
+    await this.expectAttributes([
+      { locator: this.callChargesLink, name: 'href', value: EXTERNAL_LINKS.CALL_CHARGES },
+      { locator: this.callChargesLink, name: 'target', value: '_blank' },
+      { locator: this.callChargesLink, name: 'rel', value: 'noopener noreferrer' },
+    ]);
+  }
+
+    // Verify the contact help panel starts collapsed
+  async verifyContactHelpClosedByDefault(): Promise<void> {
+    await expect(this.contactUsForHelpDetails).not.toHaveAttribute('open', '');
+  }
+
+}

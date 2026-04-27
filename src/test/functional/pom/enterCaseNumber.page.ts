@@ -1,4 +1,6 @@
-import { expect,Locator, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
+
+import { expectVisible } from '../utils/helpers/pomAssertions';
 
 export class EnterCaseNumberPage {
   readonly caseNumberHeader: Locator;
@@ -21,12 +23,7 @@ export class EnterCaseNumberPage {
 
   async verifyCaseNumberPageContent(): Promise<void> {
     await expect(this.page).toHaveURL(/\/enter-case-number$/);
-    await expect(this.caseNumberHeader).toBeVisible();
-
-    const elementsToCheck = [this.caseNumberInput, this.caseNumberHint, this.continueBtn];
-    for (const element of elementsToCheck) {
-      await expect(element).toBeVisible();
-    }
+    await expectVisible([this.caseNumberHeader, this.caseNumberInput, this.caseNumberHint, this.continueBtn]);
   }
 
   async submitCaseNumber(caseNumber: string): Promise<void> {
@@ -39,8 +36,10 @@ export class EnterCaseNumberPage {
   }
 
   async expectValidationError(message: string): Promise<void> {
-    await expect(this.errorSummaryTitle).toBeVisible();
-    await expect(this.errorSummary.getByRole('link', { name: message })).toBeVisible();
+    await expectVisible([
+      this.errorSummaryTitle,
+      this.errorSummary.getByRole('link', { name: message }),
+    ]);
     await expect(this.fieldError).toContainText(message);
   }
 

@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { OIDCAuthenticationError, OIDCCallbackError, OIDCError } from '../../../../main/modules/oidc/errors';
 
 describe('OIDCError', () => {
