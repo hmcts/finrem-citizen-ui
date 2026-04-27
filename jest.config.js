@@ -24,7 +24,7 @@ module.exports = {
     '!src/main/**/*.d.ts',
     '!src/main/routes/health.ts',
     '!src/main/routes/info.ts',
-    '!src/main/routes/home.ts',
+    '!src/main/routes/home.test.ts',
     '!src/main/HttpError.ts',
     '!src/main/middleware/index.ts',
     '!src/main/modules/appinsights/**',
