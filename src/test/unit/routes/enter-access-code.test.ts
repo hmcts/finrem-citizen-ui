@@ -4,6 +4,7 @@ import request from 'supertest';
 
 import { getSystemUser } from '../../../main/app/auth/user';
 import { getCaseApi } from '../../../main/app/case/case-api';
+import { EVENT_TYPE } from '../../../main/app/case/case-type';
 import {
   AccessCodeCollection,
   CaseRole,
@@ -13,6 +14,7 @@ import {
 import setupEnterAccessCodeRoute, {
   addUserToCaseForRole,
   getMatchingAccessCode,
+  invalidateAccessCode,
   retrieveCaseData,
   validateAccessCode,
   validateAccessCodeAgainstCase,
@@ -323,12 +325,13 @@ describe('GET /enter-access-code route handler', () => {
 
 describe('POST /enter-access-code route handler', () => {
   let mockAddUsersToCase: jest.MockedFunction<(users: unknown[]) => Promise<void>>;
+  let mockTriggerEvent: jest.MockedFunction<(caseId: string, data: Partial<FinremCaseData>, event: string) => Promise<FinremCaseData>> = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockAddUsersToCase = jest.fn() as unknown as jest.MockedFunction<(users: unknown[]) => Promise<void>>;
     mockAddUsersToCase.mockResolvedValue(undefined);
-    jest.mocked(getCaseApi).mockReturnValue({ addUsersToCase: mockAddUsersToCase } as unknown as ReturnType<typeof getCaseApi>);
+    jest.mocked(getCaseApi).mockReturnValue({ addUsersToCase: mockAddUsersToCase, triggerEvent: mockTriggerEvent } as unknown as ReturnType<typeof getCaseApi>);
     jest.mocked(getSystemUser).mockResolvedValue({
       accessToken: 'mock-access', sub: '123', id: 'system-user',
       email: 'system@test.com', givenName: 'System', familyName: 'User', roles: ['admin'],
@@ -403,5 +406,95 @@ describe('POST /enter-access-code route handler', () => {
       .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
     expect(res.status).toBe(200);
     expect(res.body.view).toBe('error');
+  });
+});
+
+describe('invalidateAccessCode', () => {
+  const mockTriggerEvent: jest.MockedFunction<(caseId: string, data: Partial<FinremCaseData>, event: string) => Promise<FinremCaseData>> = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    (getCaseApi as jest.Mock).mockReturnValue({
+      triggerEvent: mockTriggerEvent,
+    });
+
+    jest.mocked(getSystemUser).mockResolvedValue({
+      accessToken: 'mock-access', sub: '123', id: 'system-user',
+      email: 'system@test.com', givenName: 'System', familyName: 'User', roles: ['admin'],
+    } as unknown as Awaited<ReturnType<typeof getSystemUser>>);
+  });
+
+  it('invalidates applicant access code and triggers applicant event', async () => {
+    const caseData = buildMockCaseData('APPCODE1');
+    mockTriggerEvent.mockResolvedValue(caseData);
+
+
+    const result = await invalidateAccessCode(
+      caseData,
+      'APPCODE1',
+      CaseRole.APPLICANT,
+      '12345'
+    );
+
+    expect(mockTriggerEvent).toHaveBeenCalledWith(
+      '12345',
+      {
+        applicantAccessCodes: [
+          expect.objectContaining({
+            value: expect.objectContaining({
+              isValid: YesOrNo.NO,
+            }),
+          }),
+        ],
+      },
+      EVENT_TYPE.INVALIDATE_APPLICANT_ACCESS_CODE
+    );
+
+    expect(result).toBe(caseData);
+  });
+
+  it('invalidates respondent access code and triggers respondent event', async () => {
+    const caseData = buildMockCaseData('APPCODE1', 'RSPCODE1');
+    mockTriggerEvent.mockResolvedValue(caseData);
+
+    await invalidateAccessCode(
+      caseData,
+      'RSPCODE1',
+      CaseRole.RESPONDENT,
+      '12345'
+    );
+
+    expect(mockTriggerEvent).toHaveBeenCalledWith(
+      '12345',
+      {
+        respondentAccessCodes: [
+          expect.objectContaining({
+            value: expect.objectContaining({
+              isValid: YesOrNo.NO,
+            }),
+          }),
+        ],
+      },
+      EVENT_TYPE.INVALIDATE_RESPONDENT_ACCESS_CODE
+    );
+  });
+
+  it('throws and logs if triggerEvent fails', async () => {
+    const caseData = buildMockCaseData();
+    mockTriggerEvent.mockRejectedValue(new Error('CCD failure'));
+
+    await expect(
+      invalidateAccessCode(caseData, 'APPCODE1', CaseRole.APPLICANT, '12345')
+    ).rejects.toThrow('CCD failure');
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Error invalidating access code',
+      expect.objectContaining({
+        caseId: '12345',
+        caseRole: CaseRole.APPLICANT,
+        error: 'CCD failure',
+      })
+    );
   });
 });

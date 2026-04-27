@@ -3,7 +3,7 @@ import { LoggerInstance } from 'winston';
 
 import { CaseApi, getCaseApi } from '../../../../main/app/case/case-api';
 import * as caseApiClient from '../../../../main/app/case/case-api-client';
-import { CASE_TYPE } from '../../../../main/app/case/case-type';
+import { CASE_TYPE, EVENT_TYPE } from '../../../../main/app/case/case-type';
 import { CaseRole } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
 
@@ -154,5 +154,68 @@ describe('CaseApi.getExistingUserCase', () => {
     expect(mockApiClient.findExistingUserCases).toHaveBeenCalledTimes(1);
     expect(mockApiClient.findExistingUserCases).toHaveBeenCalledWith(CASE_TYPE);
     expect(mockLogger.error).not.toHaveBeenCalled();
+  });
+});
+
+describe('CaseApi.triggerEvent', () => {
+  const mockApiClient = {
+    sendEvent: jest.fn(),
+  };
+
+  const mockLogger = {
+    error: jest.fn(),
+    info: jest.fn(),
+  } as unknown as LoggerInstance;
+
+  let api: CaseApi;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    api = new CaseApi(
+      mockApiClient as unknown as caseApiClient.CaseApiClient,
+      mockLogger
+    );
+  });
+
+  test('should call apiClient.sendEvent and return the result', async () => {
+    const caseId = '123456';
+    const eventName = EVENT_TYPE.INVALIDATE_APPLICANT_ACCESS_CODE;
+
+    const userData = {
+      applicantAccessCodes: [],
+    };
+
+    const expectedResult = {
+      id: caseId,
+      state: 'Submitted',
+      applicantAccessCodes: [],
+    };
+
+    mockApiClient.sendEvent.mockResolvedValue(expectedResult);
+
+    const result = await api.triggerEvent(caseId, userData, eventName);
+
+    expect(mockApiClient.sendEvent).toHaveBeenCalledTimes(1);
+    expect(mockApiClient.sendEvent).toHaveBeenCalledWith(
+      caseId,
+      userData,
+      eventName
+    );
+    expect(result).toEqual(expectedResult);
+  });
+
+  test('should propagate errors thrown by apiClient.sendEvent', async () => {
+    const caseId = '123456';
+    const eventName = EVENT_TYPE.INVALIDATE_APPLICANT_ACCESS_CODE;
+
+    mockApiClient.sendEvent.mockRejectedValue(
+      new Error('Case could not be updated.')
+    );
+
+    await expect(
+      api.triggerEvent(caseId, {}, eventName)
+    ).rejects.toThrow('Case could not be updated.');
+
+    expect(mockApiClient.sendEvent).toHaveBeenCalledTimes(1);
   });
 });

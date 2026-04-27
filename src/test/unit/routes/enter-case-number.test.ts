@@ -253,7 +253,7 @@ describe('Enter Case Number Route Handlers', () => {
         caseNumberErrors: { caseNumber: 'Bad case number' },
         tempCaseNumber: '1234-5678-0123-4567',
       })
-    ).get('/enter-case-number');
+    ).get('/enter-case-number/');
 
     expect(res.status).toBe(200);
     expect(res.body.view).toBe('enter-case-number');

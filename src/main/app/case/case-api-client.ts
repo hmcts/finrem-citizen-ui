@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosInstance } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import config from 'config';
 import { LoggerInstance } from 'winston';
 
@@ -8,6 +8,7 @@ import { CaseAssignedUserRole } from './case-roles';
 import { FinremCaseData, FinremCaseDetails, State } from './definition';
 
 export class CaseApiClient {
+  readonly maxRetries: number = 3;
   constructor(
     private readonly server: AxiosInstance,
     private readonly logger: LoggerInstance
@@ -57,6 +58,40 @@ export class CaseApiClient {
     }
   }
 
+  public async sendEvent(
+    caseId: string,
+    data: Partial<FinremCaseData>,
+    eventName: string,
+    retries = 0
+  ): Promise<FinremCaseData> {
+    try {
+      const tokenResponse = await this.server.get<CcdTokenResponse>(`/cases/${caseId}/event-triggers/${eventName}`);
+      const token = tokenResponse.data.token;
+      const event = { id: eventName };
+      const response: AxiosResponse<CcdV2Response> = await this.server.post(`/cases/${caseId}/events`, {
+        event,
+        data,
+        event_token: token,
+      });
+
+      const { state: _ignored, ...caseData } = response.data.data;
+
+      return {
+        id: response.data.id,
+        state: response.data.state,
+        ...caseData,
+      } as FinremCaseData;
+    } catch (err) {
+      if (retries < this.maxRetries && [409, 422, 502, 504].includes(err?.response.status)) {
+        ++retries;
+        this.logger.info(`retrying send event due to ${err.response.status}. this is retry no (${retries})`);
+        return this.sendEvent(caseId, data, eventName, retries);
+      }
+      this.logError(err);
+      throw new Error('Case could not be updated.');
+    }
+  }
+
   private logError(error: AxiosError) {
     if (error.response) {
       this.logger.error(`API Error ${error.config?.method} ${error.config?.url} ${error.response.status}`);
@@ -100,4 +135,15 @@ export interface CcdV1Response {
   state: State;
   created_date: string;
   case_data: FinremCaseData;
+}
+
+
+interface CcdV2Response {
+  id: string;
+  state: State;
+  data: FinremCaseData;
+}
+
+interface CcdTokenResponse {
+  token: string;
 }
