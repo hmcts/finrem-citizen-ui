@@ -1,4 +1,5 @@
 import * as bodyParser from 'body-parser';
+import config from 'config';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import RateLimit from 'express-rate-limit';
@@ -23,7 +24,7 @@ const env = process.env.NODE_ENV || 'development';
 const developmentMode = env === 'development';
 
 const limiter = RateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: config.get<number>('rateLimitWindowMs'),
   max: 100,
 });
 
