@@ -34,8 +34,8 @@ export class CaseApi {
     return String(userCases[0].id);
   }
 
-  public async triggerEvent(caseId: string, userData: Partial<FinremCaseData>, eventName: string): Promise<FinremCaseData> {
-    return this.apiClient.sendEvent(caseId, userData, eventName);
+  public async triggerEvent(caseId: string, partialCaseData: Partial<FinremCaseData>, eventName: string): Promise<FinremCaseData> {
+    return this.apiClient.sendEvent(caseId, partialCaseData, eventName);
   }
 }
 

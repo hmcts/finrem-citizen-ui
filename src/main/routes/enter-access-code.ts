@@ -273,8 +273,12 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       } 
 
       // Invalidating access code
-      const invalidCaseData = await invalidateAccessCode(caseData, trimmedAccessCode, role, req.session.caseNumber);
-      req.session.caseData = invalidCaseData;
+      try {
+        const invalidCaseData = await invalidateAccessCode(caseData, trimmedAccessCode, role, req.session.caseNumber);
+        req.session.caseData = invalidCaseData;
+      } catch {
+        res.render(ViewNames.Error);
+      }
 
       // TODO: Send confirmation email if this is a new account setup
       

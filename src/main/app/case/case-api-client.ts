@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
+import { UrlEndPoints } from '../../common-constants';
 import config from 'config';
 import { LoggerInstance } from 'winston';
 
@@ -65,10 +66,10 @@ export class CaseApiClient {
     retries = 0
   ): Promise<FinremCaseData> {
     try {
-      const tokenResponse = await this.server.get<CcdTokenResponse>(`/cases/${caseId}/event-triggers/${eventName}`);
+      const tokenResponse = await this.server.get<CcdTokenResponse>(UrlEndPoints.CaseEventTrigger(caseId, eventName));
       const token = tokenResponse.data.token;
       const event = { id: eventName };
-      const response: AxiosResponse<CcdV2Response> = await this.server.post(`/cases/${caseId}/events`, {
+      const response: AxiosResponse<CcdV2Response> = await this.server.post(UrlEndPoints.CaseEvents(caseId), {
         event,
         data,
         event_token: token,

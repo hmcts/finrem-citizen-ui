@@ -47,3 +47,9 @@ export const UploadStepNames = {
   Confidentiality: 'confidentiality',
   FDR: 'fdr',
 };
+
+
+export const UrlEndPoints = {
+  CaseEvents: (caseId: string): string => `/cases/${caseId}/events`,
+  CaseEventTrigger: (caseId: string, eventId: string) => `/cases/${caseId}/event-triggers/${eventId}`,
+} as const;
