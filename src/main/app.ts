@@ -23,11 +23,6 @@ const { setupDev } = require('./development');
 const env = process.env.NODE_ENV || 'development';
 const developmentMode = env === 'development';
 
-const limiter = RateLimit({
-  windowMs: Number(config.get('rateLimitWindowMs')) || 900000, // 900000ms = 15 minutes
-  max: 100,
-});
-
 export const app = express();
 app.locals.ENV = env;
 
@@ -37,6 +32,11 @@ new PropertiesVolume().enableFor(app);
 new AppInsights().enable();
 new Nunjucks(developmentMode).enableFor(app);
 new Helmet(developmentMode).enableFor(app);
+
+const limiter = RateLimit({
+  windowMs: Number(config.get('rateLimitWindowMs')) || 900000, // 900000ms = 15 minutes
+  max: 100,
+});
 
 app.get('/favicon.ico', limiter, (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));
