@@ -3,7 +3,8 @@ import { LoggerInstance } from 'winston';
 
 import { CaseApiClient, getCaseApiClient } from '../../../../main/app/case/case-api-client';
 import { CaseAssignedUserRole } from '../../../../main/app/case/case-roles';
-import { CaseRole } from '../../../../main/app/case/definition';
+import { EVENT_TYPE } from '../../../../main/app/case/case-type';
+import { CaseRole, YesOrNo } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
 
 jest.mock('axios');
@@ -216,3 +217,129 @@ describe('CaseApiClient.findExistingUserCases', () => {
   });
 });
 
+describe('CaseApiClient.sendEvent', () => {
+  let mockAxios: jest.Mocked<Pick<typeof axios, 'get' | 'post'>>;
+  let mockLogger: LoggerInstance;
+  let api: CaseApiClient;
+
+  const CASE_ID = '123456';
+  const EVENT_NAME = EVENT_TYPE.INVALIDATE_APPLICANT_ACCESS_CODE;
+
+  
+const applicantAccessCodes = [
+  {
+    id: '9319d817-ade5-4e9e-a204-261331158a0e',
+    value: {
+      isValid: YesOrNo.NO,
+      createdAt: '2026-04-24T13:17:07.061694',
+      accessCode: 'FBLV2NTR',
+      validUntil: '2026-07-23T13:17:07.061701',
+    },
+  },
+];
+
+  beforeEach(() => {
+    mockAxios = {
+      get: jest.fn(),
+      post: jest.fn(),
+    } as unknown as jest.Mocked<Pick<typeof axios, 'get' | 'post'>>;
+
+    mockLogger = {
+      error: jest.fn(),
+      info: jest.fn(),
+    } as unknown as LoggerInstance;
+
+    api = new CaseApiClient(mockAxios as unknown as AxiosInstance, mockLogger);
+  });
+
+  test('should send event successfully and return updated case data', async () => {
+    mockAxios.get.mockResolvedValue({
+      data: { token: 'event-token' },
+    });
+
+    mockAxios.post.mockResolvedValue({
+      data: {
+        id: CASE_ID,
+        state: 'Submitted',
+        data: {
+          applicantAccessCodes,
+        },
+      },
+    });
+
+    const result = await api.sendEvent(
+      CASE_ID,
+      { applicantAccessCodes },
+      EVENT_NAME
+    );
+
+    expect(result).toEqual({
+      id: CASE_ID,
+      state: 'Submitted',
+      applicantAccessCodes,
+    });
+  });
+
+  test('should retry once for retriable error and then succeed', async () => {
+    mockAxios.get.mockResolvedValue({
+      data: { token: 'event-token' },
+    });
+
+    mockAxios.post
+      .mockRejectedValueOnce({
+        response: { status: 409 },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          id: CASE_ID,
+          state: 'Updated',
+          data: {
+            applicantAccessCodes,
+          },
+        },
+      });
+
+    const result = await api.sendEvent(
+      CASE_ID,
+      { applicantAccessCodes },
+      EVENT_NAME
+    );
+
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'retrying send event due to 409. this is retry no (1)'
+    );
+
+    expect(result).toEqual({
+      id: CASE_ID,
+      state: 'Updated',
+      applicantAccessCodes,
+    });
+  });
+
+  test('should throw immediately for non-retriable error', async () => {
+    mockAxios.get.mockResolvedValue({
+      data: { token: 'event-token' },
+    });
+
+    mockAxios.post.mockRejectedValue({
+      config: { method: 'post', url: `/cases/${CASE_ID}/events` },
+      response: {
+        status: 400,
+        data: { error: 'bad request' },
+      },
+    });
+
+    await expect(
+      api.sendEvent(CASE_ID, { applicantAccessCodes }, EVENT_NAME)
+    ).rejects.toThrow('Case could not be updated.');
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      `API Error post /cases/${CASE_ID}/events 400`
+    );
+
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Response: ',
+      { error: 'bad request' }
+    );
+  });
+});

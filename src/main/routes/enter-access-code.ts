@@ -1,9 +1,10 @@
+import { EVENT_TYPE } from 'app/case/case-type';
 import { Application, Request, Response } from 'express';
 
 import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
-import { AccessCodeCollection, CaseRole, FinremCaseData } from '../app/case/definition';
+import { AccessCodeCollection, CaseRole, FinremCaseData, YesOrNo } from '../app/case/definition';
 import { UserDetails } from '../app/controller/AppRequest';
 import { RouteNames, ViewNames } from '../common-constants';
 import { oidcMiddleware } from '../middleware';
@@ -140,6 +141,64 @@ export async function addUserToCaseForRole(caseId: string, userId: string, caseR
   }
 }
 
+export function getInvalidateAccessCodeData(
+  finremCaseData: FinremCaseData,
+  accessCode: string,
+  caseRole: CaseRole
+): Partial<FinremCaseData> {
+
+  const accessCodes =
+    caseRole === CaseRole.APPLICANT
+      ? finremCaseData.applicantAccessCodes
+      : finremCaseData.respondentAccessCodes;
+
+  const matchedCode = accessCodes?.find(
+    code => code.value.accessCode === accessCode
+  );
+
+  if (!matchedCode) {
+    throw new Error(`Access code ${accessCode} not found`);
+  }
+
+  const updatedAccessCode: AccessCodeCollection = {
+    id: matchedCode.id,
+    value: {
+      ...matchedCode.value,
+      isValid: YesOrNo.NO,
+    },
+  };
+
+  return caseRole === CaseRole.APPLICANT
+    ? { applicantAccessCodes: [updatedAccessCode] }
+    : { respondentAccessCodes: [updatedAccessCode] };
+}
+
+export async function invalidateAccessCode(finremCaseData: FinremCaseData,
+  accessCode: string,
+  caseRole: CaseRole,
+  caseId: string): Promise<FinremCaseData> {
+
+  const data = getInvalidateAccessCodeData(finremCaseData, accessCode, caseRole);
+  try {
+    const systemUser = await getSystemUser();
+    const caseworkerUserApi = getCaseApi(systemUser, logger);
+
+    const eventName = caseRole === CaseRole.APPLICANT ? EVENT_TYPE.INVALIDATE_APPLICANT_ACCESS_CODE : EVENT_TYPE.INVALIDATE_RESPONDENT_ACCESS_CODE;
+
+    return await caseworkerUserApi.triggerEvent(caseId, data, eventName);
+
+  } catch (error) {
+    const err = error as Error;
+    logger.error('Error invalidating access code', {
+      caseId,
+      caseRole,
+      error: err.message,
+    });
+    throw err;
+  }
+}
+
+
 export default function setupEnterAccessCodeRoute(app: Application): void {
   app.get(RouteNames.enterAccessCode, oidcMiddleware, (req: Request, res: Response) => {
     // Check if case number exists in session
@@ -213,8 +272,14 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
         res.render(ViewNames.Error);
       } 
 
+      // Invalidating access code
+      try {
+        const invalidCaseData = await invalidateAccessCode(caseData, trimmedAccessCode, role, req.session.caseNumber);
+        req.session.caseData = invalidCaseData;
+      } catch {
+        res.render(ViewNames.Error);
+      }
 
-      // TODO: Mark access code as used in CCD (update isValid to 'No')
       // TODO: Send confirmation email if this is a new account setup
       
       return res.redirect(RouteNames.dashboard);

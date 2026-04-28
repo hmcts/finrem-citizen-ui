@@ -32,6 +32,10 @@ export class CaseApi {
     this.logger.info('userCases[0]', userCases[0]);
     return String(userCases[0].id);
   }
+
+  public async triggerEvent(caseId: string, partialCaseData: Partial<FinremCaseData>, eventName: string): Promise<FinremCaseData> {
+    return this.apiClient.sendEvent(caseId, partialCaseData, eventName);
+  }
 }
 
 export const getCaseApi = (userDetails: UserDetails, logger: LoggerInstance): CaseApi => {
