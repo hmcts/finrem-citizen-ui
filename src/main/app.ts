@@ -33,8 +33,11 @@ new AppInsights().enable();
 new Nunjucks(developmentMode).enableFor(app);
 new Helmet(developmentMode).enableFor(app);
 
+const rateLimitWindowMs = Number(config.get('rateLimitWindowMs')) || 900000; // 900000ms = 15 minutes
+logger.info('rateLimitWindowMs is set to', rateLimitWindowMs);
+
 const limiter = RateLimit({
-  windowMs: Number(config.get('rateLimitWindowMs')) || 900000, // 900000ms = 15 minutes
+  windowMs: rateLimitWindowMs,
   max: 100,
 });
 
