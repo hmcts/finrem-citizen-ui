@@ -4,7 +4,7 @@ import { Application, Request, Response } from 'express';
 
 import { FinremCaseData } from '../app/case/definition';
 import { RouteNames, ViewNames } from '../common-constants';
-import { loadCaseAndReloadSession } from '../functions/util/commonUtil';
+import { loadCaseAndReloadSession } from '../functions/util/homePageUtil';
 import { oidcMiddleware } from '../middleware';
 
 const { Logger } = require('@hmcts/nodejs-logging');
