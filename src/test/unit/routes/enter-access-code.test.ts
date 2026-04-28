@@ -271,14 +271,16 @@ const buildMockCaseData = (
   applicantCode = 'APPCODE1',
   respondentCode = 'RSPCODE1',
   isValid: YesOrNo = YesOrNo.YES,
-  validUntil = futureDate()
+  validUntil = futureDate(),
+  applicantId = '1',
+  respondentId = '2'
 ): FinremCaseData =>
   ({
     applicantAccessCodes: [
-      { id: '1', value: { accessCode: applicantCode, createdAt: '2024-01-01', validUntil, isValid } },
+      { id: applicantId, value: { accessCode: applicantCode, createdAt: '2024-01-01', validUntil, isValid } },
     ],
     respondentAccessCodes: [
-      { id: '2', value: { accessCode: respondentCode, createdAt: '2024-01-01', validUntil, isValid } },
+      { id: respondentId, value: { accessCode: respondentCode, createdAt: '2024-01-01', validUntil, isValid } },
     ],
   } as unknown as FinremCaseData);
 
@@ -393,10 +395,38 @@ describe('POST /enter-access-code route handler', () => {
 
   it('redirects to dashboard on successful access code submission', async () => {
     const caseData = buildMockCaseData();
+    mockTriggerEvent.mockResolvedValue(caseData);
     const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
       .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
     expect(res.status).toBe(302);
     expect(res.header.location).toBe('/dashboard');
+  });
+
+  it('still redirects to dashboard when invalidateAccessCode fails', async () => {
+    mockTriggerEvent.mockRejectedValue(new Error('CCD invalidation failed'));
+    const caseData = buildMockCaseData();
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+      .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/dashboard');
+  });
+
+  it('redirects to dashboard and skips CCD invalidation for mock session access codes', async () => {
+    const caseData = buildMockCaseData(
+      'APPCODE1',
+      'RSPCODE1',
+      YesOrNo.YES,
+      futureDate(),
+      'mock-applicant-access-code',
+      'mock-respondent-access-code'
+    );
+
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+      .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
+
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/dashboard');
+    expect(mockTriggerEvent).not.toHaveBeenCalled();
   });
 
   it('renders error view when addUserToCaseForRole throws', async () => {

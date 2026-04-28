@@ -22,6 +22,10 @@ interface AccessCodeValidationResult {
   error?: string;
 }
 
+function isMockSessionAccessCode(accessCode: AccessCodeCollection): boolean {
+  return String(accessCode.id || '').startsWith('mock-');
+}
+
 export function retrieveCaseData(caseData: FinremCaseData | undefined): FinremCaseData | null {
   if (!caseData) {
     return null;
@@ -269,15 +273,27 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       try {
         await addUserToCaseForRole(req.session.caseNumber, user.uid as string, role);
       } catch {
-        res.render(ViewNames.Error);
+        return res.render(ViewNames.Error);
       } 
 
-      // Invalidating access code
-      try {
-        const invalidCaseData = await invalidateAccessCode(caseData, trimmedAccessCode, role, req.session.caseNumber);
-        req.session.caseData = invalidCaseData;
-      } catch {
-        res.render(ViewNames.Error);
+      // For mock test-support sessions, mark code used in session only and skip CCD event.
+      if (isMockSessionAccessCode(match)) {
+        const localInvalidatedData = getInvalidateAccessCodeData(caseData, trimmedAccessCode, role);
+        req.session.caseData = {
+          ...caseData,
+          ...localInvalidatedData,
+        } as FinremCaseData;
+      } else {
+        // Invalidating access code in CCD is non-critical for user navigation.
+        try {
+          const invalidCaseData = await invalidateAccessCode(caseData, trimmedAccessCode, role, req.session.caseNumber);
+          req.session.caseData = invalidCaseData;
+        } catch (invalidateError) {
+          logger.error('Failed to invalidate access code, proceeding to dashboard', {
+            caseNumber: req.session.caseNumber,
+            error: (invalidateError as Error).message,
+          });
+        }
       }
 
       // TODO: Send confirmation email if this is a new account setup
