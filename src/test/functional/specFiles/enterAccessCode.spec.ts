@@ -143,15 +143,8 @@ test.describe('Enter Access Code - Happy Path', () => {
   /**
    * Citizen successfully enters valid applicant access code and views case
    * [mock] Uses hardcoded access codes injected via test session endpoint.
-   * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted, the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
    */
-  test.skip('[mock] Citizen can enter valid applicant access code and view case summary', async ({
+  test('[mock] Citizen can enter valid applicant access code and view case summary', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
@@ -167,15 +160,8 @@ test.describe('Enter Access Code - Happy Path', () => {
   /**
    * Verify whitespace is trimmed from access code
    * [mock] Uses hardcoded access codes injected via test session endpoint.
-   * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted, the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
    */
-  test.skip('[mock] Success: Access code with leading/trailing whitespace is accepted', async ({
+  test('[mock] Success: Access code with leading/trailing whitespace is accepted', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
@@ -190,15 +176,8 @@ test.describe('Enter Access Code - Happy Path', () => {
   /**
    * Citizen successfully enters valid respondent access code and views case
    * [mock] Uses hardcoded access codes injected via test session endpoint.
-   * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted, the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
    */
-  test.skip('[mock] Citizen can enter valid respondent access code and view case summary', async ({
+  test('[mock] Citizen can enter valid respondent access code and view case summary', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
@@ -213,15 +192,8 @@ test.describe('Enter Access Code - Happy Path', () => {
   /**
    * Access codes are case-insensitive
    * [mock] Uses hardcoded access codes injected via test session endpoint.
-   * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted, the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
    */
-  test.skip('[mock] Access code submission is case-insensitive', async ({
+  test('[mock] Access code submission is case-insensitive', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
