@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 // Import HMCTS common configs
 const { CommonConfig, ProjectsConfig } = await import('@hmcts/playwright-common');
 
-dotenv.config({ quiet: true });
+dotenv.config({ quiet: true, override: true });
 
 // 1. Determine Target URL and Results Directory
 const resultsDir = process.env.TEST_RESULTS_DIR || 'functional-output';
