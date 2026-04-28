@@ -17,7 +17,6 @@ declare module 'express-session' {
     caseNumberErrors?: CaseNumberError;
     tempCaseNumber?: string;
     caseData?: FinremCaseData;
-    hasNFDCase?: boolean;
   }
 }
 

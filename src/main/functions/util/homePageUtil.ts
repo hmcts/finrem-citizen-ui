@@ -16,7 +16,6 @@ export interface UserDefaultPageDetails {
 export interface HomeOrchestratorResult {
   url: string;
   caseData?: FinremCaseData;
-  hasNFDCase?: boolean;
 }
 
 export async function getHomePageForUser(userDetails: UserDetails): Promise<UserDefaultPageDetails> {
@@ -49,7 +48,7 @@ export async function orchestrateHome(
     const nfdCase = await caseApi.getExistingUserCase(CaseType.NFD);
     user.hasNFDCase = nfdCase !== undefined;
   }
-  logger.info("user has NFD case registered : ", user.hasNFDCase)
+  logger.info('user has NFD case registered : ', user.hasNFDCase);
   const { url, caseData } = await getHomePageForUser(user);
 
   return { url, caseData };
