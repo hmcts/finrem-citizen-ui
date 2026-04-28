@@ -4,26 +4,26 @@ import { LoggerInstance } from 'winston';
 import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
+import { CASE_TYPE } from '../app/case/case-type';
 import { CaseRole } from '../app/case/definition';
 import { UserDetails } from '../app/controller/AppRequest';
 import { RouteNames } from '../common-constants';
-import { getHomePageForUser } from '../functions/util/commonUtil';
+import { orchestrateHome } from '../functions/util/homePageUtil';
 import { oidcMiddleware } from '../middleware';
 
 export default function (app: Application): void {
+  const logger: LoggerInstance = console as unknown as LoggerInstance;
   app.get(RouteNames.basePath, oidcMiddleware, async (req, res) => {
     const user = req.session.user as UserDetails;
-    const userPageDetails = await getHomePageForUser(user);
-    if(userPageDetails.caseData) {
-      req.session.caseData = userPageDetails.caseData;
+    const result = await orchestrateHome(user, logger);
+    if (result.caseData) {
+      req.session.caseData = result.caseData;
     }
-    res.redirect(userPageDetails.url);
+    res.redirect(result.url);
   });
 
   app.get(RouteNames.caseReference, async (req, res) => {
     const { caseReference } = req.params;
-
-    const logger: LoggerInstance = console as unknown as LoggerInstance;
 
     const systemUser = await getSystemUser();
 
@@ -40,8 +40,6 @@ export default function (app: Application): void {
         case_role: req.params.caseRole as CaseRole,
       },
     ];
-    const logger: LoggerInstance = console as unknown as LoggerInstance;
-
     try {
       const systemUser = await getSystemUser();
       const caseworkerUserApi = getCaseApi(systemUser, logger);
@@ -66,10 +64,8 @@ export default function (app: Application): void {
   });
 
   app.get(RouteNames.retrieveCase, async (req, res) => {
-
-    const logger: LoggerInstance = console as unknown as LoggerInstance;
     const caseApi = getCaseApi(req.session.user as UserDetails, logger);
-    const caseId = await caseApi.getExistingUserCase();
+    const caseId = await caseApi.getExistingUserCase(CASE_TYPE);
     res.json({ id: caseId });
   });
 }

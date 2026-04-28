@@ -107,7 +107,7 @@ describe('CaseApi.getExistingUserCase', () => {
   test('should return undefined when user has no cases', async () => {
     mockApiClient.findExistingUserCases.mockResolvedValue([]);
 
-    const result = await api.getExistingUserCase();
+    const result = await api.getExistingUserCase(CASE_TYPE);
 
     expect(mockApiClient.findExistingUserCases).toHaveBeenCalledTimes(1);
     expect(mockApiClient.findExistingUserCases).toHaveBeenCalledWith(CASE_TYPE);
@@ -120,7 +120,7 @@ describe('CaseApi.getExistingUserCase', () => {
       { id: 987654321, state: 'Submitted' },
     ]);
 
-    const result = await api.getExistingUserCase();
+    const result = await api.getExistingUserCase(CASE_TYPE);
 
     expect(mockApiClient.findExistingUserCases).toHaveBeenCalledTimes(1);
     expect(mockApiClient.findExistingUserCases).toHaveBeenCalledWith(CASE_TYPE);
@@ -134,7 +134,7 @@ describe('CaseApi.getExistingUserCase', () => {
       { id: '2222', state: 'Submitted' },
     ]);
 
-    await expect(api.getExistingUserCase()).rejects.toThrow(
+    await expect(api.getExistingUserCase(CASE_TYPE)).rejects.toThrow(
       `More than one case found for caseType "${CASE_TYPE}". Expected exactly one. Found: 2.`
     );
 
@@ -149,7 +149,7 @@ describe('CaseApi.getExistingUserCase', () => {
   test('should propagate errors from apiClient.findExistingUserCases', async () => {
     mockApiClient.findExistingUserCases.mockRejectedValue(new Error('upstream error'));
 
-    await expect(api.getExistingUserCase()).rejects.toThrow('upstream error');
+    await expect(api.getExistingUserCase(CASE_TYPE)).rejects.toThrow('upstream error');
 
     expect(mockApiClient.findExistingUserCases).toHaveBeenCalledTimes(1);
     expect(mockApiClient.findExistingUserCases).toHaveBeenCalledWith(CASE_TYPE);

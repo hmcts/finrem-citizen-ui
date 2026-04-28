@@ -3342,6 +3342,7 @@ export const enum Classification {
 export const enum CaseType {
   CONSENTED = 'FinancialRemedyMVP2',
   CONTESTED = 'FinancialRemedyContested',
+  NFD = "NFD",
   UNKNOWN = 'unknown',
 }
 
