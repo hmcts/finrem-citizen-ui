@@ -11,7 +11,7 @@ It provides the citizen-facing web journey for linking and viewing Financial Rem
 - entering a case access code
 - progressing through citizen case-linking and case access workflows
 
-## Core Citizen Workflow
+## Core Citizen Workflow1
 
 At a high level, the user flow is:
 
