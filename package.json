@@ -102,7 +102,7 @@
     "jest-allure2-reporter": "*",
     "jest-circus": "*",
     "jest-html-reporter": "4.4.0",
-    "jest-junit": "16.0.0",
+    "jest-junit": "17.0.0",
     "lint-staged": "16.4.0",
     "mini-css-extract-plugin": "2.10.2",
     "nodemon": "3.1.14",
