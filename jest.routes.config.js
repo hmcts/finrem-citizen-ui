@@ -1,5 +1,3 @@
-process.env.ALLOW_CONFIG_MUTATIONS = 'true';
-
 module.exports = {
   roots: ['<rootDir>/src/test/routes'],
   testRegex: '(/src/test/.*|\\.(test|spec))\\.(ts|js)$',
