@@ -32,6 +32,7 @@ export interface UserDetails {
   familyName: string;
   roles: string[];
   [key: string]: unknown;
+  hasNFDCase?: boolean;
 }
 
 export type FormError = {

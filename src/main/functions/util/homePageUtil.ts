@@ -42,20 +42,17 @@ export async function getHomePageForUser(userDetails: UserDetails): Promise<User
 export async function orchestrateHome(
   user: UserDetails,
   logger: LoggerInstance,
-  nfdCaseAlreadyChecked: boolean
 ): Promise<HomeOrchestratorResult> {
-  let hasNFDCase: boolean | undefined;
 
-  if (!nfdCaseAlreadyChecked) {
+  if (user.hasNFDCase === undefined) {
     const caseApi = getCaseApi(user, logger);
     const nfdCase = await caseApi.getExistingUserCase(CaseType.NFD);
-    hasNFDCase = nfdCase !== undefined;
-    logger.info('hasNFDCase:', hasNFDCase);
+    user.hasNFDCase = nfdCase !== undefined;
   }
-
+  logger.info("user has NFD case registered : ", user.hasNFDCase)
   const { url, caseData } = await getHomePageForUser(user);
 
-  return { url, caseData, hasNFDCase };
+  return { url, caseData };
 }
 
 /**

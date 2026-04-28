@@ -15,10 +15,7 @@ export default function (app: Application): void {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
   app.get(RouteNames.basePath, oidcMiddleware, async (req, res) => {
     const user = req.session.user as UserDetails;
-    const result = await orchestrateHome(user, logger, req.session.hasNFDCase !== undefined);
-    if (result.hasNFDCase !== undefined) {
-      req.session.hasNFDCase = result.hasNFDCase;
-    }
+    const result = await orchestrateHome(user, logger);
     if (result.caseData) {
       req.session.caseData = result.caseData;
     }

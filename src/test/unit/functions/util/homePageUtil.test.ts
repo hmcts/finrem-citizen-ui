@@ -136,37 +136,35 @@ describe('getHomePageForUser', () => {
 
     const result = await homePageUtil.orchestrateHome(
       userDetails,
-      mockLogger,
-      false
+      mockLogger
     );
 
     expect(mockGetExistingUserCase).toHaveBeenCalledWith(CaseType.NFD);
     expect(mockGetExistingUserCase).toHaveBeenCalledWith(CASE_TYPE);
+    expect(userDetails.hasNFDCase).toBe(true);
 
     expect(result).toEqual({
       url: RouteNames.dashboard,
-      caseData: { id: 'CASE123' },
-      hasNFDCase: true,
+      caseData: { id: 'CASE123' }
     });
   });
 
   test('should skip NFD lookup if already checked', async () => {
     mockGetExistingUserCase.mockResolvedValue('CASE123');
     mockGetCaseById.mockResolvedValue({ id: 'CASE123' });
-
+    userDetails.hasNFDCase = true;
     const result = await homePageUtil.orchestrateHome(
       userDetails,
-      mockLogger,
-      true
+      mockLogger
     );
 
     expect(mockGetExistingUserCase).not.toHaveBeenCalledWith(CaseType.NFD);
     expect(mockGetExistingUserCase).toHaveBeenCalledWith(CASE_TYPE);
+    expect(userDetails.hasNFDCase).toBe(true);
 
     expect(result).toEqual({
       url: RouteNames.dashboard,
-      caseData: { id: 'CASE123' },
-      hasNFDCase: undefined,
+      caseData: { id: 'CASE123' }
     });
   });
 
@@ -175,17 +173,15 @@ describe('getHomePageForUser', () => {
 
     const result = await homePageUtil.orchestrateHome(
       userDetails,
-      mockLogger,
-      false
+      mockLogger
     );
 
     expect(mockGetExistingUserCase).toHaveBeenCalledWith(CaseType.NFD);
     expect(mockGetExistingUserCase).toHaveBeenCalledWith(CASE_TYPE);
-
+    expect(userDetails.hasNFDCase).toBe(false);
     expect(result).toEqual({
       url: RouteNames.enterCaseNumber,
-      caseData: undefined,
-      hasNFDCase: false,
+      caseData: undefined
     });
   });
 });
