@@ -21,7 +21,7 @@ export class CaseApiClient {
         case_users: assignments,
       };
 
-      await this.server.post('/case-users', payload);
+      await this.server.post(UrlEndPoints.CaseUsers, payload);
     } catch (err) {
       this.logError(err as AxiosError);
       throw new Error('Case user roles could not be added.');
@@ -30,7 +30,7 @@ export class CaseApiClient {
 
   public async getCaseById(caseId: string): Promise<FinremCaseData> {
     try {
-      const response = await this.server.get<FinremCaseDetails>(`/cases/${caseId}`);
+      const response = await this.server.get<FinremCaseDetails>(UrlEndPoints.CaseId(caseId));
       return response.data.data;
     } catch (err) {
       this.logError(err as AxiosError);
@@ -48,7 +48,7 @@ export class CaseApiClient {
 
   private async findUserCases(caseType: string, query: string): Promise<CcdV1Response[] | false> {
     try {
-      const response = await this.server.post<ES<CcdV1Response>>(`/searchCases?ctid=${caseType}`, query);
+      const response = await this.server.post<ES<CcdV1Response>>(UrlEndPoints.SearchCases(caseType), query);
       return response.data.cases;
     } catch (err) {
       if (err.response?.status === 404) {
