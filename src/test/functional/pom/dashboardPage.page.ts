@@ -9,23 +9,26 @@ const URL_PATTERNS = {
 };
 
 export class DashboardPage extends BasePage {
-  readonly dashboardHeader: Locator;
-  readonly placeholderBodyText: Locator;
-  readonly redirectedBodyText: Locator;
-  readonly uploadDocumentsHeader: Locator;
-  readonly uploadDocumentsText: Locator;
+  readonly userNameHeader: Locator;
+  readonly caseNumberText: Locator;
+  readonly divorceAccountHeading: Locator;
+  readonly latestInformationHeading: Locator;
   readonly goToDocumentUploadButton: Locator;
+  readonly viewPreviouslyUploadedLink: Locator;
+  readonly iWantToHeading: Locator;
+  readonly gettingHelpHeading: Locator;
 
   constructor(readonly page: Page) {
     super(page);
-    this.dashboardHeader = this.page.getByRole('heading', { name: 'Financial Remedy Dashboard' });
-    this.placeholderBodyText = this.page.getByText('This is a placeholder dashboard page.');
-    this.redirectedBodyText = this.page.getByText(
-      'You have been redirected here because you already have a linked Financial Remedy case.'
-    );
-    this.uploadDocumentsHeader = this.page.getByRole('heading', { name: 'Upload documents' });
-    this.uploadDocumentsText = this.page.getByText('Upload documents to support your financial remedy case.');
-    this.goToDocumentUploadButton = this.page.getByRole('button', { name: 'Go to document upload' });
+    // Use the first h1 on the page for the user name (dynamic)
+    this.userNameHeader = this.page.locator('h1').first();
+    this.caseNumberText = this.page.getByText(/Case number/);
+    this.divorceAccountHeading = this.page.getByRole('heading', { name: 'This is your financial remedy account' });
+    this.latestInformationHeading = this.page.getByRole('heading', { name: 'Latest information' });
+    this.goToDocumentUploadButton = this.page.getByRole('link', { name: /Go to document upload/ });
+    this.viewPreviouslyUploadedLink = this.page.getByRole('link', { name: 'View previously uploaded documents' });
+    this.iWantToHeading = this.page.getByRole('heading', { name: 'I want to...' });
+    this.gettingHelpHeading = this.page.getByRole('heading', { name: 'Getting help' });
   }
 
   // Navigate to the dashboard
@@ -38,12 +41,14 @@ export class DashboardPage extends BasePage {
     await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
 
     await this.expectVisible([
-      this.dashboardHeader,
-      this.uploadDocumentsHeader,
+      this.userNameHeader,
+      this.caseNumberText,
+      this.divorceAccountHeading,
+      this.latestInformationHeading,
       this.goToDocumentUploadButton,
-      this.placeholderBodyText,
-      this.redirectedBodyText,
-      this.uploadDocumentsText,
+      this.viewPreviouslyUploadedLink,
+      this.iWantToHeading,
+      this.gettingHelpHeading,
     ]);
 
     await this.expectAttributes([{ locator: this.goToDocumentUploadButton, name: 'href', value: '/upload/before-you-start' }]);
