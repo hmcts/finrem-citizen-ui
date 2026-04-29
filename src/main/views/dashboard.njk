@@ -1,17 +1,79 @@
+{% from "./macros/getting-help.njk" import gettingHelp %}
+
 {% extends "template.njk" %}
 
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-xl">Financial Remedy Dashboard</h1>
-      <p class="govuk-body">This is a placeholder dashboard page.</p>
-      <p class="govuk-body">You have been redirected here because you already have a linked Financial Remedy case.</p>
+      <h1 class="govuk-heading-xl">{{ userName }}</h1>
+      <p class="govuk-body">Case number {{ caseNumber }}</p>
       
-      <h2 class="govuk-heading-m">Upload documents</h2>
-      <p class="govuk-body">Upload documents to support your financial remedy case.</p>
-      <a href="/upload/before-you-start" role="button" draggable="false" class="govuk-button" data-module="govuk-button">
+      <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+      
+      {% if hasDivorceCase %}
+        <div class="govuk-inset-text">
+          <h2 class="govuk-heading-m">This is your financial remedy account</h2>
+          <p class="govuk-body">
+            If you want to view your divorce case you can 
+            <a href="https://www.apply-divorce.service.gov.uk/" class="govuk-link" target="_blank" rel="noopener noreferrer">go to your divorce account (opens in new tab)</a>.
+          </p>
+        </div>
+      {% endif %}
+      
+      <h2 class="govuk-heading-m">Latest information</h2>
+      
+      <div class="govuk-inset-text">
+        <p class="govuk-body">
+          You are involved in a contested financial remedy case. You may need to prepare some documents and upload them before your next hearing. You will find instructions about which documents to prepare on the order you received from the court.
+        </p>
+      </div>
+      
+      <div class="govuk-warning-text">
+        <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+        <strong class="govuk-warning-text__text">
+          <span class="govuk-visually-hidden">Warning</span>
+          Do not use this service to submit applications or anything else that needs a court response. You should email these to the court.
+        </strong>
+      </div>
+      
+      <a href="/upload/before-you-start" role="button" draggable="false" class="govuk-button govuk-button--start" data-module="govuk-button">
         Go to document upload
+        <svg class="govuk-button__start-icon" xmlns="http://www.w3.org/2000/svg" width="17.5" height="19" viewBox="0 0 33 40" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M0 0h13l20 20-20 20H0l20-20z"/>
+        </svg>
       </a>
+      
+      <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+      
+      <p class="govuk-body">
+        <a href="#" class="govuk-link">View previously uploaded documents</a>
+      </p>
+    </div>
+    
+    <div class="govuk-grid-column-one-third">
+      <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+      
+      <h2 class="govuk-heading-m">I want to...</h2>
+      
+      <p class="govuk-body">
+        <a href="https://www.gov.uk/government/publications/form-d81-statement-of-information-for-a-consent-order-in-a-matrimonialcivil-partnership-case" class="govuk-link" target="_blank" rel="noopener noreferrer">Find templates for the most commonly requested documents (opens in new tab)</a>
+      </p>
+      
+      <p class="govuk-body">
+        <a href="https://www.judiciary.uk/guidance-and-resources/financial-remedy-courts-what-to-expect-coming-to-a-court-or-tribunal/" class="govuk-link" target="_blank" rel="noopener noreferrer">Find out what to expect coming to a court (opens in new tab)</a>
+      </p>
+      
+      <p class="govuk-body">
+        <a href="https://www.advicenow.org.uk/guides/survival-guide-sorting-out-money-and-property-when-you-divorce-or-dissolve-your-civil" class="govuk-link" target="_blank" rel="noopener noreferrer">Read advice about representing myself in court from AdviceNow (opens in new tab)</a>
+      </p>
+      
+      <p class="govuk-body">
+        <a href="https://www.judiciary.uk/guidance-and-resources/preparing-for-a-hearing-in-the-financial-remedy-court/" class="govuk-link" target="_blank" rel="noopener noreferrer">Read advice about preparing a court bundle from Judiciary UK (opens in new tab)</a>
+      </p>
+      
+      <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+      
+      {{ gettingHelp() }}
     </div>
   </div>
 {% endblock %}
