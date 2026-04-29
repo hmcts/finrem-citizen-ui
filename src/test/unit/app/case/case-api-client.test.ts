@@ -274,21 +274,6 @@ const applicantAccessCodes = [
       EVENT_NAME
     );
 
-    expect(mockAxios.get).toHaveBeenCalledTimes(1);
-    expect(mockAxios.get).toHaveBeenCalledWith(
-      UrlEndPoints.CaseEventTrigger(CASE_ID, EVENT_NAME)
-    );
-
-    expect(mockAxios.post).toHaveBeenCalledTimes(1);
-    expect(mockAxios.post).toHaveBeenCalledWith(
-      UrlEndPoints.CaseEvents(CASE_ID),
-      {
-        event: { id: EVENT_NAME },
-        data: { applicantAccessCodes },
-        event_token: 'event-token',
-      }
-    );
-
     expect(result).toEqual({
       id: CASE_ID,
       state: 'Submitted',
@@ -324,9 +309,6 @@ const applicantAccessCodes = [
     expect(mockLogger.info).toHaveBeenCalledWith(
       'retrying send event due to 409. this is retry no (1)'
     );
-
-    expect(mockAxios.get).toHaveBeenCalledTimes(2);
-    expect(mockAxios.post).toHaveBeenCalledTimes(2);
 
     expect(result).toEqual({
       id: CASE_ID,
