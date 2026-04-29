@@ -111,9 +111,16 @@ export const getCaseApiClient = (userDetails: UserDetails, logger: LoggerInstanc
     throw new Error('Access token is required to create Case API client');
   }
   const serviceAuthToken = getServiceAuthToken();
+  
+  // When test support routes are enabled, thius routes CCD API calls to local mock endpoints instead of making real calls to the CCD API service
+  const isTestMode = process.env.ENABLE_TEST_SUPPORT_ROUTES === 'true';
+  const baseURL: string = isTestMode 
+    ? '/__test/mock-ccd' 
+    : (config.get('services.case.url') as string);
+
   return new CaseApiClient(
     axios.create({
-      baseURL: config.get('services.case.url'),
+      baseURL,
       headers: {
         Authorization: 'Bearer ' + userDetails.accessToken,
         ServiceAuthorization: serviceAuthToken,
