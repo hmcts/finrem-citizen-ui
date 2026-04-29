@@ -17,13 +17,13 @@ describe('Test support routes', () => {
   });
 
   test('should redirect to enter-access-code when params are valid', async () => {
-    const res = await request(app)
-      .get(TestRoutes.injectCaseSession)
-      .query({
-        caseNumber: '1234567890123456',
-        applicantCode: 'APPCODE1',
-        respondentCode: 'RSPCODE1',
-      });
+    const params = new URLSearchParams({
+      caseNumber: '1234567890123456',
+      applicantCode: 'APPCODE1',
+      respondentCode: 'RSPCODE1',
+    });
+
+    const res = await request(app).get(`${TestRoutes.injectCaseSession}?${params.toString()}`);
 
     expect(res.status).toBe(302);
     expect(res.header.location).toBe('/enter-access-code');
