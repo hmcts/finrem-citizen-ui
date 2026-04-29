@@ -52,4 +52,7 @@ export const UploadStepNames = {
 export const UrlEndPoints = {
   CaseEvents: (caseId: string): string => `/cases/${caseId}/events`,
   CaseEventTrigger: (caseId: string, eventId: string) => `/cases/${caseId}/event-triggers/${eventId}`,
+  CaseUsers: '/case-users',
+  CaseId: (caseId: string) => `/cases/${caseId}`,
+  SearchCases: (caseType: string) => `/searchCases?ctid=${caseType}`,
 } as const;
