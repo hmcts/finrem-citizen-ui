@@ -38,15 +38,9 @@ test.describe('Persistent Session After Re-login', () => {
    * on the dashboard without re-entering case number or access code.
    * IDAM SSO re-authenticates and the linked case session is restored.
    * [mock] Uses hardcoded access codes injected via test session endpoint.
-   * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted via navigateToLinkedDashboard(), the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
+   * Access code invalidation is mocked via /__test/mock-ccd endpoints.
    */
-  test.skip('[mock] User lands on dashboard after re-login without re-entering case details @a11y', async ({
+  test('[mock] User lands on dashboard after re-login without re-entering case details @a11y', async ({
     loggedInPage,
     basePage,
     dashboardPage,
@@ -80,15 +74,9 @@ test.describe('Persistent Session After Re-login', () => {
    * Verify that case session persists across multiple tabs/contexts
    * within the same authenticated session.
    * [mock] Uses hardcoded access codes injected via test session endpoint.
-   * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted via navigateToLinkedDashboard(), the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
+   * Access code invalidation is mocked via /__test/mock-ccd endpoints.
    */
-  test.skip('[mock] Case session persists across multiple tabs in same browser context @a11y', async ({
+  test('[mock] Case session persists across multiple tabs in same browser context @a11y', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
@@ -117,15 +105,9 @@ test.describe('Persistent Session After Re-login', () => {
    * dashboard within the same session does not require re-entering case/access code.
    * (page.reload() is not used because a hard reload clears in-memory mock session state)
    * [mock] Uses hardcoded access codes injected via test session endpoint.
-   * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted via navigateToLinkedDashboard(), the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
+   * Access code invalidation is mocked via /__test/mock-ccd endpoints.
    */
-  test.skip('[mock] Case session persists when navigating away and back to dashboard @a11y', async ({
+  test('[mock] Case session persists when navigating away and back to dashboard @a11y', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
