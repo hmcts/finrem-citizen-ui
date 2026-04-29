@@ -274,14 +274,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
 
       // Invalidating access code
       try {
-        let invalidCaseData: FinremCaseData;
-        if (process.env.ENABLE_TEST_SUPPORT_ROUTES === 'true') {
-          // In test mode, skip the CCD triggerEvent call and apply the update locally
-          const partialUpdate = getInvalidateAccessCodeData(caseData, trimmedAccessCode, role);
-          invalidCaseData = { ...caseData, ...partialUpdate };
-        } else {
-          invalidCaseData = await invalidateAccessCode(caseData, trimmedAccessCode, role, req.session.caseNumber);
-        }
+        const invalidCaseData = await invalidateAccessCode(caseData, trimmedAccessCode, role, req.session.caseNumber);
         req.session.caseData = invalidCaseData;
       } catch {
         res.render(ViewNames.Error);

@@ -1,5 +1,6 @@
 import { defineConfig, devices,type ReporterDescription } from '@playwright/test';
 import dotenv from 'dotenv';
+import path from 'path';
 
 // Import HMCTS common configs
 const { CommonConfig, ProjectsConfig } = await import('@hmcts/playwright-common');
@@ -26,6 +27,9 @@ const getBaseUrl = (): string => {
 const finalBaseUrl = getBaseUrl();
 const isLocal = finalBaseUrl.includes('localhost');
 const displayEnv = isLocal ? 'local' : process.env.RUNNING_ENV || 'aat';
+const mockInvalidateAccessCodePreload = path.resolve(
+  'src/test/functional/support/mock-invalidate-access-code.cjs'
+);
 
 // 2. Logging for clarity
 /* eslint-disable no-console */
@@ -69,7 +73,7 @@ export default defineConfig({
   // 3. Merged WebServer logic (Local development support)
   webServer: isLocal
     ? {
-        command: 'NODE_OPTIONS="--openssl-legacy-provider" yarn start',
+        command: `NODE_OPTIONS="--openssl-legacy-provider --require ${mockInvalidateAccessCodePreload}" yarn start`,
         url: `${finalBaseUrl}/health`,
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
@@ -77,6 +81,7 @@ export default defineConfig({
           IDAM_SECRET: process.env.IDAM_SECRET || 'dummy-secret-for-playwright-tests',
           SESSION_SECRET: process.env.SESSION_SECRET || 'dummy-session-secret',
           ENABLE_TEST_SUPPORT_ROUTES: 'true',
+          MOCK_INVALIDATE_ACCESS_CODE: 'true',
           PORT: '3100',
         },
       }
