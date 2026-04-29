@@ -6,6 +6,7 @@ import { CaseAssignedUserRole } from '../../../../main/app/case/case-roles';
 import { EVENT_TYPE } from '../../../../main/app/case/case-type';
 import { CaseRole, YesOrNo } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
+import { UrlEndPoints } from '../../../../main/common-constants';
 
 jest.mock('axios');
 
@@ -180,7 +181,7 @@ describe('CaseApiClient.findExistingUserCases', () => {
     const result = await api.findExistingUserCases(CASE_TYPE);
 
     expect(mockAxios.post).toHaveBeenCalledWith(
-      `/searchCases?ctid=${CASE_TYPE}`,
+      UrlEndPoints.SearchCases(CASE_TYPE),
       expect.any(String)
     );
     expect(result).toEqual(cases);
@@ -199,7 +200,7 @@ describe('CaseApiClient.findExistingUserCases', () => {
 
   test('should log error and throw when error occurs', async () => {
     mockAxios.post.mockRejectedValue({
-      config: { method: 'post', url: `/searchCases?ctid=${CASE_TYPE}` },
+      config: { method: 'post', url: UrlEndPoints.SearchCases(CASE_TYPE) },
       response: { status: 500, data: { error: 'bad' } },
     });
 
@@ -207,7 +208,7 @@ describe('CaseApiClient.findExistingUserCases', () => {
       .rejects.toThrow('Case could not be retrieved.');
 
     expect(mockLogger.error).toHaveBeenCalledWith(
-      `API Error post /searchCases?ctid=${CASE_TYPE} 500`
+      `API Error post ${UrlEndPoints.SearchCases(CASE_TYPE)} 500`
     );
 
     expect(mockLogger.info).toHaveBeenCalledWith(
@@ -322,7 +323,7 @@ const applicantAccessCodes = [
     });
 
     mockAxios.post.mockRejectedValue({
-      config: { method: 'post', url: `/cases/${CASE_ID}/events` },
+      config: { method: 'post', url: UrlEndPoints.CaseEvents(CASE_ID) },
       response: {
         status: 400,
         data: { error: 'bad request' },
@@ -334,7 +335,7 @@ const applicantAccessCodes = [
     ).rejects.toThrow('Case could not be updated.');
 
     expect(mockLogger.error).toHaveBeenCalledWith(
-      `API Error post /cases/${CASE_ID}/events 400`
+      `API Error post ${UrlEndPoints.CaseEvents(CASE_ID)} 400`
     );
 
     expect(mockLogger.info).toHaveBeenCalledWith(
