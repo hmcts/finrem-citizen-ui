@@ -393,10 +393,104 @@ describe('POST /enter-access-code route handler', () => {
 
   it('redirects to dashboard on successful access code submission', async () => {
     const caseData = buildMockCaseData();
+    mockTriggerEvent.mockResolvedValue(caseData);
     const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
       .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
     expect(res.status).toBe(302);
     expect(res.header.location).toBe('/dashboard');
+  });
+
+  it('accepts valid applicant code and triggers applicant invalidation event', async () => {
+    const caseData = buildMockCaseData('APPCODE1', 'RSPCODE1');
+    mockTriggerEvent.mockResolvedValue(caseData);
+
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+      .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
+
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/dashboard');
+    expect(mockTriggerEvent).toHaveBeenCalledWith(
+      '1234567890123456',
+      expect.objectContaining({
+        applicantAccessCodes: [
+          expect.objectContaining({
+            value: expect.objectContaining({
+              accessCode: 'APPCODE1',
+              isValid: YesOrNo.NO,
+            }),
+          }),
+        ],
+      }),
+      EVENT_TYPE.INVALIDATE_APPLICANT_ACCESS_CODE
+    );
+  });
+
+  it('accepts access code with surrounding whitespace', async () => {
+    const caseData = buildMockCaseData('APPCODE1', 'RSPCODE1');
+    mockTriggerEvent.mockResolvedValue(caseData);
+
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+      .post('/enter-access-code').send({ accessCode: '  APPCODE1  ' });
+
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/dashboard');
+    expect(mockAddUsersToCase).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          case_role: CaseRole.APPLICANT,
+        }),
+      ])
+    );
+  });
+
+  it('accepts valid respondent code and triggers respondent invalidation event', async () => {
+    const caseData = buildMockCaseData('APPCODE1', 'RSPCODE1');
+    mockTriggerEvent.mockResolvedValue(caseData);
+
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+      .post('/enter-access-code').send({ accessCode: 'RSPCODE1' });
+
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/dashboard');
+    expect(mockAddUsersToCase).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          case_role: CaseRole.RESPONDENT,
+        }),
+      ])
+    );
+    expect(mockTriggerEvent).toHaveBeenCalledWith(
+      '1234567890123456',
+      expect.objectContaining({
+        respondentAccessCodes: [
+          expect.objectContaining({
+            value: expect.objectContaining({
+              accessCode: 'RSPCODE1',
+              isValid: YesOrNo.NO,
+            }),
+          }),
+        ],
+      }),
+      EVENT_TYPE.INVALIDATE_RESPONDENT_ACCESS_CODE
+    );
+  });
+
+  it('accepts applicant code in lowercase (case-insensitive submission)', async () => {
+    const caseData = buildMockCaseData('APPCODE1', 'RSPCODE1');
+    mockTriggerEvent.mockResolvedValue(caseData);
+
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+      .post('/enter-access-code').send({ accessCode: 'appcode1' });
+
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/dashboard');
+    expect(mockAddUsersToCase).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          case_role: CaseRole.APPLICANT,
+        }),
+      ])
+    );
   });
 
   it('renders error view when addUserToCaseForRole throws', async () => {
