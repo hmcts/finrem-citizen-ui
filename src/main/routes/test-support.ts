@@ -10,6 +10,7 @@ import { RouteNames, TestRoutes } from '../common-constants';
  */
 export default function setupTestSupportRoutes(app: Application): void {
   const enableTestSupportRoutes = process.env.ENABLE_TEST_SUPPORT_ROUTES === 'true';
+  const mockCaseStore = new Map<string, FinremCaseData>();
 
   if (!enableTestSupportRoutes) {
     return;
@@ -70,11 +71,50 @@ export default function setupTestSupportRoutes(app: Application): void {
       respondentAccessCodes: [respondentEntry],
     } as unknown as FinremCaseData;
 
+    mockCaseStore.set(caseNumber, req.session.caseData as FinremCaseData);
+
     req.session.save(err => {
       if (err) {
         return res.status(500).json({ error: 'Session save error' });
       }
       res.redirect(RouteNames.enterAccessCode);
     });
+  });
+
+  app.post(`${TestRoutes.mockCcdBase}/case-users`, (_req: Request, res: Response) => {
+    return res.status(201).json({ case_users: [] });
+  });
+
+  app.get(`${TestRoutes.mockCcdBase}/cases/:caseId/event-triggers/:eventName`, (_req: Request, res: Response) => {
+    return res.status(200).json({ token: 'mock-event-token' });
+  });
+
+  app.post(`${TestRoutes.mockCcdBase}/cases/:caseId/events`, (req: Request, res: Response) => {
+    const rawCaseId = req.params.caseId;
+    const caseId = Array.isArray(rawCaseId) ? rawCaseId[0] : rawCaseId;
+
+    if (!caseId) {
+      return res.status(400).json({ error: 'Missing caseId route parameter' });
+    }
+
+    const incomingData = (req.body?.data || {}) as Partial<FinremCaseData>;
+    const existing = mockCaseStore.get(caseId) || ({} as FinremCaseData);
+    const updatedCaseData = {
+      ...existing,
+      ...incomingData,
+    } as FinremCaseData;
+
+    mockCaseStore.set(caseId, updatedCaseData);
+
+    return res.status(200).json({
+      id: caseId,
+      state: 'Submitted',
+      data: updatedCaseData,
+    });
+  });
+
+  app.get(TestRoutes.clearMockCcdStore, (_req: Request, res: Response) => {
+    mockCaseStore.clear();
+    return res.status(200).json({ cleared: true });
   });
 }
