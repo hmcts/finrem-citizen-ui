@@ -65,13 +65,15 @@ export default function setupTestSupportRoutes(app: Application): void {
       },
     };
 
-    req.session.caseNumber = caseNumber;
-    req.session.caseData = {
+    const mockCaseData = {
       applicantAccessCodes: [applicantEntry],
       respondentAccessCodes: [respondentEntry],
     } as unknown as FinremCaseData;
 
-    mockCaseStore.set(caseNumber, req.session.caseData as FinremCaseData);
+    req.session.caseNumber = caseNumber;
+    req.session.caseData = mockCaseData;
+
+    mockCaseStore.set(caseNumber, mockCaseData);
 
     req.session.save(err => {
       if (err) {

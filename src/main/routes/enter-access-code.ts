@@ -280,8 +280,6 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
         return res.render(ViewNames.Error);
       }
 
-      // TODO: Send confirmation email if this is a new account setup
-      
       return res.redirect(RouteNames.dashboard);
     } catch (error) {
       const err = error as Error;
