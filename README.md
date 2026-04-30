@@ -53,6 +53,41 @@ Start app:
 yarn start:dev
 ```
 
+Run the local mock CCD/Azure case API stub:
+
+```bash
+yarn start:mock-case-api
+```
+
+Point the main app at the stub by overriding `CCD_URL`:
+
+```bash
+CCD_URL=http://localhost:4100 yarn start:dev
+```
+
+The mock server implements these five endpoints used by the app:
+
+- `GET /cases/:caseId`
+- `GET /cases/:caseId/event-triggers/:eventId`
+- `POST /cases/:caseId/events`
+- `POST /case-users`
+- `POST /searchCases?ctid=:caseType`
+
+Default seeded local case data:
+
+- case ID: `1616591401473378`
+- case type: `FinancialRemedyContested`
+- applicant access code: `APPCODE1`
+- respondent access code: `RSPCODE1`
+
+Optional environment variables for the mock server:
+
+- `MOCK_CASE_API_PORT`
+- `MOCK_CASE_ID`
+- `MOCK_CASE_TYPE`
+- `MOCK_APPLICANT_ACCESS_CODE`
+- `MOCK_RESPONDENT_ACCESS_CODE`
+
 Local dev startup now loads `.env` automatically before the app config is initialised, so the same file is used by `yarn start:dev` and the checked-in VS Code debug profile.
 
 Debug in VS Code:
