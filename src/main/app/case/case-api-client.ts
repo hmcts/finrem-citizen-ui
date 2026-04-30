@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import config from 'config';
 import { LoggerInstance } from 'winston';
 
-import { UrlEndPoints } from '../../common-constants';
+import { TestRoutes, UrlEndPoints } from '../../common-constants';
 import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
 import { UserDetails } from '../controller/AppRequest';
 import { CaseAssignedUserRole } from './case-roles';
@@ -110,10 +110,17 @@ export const getCaseApiClient = (userDetails: UserDetails, logger: LoggerInstanc
     logger.error('Missing access token in userDetails');
     throw new Error('Access token is required to create Case API client');
   }
+
+  const isTestSupportMode = process.env.ENABLE_TEST_SUPPORT_ROUTES === 'true';
+  const localPort = process.env.PORT || '3000';
+  const baseUrl = isTestSupportMode
+    ? `http://127.0.0.1:${localPort}${TestRoutes.mockCcdBase}`
+    : config.get<string>('services.case.url');
+
   const serviceAuthToken = getServiceAuthToken();
   return new CaseApiClient(
     axios.create({
-      baseURL: config.get('services.case.url'),
+      baseURL: baseUrl,
       headers: {
         Authorization: 'Bearer ' + userDetails.accessToken,
         ServiceAuthorization: serviceAuthToken,
