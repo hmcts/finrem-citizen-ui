@@ -9,6 +9,7 @@ export default function setupDashboardRoute(app: Application): void {
       userName: 'Sam Thompson',
       caseNumber: '1674-2354-3687-4537',
       hasDivorceCase: true,
+      showPreviouslyUploaded: true,
     });
   });
 }
