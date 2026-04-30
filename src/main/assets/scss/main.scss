@@ -56,3 +56,13 @@
   padding-top: 12px;
   padding-bottom: 12px;
 }
+
+.finrem-dashboard-panel {
+  background-color: govuk-colour("light-grey");
+  padding: govuk-spacing(4);
+}
+
+.finrem-dashboard-inset--highlight {
+  background-color: #e8f5fe;
+  padding: 15px 15px 15px 20px;
+}
