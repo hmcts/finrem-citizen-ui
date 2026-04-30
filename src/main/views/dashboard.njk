@@ -6,10 +6,10 @@
   <h1 class="govuk-heading-xl">{{ userName }}</h1>
   <p class="govuk-body">Case number {{ caseNumber }}</p>
   
-  <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
+      <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+      
       {% if hasDivorceCase %}
         <div class="govuk-inset-text">
           <h2 class="govuk-heading-m">This is your financial remedy account</h2>
@@ -53,6 +53,8 @@
     </div>
     
     <div class="govuk-grid-column-one-third">
+      <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+      
       <h2 class="govuk-heading-m">I want to...</h2>
       
       <p class="govuk-body">
