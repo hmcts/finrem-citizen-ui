@@ -77,8 +77,39 @@ describe('CaseApi', () => {
 });
 
 describe('getCaseApiClient', () => {
+  const mockedAxios = axios as jest.Mocked<typeof axios>;
+  const originalEnableTestSupportRoutes = process.env.ENABLE_TEST_SUPPORT_ROUTES;
+  const originalPort = process.env.PORT;
+
+  afterEach(() => {
+    if (originalEnableTestSupportRoutes === undefined) {
+      delete process.env.ENABLE_TEST_SUPPORT_ROUTES;
+    } else {
+      process.env.ENABLE_TEST_SUPPORT_ROUTES = originalEnableTestSupportRoutes;
+    }
+
+    if (originalPort === undefined) {
+      delete process.env.PORT;
+    } else {
+      process.env.PORT = originalPort;
+    }
+  });
+
   test('should create a CaseApiClient', () => {
     expect(getCaseApiClient(userDetails, {} as never)).toBeInstanceOf(CaseApiClient);
+  });
+
+  test('should use local mock CCD base url when test support routes are enabled', () => {
+    process.env.ENABLE_TEST_SUPPORT_ROUTES = 'true';
+    process.env.PORT = '3100';
+
+    getCaseApiClient(userDetails, {} as never);
+
+    expect(mockedAxios.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baseURL: 'http://127.0.0.1:3100/__test/mock-ccd',
+      })
+    );
   });
 });
 
