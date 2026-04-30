@@ -110,6 +110,17 @@ export const test = base.extend<MyFixtures & MockOptions>({
     }
 
     const response = await request.get('/__test/inject-case-session');
+    const testUrl = process.env.TEST_URL || '';
+    const runningEnv = process.env.RUNNING_ENV || '';
+    const isPreviewTarget = testUrl.includes('.preview.platform.hmcts.net') || runningEnv.startsWith('pr-');
+
+    if (response.status() === 404 && isPreviewTarget) {
+      throw new Error(
+        '[mock] tests expected /__test/inject-case-session in preview, but received 404. ' +
+        'Ensure ENABLE_TEST_SUPPORT_ROUTES=true is deployed in preview environment.'
+      );
+    }
+
     base.skip(
       response.status() === 404,
       '[mock] tests require /__test/inject-case-session (ENABLE_TEST_SUPPORT_ROUTES=true)'
