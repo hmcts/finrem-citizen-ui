@@ -12,6 +12,8 @@ export const PublicRoutes = {
 
 export const TestRoutes = {
   injectCaseSession: '/__test/inject-case-session',
+  mockCcdBase: '/__test/mock-ccd',
+  clearMockCcdStore: '/__test/clear-mock-ccd-store',
 } as const;
 
 export const PrivateRoutes = {
