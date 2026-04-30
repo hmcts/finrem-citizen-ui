@@ -25,7 +25,7 @@ export class DashboardPage extends BasePage {
     this.caseNumberText = this.page.getByText(/Case number/);
     this.divorceAccountHeading = this.page.getByRole('heading', { name: 'This is your financial remedy account' });
     this.latestInformationHeading = this.page.getByRole('heading', { name: 'Latest information' });
-    this.goToDocumentUploadButton = this.page.getByRole('link', { name: /Go to document upload/ });
+    this.goToDocumentUploadButton = this.page.getByRole('button', { name: /Go to document upload/ });
     this.viewPreviouslyUploadedLink = this.page.getByRole('link', { name: 'View previously uploaded documents' });
     this.iWantToHeading = this.page.getByRole('heading', { name: 'I want to...' });
     this.gettingHelpHeading = this.page.getByRole('heading', { name: 'Getting help' });
