@@ -42,12 +42,14 @@
       
       <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
       
-      <p class="govuk-body">
-        <a href="#" class="govuk-link">View previously uploaded documents</a>
-      </p>
+      {% if showPreviouslyUploaded %}
+        <p class="govuk-body">
+          <a href="#" class="govuk-link">View previously uploaded documents</a>
+        </p>
+      {% endif %}
     </div>
     
-    <div class="govuk-grid-column-one-third finrem-dashboard">
+    <div class="govuk-grid-column-one-third">
       <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible finrem-section-break">
       
       <h2 class="govuk-heading-m govuk-!-padding-top-2">I want to...</h2>
