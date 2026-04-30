@@ -25,10 +25,9 @@ async function navigateToLinkedDashboard(
   await dashboardPage.verifyDashboardPageContent();
 }
 
-// MOCK: All tests in this describe use the contestedCaseWithHearing fixture with hardcoded
-// access codes (APPCODE1 / RSPCODE1) injected via /__test/inject-case-session.
-// No Form C or FR_manageHearings hearing flow is required.
-// To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
+// Persistent session tests remain skipped until Form C-generated access codes are
+// available end to end. These tests depend on navigateToLinkedDashboard() which requires
+// a valid access-code submission flow.
 test.describe('Persistent Session After Re-login', () => {
   test.use({ useMockTestSupport: true });
 
@@ -37,14 +36,7 @@ test.describe('Persistent Session After Re-login', () => {
    * signing out, and navigating back to the dashboard, the user lands directly
    * on the dashboard without re-entering case number or access code.
    * IDAM SSO re-authenticates and the linked case session is restored.
-   * [mock] Uses hardcoded access codes injected via test session endpoint.
-   * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted via navigateToLinkedDashboard(), the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
+   * Kept skipped until Form C-generated access codes are available end to end.
    */
   test.skip('[mock] User lands on dashboard after re-login without re-entering case details @a11y', async ({
     loggedInPage,
@@ -79,14 +71,7 @@ test.describe('Persistent Session After Re-login', () => {
   /**
    * Verify that case session persists across multiple tabs/contexts
    * within the same authenticated session.
-   * [mock] Uses hardcoded access codes injected via test session endpoint.
-   * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted via navigateToLinkedDashboard(), the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
+   * Kept skipped until Form C-generated access codes are available end to end.
    */
   test.skip('[mock] Case session persists across multiple tabs in same browser context @a11y', async ({
     loggedInPage: _loggedInPage,
@@ -116,14 +101,7 @@ test.describe('Persistent Session After Re-login', () => {
    * Verify that after entering an access code, navigating away and back to the
    * dashboard within the same session does not require re-entering case/access code.
    * (page.reload() is not used because a hard reload clears in-memory mock session state)
-   * [mock] Uses hardcoded access codes injected via test session endpoint.
-   * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted via navigateToLinkedDashboard(), the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
+   * Kept skipped until Form C-generated access codes are available end to end.
    */
   test.skip('[mock] Case session persists when navigating away and back to dashboard @a11y', async ({
     loggedInPage: _loggedInPage,
