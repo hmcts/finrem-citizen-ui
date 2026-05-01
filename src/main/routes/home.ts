@@ -1,4 +1,5 @@
 import { Application } from 'express';
+import multer from 'multer';
 import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../app/auth/user';
@@ -7,9 +8,14 @@ import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { CASE_TYPE } from '../app/case/case-type';
 import { CaseRole } from '../app/case/definition';
 import { UserDetails } from '../app/controller/AppRequest';
+import { downloadDocument,uploadDocument } from '../app/document/document.controller';
 import { RouteNames } from '../common-constants';
 import { orchestrateHome } from '../functions/util/homePageUtil';
 import { oidcMiddleware } from '../middleware';
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+});
 
 export default function (app: Application): void {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
@@ -68,4 +74,19 @@ export default function (app: Application): void {
     const caseId = await caseApi.getExistingUserCase(CASE_TYPE);
     res.json({ id: caseId });
   });
+
+  app.get('/documents/:documentId/download', oidcMiddleware, downloadDocument);
+
+  app.post('/documents/upload', oidcMiddleware, upload.single('file'), uploadDocument);
+
+  app.get(
+    '/documents',
+    oidcMiddleware,
+    (req, res) => {
+      res.render('document', {
+        uploadedDocumentId: req.session.uploadedDocumentId,
+      });
+    }
+  );
+
 }

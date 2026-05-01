@@ -17,6 +17,7 @@ declare module 'express-session' {
     caseNumberErrors?: CaseNumberError;
     tempCaseNumber?: string;
     caseData?: FinremCaseData;
+    uploadedDocumentId?: string;
   }
 }
 
