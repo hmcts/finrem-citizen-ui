@@ -19,13 +19,15 @@ const getBaseUrl = (): string => {
   }
   // For AAT/demo/etc use the citizen UI, not manage-case (XUI)
   return `https://finrem-citizen-ui.${env}.platform.hmcts.net`;
-  
-  //   return `https://manage-case.${env}.platform.hmcts.net`;
 };
 
 const finalBaseUrl = getBaseUrl();
 const isLocal = finalBaseUrl.includes('localhost');
 const displayEnv = isLocal ? 'local' : process.env.RUNNING_ENV || 'aat';
+const parsedWorkers = Number.parseInt(process.env.PW_WORKERS ?? '', 10);
+const workers = Number.isFinite(parsedWorkers) && parsedWorkers > 0
+  ? parsedWorkers
+  : (process.env.CI ? 1 : 2);
 
 // 2. Logging for clarity
 /* eslint-disable no-console */
@@ -41,6 +43,8 @@ if (!process.env.ALREADY_LOGGED && !process.env.PW_WORKER_INDEX) {
 
 export default defineConfig({
   ...CommonConfig.recommended,
+  workers,
+  fullyParallel: false,
 
   // Link to your test-specific tsconfig
   tsconfig: 'src/test/tsconfig.json',
@@ -68,18 +72,34 @@ export default defineConfig({
 
   // 3. Merged WebServer logic (Local development support)
   webServer: isLocal
-    ? {
-        command: 'NODE_OPTIONS="--openssl-legacy-provider" yarn start',
-        url: `${finalBaseUrl}/health`,
-        reuseExistingServer: !process.env.CI,
-        timeout: 120 * 1000,
-        env: {
-          IDAM_SECRET: process.env.IDAM_SECRET || 'dummy-secret-for-playwright-tests',
-          SESSION_SECRET: process.env.SESSION_SECRET || 'dummy-session-secret',
-          ENABLE_TEST_SUPPORT_ROUTES: 'true',
-          PORT: '3100',
+    ? [
+        {
+          // Main Application
+          command: 'NODE_OPTIONS="--openssl-legacy-provider" yarn ts-node -r tsconfig-paths/register src/main/server.ts',
+          url: 'http://localhost:3100/health',
+          reuseExistingServer: !process.env.CI,
+          timeout: 120 * 1000,
+          env: {
+            ...process.env,
+            NODE_ENV: 'development',
+            IDAM_SECRET: process.env.IDAM_SECRET || 'dummy-secret-for-playwright-tests',
+            SESSION_SECRET: process.env.SESSION_SECRET || 'dummy-session-secret',
+            CASE_API_URL: 'http://localhost:4100',
+            SERVICES_CASE_API_URL: 'http://localhost:4100',
+            SERVICES_CCD_DATA_STORE_API_BASE_URL: 'http://localhost:4100',
+            IDAM_API_URL: process.env.IDAM_API_URL || 'http://localhost:5000',
+            S2S_URL: process.env.S2S_URL || 'http://localhost:4502',
+            ENABLE_TEST_SUPPORT_ROUTES: 'true',
+            PORT: '3100',
+          },
         },
-      }
+        {
+          // Mock Case API
+          command: 'yarn start:mock-case-api',
+          port: 4100,
+          reuseExistingServer: !process.env.CI,
+        },
+      ]
     : undefined,
 
   projects: [
