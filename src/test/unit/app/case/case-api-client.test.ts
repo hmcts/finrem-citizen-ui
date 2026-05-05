@@ -74,11 +74,87 @@ describe('CaseApi', () => {
 
     expect(mockLogger.error).toHaveBeenCalledWith('API Error', 'Error');
   });
+
+  test('should log error with just request when response is missing', async () => {
+    mockedAxios.get.mockRejectedValue({
+      config: { method: 'GET', url: 'https://example.com' },
+      request: 'mock request',
+      response: undefined,
+    });
+
+    await expect(api.getCaseById('1234')).rejects.toThrow('Case could not be retrieved.');
+
+    expect(mockLogger.error).toHaveBeenCalledWith('API Error GET https://example.com');
+  });
 });
 
 describe('getCaseApiClient', () => {
   test('should create a CaseApiClient', () => {
     expect(getCaseApiClient(userDetails, {} as never)).toBeInstanceOf(CaseApiClient);
+  });
+
+  test('should throw error when userDetails has no accessToken', () => {
+    const mockLogger = {
+      error: jest.fn(),
+      info: jest.fn(),
+    } as unknown as LoggerInstance;
+
+    const invalidUserDetails = {
+      ...userDetails,
+      accessToken: '',
+    };
+
+    expect(() => getCaseApiClient(invalidUserDetails as unknown as UserDetails, mockLogger)).toThrow(
+      'Access token is required to create Case API client'
+    );
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Missing access token in userDetails'
+    );
+  });
+
+  test('should throw error when userDetails is null', () => {
+    const mockLogger = {
+      error: jest.fn(),
+      info: jest.fn(),
+    } as unknown as LoggerInstance;
+
+    expect(() => getCaseApiClient(null as unknown as UserDetails, mockLogger)).toThrow(
+      'Access token is required to create Case API client'
+    );
+  });
+
+  test('should use test-support base URL when ENABLE_TEST_SUPPORT_ROUTES is true', () => {
+    process.env.ENABLE_TEST_SUPPORT_ROUTES = 'true';
+    process.env.TEST_URL = 'http://localhost:3100';
+
+    const mockLogger = {
+      error: jest.fn(),
+      info: jest.fn(),
+    } as unknown as LoggerInstance;
+
+    const client = getCaseApiClient(userDetails, mockLogger);
+
+    expect(client).toBeInstanceOf(CaseApiClient);
+    delete process.env.ENABLE_TEST_SUPPORT_ROUTES;
+    delete process.env.TEST_URL;
+  });
+
+  test('should use PORT from environment when constructing localhost base URL', () => {
+    process.env.ENABLE_TEST_SUPPORT_ROUTES = 'true';
+    process.env.PORT = '3200';
+    delete process.env.TEST_URL;
+
+    const mockLogger = {
+      error: jest.fn(),
+      info: jest.fn(),
+    } as unknown as LoggerInstance;
+
+    const client = getCaseApiClient(userDetails, mockLogger);
+
+    expect(client).toBeInstanceOf(CaseApiClient);
+    delete process.env.ENABLE_TEST_SUPPORT_ROUTES;
+    delete process.env.PORT;
   });
 });
 
