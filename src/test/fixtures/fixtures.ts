@@ -103,16 +103,50 @@ export const test = base.extend<MyFixtures & MockOptions>({
 
   // Guards mock tests that depend on /__test/inject-case-session.
   // Skip locally when targeting AAT; skip anywhere the route is absent (404).
-  mockTestSupport: [async ({ request, useMockTestSupport }, use) => {
+  mockTestSupport: [async ({ request, useMockTestSupport, baseURL }, use) => {
     if (!useMockTestSupport) {
       await use();
       return;
     }
 
-    const response = await request.get('/__test/inject-case-session');
+    const testSupportPath =
+      '/__test/inject-case-session?caseNumber=2222333344445555&applicantCode=APPCODE1&respondentCode=RSPCODE1';
+
+    const resolvedBaseUrl = (baseURL || process.env.TEST_URL || '').replace(/\/$/, '');
+    const isLocalBaseUrl = /(^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$)|(^http:\/\/localhost:\d+$)|(^http:\/\/127\.0\.0\.1:\d+$)/i
+      .test(resolvedBaseUrl);
+
     base.skip(
-      response.status() === 404,
-      '[mock] tests require /__test/inject-case-session (ENABLE_TEST_SUPPORT_ROUTES=true)'
+      !isLocalBaseUrl,
+      `[mock] tests are local-only. Current baseURL=${resolvedBaseUrl || 'n/a'}`
+    );
+
+    const probeUrls = [
+      testSupportPath,
+      `${resolvedBaseUrl}${testSupportPath}`,
+      `http://127.0.0.1:3100${testSupportPath}`,
+      `http://localhost:3100${testSupportPath}`,
+    ];
+
+    let routeUnavailable = true;
+    let routeStatus = -1;
+
+    for (const probeUrl of probeUrls) {
+      try {
+        const response = await request.get(probeUrl);
+        routeStatus = response.status();
+        if (routeStatus >= 200 && routeStatus < 400) {
+          routeUnavailable = false;
+          break;
+        }
+      } catch {
+        // Try next probe
+      }
+    }
+
+    base.skip(
+      routeUnavailable,
+      `[mock] tests require a reachable and usable /__test/inject-case-session route. status=${routeStatus}`
     );
 
     await use();
@@ -229,8 +263,10 @@ export const test = base.extend<MyFixtures & MockOptions>({
             console.warn(`Initial login attempt failed and succeeded on retry: ${firstError.message}`);
           }
         } catch (secondError) {
-          const firstMessage = firstError instanceof Error ? firstError.message : String(firstError);
-          const secondMessage = secondError instanceof Error ? secondError.message : String(secondError);
+          const firstMessage =
+            firstError instanceof Error ? firstError.message : String(firstError);
+          const secondMessage =
+            secondError instanceof Error ? secondError.message : String(secondError);
           throw new Error(
             `Login failed after one retry. First attempt: ${firstMessage}. Second attempt: ${secondMessage}`
           );
@@ -254,18 +290,30 @@ export const test = base.extend<MyFixtures & MockOptions>({
   },
 
   /**
-   * Creates a real contested case via the Form A → progress-to-listing pipeline.
-   * Access codes are NOT generated — this fixture is only for tests that verify
-   * the case-number linking step without proceeding to the access-code screen.
+   * Creates a case for case-number linking tests.
    *
-   * The 240s timeout reflects the time needed to drive the full case-creation API chain, which can be slow in the AAT environment.
+   * Default in test-support mode: uses a seeded mock case ID to avoid external CCD
+   * dependencies and bypass transient FR_solicitorCreate 502 errors.
+   *
+   * Optional real integration mode: set CASE_NUMBER_REAL_INTEGRATION=true to force
+   * real CCD case creation via the Form A → progress-to-listing pipeline.
    */
   contestedCaseForCaseNumber: [
-    async ({}, use) => {
-      const caseId = String(
-        await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)
-      );
-      const formattedCaseId = caseId.replace(/(\d{4})(?=\d)/g, '$1-');
+    async ({ useMockTestSupport }, use) => {
+      // Explicit precedence:
+      // CASE_NUMBER_REAL_INTEGRATION=true  -> always real CCD case
+      // CASE_NUMBER_REAL_INTEGRATION=false -> always mock case number
+      // unset                              -> mock in test-support mode, otherwise real
+      const realMode = process.env.CASE_NUMBER_REAL_INTEGRATION;
+      const testSupportEnabled = process.env.ENABLE_TEST_SUPPORT_ROUTES === 'true';
+      const forceReal = realMode === 'true';
+      const forceMock = realMode === 'false' || useMockTestSupport || testSupportEnabled;
+
+      const caseId = forceMock && !forceReal
+        ? (process.env.MOCK_CASE_NUMBER || '2222333344445555')
+        : String(await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false));
+
+      const formattedCaseId = caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
       await use({ caseId, formattedCaseId });
     },
     { timeout: 240 * 1000 }
