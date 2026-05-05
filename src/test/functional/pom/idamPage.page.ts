@@ -18,6 +18,17 @@ export class IdamPage {
     this.continueBtn = this.page.getByRole('button', { name: /continue/i });
   }
 
+  private isIgnorableSessionClearError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+
+    return message.includes('Failed to find browser context')
+      || message.includes('Target page, context or browser has been closed')
+      || message.includes('Execution context was destroyed')
+      || message.includes('Cannot find context with specified id')
+      || message.includes('SecurityError')
+      || message.includes('Access is denied for this document');
+  }
+
   /**
    * multi-step login flow:
    * Landing page -> Email -> Password
@@ -81,21 +92,31 @@ export class IdamPage {
     try {
       await context.clearCookies();
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (!message.includes('Failed to find browser context')) {
+      if (!this.isIgnorableSessionClearError(error)) {
         throw error;
       }
     }
 
-    try {
-      await this.page.evaluate(() => {
-        globalThis.localStorage.clear();
-        globalThis.sessionStorage.clear();
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (!message.includes('Target page, context or browser has been closed')) {
-        throw error;
+    // Best-effort stabilization if retry starts while a redirect is still in flight.
+    await this.page.waitForLoadState('domcontentloaded', { timeout: 3_000 }).catch(() => undefined);
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (this.page.isClosed()) {
+        return;
+      }
+
+      try {
+        await this.page.evaluate(() => {
+          globalThis.localStorage.clear();
+          globalThis.sessionStorage.clear();
+        });
+        return;
+      } catch (error) {
+        if (!this.isIgnorableSessionClearError(error)) {
+          throw error;
+        }
+
+        await this.page.waitForLoadState('domcontentloaded', { timeout: 2_000 }).catch(() => undefined);
       }
     }
   }
