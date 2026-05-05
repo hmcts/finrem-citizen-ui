@@ -73,8 +73,13 @@ export async function loadCaseAndReloadSession(
   logger.info(`Loading case ${caseId} from CCD backend: ${ccdUrl}`);
 
   try {
-    const systemUser = await getSystemUser();
-    const caseApi = getCaseApi(systemUser, logger);
+    const useTestSupportRoutes = process.env.ENABLE_TEST_SUPPORT_ROUTES === 'true';
+    const sessionUser = req.session.user as UserDetails | undefined;
+    const userDetails = useTestSupportRoutes && sessionUser
+      ? sessionUser
+      : await getSystemUser();
+
+    const caseApi = getCaseApi(userDetails, logger);
     const caseData = await caseApi.getCaseById(caseId);
 
     logger.info(`Case ${caseId} successfully loaded from CCD`);
