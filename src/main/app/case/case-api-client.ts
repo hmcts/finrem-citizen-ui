@@ -111,9 +111,17 @@ export const getCaseApiClient = (userDetails: UserDetails, logger: LoggerInstanc
     throw new Error('Access token is required to create Case API client');
   }
   const serviceAuthToken = getServiceAuthToken();
+  const enableTestSupportRoutes = process.env.ENABLE_TEST_SUPPORT_ROUTES === 'true';
+  const appPort = process.env.PORT || '3100';
+  const configuredAppUrl = process.env.TEST_URL || `http://localhost:${appPort}`;
+  const appBaseUrl = configuredAppUrl.replace(/\/$/, '');
+  const baseURL = enableTestSupportRoutes
+    ? `${appBaseUrl}/__test/mock-ccd`
+    : (config.get('services.case.url') as string);
+
   return new CaseApiClient(
     axios.create({
-      baseURL: config.get('services.case.url'),
+      baseURL,
       headers: {
         Authorization: 'Bearer ' + userDetails.accessToken,
         ServiceAuthorization: serviceAuthToken,
