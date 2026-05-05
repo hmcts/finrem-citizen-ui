@@ -14,13 +14,13 @@ async function navigateToConfidentialityPage(
   await basePage.verifyGlobalHeaderAndFooter();
 }
  
-test.describe('Confidentiality page @PR', () => {
+test.describe('Confidentiality Page [REAL-INTEGRATION]', () => {
   test.beforeEach(async ({ loggedInPage: _loggedInPage, dashboardPage, beforeYouStartPage, basePage }) => {
     await navigateToConfidentialityPage(dashboardPage, beforeYouStartPage, basePage);
   });
  
   // AC1: Page renders with correct URL and key layout elements
-  test('Confidentiality page content is visible and accessible @PR @a11y', async ({
+  test('[REAL-INTEGRATION] Confidentiality page content is visible and accessible @a11y', async ({
     confidentialityPage,
     axeUtils,
   }) => {
@@ -29,42 +29,42 @@ test.describe('Confidentiality page @PR', () => {
   });
  
   // AC2: Form C8 link is present with the correct href and opens in a new tab
-  test('Form C8 link is present and correctly configured @PR', async ({
+  test('[REAL-INTEGRATION] Form C8 link is present and correctly configured', async ({
     confidentialityPage,
   }) => {
     await confidentialityPage.verifyFormC8Link();
   });
  
   // AC3: Redaction instructions are shown
-  test('Redaction instructions are displayed @PR', async ({
+  test('[REAL-INTEGRATION] Redaction instructions are displayed', async ({
     confidentialityPage,
   }) => {
     await confidentialityPage.verifyRedactionInstructions();
   });
  
   // AC4: Court staff disclaimer is shown
-  test('Court staff disclaimer is displayed @PR', async ({
+  test('[REAL-INTEGRATION] Court staff disclaimer is displayed', async ({
     confidentialityPage,
   }) => {
     await confidentialityPage.verifyCourtStaffDisclaimer();
   });
  
   // AC5: Confidential information examples and do-not-redact guidance are shown
-  test('Confidential information examples are displayed @PR', async ({
+  test('[REAL-INTEGRATION] Confidential information examples are displayed', async ({
     confidentialityPage,
   }) => {
     await confidentialityPage.verifyConfidentialInformationExamples();
   });
  
   // AC6: Warning message about documents being placed on the court record is shown
-  test('Court record warning message is displayed @PR', async ({
+  test('[REAL-INTEGRATION] Court record warning message is displayed', async ({
     confidentialityPage,
   }) => {
     await confidentialityPage.verifyCourtRecordWarning();
   });
  
   // AC7: Continue button is visible, enabled, and navigates to the next upload step
-  test('Continue button navigates to upload step @PR @a11y', async ({
+  test('[REAL-INTEGRATION] Continue button navigates to upload step @a11y', async ({
     confidentialityPage,
     axeUtils,
   }) => {
@@ -74,7 +74,7 @@ test.describe('Confidentiality page @PR', () => {
   });
 
   // AC8: Cancel link is visible and returns user to the dashboard
-  test('Cancel button returns to dashboard @PR @a11y', async ({
+  test('[REAL-INTEGRATION] Cancel button returns to dashboard @a11y', async ({
     dashboardPage,
     confidentialityPage,
     axeUtils,
@@ -86,7 +86,7 @@ test.describe('Confidentiality page @PR', () => {
   });
  
   // AC9: Getting help panel is collapsed by default and expands with correct contact details
-  test('Getting help panel is closed by default and shows contact details when expanded @PR @a11y', async ({
+  test('[REAL-INTEGRATION] Getting help panel is closed by default and shows contact details when expanded @a11y', async ({
     confidentialityPage,
     axeUtils,
   }) => {
