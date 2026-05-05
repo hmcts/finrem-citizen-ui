@@ -267,6 +267,20 @@ describe('loadCaseAndReloadSession', () => {
     );
   });
 
+  test('uses session user instead of system user when ENABLE_TEST_SUPPORT_ROUTES is true', async () => {
+    process.env.ENABLE_TEST_SUPPORT_ROUTES = 'true';
+    const sessionUser = createUserDetails();
+    (mockReq.session as unknown as { user: UserDetails }).user = sessionUser;
+    const caseData = createCaseData('1234567890123456');
+    mockGetCaseById.mockResolvedValue(caseData);
+
+    await loadCaseAndReloadSession(mockReq, '1234-5678-9012-3456', mockLogger);
+
+    expect(getCaseApi).toHaveBeenCalledWith(sessionUser, mockLogger);
+    expect(getSystemUser).not.toHaveBeenCalled();
+    delete process.env.ENABLE_TEST_SUPPORT_ROUTES;
+  });
+
   test('logs and rethrows when getting system user fails', async () => {
     const systemUserError = new Error('IDAM unavailable');
     jest.mocked(getSystemUser).mockRejectedValue(systemUserError);
