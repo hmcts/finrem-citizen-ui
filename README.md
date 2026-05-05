@@ -165,11 +165,81 @@ yarn test:smoke
 yarn test:functional
 ```
 
-Run PR-tagged only tests (fast subset) when needed:
+#### Current execution model (important)
+
+- Local mock-first runs:
+  - Use `TEST_URL=http://localhost:3100` (or equivalent local base URL).
+  - Playwright starts both local web servers from `playwright.config.mts`:
+    - main app on `:3100`
+    - mock case API on `:4100`
+  - Test-support routes are enabled (`ENABLE_TEST_SUPPORT_ROUTES=true`).
+  - `[MOCK]` suites run and should pass without live CCD dependency.
+
+- AAT/remote runs:
+  - No local web servers are started by Playwright.
+  - `[MOCK]` suites that rely on `useMockTestSupport` are intentionally skipped by fixture guard.
+  - `[REAL-INTEGRATION]` and shared non-mock suites run against the target environment.
+
+#### Decision rationale
+
+- We keep local and remote responsibilities separate to keep test signal reliable:
+  - local validates deterministic mocked flows quickly (`[MOCK]`)
+  - AAT/preview validates live service integration (`[REAL-INTEGRATION]`)
+- Running mock-route tests on AAT would create false failures because those tests require local test-support endpoints and local mock API wiring.
+- This split reduces flakiness, keeps CI feedback trustworthy, and avoids mixing mock shortcuts into integration environments.
+
+#### Which environment is for what
+
+| Environment | Primary purpose | Expected suite behavior |
+| --- | --- | --- |
+| `local` (`TEST_URL=http://localhost:3100`) | Fast deterministic developer validation | `[MOCK]` tests run, real integration tests run where available, explicitly skipped blocks remain skipped |
+| `aat` (`RUNNING_ENV=aat`) | Live integration confidence | `[MOCK]` tests that require test-support routes are auto-skipped; `[REAL-INTEGRATION]` tests run |
+| `pr-<number>` (`RUNNING_ENV=pr-123`) | Preview environment integration checks | Same as AAT behavior against the selected PR deployment |
+
+#### How to run against each environment
+
+Local mock-first (default local profile):
 
 ```bash
-yarn test:functional:pr
+TEST_URL=http://localhost:3100 yarn test:functional
 ```
+
+AAT live integration:
+
+```bash
+RUNNING_ENV=aat yarn test:functional
+```
+
+PR preview integration (example `pr-123`):
+
+```bash
+RUNNING_ENV=pr-123 yarn test:functional
+```
+
+Override with an explicit target URL when needed:
+
+```bash
+TEST_URL=https://finrem-citizen-ui.aat.platform.hmcts.net yarn test:functional
+```
+
+Focused runs by marker (any environment):
+
+```bash
+yarn playwright test --config playwright.config.mts --project chromium --grep "\[MOCK\]"
+yarn playwright test --config playwright.config.mts --project chromium --grep "\[REAL-INTEGRATION\]"
+```
+
+#### Test title markers
+
+- `[MOCK]` = deterministic mocked/session-injected route coverage.
+- `[REAL-INTEGRATION]` = live integration coverage.
+- `[REAL-INTEGRATION - SKIPPED]` = explicitly documented integration tests currently disabled in normal runs.
+
+#### Intentionally skipped tests
+
+- `src/test/functional/specFiles/enterCaseNumber.spec.ts` contains two real-integration happy-path tests under:
+  - `Enter Case Number - Citizen Happy Path [REAL-INTEGRATION - SKIPPED]`
+- They are intentionally skipped because they require live CCD case creation/events and are too flaky for mock-first local/CI functional profiles.
 
 > **`test:full-functional` remains available as an explicit full-suite command.**  
 > It runs the full functional suite with 2 retries, but does not install browsers first.
@@ -188,6 +258,12 @@ yarn test:functional:headed:slowmo -- src/test/functional/specFiles/enterAccessC
 ```
 
 You can change the file path and line number each time to target a different test.
+
+List tests and confirm what will run/skip:
+
+```bash
+yarn playwright test --list --config playwright.config.mts --project chromium
+```
 
 ### Accessibility Tests (Playwright + axe)
 
@@ -246,7 +322,7 @@ Important:
 
 **Output example:**
 ```
-✅ Setup Complete
+Setup Complete
 ========================================
 
 Environment: pr-XXX
