@@ -1,20 +1,32 @@
-import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
+import { DEFAULT_AXE_OPTIONS, test } from '../../fixtures/fixtures';
 
-test.describe('Enter Access Code - Page Content', () => {
+const MOCK_CASE_NUMBER = process.env.MOCK_CASE_NUMBER || '2222333344445555';
+const MOCK_APPLICANT_CODE = 'APPCODE1';
+const MOCK_RESPONDENT_CODE = 'RSPCODE1';
+
+/**
+ * MOCK COVERAGE (RUNNING)
+ *
+ * This section runs only against test-support mocked session injection and is
+ * expected to pass without any live CCD dependency.
+ */
+test.describe('Enter Access Code - Page Content [MOCK]', () => {
+  test.use({ useMockTestSupport: true });
+
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
-    enterCaseNumberPage,
-    contestedCaseForCaseNumber,
-    page,
     basePage,
   }) => {
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
-    await expect(page).toHaveURL(/\/enter-access-code$/);
+    await basePage.injectCaseSession(
+      MOCK_CASE_NUMBER,
+      MOCK_APPLICANT_CODE,
+      MOCK_RESPONDENT_CODE
+    );
     await basePage.verifyGlobalHeaderAndFooter();
   });
 
   // Verify that the Enter Access Code page displays all expected elements.
-  test('Access code page contains all required elements @a11y', async ({
+  test('[MOCK] Access code page contains all required elements @a11y', async ({
     enterAccessCodePage,
     assertionHelpers: _assertionHelpers,
     axeUtils,
@@ -24,23 +36,30 @@ test.describe('Enter Access Code - Page Content', () => {
   });
 });
 
-test.describe('Enter Access Code - Validation Errors', () => {
+/**
+ * MOCK COVERAGE (RUNNING)
+ *
+ * Validation scenarios intentionally run using mocked case/session data.
+ */
+test.describe('Enter Access Code - Validation Errors [MOCK]', () => {
+  test.use({ useMockTestSupport: true });
+
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
-    enterCaseNumberPage,
-    contestedCaseForCaseNumber,
-    page,
     basePage,
   }) => {
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
-    await expect(page).toHaveURL(/\/enter-access-code$/);
+    await basePage.injectCaseSession(
+      MOCK_CASE_NUMBER,
+      MOCK_APPLICANT_CODE,
+      MOCK_RESPONDENT_CODE
+    );
     await basePage.verifyGlobalHeaderAndFooter();
   });
 
   /**
    * Verify empty access code input validation
    */
-  test('Error: Access code is empty', async ({
+  test('[MOCK] Error: Access code is empty', async ({
     enterAccessCodePage,
     assertionHelpers: _assertionHelpers,
     page: _page,
@@ -54,7 +73,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
   /**
    * Verify access code length validation (too short)
    */
-  test('Error: Access code is too short', async ({
+  test('[MOCK] Error: Access code is too short', async ({
     enterAccessCodePage,
     page: _page,
   }) => {
@@ -66,7 +85,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
   /**
    * Verify access code length validation (too long)
    */
-  test('Error: Access code is too long', async ({
+  test('[MOCK] Error: Access code is too long', async ({
     enterAccessCodePage,
     page: _page,
   }) => {
@@ -78,7 +97,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
   /**
    * Verify access code format validation (special characters not allowed)
    */
-  test('Error: Access code contains invalid characters', async ({
+  test('[MOCK] Error: Access code contains invalid characters', async ({
     enterAccessCodePage,
     page: _page,
   }) => {
@@ -92,7 +111,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
   /**
    * Verify access code format validation (spaces not allowed)
    */
-  test('Error: Access code contains spaces', async ({
+  test('[MOCK] Error: Access code contains spaces', async ({
     enterAccessCodePage,
     page: _page,
   }) => {
@@ -106,7 +125,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
   /**
    * Verify invalid access code not found in system
    */
-  test('Error: Access code not found in case', async ({
+  test('[MOCK] Error: Access code not found in case', async ({
     enterAccessCodePage,
     page: _page,
   }) => {
@@ -120,114 +139,78 @@ test.describe('Enter Access Code - Validation Errors', () => {
 
 });
 
-// MOCK: The contestedCaseWithHearing fixture creates a real CCD case but uses hardcoded
-// access codes (APPCODE1 / RSPCODE1) injected via /__test/inject-case-session.
-// No Form C or FR_manageHearings hearing flow is required.
-// To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
-test.describe('Enter Access Code - Happy Path', () => {
+/**
+ * MOCK HAPPY PATHS (RUNNING)
+ *
+ * These tests run entirely against test-support mocked session + mock CCD routes.
+ */
+test.describe('Enter Access Code - Happy Path [MOCK]', () => {
   test.use({ useMockTestSupport: true });
 
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     basePage,
-    contestedCaseWithHearing,
   }) => {
     await basePage.injectCaseSession(
-      contestedCaseWithHearing.caseId,
-      contestedCaseWithHearing.applicantAccessCode,
-      contestedCaseWithHearing.respondentAccessCode
+      MOCK_CASE_NUMBER,
+      MOCK_APPLICANT_CODE,
+      MOCK_RESPONDENT_CODE
     );
     await basePage.verifyGlobalHeaderAndFooter();
   });
 
   /**
-   * Citizen successfully enters valid applicant access code and views case
-   * [mock] Uses hardcoded access codes injected via test session endpoint.
-   * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted, the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
+   * Citizen successfully enters valid applicant access code and views case.
    */
-  test.skip('[mock] Citizen can enter valid applicant access code and view case summary', async ({
+  test('[MOCK] Citizen can enter valid applicant access code and view case summary', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
-    contestedCaseWithHearing,
     assertionHelpers: _assertionHelpers,
   }) => {
-    const accessCode = contestedCaseWithHearing.applicantAccessCode;
+    const accessCode = MOCK_APPLICANT_CODE;
 
     await enterAccessCodePage.submitAccessCode(accessCode);
     await dashboardPage.verifyDashboardPageContent();
   });
 
   /**
-   * Verify whitespace is trimmed from access code
-   * [mock] Uses hardcoded access codes injected via test session endpoint.
-   * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted, the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
+   * Verify whitespace is trimmed from access code.
    */
-  test.skip('[mock] Success: Access code with leading/trailing whitespace is accepted', async ({
+  test('[MOCK] Success: Access code with leading/trailing whitespace is accepted', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
-    contestedCaseWithHearing,
   }) => {
-    const accessCode = contestedCaseWithHearing.applicantAccessCode;
+    const accessCode = MOCK_APPLICANT_CODE;
 
     await enterAccessCodePage.submitAccessCode(`  ${accessCode}  `);
     await dashboardPage.verifyDashboardPageContent();
   });
 
   /**
-   * Citizen successfully enters valid respondent access code and views case
-   * [mock] Uses hardcoded access codes injected via test session endpoint.
-   * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted, the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
+   * Citizen successfully enters valid respondent access code and views case.
    */
-  test.skip('[mock] Citizen can enter valid respondent access code and view case summary', async ({
+  test('[MOCK] Citizen can enter valid respondent access code and view case summary', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
-    contestedCaseWithHearing,
   }) => {
-    const accessCode = contestedCaseWithHearing.respondentAccessCode;
+    const accessCode = MOCK_RESPONDENT_CODE;
 
     await enterAccessCodePage.submitAccessCode(accessCode);
     await dashboardPage.verifyDashboardPageContent();
   });
 
   /**
-   * Access codes are case-insensitive
-   * [mock] Uses hardcoded access codes injected via test session endpoint.
-   * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted, the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
+   * Access codes are case-insensitive.
    */
-  test.skip('[mock] Access code submission is case-insensitive', async ({
+  test('[MOCK] Access code submission is case-insensitive', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
-    contestedCaseWithHearing,
   }) => {
-    const accessCode = contestedCaseWithHearing.applicantAccessCode;
+    const accessCode = MOCK_APPLICANT_CODE;
 
     // Enter access code in lowercase
     const lowercaseCode = accessCode.toLowerCase();
