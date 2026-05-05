@@ -1,7 +1,7 @@
 import { DEFAULT_AXE_OPTIONS, test } from '../../fixtures/fixtures';
 
 
-test.describe('Dashboard upload journey', () => {
+test.describe('Dashboard Upload Journey [REAL-INTEGRATION]', () => {
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
@@ -13,7 +13,7 @@ test.describe('Dashboard upload journey', () => {
     await basePage.verifyGlobalHeaderAndFooter();
   });
 
-  test('Dashboard sections and upload document button visible and accessible @a11y', async ({
+  test('[REAL-INTEGRATION] Dashboard sections and upload document button visible and accessible @a11y', async ({
     dashboardPage,
     axeUtils,
   }) => {
@@ -21,7 +21,7 @@ test.describe('Dashboard upload journey', () => {
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
-  test('Before-you-start sections and help details are visible and accessible @a11y', async ({
+  test('[REAL-INTEGRATION] Before-you-start sections and help details are visible and accessible @a11y', async ({
     dashboardPage,
     beforeYouStartPage,
     axeUtils,
@@ -35,7 +35,7 @@ test.describe('Dashboard upload journey', () => {
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
-  test('Before-you-start supports back navigation and start-now progression @a11y', async ({
+  test('[REAL-INTEGRATION] Before-you-start supports back navigation and start-now progression @a11y', async ({
     dashboardPage,
     beforeYouStartPage,
     axeUtils,
