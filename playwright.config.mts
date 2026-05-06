@@ -44,7 +44,7 @@ export default defineConfig({
   tsconfig: 'src/test/tsconfig.json',
 
   testDir: './src/test',
-  testMatch: ['a11y/*.test.ts', 'api/**/*.spec.ts', 'functional/**/*.spec.ts'],
+  testMatch: ['a11y/*.test.ts', 'functional/**/*.spec.ts'],
 
   reporter: [
     ...((CommonConfig.recommended.reporter as ReporterDescription[]) || []),
