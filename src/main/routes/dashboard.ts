@@ -26,7 +26,6 @@ export default function setupDashboardRoute(app: Application): void {
       caseNumber: req.session.caseNumber ?? '0000-0000-0000-0000',
       hasDivorceCase: user?.hasNFDCase ?? false,
       showPreviouslyUploaded: true,
-      contactEmail: caseData?.consentOrderFRCEmail || 'FRCexample@justice.gov.uk',
     });
   });
 }
