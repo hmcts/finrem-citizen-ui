@@ -19,8 +19,6 @@ const getBaseUrl = (): string => {
   }
   // For AAT/demo/etc use the citizen UI, not manage-case (XUI)
   return `https://finrem-citizen-ui.${env}.platform.hmcts.net`;
-  
-  //   return `https://manage-case.${env}.platform.hmcts.net`;
 };
 
 const finalBaseUrl = getBaseUrl();
@@ -69,11 +67,12 @@ export default defineConfig({
   // 3. Merged WebServer logic (Local development support)
   webServer: isLocal
     ? {
-        command: 'NODE_OPTIONS="--openssl-legacy-provider" yarn start',
+        command: 'NODE_OPTIONS="--openssl-legacy-provider" ts-node -r dotenv/config -r tsconfig-paths/register src/main/server.ts',
         url: `${finalBaseUrl}/health`,
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
         env: {
+          ...process.env,
           IDAM_SECRET: process.env.IDAM_SECRET || 'dummy-secret-for-playwright-tests',
           SESSION_SECRET: process.env.SESSION_SECRET || 'dummy-session-secret',
           ENABLE_TEST_SUPPORT_ROUTES: 'true',
