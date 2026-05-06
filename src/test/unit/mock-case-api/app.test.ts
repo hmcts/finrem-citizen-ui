@@ -61,6 +61,9 @@ describe('mock case api app', () => {
   });
 
   test('updates case data via events route', async () => {
+    const createdAt = new Date().toISOString();
+    const validUntil = getFutureIsoDate(90);
+
     const response = await request(app)
       .post(`/cases/${caseId}/events`)
       .send({
@@ -72,8 +75,8 @@ describe('mock case api app', () => {
               id: 'mock-applicant-access-code',
               value: {
                 accessCode: 'APPCODE1',
-                createdAt: '2026-01-01T00:00:00.000Z',
-                validUntil: '2026-12-31T00:00:00.000Z',
+                createdAt,
+                validUntil,
                 isValid: 'No',
               },
             },
@@ -181,3 +184,9 @@ describe('mock case api app', () => {
     expect(response.body).toEqual({ status: 'UP' });
   });
 });
+
+function getFutureIsoDate(daysFromNow: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString();
+}

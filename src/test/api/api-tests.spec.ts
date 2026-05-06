@@ -11,11 +11,14 @@ test.describe('Mock case API endpoints', () => {
   const seededCaseTypeId = 'FinancialRemedyContested';
 
   test.beforeAll(async () => {
+    const createdAt = new Date().toISOString();
+    const validUntil = getFutureIsoDate(90);
+
     const seededCase: NonNullable<MockCaseApiOptions['seedCases']>[number] = {
       id: seededCaseId,
       state: 'CaseAdded',
       caseTypeId: seededCaseTypeId,
-      createdDate: '2026-01-01T00:00:00.000Z',
+      createdDate: createdAt,
       data: {
         divorceCaseNumber: 'LV24D00001',
         applicantAccessCodes: [
@@ -23,8 +26,8 @@ test.describe('Mock case API endpoints', () => {
             id: 'mock-applicant-access-code',
             value: {
               accessCode: 'APPCODE1',
-              createdAt: '2026-01-01T00:00:00.000Z',
-              validUntil: '2026-12-31T00:00:00.000Z',
+              createdAt,
+              validUntil,
               isValid: 'Yes',
             },
           },
@@ -34,8 +37,8 @@ test.describe('Mock case API endpoints', () => {
             id: 'mock-respondent-access-code',
             value: {
               accessCode: 'RSPCODE1',
-              createdAt: '2026-01-01T00:00:00.000Z',
-              validUntil: '2026-12-31T00:00:00.000Z',
+              createdAt,
+              validUntil,
               isValid: 'Yes',
             },
           },
@@ -82,6 +85,9 @@ test.describe('Mock case API endpoints', () => {
   });
 
   test('POST /cases/:caseId/events merges data and updates state for invalidate access code events', async () => {
+    const createdAt = new Date().toISOString();
+    const validUntil = getFutureIsoDate(90);
+
     const res = await request(app)
       .post(`/cases/${seededCaseId}/events`)
       .send({
@@ -93,8 +99,8 @@ test.describe('Mock case API endpoints', () => {
               id: 'mock-applicant-access-code',
               value: {
                 accessCode: 'APPCODE1',
-                createdAt: '2026-01-01T00:00:00.000Z',
-                validUntil: '2026-12-31T00:00:00.000Z',
+                createdAt,
+                validUntil,
                 isValid: 'No',
               },
             },
@@ -146,5 +152,11 @@ test.describe('Mock case API endpoints', () => {
     });
   });
 });
+
+function getFutureIsoDate(daysFromNow: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString();
+}
 
  
