@@ -10,15 +10,15 @@
     <div class="govuk-grid-column-two-thirds">
       <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible finrem-section-break">
       
-      <div class="govuk-inset-text finrem-dashboard-inset--highlight">
-        <h2 class="govuk-heading-m">This is your financial remedy account</h2>
-        {% if hasDivorceCase %}
+      {% if hasDivorceCase %}
+        <div class="govuk-inset-text finrem-dashboard-inset--highlight">
+          <h2 class="govuk-heading-m">This is your financial remedy account</h2>
           <p class="govuk-body">
             If you want to view your divorce case you can 
             <a href="https://www.apply-divorce.service.gov.uk/" class="govuk-link" target="_blank" rel="noopener noreferrer">go to your divorce account (opens in new tab)</a>.
           </p>
-        {% endif %}
-      </div>
+        </div>
+      {% endif %}
       
       <h2 class="govuk-heading-m">Latest information</h2>
       
@@ -72,7 +72,7 @@
       
       <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
       
-      {{ gettingHelp() }}
+      {{ gettingHelp(contactEmail) }}
     </div>
   </div>
 {% endblock %}

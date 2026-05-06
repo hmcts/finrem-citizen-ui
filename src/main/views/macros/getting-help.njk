@@ -1,4 +1,4 @@
-{% macro gettingHelp() %}
+{% macro gettingHelp(contactEmail) %}
 
 <aside class="govuk-prototype-kit-common-templates-related-items" role="complementary">
   <h2 class="govuk-heading-s govuk-!-margin-top-9" id="subsection-title">
@@ -13,7 +13,7 @@
     <div class="govuk-details__text">
       <h3 class="govuk-heading-s">Email</h3>
       <p class="govuk-body">
-        <a href="mailto:FRCexample@justice.gov.uk" class="govuk-link">FRCexample@justice.gov.uk</a>
+        <a href="mailto:{{ contactEmail or 'FRCexample@justice.gov.uk' }}" class="govuk-link">{{ contactEmail or 'FRCexample@justice.gov.uk' }}</a>
       </p>
       
       <h3 class="govuk-heading-s">Telephone</h3>
