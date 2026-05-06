@@ -217,6 +217,20 @@ Smoke tests verify key route availability and basic service readiness:
 yarn test:smoke
 ```
 
+### API Tests (Playwright)
+
+Run the mock case API integration tests:
+
+```bash
+yarn test:api
+```
+
+This runs:
+
+```bash
+playwright test api/api-tests.spec.ts --config playwright.config.mts --project=chromium
+```
+
 ### Functional Tests (Playwright)
 
 > **`test:functional` is the default functional command used by CI (Jenkins preview functional stage) and local runs.**  
