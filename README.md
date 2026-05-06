@@ -267,6 +267,22 @@ With that setup:
 - mock suites run locally when `CCD_URL` points to `http://localhost:4100`
 - real-integration suites remain visible in Playwright output but are skipped by default
 
+### Why Mock Tests Do Not Run In Preview Or AAT
+
+This is intentional and enforced by shared Playwright fixtures.
+
+Mock tests are designed for local deterministic runs only and require both of the following:
+
+- `CCD_URL` (or `CCD_DATA_STORE_API_URL`) set to `http://localhost:4100`
+- test-support session injection route `'/__test/inject-case-session'` available
+
+In preview/AAT:
+
+- CCD URLs point to real environment services, not the local mock API
+- test-support routes are commonly disabled or restricted
+
+As a result, mock-tagged tests are skipped there by design, while real integration paths are used when enabled. This avoids false confidence from mock behavior in shared environments and keeps CI behavior predictable.
+
 ### Commands By Environment
 
 ### Local Mock Run
