@@ -37,6 +37,9 @@ if (!process.env.ALREADY_LOGGED && !process.env.PW_WORKER_INDEX) {
 }
 /* eslint-enable no-console */
 
+// Only ignore API tests during functional test runs (not when running API tests explicitly)
+const isRunningApiTests = process.env.RUN_API_TESTS === 'true';
+
 export default defineConfig({
   ...CommonConfig.recommended,
 
@@ -44,7 +47,8 @@ export default defineConfig({
   tsconfig: 'src/test/tsconfig.json',
 
   testDir: './src/test',
-  testMatch: ['functional/**/*.spec.ts'],
+  testMatch: ['**/*.spec.ts'],
+  testIgnore: isRunningApiTests ? [] : ['api/**/*.spec.ts'],
 
   reporter: [
     ...((CommonConfig.recommended.reporter as ReporterDescription[]) || []),
