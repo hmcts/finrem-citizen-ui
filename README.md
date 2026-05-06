@@ -100,6 +100,67 @@ Default local URL:
 
 - `http://localhost:3100`
 
+## Environment Profiles
+
+The `.env` file is organised into shared defaults plus a `Target selection` section.
+
+Only enable one target block at a time for test execution accross different environments:
+
+- local
+- preview
+- aat
+
+In practice this means:
+
+- uncomment the four lines for the target you want to use
+- comment out the equivalent lines in the other target blocks
+
+The active target lines are:
+
+- `TEST_URL`
+- `RUNNING_ENV`
+- `CCD_URL`
+- `CCD_DATA_STORE_API_URL`
+
+Playwright resolves the target in this order:
+
+1. `TEST_URL` if set
+2. `RUNNING_ENV` if `TEST_URL` is empty
+3. fallback to `aat`
+
+### Local Block
+
+Use this for local app, plus local mock CCD API:
+
+```dotenv
+TEST_URL=http://localhost:3100
+RUNNING_ENV=local
+CCD_URL=http://localhost:4100
+CCD_DATA_STORE_API_URL=http://localhost:4100
+```
+
+### Preview Block
+
+Use this for preview environments such as `pr-356`:
+
+```dotenv
+# TEST_URL=
+RUNNING_ENV=pr-356
+CCD_URL=XXXX
+CCD_DATA_STORE_API_URL=XXXX
+```
+
+### AAT Block
+
+Use this for AAT-backed runs:
+
+```dotenv
+# TEST_URL=
+RUNNING_ENV=aat
+CCD_URL=XXXX
+CCD_DATA_STORE_API_URL=XXXX
+```
+
 ## Run with Docker
 
 Build image:
@@ -164,6 +225,109 @@ yarn test:smoke
 ```bash
 yarn test:functional
 ```
+
+### Mock vs Real Integration Tests
+
+The functional suite now contains two distinct categories of tests:
+
+- `[mock]` tests
+- `[real-integration]` tests
+
+`[mock]` tests are intended for local development and deterministic preview/manual flows.
+
+They use:
+
+- the local mock case API on `http://localhost:4100`
+- seeded case data from `.env`
+- `/__test/inject-case-session` when required
+
+`[real-integration]` tests are opt-in only.
+
+They use:
+
+- real CCD-backed case creation
+- real environment connectivity and credentials
+- the target selected by your active `.env` block
+
+The flag controlling access-code real integration is:
+
+```dotenv
+ACCESS_CODE_REAL_INTEGRATION=false
+```
+
+Recommended defaults for local mock runs:
+
+```dotenv
+ACCESS_CODE_REAL_INTEGRATION=false
+ENABLE_TEST_SUPPORT_ROUTES=true
+```
+
+With that setup:
+
+- mock suites run locally when `CCD_URL` points to `http://localhost:4100`
+- real-integration suites remain visible in Playwright output but are skipped by default
+
+### Commands By Environment
+
+### Local Mock Run
+
+Use this when you want fast, reliable local functional coverage without real CCD dependencies.
+
+`.env` setup:
+
+- uncomment the local block
+- comment out preview and aat blocks
+- keep `ACCESS_CODE_REAL_INTEGRATION=false`
+- keep `ENABLE_TEST_SUPPORT_ROUTES=true`
+
+Commands:
+
+```bash
+yarn start:mock-case-api
+yarn test:functional
+```
+
+If the app is not already running, Playwright will start it locally using the active `.env` values.
+
+### Preview Run
+
+Use this when running against a preview environment.
+
+`.env` setup:
+
+- uncomment the preview block
+- set `RUNNING_ENV` to the required PR, for example `pr-356`
+- comment out local and aat blocks
+- keep `ACCESS_CODE_REAL_INTEGRATION=false` unless you explicitly want real integration access-code coverage
+
+Command:
+
+```bash
+yarn test:functional
+```
+
+### AAT Real Integration Run
+
+Use this only when the environment is reachable and you want real CCD-backed integration coverage.
+
+`.env` setup:
+
+- uncomment the aat block
+- comment out local and preview blocks
+- set `ACCESS_CODE_REAL_INTEGRATION=true` only if you want the real integration access-code paths to execute
+
+Command:
+
+```bash
+yarn test:functional
+```
+
+### Common Pitfalls
+
+- If `RUNNING_ENV` is commented out and `TEST_URL` is empty, Playwright falls back to AAT.
+- If `CCD_URL` still points to AAT while running locally, mock tests may skip and any CCD-backed setup will fail or retry.
+- If `ACCESS_CODE_REAL_INTEGRATION=true`, tests marked for real integration will execute and expect reachable CCD dependencies.
+- If `ENABLE_TEST_SUPPORT_ROUTES=false`, tests that depend on `/__test/inject-case-session` will skip or fail depending on the path used.
 
 Run PR-tagged only tests (fast subset) when needed:
 
