@@ -276,6 +276,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       try {
         const invalidCaseData = await invalidateAccessCode(caseData, trimmedAccessCode, role, req.session.caseNumber);
         req.session.caseData = invalidCaseData;
+        req.session.caseRole = role;
       } catch {
         res.render(ViewNames.Error);
       }

@@ -43,7 +43,6 @@ export class DashboardPage extends BasePage {
     await this.expectVisible([
       this.userNameHeader,
       this.caseNumberText,
-      this.divorceAccountHeading,
       this.latestInformationHeading,
       this.goToDocumentUploadButton,
       this.viewPreviouslyUploadedLink,
@@ -52,6 +51,11 @@ export class DashboardPage extends BasePage {
     ]);
 
     await this.expectAttributes([{ locator: this.goToDocumentUploadButton, name: 'href', value: '/upload/before-you-start' }]);
+  }
+
+  // Verify divorce account inset is visible (only when user has divorce case)
+  async verifyDivorceAccountInset(): Promise<void> {
+    await this.expectVisible([this.divorceAccountHeading]);
   }
 
   // Click the document upload button
