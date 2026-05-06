@@ -45,7 +45,6 @@ describe('Dashboard Route', () => {
         caseNumber: '1234-5678-9012-3456',
         hasDivorceCase: true,
         showPreviouslyUploaded: true,
-        contactEmail: 'court@example.com',
       })
     );
   });
@@ -67,7 +66,6 @@ describe('Dashboard Route', () => {
         caseNumber: '1234-5678-9012-3456',
         hasDivorceCase: false,
         showPreviouslyUploaded: true,
-        contactEmail: 'FRCexample@justice.gov.uk',
       })
     );
   });
@@ -82,7 +80,6 @@ describe('Dashboard Route', () => {
         caseNumber: '0000-0000-0000-0000',
         hasDivorceCase: false,
         showPreviouslyUploaded: true,
-        contactEmail: 'FRCexample@justice.gov.uk',
       })
     );
   });
@@ -100,7 +97,6 @@ describe('Dashboard Route', () => {
       ViewNames.Dashboard,
       expect.objectContaining({
         userName: 'Applicant',
-        contactEmail: 'FRCexample@justice.gov.uk',
       })
     );
   });
