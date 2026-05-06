@@ -1,4 +1,4 @@
-import type { FinremCaseData } from '../app/case/definition';
+import type { CaseRole, FinremCaseData } from '../app/case/definition';
 
 export {};
 
@@ -15,5 +15,6 @@ declare module 'express-session' {
     codeVerifier?: string;
     nonce?: string;
     caseData?: FinremCaseData;
+    caseRole?: CaseRole;
   }
 }
