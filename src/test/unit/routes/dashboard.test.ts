@@ -10,7 +10,16 @@ describe('Dashboard Route', () => {
   let handler: (req: Request, res: Response) => void;
 
   // Creates mock req/res, calls the route handler, and returns res for assertions
-  function callHandler(session = {}) {
+  function callHandler(session: any = {}) {
+    // Auto-populate caseUserName from caseData and caseRole if not already set
+    if (!session.caseUserName && session.caseData && session.caseRole) {
+      if (session.caseRole === CaseRole.APPLICANT) {
+        session.caseUserName = session.caseData.applicantFlags?.partyName || 'Applicant';
+      } else if (session.caseRole === CaseRole.RESPONDENT) {
+        session.caseUserName = session.caseData.respondentFlags?.partyName || 'Respondent';
+      }
+    }
+    
     const req = { session } as unknown as Request;
     const res = { render: jest.fn() } as unknown as Response;
     handler(req, res);
@@ -97,6 +106,7 @@ describe('Dashboard Route', () => {
       ViewNames.Dashboard,
       expect.objectContaining({
         userName: 'Applicant',
+        showPreviouslyUploaded: true,
       })
     );
   });
