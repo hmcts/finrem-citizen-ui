@@ -524,10 +524,9 @@ This project uses a **multi-layer testing strategy** with clear separation betwe
 |------|----------|-----------|-------------|
 | `mock-case-api.test.ts` | `mocks/` | Mock GET/POST case API endpoints | Seeded case retrieval, event triggers, search, 404s |
 | `public-endpoints.test.ts` | `endpoints/` | GET endpoints (health, info, login, logout) | Status codes, headers, public accessibility |
-| `protected-endpoints.test.ts` | `endpoints/` | GET/POST endpoints requiring auth | 302 redirects when unauthenticated |
 | `error-handling.test.ts` | `endpoints/` | Routes with error scenarios | 400/404/500 handling, invalid JSON, missing fields |
 | `response-headers.test.ts` | `endpoints/` | All endpoints | Security headers, Content-Type, session cookies |
-| `authentication-flow.test.ts` | `workflows/` | All routes with auth flows | OIDC flow, redirect chains, session management, logout |
+| `authentication-flow.test.ts` | `workflows/` | All protected routes + OIDC + logout | Auth redirects, OIDC flow, form submissions without session, request methods |
 | `access-code-entry.test.ts` | `workflows/` | POST /enter-case-number, POST /enter-access-code | Case number format, access code validation, whitespace, session |
 
 #### Known API Test Gaps (Intentional Skips)
@@ -677,7 +676,7 @@ Accessibility audits validate:
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ TEST LAYER              │ FRAMEWORK      │ INTEGRATION │ COVERAGE         │ STATUS
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ API Tests              │ Jest/Supertest │ Real ✓      │ 7 files, 73 tests│ ✅ All passing
+│ API Tests              │ Jest/Supertest │ Real ✓      │ 6 files, ~60 tests│ ✅ All passing
 │ Functional (UI)        │ Playwright     │ Real ✓      │ 6 spec files     │ ⚠️ Partial (Form C skip)
 │ Accessibility (@a11y)  │ Playwright+axe │ Real ✓      │ WCAG 2.1 AA      │ ✅ Passing
 │ Smoke Tests            │ Jest           │ Varies      │ Route health     │ ✅ Passing
