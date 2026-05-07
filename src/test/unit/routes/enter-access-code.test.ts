@@ -331,6 +331,7 @@ describe('POST /enter-access-code route handler', () => {
     jest.clearAllMocks();
     mockAddUsersToCase = jest.fn() as unknown as jest.MockedFunction<(users: unknown[]) => Promise<void>>;
     mockAddUsersToCase.mockResolvedValue(undefined);
+    mockTriggerEvent.mockResolvedValue(buildMockCaseData());
     jest.mocked(getCaseApi).mockReturnValue({ addUsersToCase: mockAddUsersToCase, triggerEvent: mockTriggerEvent } as unknown as ReturnType<typeof getCaseApi>);
     jest.mocked(getSystemUser).mockResolvedValue({
       accessToken: 'mock-access', sub: '123', id: 'system-user',
