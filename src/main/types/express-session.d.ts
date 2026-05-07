@@ -16,5 +16,6 @@ declare module 'express-session' {
     nonce?: string;
     caseData?: FinremCaseData;
     caseRole?: CaseRole;
+    caseUserName?: string;
   }
 }
