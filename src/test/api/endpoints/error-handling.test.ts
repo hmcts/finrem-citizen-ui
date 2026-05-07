@@ -12,10 +12,11 @@ describe('Error Handling & Status Codes', () => {
       expect(res.status).toBe(404);
     });
 
-    test('POST / (root) without proper handling returns error or redirects', async () => {
+    test('POST / (root) returns 404 (no handler for POST root)', async () => {
       const res = await request(app).post(PublicRoutes.basePath);
 
-      expect([302, 404, 405]).toContain(res.status);
+      // Root POST is not defined in the routing, should return 404
+      expect(res.status).toBe(404);
     });
   });
 
@@ -26,13 +27,14 @@ describe('Error Handling & Status Codes', () => {
       expect(res.status).not.toBe(500);
     });
 
-    test('Malformed requests return 400', async () => {
+    test('Malformed JSON to protected routes returns 400 (parser error before auth check)', async () => {
       const res = await request(app)
         .post(PrivateRoutes.enterAccessCode)
         .set('Content-Type', 'application/json')
         .send('{ invalid json }');
 
-      expect([302, 400]).toContain(res.status);
+      // JSON parsing fails before auth middleware runs, so returns 400
+      expect(res.status).toBe(400);
     });
   });
 });

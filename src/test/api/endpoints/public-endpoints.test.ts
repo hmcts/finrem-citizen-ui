@@ -23,22 +23,25 @@ describe('Public Endpoints (No Authentication Required)', () => {
     }
   });
 
-  test('GET /login redirects or renders login page', async () => {
+  test('GET /login renders login page or redirects to OIDC', async () => {
     const res = await request(app).get(PublicRoutes.login);
 
-    expect([200, 302, 303, 307, 308]).toContain(res.status);
+    // Either renders login form (200) or redirects to OIDC provider (302/303)
+    expect([200, 302, 303]).toContain(res.status);
   });
 
   test('GET /logout redirects to IDAM sign-out', async () => {
     const res = await request(app).get(PublicRoutes.logout);
 
-    expect([302, 303, 307, 308]).toContain(res.status);
+    // Redirect to IDAM sign-out (302/303 are typical redirect codes)
+    expect([302, 303]).toContain(res.status);
     expect(res.header.location).toBeTruthy();
   });
 
-  test('GET /oauth2/callback without code parameter returns error or redirects', async () => {
+  test('GET /oauth2/callback without code parameter redirects or returns server error', async () => {
     const res = await request(app).get(PublicRoutes.callbackUrl);
 
-    expect([302, 400, 401, 500]).toContain(res.status);
+    // Missing code param should redirect back to login or return 500 if callback handler fails
+    expect([302, 500]).toContain(res.status);
   });
 });
