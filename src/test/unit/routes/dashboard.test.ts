@@ -72,14 +72,14 @@ describe('Dashboard Route', () => {
     );
   });
 
-  it('should use fallback values when session data is missing', () => {
+  it('should pass undefined when session data is missing', () => {
     const res = callHandler();
 
     expect(res.render).toHaveBeenCalledWith(
       ViewNames.Dashboard,
       expect.objectContaining({
-        userName: 'Unknown User',
-        caseNumber: '0000-0000-0000-0000',
+        userName: undefined,
+        caseNumber: undefined,
         hasDivorceCase: false,
         showPreviouslyUploaded: true,
       })
