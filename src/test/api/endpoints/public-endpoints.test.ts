@@ -45,9 +45,12 @@ describe('Public Endpoints (No Authentication Required)', () => {
       expect([200, 503]).toContain(res.status);
       expect(res.headers['content-type']).toMatch(/application\/json/i);
 
-      // Response should be a JSON object with status information
-      expect(res.body).toEqual(expect.any(Object));
-      expect(typeof res.body).toBe('object');
+      // Response should contain a non-empty JSON contract with status information
+      expect(res.body).toEqual(
+        expect.objectContaining({
+          status: expect.any(String),
+        })
+      );
     }
   });
 
@@ -56,6 +59,13 @@ describe('Public Endpoints (No Authentication Required)', () => {
 
     // Either renders login form (200) or redirects to OIDC provider (302/303)
     expect([200, 302, 303]).toContain(res.status);
+    if (res.status === 200) {
+      expect(res.headers['content-type']).toMatch(/text\/html/i);
+      expect(res.text).toMatch(/<html|<!doctype html|form/i);
+    } else {
+      expect(res.header.location).toEqual(expect.any(String));
+      expect(res.header.location.length).toBeGreaterThan(0);
+    }
   });
 
   test('GET /logout redirects to IDAM sign-out', async () => {
@@ -64,6 +74,7 @@ describe('Public Endpoints (No Authentication Required)', () => {
     // Redirect to IDAM sign-out (302/303 are typical redirect codes)
     expect([302, 303]).toContain(res.status);
     expect(res.header.location).toEqual(expect.any(String));
+    expect(res.header.location.length).toBeGreaterThan(0);
     expect(res.header.location).toMatch(/^https?:\/\/|^\//);  // Must be absolute URL or relative path
   });
 
@@ -77,6 +88,13 @@ describe('Public Endpoints (No Authentication Required)', () => {
     if ([302, 303].includes(res.status)) {
       expect(res.header.location).toEqual(expect.any(String));
       expect(res.header.location.length).toBeGreaterThan(0);
+    } else {
+      expect(res.headers['content-type']).toMatch(/text\/html|application\/json/i);
+      if (/application\/json/i.test(res.headers['content-type'])) {
+        expect(res.body).toEqual(expect.any(Object));
+      } else {
+        expect(res.text).toMatch(/error|invalid|callback|html/i);
+      }
     }
   });
 });

@@ -1,10 +1,25 @@
 import { describe, expect, jest, test } from '@jest/globals';
-import request from 'supertest';
+import request, { Response } from 'supertest';
 
 import { app } from '../../../main/app';
 import { PrivateRoutes, PublicRoutes } from '../../../main/common-constants';
 
 jest.setTimeout(15000);
+
+const assertRedirectContract = (res: Response, expectedLocation: RegExp | string): void => {
+  expect(res.status).toBe(302);
+  expect(res.header.location).toEqual(expect.any(String));
+  expect(res.header.location.length).toBeGreaterThan(0);
+  expect(res.headers['content-type']).toMatch(/text\/html|text\/plain/i);
+  expect(res.text).toMatch(/Redirecting to/i);
+
+  if (typeof expectedLocation === 'string') {
+    expect(res.header.location).toBe(expectedLocation);
+    return;
+  }
+
+  expect(res.header.location).toMatch(expectedLocation);
+};
 
 describe('Access Code & Case Number Entry Workflows', () => {
   describe('Case Number Submission Flow', () => {
@@ -14,8 +29,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .send({ caseNumber: '1234567890123456' });
 
       // Unauthenticated request redirects to OIDC login
-      expect(res.status).toBe(302);
-      expect(res.header.location).toMatch(/oauth2|login/i);
+      assertRedirectContract(res, /oauth2|login/i);
     });
 
     test('POST /enter-case-number with hyphenated case number format (unauthenticated redirects)', async () => {
@@ -24,8 +38,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .send({ caseNumber: '1234-5678-9012-3456' });
 
       // Unauthenticated request redirects to OIDC login
-      expect(res.status).toBe(302);
-      expect(res.header.location).toMatch(/oauth2|login/i);
+      assertRedirectContract(res, /oauth2|login/i);
     });
 
     test('POST /enter-case-number with invalid case number format returns validation error or redirects', async () => {
@@ -34,8 +47,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .send({ caseNumber: 'invalid' });
 
       // Invalid format stays on the form or redirects to same route
-      expect(res.status).toBe(302);
-      expect(res.header.location).toMatch(/enter-case-number/i);
+      assertRedirectContract(res, /enter-case-number/i);
     });
 
     test('POST /enter-case-number without case number field returns redirect', async () => {
@@ -44,8 +56,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .send({});
 
       // Missing field stays on the form or redirects to same route
-      expect(res.status).toBe(302);
-      expect(res.header.location).toMatch(/enter-case-number/i);
+      assertRedirectContract(res, /enter-case-number/i);
     });
 
     test('POST /enter-case-number without session redirects to oauth2/login', async () => {
@@ -54,8 +65,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .send({ caseNumber: '1234567890123456' });
 
       // No session present, should redirect to OIDC login
-      expect(res.status).toBe(302);
-      expect(res.header.location).toMatch(/oauth2|login/i);
+      assertRedirectContract(res, /oauth2|login/i);
     });
   });
 
@@ -75,8 +85,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
           .send({ accessCode: code });
 
         // Without session, redirects to login before processing valid format
-        expect(res.status).toBe(302);
-        expect(res.header.location).toBe(PublicRoutes.login);
+        assertRedirectContract(res, PublicRoutes.login);
       }
     });
 
@@ -96,8 +105,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
           .send({ accessCode: code });
 
         // Auth check happens before validation; unauthenticated redirects regardless of format
-        expect(res.status).toBe(302);
-        expect(res.header.location).toBe(PublicRoutes.login);
+        assertRedirectContract(res, PublicRoutes.login);
       }
     });
 
@@ -106,8 +114,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: '' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      assertRedirectContract(res, PublicRoutes.login);
     });
 
     test('POST /enter-access-code with invalid format redirects to /login (no session)', async () => {
@@ -115,8 +122,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: 'INVALID-CODE!' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      assertRedirectContract(res, PublicRoutes.login);
     });
 
     test('POST /enter-access-code handles null/undefined gracefully', async () => {
@@ -124,8 +130,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: null });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      assertRedirectContract(res, PublicRoutes.login);
     });
 
     test('POST /enter-access-code with numeric-only string redirects to /login (no session)', async () => {
@@ -133,8 +138,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: '12345678' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      assertRedirectContract(res, PublicRoutes.login);
     });
 
     test('POST /enter-access-code with alpha-only string redirects to /login (no session)', async () => {
@@ -142,8 +146,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: 'ALPHABETA' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      assertRedirectContract(res, PublicRoutes.login);
     });
   });
 
@@ -153,8 +156,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: 'TESTCODE' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      assertRedirectContract(res, PublicRoutes.login);
     });
 
     test('POST /enter-access-code accepts lowercase codes (redirects without session)', async () => {
@@ -162,8 +164,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: 'testcode' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      assertRedirectContract(res, PublicRoutes.login);
     });
 
     test('POST /enter-access-code accepts mixed case codes (redirects without session)', async () => {
@@ -171,8 +172,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: 'TeSt0001' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      assertRedirectContract(res, PublicRoutes.login);
     });
   });
 
@@ -182,8 +182,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: '   TESTCODE' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      assertRedirectContract(res, PublicRoutes.login);
     });
 
     test('POST /enter-access-code trims trailing whitespace (redirects without session)', async () => {
@@ -191,8 +190,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: 'TESTCODE   ' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      assertRedirectContract(res, PublicRoutes.login);
     });
 
     test('POST /enter-access-code trims both leading and trailing whitespace (redirects without session)', async () => {
@@ -200,8 +198,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: '   TESTCODE   ' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      assertRedirectContract(res, PublicRoutes.login);
     });
 
     test('POST /enter-access-code rejects codes with internal spaces (redirects without session)', async () => {
@@ -209,8 +206,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: 'TEST CODE1' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      assertRedirectContract(res, PublicRoutes.login);
     });
   });
 
@@ -220,8 +216,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterCaseNumber)
         .send({ caseNumber: '1234567890123456' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toMatch(/oauth2|login/i);
+      assertRedirectContract(res, /oauth2|login/i);
     });
 
     test('POST /enter-access-code without caseNumber in session redirects to /login', async () => {
@@ -229,8 +224,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: 'TESTCODE' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      assertRedirectContract(res, PublicRoutes.login);
     });
   });
 
@@ -243,8 +237,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
           .post(PrivateRoutes.enterAccessCode)
           .send({ accessCode: format });
 
-        expect(res.status).toBe(302);
-        expect(res.header.location).toBe(PublicRoutes.login);
+        assertRedirectContract(res, PublicRoutes.login);
       }
     });
 
@@ -256,8 +249,7 @@ describe('Access Code & Case Number Entry Workflows', () => {
           .post(PrivateRoutes.enterAccessCode)
           .send({ accessCode: format });
 
-        expect(res.status).toBe(302);
-        expect(res.header.location).toBe(PublicRoutes.login);
+        assertRedirectContract(res, PublicRoutes.login);
       }
     });
   });

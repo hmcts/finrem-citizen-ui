@@ -33,6 +33,13 @@ describe('Authentication & OIDC Login Flow', () => {
       if ([302, 303].includes(res.status)) {
         expect(res.header.location).toEqual(expect.any(String));
         expect(res.header.location.length).toBeGreaterThan(0);
+      } else {
+        expect(res.headers['content-type']).toMatch(/text\/html|application\/json/i);
+        if (/application\/json/i.test(res.headers['content-type'])) {
+          expect(res.body).toEqual(expect.any(Object));
+        } else {
+          expect(res.text).toMatch(/error|invalid|callback|html/i);
+        }
       }
     });
 
@@ -44,6 +51,14 @@ describe('Authentication & OIDC Login Flow', () => {
       // Invalid code fails with errors (400/401/500) or redirects back to login (302/303), never succeeds
       expect([302, 303, 400, 401, 500]).toContain(res.status);
       expect(res.status).not.toBe(200);  // Should never succeed
+      if ([400, 401, 500].includes(res.status)) {
+        expect(res.headers['content-type']).toMatch(/text\/html|application\/json/i);
+        if (/application\/json/i.test(res.headers['content-type'])) {
+          expect(res.body).toEqual(expect.any(Object));
+        } else {
+          expect(res.text).toMatch(/error|invalid|callback|html/i);
+        }
+      }
     });
   });
 
@@ -145,6 +160,18 @@ describe('Authentication & OIDC Login Flow', () => {
       expect(res.status).toBe(200);
       expect(res.headers).toBeDefined();
       expect(res.headers['content-type']).toMatch(/application\/json/i);
+      expect(res.body).toEqual(
+        expect.objectContaining({
+          build: expect.objectContaining({
+            version: expect.any(String),
+          }),
+          extraBuildInfo: expect.objectContaining({
+            host: expect.any(String),
+            name: expect.any(String),
+            uptime: expect.any(Number),
+          }),
+        })
+      );
     });
   });
 });

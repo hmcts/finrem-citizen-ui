@@ -16,8 +16,10 @@ describe('Response Headers & Session Management', () => {
       expect(res.headers['content-type']).toBeDefined();
       if (res.status === 200) {
         expect(res.headers['content-type']).toMatch(/text\/html/i);
+        expect(res.text).toMatch(/<html|<!doctype html|form/i);
       } else if ([302, 303].includes(res.status)) {
-        expect(res.headers['content-type']).toBeDefined();
+        expect(res.header.location).toEqual(expect.any(String));
+        expect(res.header.location.length).toBeGreaterThan(0);
       }
     });
 
@@ -26,6 +28,18 @@ describe('Response Headers & Session Management', () => {
 
       expect(res.status).toBe(200);
       expect(res.headers['content-type']).toMatch(/application\/json/i);
+      expect(res.body).toEqual(
+        expect.objectContaining({
+          build: expect.objectContaining({
+            version: expect.any(String),
+          }),
+          extraBuildInfo: expect.objectContaining({
+            host: expect.any(String),
+            name: expect.any(String),
+            uptime: expect.any(Number),
+          }),
+        })
+      );
     });
 
     test('Redirects include Location header with valid path or URL', async () => {
