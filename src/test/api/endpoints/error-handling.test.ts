@@ -21,10 +21,12 @@ describe('Error Handling & Status Codes', () => {
   });
 
   describe('Error Responses', () => {
-    test('Server errors return 5xx status with error info', async () => {
+    test('GET /info returns 200 (successful response, not server error)', async () => {
       const res = await request(app).get('/info');
 
-      expect(res.status).not.toBe(500);
+      // /info is a public endpoint that should always succeed
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toMatch(/application\/json/i);
     });
 
     test('Malformed JSON to protected routes returns 400 (parser error before auth check)', async () => {
