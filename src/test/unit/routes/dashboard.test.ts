@@ -10,13 +10,14 @@ describe('Dashboard Route', () => {
   let handler: (req: Request, res: Response) => void;
 
   // Creates mock req/res, calls the route handler, and returns res for assertions
-  function callHandler(session: any = {}) {
+  function callHandler(session: Record<string, unknown> = {}) {
     // Auto-populate caseUserName from caseData and caseRole if not already set
     if (!session.caseUserName && session.caseData && session.caseRole) {
+      const caseData = session.caseData as { applicantFlags?: { partyName?: string }; respondentFlags?: { partyName?: string } };
       if (session.caseRole === CaseRole.APPLICANT) {
-        session.caseUserName = session.caseData.applicantFlags?.partyName || 'Applicant';
+        session.caseUserName = caseData.applicantFlags?.partyName || 'Applicant';
       } else if (session.caseRole === CaseRole.RESPONDENT) {
-        session.caseUserName = session.caseData.respondentFlags?.partyName || 'Respondent';
+        session.caseUserName = caseData.respondentFlags?.partyName || 'Respondent';
       }
     }
     
