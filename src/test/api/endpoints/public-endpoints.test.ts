@@ -64,7 +64,7 @@ describe('Public Endpoints (No Authentication Required)', () => {
     // Redirect to IDAM sign-out (302/303 are typical redirect codes)
     expect([302, 303]).toContain(res.status);
     expect(res.header.location).toEqual(expect.any(String));
-    expect(res.header.location).toMatch(/^https?:\/\/|^\//)  // Must be absolute URL or relative path
+    expect(res.header.location).toMatch(/^https?:\/\/|^\//);  // Must be absolute URL or relative path
   });
 
   test('GET /oauth2/callback without code redirects to login', async () => {
