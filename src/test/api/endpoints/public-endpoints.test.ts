@@ -10,16 +10,42 @@ describe('Public Endpoints (No Authentication Required)', () => {
 
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toMatch(/application\/json/i);
-    expect(res.body).toBeTruthy();
-    expect(typeof res.body).toBe('object');
+
+    // Validate response structure contains expected nested build info and extra build info
+    expect(res.body).toEqual(
+      expect.objectContaining({
+        build: expect.objectContaining({
+          version: expect.any(String),
+        }),
+        extraBuildInfo: expect.objectContaining({
+          host: expect.any(String),
+          name: expect.stringMatching(/expressjs-template|finrem-citizen-ui/),
+          uptime: expect.any(Number),
+        }),
+      })
+    );
+
+    // Verify build version is a valid string (not empty)
+    expect(res.body.build.version).toBeTruthy();
+
+    // Verify extraBuildInfo values are valid
+    expect(res.body.extraBuildInfo.host).toBeTruthy();
+    expect(res.body.extraBuildInfo.uptime).toBeGreaterThan(0);
   });
 
-  test('GET /health endpoints are reachable', async () => {
+  test('GET /health endpoints are reachable and return valid health status', async () => {
     const healthEndpoints = ['/health', '/health/liveness', '/health/readiness'];
 
     for (const endpoint of healthEndpoints) {
       const res = await request(app).get(endpoint);
-      expect(res.status).not.toBe(404);
+
+      // Health endpoints should return either 200 (healthy) or 503 (unhealthy), never 404 or 500
+      expect([200, 503]).toContain(res.status);
+      expect(res.headers['content-type']).toMatch(/application\/json/i);
+
+      // Response should be a JSON object with status information
+      expect(res.body).toEqual(expect.any(Object));
+      expect(typeof res.body).toBe('object');
     }
   });
 
