@@ -1,5 +1,7 @@
 import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
 
+const runRealIntegrationCaseNumberTests = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
+
 const dataFactory = {
   generateDigits: (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join(''),
   validFormatted: (base: string) => {
@@ -9,6 +11,11 @@ const dataFactory = {
 };
 
 test.describe('Enter Case Number - Citizen Happy Path', () => {
+  test.skip(
+    !runRealIntegrationCaseNumberTests,
+    '[real-integration] skipped by default; requires reachable CCD and ACCESS_CODE_REAL_INTEGRATION=true'
+  );
+
   test.describe.configure({ mode: 'serial' });
 
   /**

@@ -1,5 +1,6 @@
 import { AxeUtils } from '@hmcts/playwright-common';
 import { expect, test as base } from '@playwright/test';
+import dotenv from 'dotenv';
 
 import { BasePage } from '../functional/pom/basePage.page';
 import { BeforeYouStartPage } from '../functional/pom/beforeYouStart.page';
@@ -15,6 +16,30 @@ import {
 } from '../functional/utils/helpers/assertionHelpers';
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
 
+dotenv.config({ quiet: true });
+
+function getConfiguredCcdUrl(): string {
+  return (
+    process.env.CCD_URL
+    || process.env.CCD_DATA_STORE_API_URL
+    || ''
+  ).trim();
+}
+
+function isLocalMockCcdUrl(url: string): boolean {
+  return /https?:\/\/(localhost|127\.0\.0\.1):4100\b/i.test(url);
+}
+
+function getMockSeedCase(): CreatedCaseWithAccessCodes {
+  const caseId = process.env.MOCK_CASE_ID || '1616591401473378';
+
+  return {
+    caseId,
+    formattedCaseId: caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-'),
+    applicantAccessCode: process.env.MOCK_APPLICANT_ACCESS_CODE || 'APPCODE1',
+    respondentAccessCode: process.env.MOCK_RESPONDENT_ACCESS_CODE || 'RSPCODE1',
+  };
+}
 
 
 /**
@@ -108,6 +133,12 @@ export const test = base.extend<MyFixtures & MockOptions>({
       await use();
       return;
     }
+
+    const configuredCcdUrl = getConfiguredCcdUrl();
+    base.skip(
+      !isLocalMockCcdUrl(configuredCcdUrl),
+      '[mock] tests require CCD_URL (or CCD_DATA_STORE_API_URL) set to http://localhost:4100'
+    );
 
     const response = await request.get('/__test/inject-case-session');
     base.skip(
@@ -262,10 +293,16 @@ export const test = base.extend<MyFixtures & MockOptions>({
    */
   contestedCaseForCaseNumber: [
     async ({}, use) => {
+      if (isLocalMockCcdUrl(getConfiguredCcdUrl())) {
+        const { caseId, formattedCaseId } = getMockSeedCase();
+        await use({ caseId, formattedCaseId });
+        return;
+      }
+
       const caseId = String(
         await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)
       );
-      const formattedCaseId = caseId.replace(/(\d{4})(?=\d)/g, '$1-');
+      const formattedCaseId = caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
       await use({ caseId, formattedCaseId });
     },
     { timeout: 240 * 1000 }
@@ -286,6 +323,11 @@ export const test = base.extend<MyFixtures & MockOptions>({
    */
   contestedCaseWithHearing: [
     async ({}, use) => {
+      if (isLocalMockCcdUrl(getConfiguredCcdUrl())) {
+        await use(getMockSeedCase());
+        return;
+      }
+
       const useRealIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
       const caseData = await ContestedCaseFactory.createCaseForAccessCodeJourney(useRealIntegration);
       const formattedCaseId = caseData.caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
