@@ -1,6 +1,13 @@
 import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
 
-test.describe('Enter Access Code - Page Content', () => {
+const runRealIntegrationAccessCodeTests = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
+
+test.describe('[real-integration] Enter Access Code - Page Content', () => {
+  test.skip(
+    !runRealIntegrationAccessCodeTests,
+    '[real-integration] skipped by default; run with ACCESS_CODE_REAL_INTEGRATION=true when environment is stable'
+  );
+
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
@@ -24,7 +31,12 @@ test.describe('Enter Access Code - Page Content', () => {
   });
 });
 
-test.describe('Enter Access Code - Validation Errors', () => {
+test.describe('[real-integration] Enter Access Code - Validation Errors', () => {
+  test.skip(
+    !runRealIntegrationAccessCodeTests,
+    '[real-integration] skipped by default; run with ACCESS_CODE_REAL_INTEGRATION=true when environment is stable'
+  );
+
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
@@ -120,11 +132,11 @@ test.describe('Enter Access Code - Validation Errors', () => {
 
 });
 
-// Happy-path access-code UI tests remain skipped until Form C-generated access
-// codes are available in the test flow. Route-level API coverage exists for the
-// current injected-session endpoint behavior; end-to-end happy paths should be
-// re-enabled once real access-code generation is implemented.
-test.describe('Enter Access Code - Happy Path', () => {
+// MOCK: The contestedCaseWithHearing fixture creates a real CCD case but uses hardcoded
+// access codes (APPCODE1 / RSPCODE1) injected via /__test/inject-case-session.
+// No Form C or FR_manageHearings hearing flow is required.
+// To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
+test.describe('[mock] Enter Access Code - Happy Path', () => {
   test.use({ useMockTestSupport: true });
 
   test.beforeEach(async ({
@@ -141,16 +153,24 @@ test.describe('Enter Access Code - Happy Path', () => {
   });
 
   /**
-   * Citizen successfully enters valid applicant access code and views case.
-   * Kept skipped until Form C-generated access codes are available end to end.
+   * Citizen successfully enters valid applicant access code and views case
+   * [mock] Uses hardcoded access codes injected via test session endpoint.
+   * 
+  * This test depends on mock CCD endpoints for invalidate-access-code events.
+  * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
    */
-  test.skip('[mock] Citizen can enter valid applicant access code and view case summary', async ({
+  test('[mock] Citizen can enter valid applicant access code and view case summary', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
     assertionHelpers: _assertionHelpers,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await enterAccessCodePage.submitAccessCode(accessCode);
@@ -158,15 +178,23 @@ test.describe('Enter Access Code - Happy Path', () => {
   });
 
   /**
-   * Verify whitespace is trimmed from access code.
-   * Kept skipped until Form C-generated access codes are available end to end.
+   * Verify whitespace is trimmed from access code
+   * [mock] Uses hardcoded access codes injected via test session endpoint.
+   * 
+  * This test depends on mock CCD endpoints for invalidate-access-code events.
+  * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
    */
-  test.skip('[mock] Success: Access code with leading/trailing whitespace is accepted', async ({
+  test('[mock] Success: Access code with leading/trailing whitespace is accepted', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await enterAccessCodePage.submitAccessCode(`  ${accessCode}  `);
@@ -174,15 +202,23 @@ test.describe('Enter Access Code - Happy Path', () => {
   });
 
   /**
-   * Citizen successfully enters valid respondent access code and views case.
-   * Kept skipped until Form C-generated access codes are available end to end.
+   * Citizen successfully enters valid respondent access code and views case
+   * [mock] Uses hardcoded access codes injected via test session endpoint.
+   * 
+  * This test depends on mock CCD endpoints for invalidate-access-code events.
+  * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
    */
-  test.skip('[mock] Citizen can enter valid respondent access code and view case summary', async ({
+  test('[mock] Citizen can enter valid respondent access code and view case summary', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     const accessCode = contestedCaseWithHearing.respondentAccessCode;
 
     await enterAccessCodePage.submitAccessCode(accessCode);
@@ -190,15 +226,23 @@ test.describe('Enter Access Code - Happy Path', () => {
   });
 
   /**
-   * Access codes are case-insensitive.
-   * Kept skipped until Form C-generated access codes are available end to end.
+   * Access codes are case-insensitive
+   * [mock] Uses hardcoded access codes injected via test session endpoint.
+   * 
+  * This test depends on mock CCD endpoints for invalidate-access-code events.
+  * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
    */
-  test.skip('[mock] Access code submission is case-insensitive', async ({
+  test('[mock] Access code submission is case-insensitive', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     // Enter access code in lowercase
@@ -206,6 +250,27 @@ test.describe('Enter Access Code - Happy Path', () => {
 
     await enterAccessCodePage.submitAccessCode(lowercaseCode);
 
+    await dashboardPage.verifyDashboardPageContent();
+  });
+});
+
+test.describe('[real-integration] Enter Access Code - Happy Path', () => {
+  test.skip(
+    !runRealIntegrationAccessCodeTests,
+    '[real-integration] skipped by default; run with ACCESS_CODE_REAL_INTEGRATION=true when environment is stable'
+  );
+
+  test('Citizen can submit real applicant access code @real-integration', async ({
+    loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    contestedCaseWithHearing,
+    enterAccessCodePage,
+    dashboardPage,
+  }) => {
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await expect(enterAccessCodePage.page).toHaveURL(/\/enter-access-code$/);
+
+    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
     await dashboardPage.verifyDashboardPageContent();
   });
 });

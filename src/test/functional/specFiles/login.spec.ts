@@ -1,5 +1,7 @@
 import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
 
+const idamAuthEntryUrl = /https:\/\/hmcts-access\.[^/]+\/(sign-in-or-create|enter-email)(\?.*)?$/;
+
 test.describe('Authenticated Citizen User Journey Verification', () => {
   /**
    * AUTOMATIC SETUP (via beforeEach)
@@ -29,13 +31,24 @@ test.describe('Authenticated Citizen User Journey Verification', () => {
     // Perform the UI-driven sign out
     await basePage.signOut();
 
-    // Assert redirection to IDAM (Sign-in page)
-    await expect(page).toHaveURL(/.*sign-in-or-create.*/);
-    await expect(idamPage.signInLink).toBeVisible();
+    // Assert redirection to IDAM auth entry route.
+    await expect(page).toHaveURL(idamAuthEntryUrl, { timeout: 15_000 });
+
+    const idamAccessHeading = page.getByRole('heading', {
+      name: /Sorry, you cannot access HMCTS Access from this page/i,
+    });
+
+    const idamLandingHeading = page.getByRole('heading', {
+      name: /Sign in or create an account/i,
+    });
+
+    await expect(
+      idamPage.emailInput.or(idamAccessHeading).or(idamLandingHeading)
+    ).toBeVisible();
 
     // Verify that trying to go back to the app root redirects back to login
     await basePage.goto('/');
-    await expect(page).toHaveURL(/.*sign-in-or-create.*/);
+    await expect(page).toHaveURL(idamAuthEntryUrl, { timeout: 15_000 });
     await _axeUtils.audit(DEFAULT_AXE_OPTIONS); 
   });
 

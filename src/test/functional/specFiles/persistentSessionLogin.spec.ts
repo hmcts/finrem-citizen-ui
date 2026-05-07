@@ -3,6 +3,8 @@ import { BasePage } from '../pom/basePage.page';
 import { DashboardPage } from '../pom/dashboardPage.page';
 import { EnterAccessCodePage } from '../pom/enterAccessCode.page';
 
+const runRealIntegrationAccessCodeTests = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
+
 interface CaseWithHearing {
   caseId: string;
   applicantAccessCode: string;
@@ -25,10 +27,11 @@ async function navigateToLinkedDashboard(
   await dashboardPage.verifyDashboardPageContent();
 }
 
-// Persistent session tests remain skipped until Form C-generated access codes are
-// available end to end. These tests depend on navigateToLinkedDashboard() which requires
-// a valid access-code submission flow.
-test.describe('Persistent Session After Re-login', () => {
+// MOCK: All tests in this describe use the contestedCaseWithHearing fixture with hardcoded
+// access codes (APPCODE1 / RSPCODE1) injected via /__test/inject-case-session.
+// No Form C or FR_manageHearings hearing flow is required.
+// To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
+test.describe('[mock] Persistent Session After Re-login', () => {
   test.use({ useMockTestSupport: true });
 
   /**
@@ -36,9 +39,12 @@ test.describe('Persistent Session After Re-login', () => {
    * signing out, and navigating back to the dashboard, the user lands directly
    * on the dashboard without re-entering case number or access code.
    * IDAM SSO re-authenticates and the linked case session is restored.
-   * Kept skipped until Form C-generated access codes are available end to end.
+   * [mock] Uses hardcoded access codes injected via test session endpoint.
+   * 
+  * This test depends on mock CCD endpoints for invalidate-access-code events.
+  * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
    */
-  test.skip('[mock] User lands on dashboard after re-login without re-entering case details @a11y', async ({
+  test('[mock] User lands on dashboard after re-login without re-entering case details @a11y', async ({
     loggedInPage,
     basePage,
     dashboardPage,
@@ -48,6 +54,11 @@ test.describe('Persistent Session After Re-login', () => {
     page,
     axeUtils,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     // Two full login cycles: loggedInPage fixture + explicit re-login after sign-out.
     // Longer timeout required for login flow
     test.setTimeout(90_000);
@@ -71,9 +82,12 @@ test.describe('Persistent Session After Re-login', () => {
   /**
    * Verify that case session persists across multiple tabs/contexts
    * within the same authenticated session.
-   * Kept skipped until Form C-generated access codes are available end to end.
+   * [mock] Uses hardcoded access codes injected via test session endpoint.
+   * 
+  * This test depends on mock CCD endpoints for invalidate-access-code events.
+  * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
    */
-  test.skip('[mock] Case session persists across multiple tabs in same browser context @a11y', async ({
+  test('[mock] Case session persists across multiple tabs in same browser context @a11y', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
@@ -82,6 +96,11 @@ test.describe('Persistent Session After Re-login', () => {
     context,
     axeUtils,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     await navigateToLinkedDashboard(basePage, enterAccessCodePage, dashboardPage, contestedCaseWithHearing);
 
     // Open a new tab in the same browser context (shares cookies/session)
@@ -101,9 +120,12 @@ test.describe('Persistent Session After Re-login', () => {
    * Verify that after entering an access code, navigating away and back to the
    * dashboard within the same session does not require re-entering case/access code.
    * (page.reload() is not used because a hard reload clears in-memory mock session state)
-   * Kept skipped until Form C-generated access codes are available end to end.
+   * [mock] Uses hardcoded access codes injected via test session endpoint.
+   * 
+  * This test depends on mock CCD endpoints for invalidate-access-code events.
+  * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
    */
-  test.skip('[mock] Case session persists when navigating away and back to dashboard @a11y', async ({
+  test('[mock] Case session persists when navigating away and back to dashboard @a11y', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
@@ -112,6 +134,11 @@ test.describe('Persistent Session After Re-login', () => {
     page,
     axeUtils,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     await navigateToLinkedDashboard(basePage, enterAccessCodePage, dashboardPage, contestedCaseWithHearing);
 
     // Navigate away then back to dashboard within the same authenticated session
