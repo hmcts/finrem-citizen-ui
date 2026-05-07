@@ -3,8 +3,8 @@
 {% extends "template.njk" %}
 
 {% block content %}
-  <h1 class="govuk-heading-xl">{{ userName }}</h1>
-  <p class="govuk-body">Case number {{ caseNumber }}</p>
+  <h1 class="govuk-heading-xl">{{ userName or 'Your financial remedy case' }}</h1>
+  <p class="govuk-body">Case number {{ caseNumber or 'Not available' }}</p>
   
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
