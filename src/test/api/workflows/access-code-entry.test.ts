@@ -8,20 +8,24 @@ jest.setTimeout(15000);
 
 describe('Access Code & Case Number Entry Workflows', () => {
   describe('Case Number Submission Flow', () => {
-    test('POST /enter-case-number with valid 16-digit case number format', async () => {
+    test('POST /enter-case-number with valid 16-digit case number format (unauthenticated redirects)', async () => {
       const res = await request(app)
         .post(PrivateRoutes.enterCaseNumber)
         .send({ caseNumber: '1234567890123456' });
 
-      expect([200, 302, 401]).toContain(res.status);
+      // Unauthenticated request redirects to OIDC login
+      expect(res.status).toBe(302);
+      expect(res.header.location).toMatch(/oauth2|login/i);
     });
 
-    test('POST /enter-case-number with hyphenated case number format', async () => {
+    test('POST /enter-case-number with hyphenated case number format (unauthenticated redirects)', async () => {
       const res = await request(app)
         .post(PrivateRoutes.enterCaseNumber)
         .send({ caseNumber: '1234-5678-9012-3456' });
 
-      expect([200, 302, 400, 401]).toContain(res.status);
+      // Unauthenticated request redirects to OIDC login
+      expect(res.status).toBe(302);
+      expect(res.header.location).toMatch(/oauth2|login/i);
     });
 
     test('POST /enter-case-number with invalid case number format returns validation error or redirects', async () => {
@@ -29,15 +33,19 @@ describe('Access Code & Case Number Entry Workflows', () => {
         .post(PrivateRoutes.enterCaseNumber)
         .send({ caseNumber: 'invalid' });
 
-      expect([302, 400, 401]).toContain(res.status);
+      // Invalid format stays on the form or redirects to same route
+      expect(res.status).toBe(302);
+      expect(res.header.location).toMatch(/enter-case-number/i);
     });
 
-    test('POST /enter-case-number without case number field returns error', async () => {
+    test('POST /enter-case-number without case number field returns redirect', async () => {
       const res = await request(app)
         .post(PrivateRoutes.enterCaseNumber)
         .send({});
 
-      expect([302, 400, 401]).toContain(res.status);
+      // Missing field stays on the form or redirects to same route
+      expect(res.status).toBe(302);
+      expect(res.header.location).toMatch(/enter-case-number/i);
     });
 
     test('POST /enter-case-number without session redirects to oauth2/login', async () => {
