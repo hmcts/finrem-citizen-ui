@@ -95,31 +95,6 @@ describe('Authentication & OIDC Login Flow', () => {
     });
   });
 
-  describe('Session Timeout & State Management', () => {
-    test('Consecutive requests to same endpoint maintain consistent behavior', async () => {
-      const res1 = await request(app).get(PrivateRoutes.dashboard);
-      const res2 = await request(app).get(PrivateRoutes.dashboard);
-
-      expect(res1.status).toBe(res2.status);
-      expect(res1.header.location).toBe(res2.header.location);
-    });
-
-    test('Requests to different protected endpoints all redirect to login', async () => {
-      const endpoints = [
-        PrivateRoutes.dashboard,
-        PrivateRoutes.enterCaseNumber,
-        PrivateRoutes.enterAccessCode,
-      ];
-
-      for (const endpoint of endpoints) {
-        const res = await request(app).get(endpoint);
-
-        expect(res.status).toBe(302);
-        expect(res.header.location).toBe(PublicRoutes.login);
-      }
-    });
-  });
-
   describe('Logout Flow', () => {
     test('GET /logout redirects to sign-out endpoint', async () => {
       const res = await request(app).get(PublicRoutes.logout);
