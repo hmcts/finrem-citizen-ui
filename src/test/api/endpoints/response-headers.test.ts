@@ -12,8 +12,12 @@ describe('Response Headers & Session Management', () => {
       // Login can redirect to OIDC (302/303) or render login form (200)
       expect([200, 302, 303]).toContain(res.status);
       
+      // Always check content-type is set
+      expect(res.headers['content-type']).toBeDefined();
       if (res.status === 200) {
         expect(res.headers['content-type']).toMatch(/text\/html/i);
+      } else if ([302, 303].includes(res.status)) {
+        expect(res.headers['content-type']).toBeDefined();
       }
     });
 
@@ -29,9 +33,10 @@ describe('Response Headers & Session Management', () => {
 
       // Dashboard redirect to OIDC is expected when not authenticated
       expect([302, 303]).toContain(res.status);
-      expect(res.header.location).toBeTruthy();
-      // Location can be absolute URL (https://...) or relative path (/login)
+      expect(res.header.location).toEqual(expect.any(String));
+      // Location must be absolute URL (https://...) or relative path (/login)
       expect(res.header.location).toMatch(/^(https?:\/\/|\/)/);
+      expect(res.header.location.length).toBeGreaterThan(0);
     });
   });
 
@@ -41,15 +46,15 @@ describe('Response Headers & Session Management', () => {
 
       expect(res.status).toBe(200);
       expect(res.headers['x-content-type-options']).toBe('nosniff');
-      expect(res.headers['x-frame-options']).toBeTruthy();
+      // x-frame-options should be set to specific value (DENY or SAMEORIGIN)
+      expect(res.headers['x-frame-options']).toMatch(/DENY|SAMEORIGIN/i);
     });
 
     test('Protected routes require authentication or redirect', async () => {
       const res = await request(app).post(PrivateRoutes.enterAccessCode).send({});
 
-      // Should redirect to login (302/303) or return 401, not 500 or 200
+      // Should redirect to login (302/303) or return 401, never 500
       expect([302, 303, 400, 401]).toContain(res.status);
-      expect(res.status).not.toBe(500);
     });
   });
 
@@ -58,7 +63,9 @@ describe('Response Headers & Session Management', () => {
       const res = await request(app).get(PublicRoutes.login);
 
       expect([200, 302, 303]).toContain(res.status);
+      // Session cookie must always be set
       expect(res.headers['set-cookie']).toBeDefined();
+      expect(Array.isArray(res.headers['set-cookie'])).toBe(true);
       expect(res.headers['set-cookie']).toEqual(
         expect.arrayContaining([
           expect.stringMatching(/connect\.sid|session/i),

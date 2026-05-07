@@ -12,20 +12,27 @@ describe('Authentication & OIDC Login Flow', () => {
       // Login should redirect to OIDC (302/303) or render form (200)
       expect([200, 302, 303]).toContain(res.status);
 
+      // If redirect, location header must be present and point to OIDC
       if ([302, 303].includes(res.status)) {
-        expect(res.header.location).toBeTruthy();
+        expect(res.header.location).toEqual(expect.any(String));
+        expect(res.header.location.length).toBeGreaterThan(0);
         expect(res.header.location).toMatch(/oauth2|authorize/i);
+      } else {
+        // If not redirect, must be 200 with HTML form
+        expect(res.status).toBe(200);
       }
     });
 
-    test('GET /oauth2/callback without code redirects or shows error', async () => {
+    test('GET /oauth2/callback without code redirects or returns error', async () => {
       const res = await request(app).get(PublicRoutes.callbackUrl);
 
       // Missing code redirects back to login (302/303) or errors (400/401/500)
       expect([302, 303, 400, 401, 500]).toContain(res.status);
+      expect(res.status).not.toBe(200);  // Should never succeed
 
       if ([302, 303].includes(res.status)) {
-        expect(res.header.location).toBeTruthy();
+        expect(res.header.location).toEqual(expect.any(String));
+        expect(res.header.location.length).toBeGreaterThan(0);
       }
     });
 
@@ -34,9 +41,9 @@ describe('Authentication & OIDC Login Flow', () => {
         .get(PublicRoutes.callbackUrl)
         .query({ code: 'invalid-code-format' });
 
-      // Invalid code fails with 400/401/500 or redirects back to login (302/303)
+      // Invalid code fails with errors (400/401/500) or redirects back to login (302/303), never succeeds
       expect([302, 303, 400, 401, 500]).toContain(res.status);
-      expect(res.status).not.toBe(200);
+      expect(res.status).not.toBe(200);  // Should never succeed
     });
   });
 
@@ -103,7 +110,8 @@ describe('Authentication & OIDC Login Flow', () => {
 
       // Logout redirects to IDAM sign-out with 302 or 303
       expect([302, 303]).toContain(res.status);
-      expect(res.header.location).toBeTruthy();
+      expect(res.header.location).toEqual(expect.any(String));
+      expect(res.header.location.length).toBeGreaterThan(0);
     });
 
     test('POST /logout is either not supported or redirects', async () => {

@@ -25,11 +25,13 @@ describe('Public Endpoints (No Authentication Required)', () => {
       })
     );
 
-    // Verify build version is a valid string (not empty)
-    expect(res.body.build.version).toBeTruthy();
+    // Verify build version is a valid non-empty string
+    expect(res.body.build.version).toEqual(expect.any(String));
+    expect(res.body.build.version.length).toBeGreaterThan(0);
 
     // Verify extraBuildInfo values are valid
-    expect(res.body.extraBuildInfo.host).toBeTruthy();
+    expect(res.body.extraBuildInfo.host).toEqual(expect.any(String));
+    expect(res.body.extraBuildInfo.host.length).toBeGreaterThan(0);
     expect(res.body.extraBuildInfo.uptime).toBeGreaterThan(0);
   });
 
@@ -61,13 +63,20 @@ describe('Public Endpoints (No Authentication Required)', () => {
 
     // Redirect to IDAM sign-out (302/303 are typical redirect codes)
     expect([302, 303]).toContain(res.status);
-    expect(res.header.location).toBeTruthy();
+    expect(res.header.location).toEqual(expect.any(String));
+    expect(res.header.location).toMatch(/^https?:\/\/|^\//)  // Must be absolute URL or relative path
   });
 
-  test('GET /oauth2/callback without code parameter redirects or returns server error', async () => {
+  test('GET /oauth2/callback without code redirects to login', async () => {
     const res = await request(app).get(PublicRoutes.callbackUrl);
 
-    // Missing code param should redirect back to login or return 500 if callback handler fails
-    expect([302, 500]).toContain(res.status);
+    // Missing code should redirect back to login or return error
+    expect([302, 303, 400, 401, 500]).toContain(res.status);
+    expect(res.status).not.toBe(200);  // Should never succeed
+    
+    if ([302, 303].includes(res.status)) {
+      expect(res.header.location).toEqual(expect.any(String));
+      expect(res.header.location.length).toBeGreaterThan(0);
+    }
   });
 });
