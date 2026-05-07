@@ -9,8 +9,8 @@ export default function setupDashboardRoute(app: Application): void {
     const user = req.session.user as UserDetails | undefined;
 
     res.render(ViewNames.Dashboard, {
-      userName: req.session.caseUserName ?? 'Unknown User',
-      caseNumber: req.session.caseNumber ?? '0000-0000-0000-0000',
+      userName: req.session.caseUserName,
+      caseNumber: req.session.caseNumber,
       hasDivorceCase: user?.hasNFDCase ?? false,
       showPreviouslyUploaded: true,
     });
