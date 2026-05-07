@@ -24,7 +24,7 @@ At a high level, the user flow is:
 
 ## Prerequisites
 
-- Node.js `>=24.14.1`
+- Node.js `>=22.22.0`
 - Yarn `4.x`
 - Docker (optional, for containerized local runs)
 - Playwright browser dependencies (installed automatically by `yarn test:functional`)
@@ -217,19 +217,15 @@ Smoke tests verify key route availability and basic service readiness:
 yarn test:smoke
 ```
 
-### API Tests (Playwright)
+### API Tests (Jest + Supertest)
 
-Run the mock case API integration tests:
+Run the API integration tests:
 
 ```bash
 yarn test:api
 ```
 
-This runs:
-
-```bash
-playwright test api/api-tests.spec.ts --config playwright.config.mts --project=chromium
-```
+This runs Jest against `src/test/api/` using `--testRegex='.*\.test\.ts$'`.
 
 ### Functional Tests (Playwright)
 
@@ -495,9 +491,13 @@ This project uses a **multi-layer testing strategy** with clear separation betwe
 
 ### API Tests - Real Integration Coverage
 
-**Location**: `src/test/api/`
+**Location**: `src/test/api/` — organised into three subdirectories:
 
-**Key Principle**: All API tests use real integration via **Supertest** (Express test utility). No HTTP mocking.
+- `mocks/` — Tests for the mock case API server (clearly labelled `[MOCK]`)
+- `endpoints/` — Real app endpoint tests (public, protected, error handling, response headers)
+- `workflows/` — Real app workflow tests (authentication flow, case & access code entry)
+
+**Key Principle**: All API tests use real integration via **Supertest** (Express test utility). Tests in `mocks/` verify the mock API infrastructure itself, not the live app.
 
 #### Public Endpoints (No Auth Required)
 - `GET /` → Root route redirect
@@ -520,15 +520,15 @@ This project uses a **multi-layer testing strategy** with clear separation betwe
 
 #### API Test Files & Coverage
 
-| File | Endpoints | Validations |
-|------|-----------|-------------|
-| `public-endpoints.test.ts` | GET endpoints (health, info, login, logout) | Status codes, headers, public accessibility |
-| `protected-endpoints.test.ts` | GET endpoints requiring auth | 302 redirects when unauthenticated |
-| `access-code.workflow.test.ts` | POST /enter-case-number, POST /enter-access-code | Case number format, access code validation, session storage |
-| `form-validation.test.ts` | POST endpoints | Input validation (length, format, special chars, whitespace) |
-| `authentication-flow.test.ts` | All routes with auth flows | OIDC flow, redirect chains, malformed tokens |
-| `error-handling.test.ts` | Routes with error scenarios | 400/404/500 handling, invalid JSON, missing fields |
-| `response-headers.test.ts` | All endpoints | Security headers, Content-Type, CORS headers |
+| File | Location | Endpoints | Validations |
+|------|----------|-----------|-------------|
+| `mock-case-api.test.ts` | `mocks/` | Mock GET/POST case API endpoints | Seeded case retrieval, event triggers, search, 404s |
+| `public-endpoints.test.ts` | `endpoints/` | GET endpoints (health, info, login, logout) | Status codes, headers, public accessibility |
+| `protected-endpoints.test.ts` | `endpoints/` | GET/POST endpoints requiring auth | 302 redirects when unauthenticated |
+| `error-handling.test.ts` | `endpoints/` | Routes with error scenarios | 400/404/500 handling, invalid JSON, missing fields |
+| `response-headers.test.ts` | `endpoints/` | All endpoints | Security headers, Content-Type, session cookies |
+| `authentication-flow.test.ts` | `workflows/` | All routes with auth flows | OIDC flow, redirect chains, session management, logout |
+| `access-code-entry.test.ts` | `workflows/` | POST /enter-case-number, POST /enter-access-code | Case number format, access code validation, whitespace, session |
 
 #### Known API Test Gaps (Intentional Skips)
 
@@ -677,7 +677,7 @@ Accessibility audits validate:
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ TEST LAYER              │ FRAMEWORK      │ INTEGRATION │ COVERAGE         │ STATUS
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ API Tests              │ Jest/Supertest │ Real ✓      │ 14 endpoints     │ ✅ All passing
+│ API Tests              │ Jest/Supertest │ Real ✓      │ 7 files, 73 tests│ ✅ All passing
 │ Functional (UI)        │ Playwright     │ Real ✓      │ 6 spec files     │ ⚠️ Partial (Form C skip)
 │ Accessibility (@a11y)  │ Playwright+axe │ Real ✓      │ WCAG 2.1 AA      │ ✅ Passing
 │ Smoke Tests            │ Jest           │ Varies      │ Route health     │ ✅ Passing
@@ -700,6 +700,10 @@ Accessibility audits validate:
 
 ## Test Structure
 
+- API tests: `src/test/api/` (Jest + Supertest)
+  - `mocks/` — Mock case API tests (`[MOCK]` prefixed)
+  - `endpoints/` — Real app endpoint tests
+  - `workflows/` — Real app workflow tests
 - Functional specs: `src/test/functional/specFiles/`
 - Page objects: `src/test/functional/pom/`
 - Shared Playwright fixtures: `src/test/fixtures/fixtures.ts`
