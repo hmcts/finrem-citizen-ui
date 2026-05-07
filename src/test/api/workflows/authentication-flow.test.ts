@@ -9,29 +9,34 @@ describe('Authentication & OIDC Login Flow', () => {
     test('GET /login redirects to OIDC authorization endpoint', async () => {
       const res = await request(app).get(PublicRoutes.login);
 
+      // Login should redirect to OIDC (302/303) or render form (200)
       expect([200, 302, 303]).toContain(res.status);
 
       if ([302, 303].includes(res.status)) {
         expect(res.header.location).toBeTruthy();
+        expect(res.header.location).toMatch(/oauth2|authorize/i);
       }
     });
 
-    test('GET /oauth2/callback without code returns error response', async () => {
+    test('GET /oauth2/callback without code redirects or shows error', async () => {
       const res = await request(app).get(PublicRoutes.callbackUrl);
 
-      expect([200, 302, 303, 500]).toContain(res.status);
+      // Missing code redirects back to login (302/303) or errors (400/401/500)
+      expect([302, 303, 400, 401, 500]).toContain(res.status);
 
       if ([302, 303].includes(res.status)) {
         expect(res.header.location).toBeTruthy();
       }
     });
 
-    test('GET /oauth2/callback with malformed code returns error response', async () => {
+    test('GET /oauth2/callback with malformed code returns error or redirects', async () => {
       const res = await request(app)
         .get(PublicRoutes.callbackUrl)
         .query({ code: 'invalid-code-format' });
 
-      expect([302, 400, 401, 500]).toContain(res.status);
+      // Invalid code fails with 400/401/500 or redirects back to login (302/303)
+      expect([302, 303, 400, 401, 500]).toContain(res.status);
+      expect(res.status).not.toBe(200);
     });
   });
 
@@ -73,16 +78,13 @@ describe('Authentication & OIDC Login Flow', () => {
   });
 
   describe('Form Submissions Without Session', () => {
-    test('POST /enter-case-number without session redirects to oauth2/login', async () => {
+    test('POST /enter-case-number without session redirects to login', async () => {
       const res = await request(app)
         .post(PrivateRoutes.enterCaseNumber)
         .send({ caseNumber: '1234567890123456' });
 
-      expect([302, 401]).toContain(res.status);
-
-      if (res.status === 302) {
-        expect(res.header.location).toMatch(/login|oauth/i);
-      }
+      expect(res.status).toBe(302);
+      expect(res.header.location).toMatch(/login|oauth/i);
     });
 
     test('POST /enter-access-code without session redirects to login', async () => {
@@ -99,37 +101,42 @@ describe('Authentication & OIDC Login Flow', () => {
     test('GET /logout redirects to sign-out endpoint', async () => {
       const res = await request(app).get(PublicRoutes.logout);
 
-      expect([302, 303, 307, 308]).toContain(res.status);
+      // Logout redirects to IDAM sign-out with 302 or 303
+      expect([302, 303]).toContain(res.status);
       expect(res.header.location).toBeTruthy();
     });
 
-    test('POST /logout is handled if supported', async () => {
+    test('POST /logout is either not supported or redirects', async () => {
       const res = await request(app).post(PublicRoutes.logout);
 
-      expect([302, 304, 404, 405, 501]).toContain(res.status);
+      // POST /logout should either not be allowed (404/405) or redirect (302/303)
+      expect([302, 303, 404, 405]).toContain(res.status);
     });
   });
 
   describe('Request Method Validation', () => {
-    test('Unsupported HTTP methods return 405 Method Not Allowed', async () => {
+    test('DELETE /login returns 404 or 405 (method not allowed)', async () => {
       const res = await request(app).delete(PublicRoutes.login);
 
+      // DELETE on login is not supported, expect 404 or 405
       expect([404, 405]).toContain(res.status);
     });
 
-    test('PUT requests to protected endpoints are rejected', async () => {
+    test('PUT /dashboard returns 404 or 405 (method not allowed)', async () => {
       const res = await request(app).put(PrivateRoutes.dashboard);
 
+      // PUT on protected route is not supported, expect 404 or 405
       expect([404, 405]).toContain(res.status);
     });
   });
 
   describe('CORS & Origin Headers', () => {
-    test('Requests include appropriate CORS headers if configured', async () => {
+    test('Public /info endpoint returns 200 with headers', async () => {
       const res = await request(app).get('/info');
 
       expect(res.status).toBe(200);
       expect(res.headers).toBeDefined();
+      expect(res.headers['content-type']).toMatch(/application\/json/i);
     });
   });
 });
