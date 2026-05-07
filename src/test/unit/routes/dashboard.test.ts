@@ -11,16 +11,6 @@ describe('Dashboard Route', () => {
 
   // Creates mock req/res, calls the route handler, and returns res for assertions
   function callHandler(session: Record<string, unknown> = {}) {
-    // Auto-populate caseUserName from caseData and caseRole if not already set
-    if (!session.caseUserName && session.caseData && session.caseRole) {
-      const caseData = session.caseData as { applicantFlags?: { partyName?: string }; respondentFlags?: { partyName?: string } };
-      if (session.caseRole === CaseRole.APPLICANT) {
-        session.caseUserName = caseData.applicantFlags?.partyName || 'Applicant';
-      } else if (session.caseRole === CaseRole.RESPONDENT) {
-        session.caseUserName = caseData.respondentFlags?.partyName || 'Respondent';
-      }
-    }
-    
     const req = { session } as unknown as Request;
     const res = { render: jest.fn() } as unknown as Response;
     handler(req, res);
@@ -42,6 +32,7 @@ describe('Dashboard Route', () => {
       caseNumber: '1234-5678-9012-3456',
       user: { hasNFDCase: true },
       caseRole: CaseRole.APPLICANT,
+      caseUserName: 'John Smith',
       caseData: {
         applicantFlags: { partyName: 'John Smith' },
         consentOrderFRCEmail: 'court@example.com',
@@ -64,6 +55,7 @@ describe('Dashboard Route', () => {
       caseNumber: '1234-5678-9012-3456',
       user: { hasNFDCase: false },
       caseRole: CaseRole.RESPONDENT,
+      caseUserName: 'Jane Doe',
       caseData: {
         respondentFlags: { partyName: 'Jane Doe' },
       },
@@ -98,6 +90,7 @@ describe('Dashboard Route', () => {
     const res = callHandler({
       caseNumber: '1234-5678-9012-3456',
       caseRole: CaseRole.APPLICANT,
+      caseUserName: 'Applicant',
       caseData: {
         applicantFlags: {},
       },
