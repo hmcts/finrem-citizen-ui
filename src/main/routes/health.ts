@@ -22,9 +22,11 @@ export default function health(app: Application): void {
   const logger = Logger.getLogger('health');
   const typedApp = app as AppWithRedis;
   const isRedisEnabled = config.get<string>('features.redis') === 'true';
+  const caseServiceHealthUrl = `${config.get<string>('services.case.url').replace(/\/$/, '')}/health`;
 
   const healthCheckConfig = {
     checks: {
+      ccd: healthcheck.web(caseServiceHealthUrl),
       redis: healthcheck.raw(async () => {
         if (!isRedisEnabled) {
           return healthcheck.up();
