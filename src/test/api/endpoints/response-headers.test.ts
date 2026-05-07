@@ -6,68 +6,73 @@ import { PrivateRoutes, PublicRoutes } from '../../../main/common-constants';
 
 describe('Response Headers & Session Management', () => {
   describe('Content Type & Response Headers', () => {
-    test('HTML endpoints return text/html content-type', async () => {
+    test('HTML endpoints return appropriate content-type', async () => {
       const res = await request(app).get(PublicRoutes.login);
 
+      // Login can redirect to OIDC (302/303) or render login form (200)
+      expect([200, 302, 303]).toContain(res.status);
+      
       if (res.status === 200) {
-        expect(res.headers['content-type']).toMatch(/text\/html|application\/json/i);
+        expect(res.headers['content-type']).toMatch(/text\/html/i);
       }
     });
 
-    test('API responses set appropriate cache headers', async () => {
+    test('API /info endpoint returns JSON with proper headers', async () => {
       const res = await request(app).get('/info');
 
       expect(res.status).toBe(200);
-      expect(res.headers).toHaveProperty('content-type');
+      expect(res.headers['content-type']).toMatch(/application\/json/i);
     });
 
-    test('Redirects include Location header', async () => {
+    test('Redirects include Location header with valid path or URL', async () => {
       const res = await request(app).get(PrivateRoutes.dashboard);
 
-      if ([302, 303, 307, 308].includes(res.status)) {
-        expect(res.header.location).toBeTruthy();
-      }
+      // Dashboard redirect to OIDC is expected when not authenticated
+      expect([302, 303]).toContain(res.status);
+      expect(res.header.location).toBeTruthy();
+      // Location can be absolute URL (https://...) or relative path (/login)
+      expect(res.header.location).toMatch(/^(https?:\/\/|\/)/);
     });
   });
 
   describe('Security Headers', () => {
-    test('Responses include security headers', async () => {
+    test('Responses include Helmet security headers', async () => {
       const res = await request(app).get('/info');
 
-      expect(res.headers['x-content-type-options']).toBeTruthy();
+      expect(res.status).toBe(200);
+      expect(res.headers['x-content-type-options']).toBe('nosniff');
       expect(res.headers['x-frame-options']).toBeTruthy();
     });
 
-    test('Sensitive routes enforce HTTPS in production (if configured)', async () => {
+    test('Protected routes require authentication or redirect', async () => {
       const res = await request(app).post(PrivateRoutes.enterAccessCode).send({});
 
-      expect([302, 400, 401]).toContain(res.status);
+      // Should redirect to login (302/303) or return 401, not 500 or 200
+      expect([302, 303, 400, 401]).toContain(res.status);
+      expect(res.status).not.toBe(500);
     });
   });
 
   describe('Session & Cookie Management', () => {
-    test('Responses set session cookie when appropriate', async () => {
+    test('Login endpoint returns session cookie in Set-Cookie header', async () => {
       const res = await request(app).get(PublicRoutes.login);
 
-      if (res.headers['set-cookie']) {
-        expect(res.headers['set-cookie']).toEqual(
-          expect.arrayContaining([
-            expect.stringMatching(/connect.sid|session/i),
-          ])
-        );
-      }
+      expect([200, 302, 303]).toContain(res.status);
+      expect(res.headers['set-cookie']).toBeDefined();
+      expect(res.headers['set-cookie']).toEqual(
+        expect.arrayContaining([
+          expect.stringMatching(/connect\.sid|session/i),
+        ])
+      );
     });
 
-    test('Multiple requests maintain session isolation', async () => {
+    test('Multiple requests receive different session IDs', async () => {
       const res1 = await request(app).get(PublicRoutes.login);
       const res2 = await request(app).get(PublicRoutes.login);
 
-      const cookie1 = res1.headers['set-cookie'];
-      const cookie2 = res2.headers['set-cookie'];
-
-      if (cookie1 && cookie2) {
-        expect(cookie1).not.toEqual(cookie2);
-      }
+      expect(res1.headers['set-cookie']).toBeDefined();
+      expect(res2.headers['set-cookie']).toBeDefined();
+      expect(res1.headers['set-cookie']).not.toEqual(res2.headers['set-cookie']);
     });
   });
 });
