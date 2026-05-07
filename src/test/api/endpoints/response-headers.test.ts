@@ -1,15 +1,14 @@
 import { describe, expect, test } from '@jest/globals';
 import request from 'supertest';
 
-import { app } from '../../main/app';
-import { PrivateRoutes, PublicRoutes } from '../../main/common-constants';
+import { app } from '../../../main/app';
+import { PrivateRoutes, PublicRoutes } from '../../../main/common-constants';
 
 describe('Response Headers & Session Management', () => {
   describe('Content Type & Response Headers', () => {
     test('HTML endpoints return text/html content-type', async () => {
       const res = await request(app).get(PublicRoutes.login);
 
-      // May redirect or return HTML
       if (res.status === 200) {
         expect(res.headers['content-type']).toMatch(/text\/html|application\/json/i);
       }
@@ -18,7 +17,6 @@ describe('Response Headers & Session Management', () => {
     test('API responses set appropriate cache headers', async () => {
       const res = await request(app).get('/info');
 
-      // Should have some cache control
       expect(res.status).toBe(200);
       expect(res.headers).toHaveProperty('content-type');
     });
@@ -43,7 +41,6 @@ describe('Response Headers & Session Management', () => {
     test('Sensitive routes enforce HTTPS in production (if configured)', async () => {
       const res = await request(app).post(PrivateRoutes.enterAccessCode).send({});
 
-      // Should either require auth or accept http in test
       expect([302, 400, 401]).toContain(res.status);
     });
   });
@@ -52,7 +49,6 @@ describe('Response Headers & Session Management', () => {
     test('Responses set session cookie when appropriate', async () => {
       const res = await request(app).get(PublicRoutes.login);
 
-      // May set session cookie
       if (res.headers['set-cookie']) {
         expect(res.headers['set-cookie']).toEqual(
           expect.arrayContaining([
@@ -66,7 +62,6 @@ describe('Response Headers & Session Management', () => {
       const res1 = await request(app).get(PublicRoutes.login);
       const res2 = await request(app).get(PublicRoutes.login);
 
-      // Different session cookies if set
       const cookie1 = res1.headers['set-cookie'];
       const cookie2 = res2.headers['set-cookie'];
 

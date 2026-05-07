@@ -1,8 +1,8 @@
 import { describe, expect, test } from '@jest/globals';
 import request from 'supertest';
 
-import { app } from '../../main/app';
-import { PrivateRoutes, PublicRoutes } from '../../main/common-constants';
+import { app } from '../../../main/app';
+import { PrivateRoutes, PublicRoutes } from '../../../main/common-constants';
 
 describe('Protected Endpoints (Authentication & Session Validation)', () => {
   describe('Protected GET Endpoints (Redirect to Login When Unauthenticated)', () => {

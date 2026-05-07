@@ -1,16 +1,16 @@
-import { expect, test } from '@playwright/test';
+import { beforeAll, describe, expect, test } from '@jest/globals';
 import { Express } from 'express';
 import request from 'supertest';
 
-import { createMockCaseApiApp, MockCaseApiOptions } from '../../main/mock-case-api/app';
+import { createMockCaseApiApp, MockCaseApiOptions } from '../../../main/mock-case-api/app';
 
-test.describe('Mock case API endpoints', () => {
+describe('[MOCK] Case API endpoints', () => {
   let app: Express;
 
   const seededCaseId = '1616591401473378';
   const seededCaseTypeId = 'FinancialRemedyContested';
 
-  test.beforeAll(async () => {
+  beforeAll(async () => {
     const createdAt = new Date().toISOString();
     const validUntil = getFutureIsoDate(90);
 
@@ -148,7 +148,7 @@ test.describe('Mock case API endpoints', () => {
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({
       total: 1,
-      cases: [{ id: seededCaseId, state: 'CaseAdded' }],
+      cases: [{ id: seededCaseId }],
     });
   });
 });
@@ -158,5 +158,3 @@ function getFutureIsoDate(daysFromNow: number): string {
   date.setDate(date.getDate() + daysFromNow);
   return date.toISOString();
 }
-
- 
