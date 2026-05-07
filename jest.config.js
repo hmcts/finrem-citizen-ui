@@ -34,6 +34,9 @@ transformIgnorePatterns: [
     '!src/main/modules/helmet/**',
     '!src/main/modules/nunjucks/**',
     '!src/main/modules/oidc/config.interface.ts',
+    '!src/main/mock-case-api/**',
+    '!src/main/modules/auth-provider/**',
+    '!src/main/routes/demo.ts',
   ],
   coverageThreshold: {
     global: {

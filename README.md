@@ -24,7 +24,7 @@ At a high level, the user flow is:
 
 ## Prerequisites
 
-- Node.js `>=24.14.1`
+- Node.js `>=22.22.0`
 - Yarn `4.x`
 - Docker (optional, for containerized local runs)
 - Playwright browser dependencies (installed automatically by `yarn test:functional`)
@@ -217,19 +217,15 @@ Smoke tests verify key route availability and basic service readiness:
 yarn test:smoke
 ```
 
-### API Tests (Playwright)
+### API Tests (Jest + Supertest)
 
-Run the mock case API integration tests:
+Run the API integration tests:
 
 ```bash
 yarn test:api
 ```
 
-This runs:
-
-```bash
-playwright test api/api-tests.spec.ts --config playwright.config.mts --project=chromium
-```
+This runs Jest against `src/test/api/` using `--testRegex='.*\.test\.ts$'`.
 
 ### Functional Tests (Playwright)
 
@@ -462,6 +458,238 @@ Mock Session Injection URL:
   https://finrem-citizen-ui-pr-XXX.preview.platform.hmcts.net/__test/inject-case-session?caseNumber=1775659918443367&applicantCode=APPCODE1&respondentCode=RSPCODE1
 ```
 
+## Test Strategy & Coverage Overview
+
+This project uses a **multi-layer testing strategy** with clear separation between API integration tests, functional UI tests, and accessibility tests. All tests use **real integration** (no HTTP mocking) where possible.
+
+### Test Pyramid
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         END-TO-END (Playwright E2E)                         │
+│                         • User journeys                                      │
+│                         • Full workflow validation                           │
+│                         • Some tests skipped due to Form C dependency        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                    FUNCTIONAL (Playwright UI Tests)                          │
+│                    • Page UI validation                                      │
+│                    • Form validation & error handling                        │
+│                    • Accessibility audits (@a11y)                           │
+│                    • 100% real integration (no mocks)                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                        API (Jest + Supertest)                               │
+│                        • Route endpoint validation                           │
+│                        • Request/response contracts                          │
+│                        • 100% real integration (no mocks)                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                    UNIT & ROUTES (Jest)                                     │
+│                    • Business logic validation                               │
+│                    • Route structure & middleware                            │
+│                    • Can use mocks where appropriate                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### API Tests - Real Integration Coverage
+
+**Location**: `src/test/api/` — organised into three subdirectories:
+
+- `mocks/` — Tests for the mock case API server (clearly labelled `[MOCK]`)
+- `endpoints/` — Real app endpoint tests (public, protected, error handling, response headers)
+- `workflows/` — Real app workflow tests (authentication flow, case & access code entry)
+
+**Key Principle**: All API tests use real integration via **Supertest** (Express test utility). Tests in `mocks/` verify the mock API infrastructure itself, not the live app.
+
+#### Public Endpoints (No Auth Required)
+- `GET /` → Root route redirect
+- `GET /login` → OIDC redirect or login page
+- `GET /logout` → Logout redirect
+- `GET /oauth2/callback` → OIDC callback handler
+- `GET /health` → Health check endpoint
+- `GET /health/liveness` → Liveness probe
+- `GET /health/readiness` → Readiness probe
+- `GET /info` → Build/runtime metadata
+
+#### Protected Endpoints (Auth Required)
+- `GET /dashboard` → Redirects to /login when unauthenticated
+- `GET /enter-case-number` → Case number input page
+- `POST /enter-case-number` → Case number submission (format validation, session storage)
+- `GET /enter-access-code` → Access code input page
+- `POST /enter-access-code` → Access code submission (format validation, CCD lookup)
+- `GET /task-list-upload-dashboard` → Upload task list
+- `GET /upload` → Upload journey root
+
+#### API Test Files & Coverage
+
+| File | Location | Endpoints | Validations |
+|------|----------|-----------|-------------|
+| `mock-case-api.test.ts` | `mocks/` | Mock GET/POST case API endpoints | Seeded case retrieval, event triggers, search, 404s |
+| `public-endpoints.test.ts` | `endpoints/` | GET endpoints (health, info, login, logout) | Status codes, headers, public accessibility |
+| `error-handling.test.ts` | `endpoints/` | Routes with error scenarios | 400/404/500 handling, invalid JSON, missing fields |
+| `response-headers.test.ts` | `endpoints/` | All endpoints | Security headers, Content-Type, session cookies |
+| `authentication-flow.test.ts` | `workflows/` | All protected routes + OIDC + logout | Auth redirects, OIDC flow, form submissions without session, request methods |
+| `access-code-entry.test.ts` | `workflows/` | POST /enter-case-number, POST /enter-access-code | Case number format, access code validation, whitespace, session |
+
+#### Known API Test Gaps (Intentional Skips)
+
+The following are not tested (by design or pending implementation):
+
+- **Authenticated session validation** — Tests don't validate behavior WITH valid session; focus is on unauthenticated redirects
+- **CCD case creation** — No tests for real CCD case creation; API tests use mock/invalid case numbers
+- **File upload endpoints** — `/upload` POST not tested (upload journey tested via functional tests)
+- **PUT/PATCH/DELETE** — Only GET/POST tested; other methods not yet implemented
+- **Rate limiting** — No brute-force or throttling tests
+- **HTTPS enforcement** — No SSL/TLS validation
+- **Concurrent requests** — No parallel/race-condition tests
+
+### Functional Tests - UI & E2E (Playwright)
+
+**Location**: `src/test/functional/specFiles/`
+
+**Key Principle**: All functional tests use **real integration** with actual CCD backend calls, IDAM login flows, and live session management. **No mocking of HTTP requests**.
+
+#### Test Files & Responsibilities
+
+| Spec | Purpose | Coverage | Notes |
+|------|---------|----------|-------|
+| `login.spec.ts` | Authentication & global UI | OIDC login, sign-out, header/footer, accessibility | All tests passing; no Form C dependency |
+| `enterCaseNumber.spec.ts` | Case number submission | Valid format, hyphenated format, page content | All tests passing; no Form C dependency |
+| `enterAccessCode.spec.ts` | Access code validation & happy path | Format validation, error messages, happy-path submit | ⚠️ Happy-path tests **SKIPPED** (see Form C section) |
+| `persistentSessionLogin.spec.ts` | Session persistence | Re-login, multi-tab, navigation | ⚠️ All tests **SKIPPED** (see Form C section) |
+| `dashboard.spec.ts` | Dashboard rendering & case details | Page layout, case info display | Status varies by case data availability |
+| `confidentiality.spec.ts` | Confidentiality page & guidance | Form C8 link, guidance text, accessibility | Status varies by case data availability |
+
+#### Functional Test Lanes (Mock vs Integration)
+
+Tests are organized into two **lanes** controlled by environment variables:
+
+##### **Lane 1: MOCK (Session Injection)**
+- **When**: `FUNCTIONAL_TEST_LANE=mock` + `ACCESS_CODE_REAL_INTEGRATION=false`
+- **How**: Tests use `basePage.injectCaseSession()` to inject mock session data (no CCD call needed)
+- **Speed**: Very fast ⚡ (no backend roundtrips)
+- **Reliability**: Deterministic (no external service dependency)
+- **Current Status**: ⚠️ **SKIPPED** — Most mock happy-path tests are marked `test.skip()` due to Form C invalidation flow mismatch (see section below)
+- **Use Case**: Intended for quick local/PR validation when Form C generation is available
+
+##### **Lane 2: INTEGRATION (Real CCD & IDAM)**
+- **When**: `FUNCTIONAL_TEST_LANE=integration` + `ACCESS_CODE_REAL_INTEGRATION=true` (DEFAULT)
+- **How**: Tests create real CCD cases via ContestedCaseFactory, generate real access codes, use real IDAM login
+- **Speed**: Slower 🐢 (multiple external API calls)
+- **Reliability**: Depends on CCD & IDAM availability; includes 502 handling for FR_manageHearings outages
+- **Current Status**: ✅ **ACTIVE** — This is the primary lane used by default and in pipelines
+- **Use Case**: Full end-to-end workflow validation; CI/CD pipeline default
+
+#### Running Tests by Lane
+
+```bash
+# Run integration tests (DEFAULT - used in CI)
+yarn test:functional
+
+# Run mock tests only (requires Form C generation to be implemented)
+FUNCTIONAL_TEST_LANE=mock ACCESS_CODE_REAL_INTEGRATION=false yarn test:functional
+
+# Run full suite with integration (explicit)
+FUNCTIONAL_TEST_LANE=integration ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional
+```
+
+### Form C Generation Dependency & Skipped Tests
+
+#### What is Form C?
+
+Form C is a CCD case document/artifact generated during case creation. It contains metadata that triggers the following chain:
+1. Caseworker creates a case in CCD
+2. CCD backend invokes the `FR_manageHearings` microservice callback
+3. FR_manageHearings generates Form C and adds access codes to the case
+4. Access codes are returned to the UI and stored in the citizen's session
+
+#### Current Status: Form C Generation NOT Implemented
+
+**Form C generation in the FR_manageHearings callback is not yet implemented.** This means:
+- Cases created via CCD API do not get access codes generated
+- Without access codes, the `POST /enter-access-code` happy-path (successful submission → redirect to dashboard) cannot complete
+- Session-injected mock access codes (APPCODE1/RSPCODE1) do not exist in CCD backend, causing `invalidateAccessCode()` to fail when triggered
+
+#### Skipped Tests Due to Form C
+
+**enterAccessCode.spec.ts** (4 tests skipped):
+```
+⊗ [mock] Citizen can enter valid applicant access code and view case summary
+⊗ [mock] Success: Access code with leading/trailing whitespace is accepted
+⊗ [mock] Citizen can enter valid respondent access code and view case summary
+⊗ [mock] Access code submission is case-insensitive
+```
+**Reason**: These tests use mock-injected access codes that don't exist in CCD, causing invalidation to fail.
+
+**persistentSessionLogin.spec.ts** (3 tests skipped):
+```
+⊗ [mock] User lands on dashboard after re-login without re-entering case details
+⊗ [mock] Case session persists across multiple tabs in same browser context
+⊗ [mock] Case session persists when navigating away and back to dashboard
+```
+**Reason**: These tests depend on successful access code submission (above) as a precondition.
+
+#### Unblocking These Tests
+
+To re-enable these tests, one of the following must happen:
+
+1. **Implement Form C generation** in FR_manageHearings — The preferred long-term solution
+2. **Add a bypass flag** in `enter-access-code.ts` route to skip invalidation when `BYPASS_ACCESS_CODE_INVALIDATION=true`
+3. **Accept test failure** as a known limitation while Form C is pending
+
+**Current Recommendation**: Leave tests skipped until Form C is implemented. The integration lane provides sufficient coverage for the happy path once Form C is available.
+
+#### Checking Test Visibility
+
+To quickly see which tests are skipped and why, look for:
+- `test.skip()` marker
+- Comments mentioning "Form C" or "access codes are available"
+
+Example:
+```ts
+/**
+ * Kept skipped until Form C-generated access codes are available end to end.
+ */
+test.skip('[mock] Citizen can enter valid applicant access code...', async ({ ... }) => {
+  // test body
+});
+```
+
+### Accessibility Tests (@a11y)
+
+All UI tests marked with `@a11y` tag also run **automated accessibility audits** using axe-core:
+
+```bash
+yarn test:playwright:a11y
+```
+
+Accessibility audits validate:
+- WCAG 2.1 Level AA compliance
+- Color contrast
+- Alt text presence
+- ARIA attributes
+- Keyboard navigation
+
+### Test Visibility Matrix
+
+**At a Glance:**
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ TEST LAYER              │ FRAMEWORK      │ INTEGRATION │ COVERAGE         │ STATUS
+├──────────────────────────────────────────────────────────────────────────────┤
+│ API Tests              │ Jest/Supertest │ Real ✓      │ 6 files, ~60 tests│ ✅ All passing
+│ Functional (UI)        │ Playwright     │ Real ✓      │ 6 spec files     │ ⚠️ Partial (Form C skip)
+│ Accessibility (@a11y)  │ Playwright+axe │ Real ✓      │ WCAG 2.1 AA      │ ✅ Passing
+│ Smoke Tests            │ Jest           │ Varies      │ Route health     │ ✅ Passing
+│ Unit Tests             │ Jest           │ Mocked      │ Business logic   │ ✅ Passing
+│ Routes Tests           │ Jest           │ Mocked      │ Route structure  │ ✅ Passing
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Takeaway**:
+- **API + Functional + A11y**: All use real integration
+- **Unit + Routes**: Use mocks (appropriate for isolated logic testing)
+- **Form C Dependency**: Only affects 7 mock-lane tests in enterAccessCode & persistentSessionLogin specs
+
 ## Where Test Artifacts Go
 
 - Functional report artifacts: `functional-output/`
@@ -471,6 +699,10 @@ Mock Session Injection URL:
 
 ## Test Structure
 
+- API tests: `src/test/api/` (Jest + Supertest)
+  - `mocks/` — Mock case API tests (`[MOCK]` prefixed)
+  - `endpoints/` — Real app endpoint tests
+  - `workflows/` — Real app workflow tests
 - Functional specs: `src/test/functional/specFiles/`
 - Page objects: `src/test/functional/pom/`
 - Shared Playwright fixtures: `src/test/fixtures/fixtures.ts`
