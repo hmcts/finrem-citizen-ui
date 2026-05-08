@@ -2,19 +2,20 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import config from 'config';
 import FormData from 'form-data';
 
+import { UrlEndPoints } from '../../common-constants';
 import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
-import { CASE_TYPE, JURISDICTION } from '../case/case-type';
+import { CASE_DOCUMENT_MANAGEMENT_SERVICE_URL,CASE_TYPE, JURISDICTION } from '../case/case-type';
 import type { UserDetails } from '../controller/AppRequest';
 
 export class CaseDocumentManagementClient {
   client: AxiosInstance;
-  BASE_URL: string = config.get('services.caseDocumentManagement.url');
+  BASE_URL: string = config.get(CASE_DOCUMENT_MANAGEMENT_SERVICE_URL);
 
   constructor(private readonly user: UserDetails) {
     this.client = axios.create({
       baseURL: this.BASE_URL,
       headers: {
-        Authorization: `Bearer ${user.accessToken}`,
+        Authorization: `Bearer ${this.user.accessToken}`,
         ServiceAuthorization: getServiceAuthToken(),
       },
     });
@@ -37,12 +38,11 @@ export class CaseDocumentManagementClient {
     }
 
     const response: AxiosResponse<CaseDocumentManagementResponse> = await this.client.post(
-      '/cases/documents',
+      UrlEndPoints.UploadDocument,
       formData,
       {
         headers: {
-          ...formData.getHeaders(),
-          'user-id': this.user.id,
+          ...formData.getHeaders()
         },
         maxContentLength: Infinity,
         maxBodyLength: Infinity,

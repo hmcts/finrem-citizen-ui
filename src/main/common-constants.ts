@@ -55,4 +55,5 @@ export const UrlEndPoints = {
   CaseUsers: '/case-users',
   CaseId: (caseId: string) => `/cases/${caseId}`,
   SearchCases: (caseType: string) => `/searchCases?ctid=${caseType}`,
+  UploadDocument: '/cases/documents',
 } as const;

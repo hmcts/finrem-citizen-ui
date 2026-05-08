@@ -88,9 +88,6 @@ describe('CaseDocumentManagementClient', () => {
       '/cases/documents',
       expect.any(FormData),
       expect.objectContaining({
-        headers: expect.objectContaining({
-          'user-id': 'user-id',
-        }),
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
       })
