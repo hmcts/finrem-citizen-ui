@@ -7,7 +7,6 @@ import * as path from 'path';
 
 import { ViewNames } from './common-constants';
 import { HTTPError } from './HttpError';
-import { contactEmailMiddleware } from './middleware';
 import { AppInsights } from './modules/appinsights';
 import { Helmet } from './modules/helmet';
 import { Nunjucks } from './modules/nunjucks';
@@ -52,9 +51,6 @@ app.use((req, res, next) => {
 
 new Session().enableFor(app);
 new OIDCModule().enableFor(app);
-
-// Add contact email to all templates via res.locals
-app.use(contactEmailMiddleware);
 
 glob
   .sync(__dirname + '/routes/**/*.+(ts|js)')

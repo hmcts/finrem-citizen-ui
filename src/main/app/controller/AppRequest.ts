@@ -20,7 +20,6 @@ export interface AppSession extends Session, SessionData {
   userCase?: CaseWithId;
   existingCaseId?: string;
   errors?: FormError[];
-  caseUserName?: string;
 }
 export interface UserDetails {
   accessToken: string;

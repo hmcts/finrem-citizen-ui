@@ -1,78 +1,17 @@
-{% from "./macros/getting-help.njk" import gettingHelp %}
-
 {% extends "template.njk" %}
 
 {% block content %}
-  <h2 class="govuk-heading-l">{{ userName or 'Your financial remedy case' }}</h2>
-  <p class="govuk-body">Case number {{ (caseNumber | formatCaseNumber) or 'Not available' }}</p>
-  
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible finrem-section-break">
+      <h1 class="govuk-heading-xl">Financial Remedy Dashboard</h1>
+      <p class="govuk-body">This is a placeholder dashboard page.</p>
+      <p class="govuk-body">You have been redirected here because you already have a linked Financial Remedy case.</p>
       
-      {% if hasDivorceCase %}
-        <div class="govuk-inset-text finrem-dashboard-inset--highlight">
-          <h2 class="govuk-heading-m">This is your financial remedy account</h2>
-          <p class="govuk-body">
-            If you want to view your divorce case you can 
-            <a href="https://www.apply-divorce.service.gov.uk/" class="govuk-link" target="_blank" rel="noopener noreferrer">go to your divorce account (opens in new tab)</a>.
-          </p>
-        </div>
-      {% endif %}
-      
-      <h2 class="govuk-heading-m">Latest information</h2>
-      
-      <div class="finrem-dashboard-panel">
-        <p class="govuk-body">
-          You are involved in a contested financial remedy case. You may need to prepare some documents and upload them before your next hearing. You will find instructions about which documents to prepare on the order you received from the court.
-        </p>
-        
-        <div class="govuk-warning-text">
-          <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-          <strong class="govuk-warning-text__text">
-            <span class="govuk-visually-hidden">Warning</span>
-            Do not use this service to submit applications or anything else that needs a court response. You should email these to the court.
-          </strong>
-        </div>
-        
-        <a href="/upload/before-you-start" role="button" draggable="false" class="govuk-button" data-module="govuk-button">
-          Go to document upload
-        </a>
-      </div>
-      
-      <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-      
-      {% if showPreviouslyUploaded %}
-        <p class="govuk-body">
-          <a href="#" class="govuk-link">View previously uploaded documents</a>
-        </p>
-      {% endif %}
-    </div>
-    
-    <div class="govuk-grid-column-one-third">
-      <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible finrem-section-break">
-      
-      <h2 class="govuk-heading-m govuk-!-padding-top-2">I want to...</h2>
-      
-      <p class="govuk-body">
-        <a href="https://www.gov.uk/government/collections/divorce-and-civil-partnership-dissolution-forms" class="govuk-link" target="_blank" rel="noopener noreferrer">Find templates for the most commonly requested documents (opens in new tab)</a>
-      </p>
-      
-      <p class="govuk-body">
-        <a href="https://www.gov.uk/guidance/what-to-expect-coming-to-a-court-or-tribunal" class="govuk-link" target="_blank" rel="noopener noreferrer">Find out what to expect coming to a court (opens in new tab)</a>
-      </p>
-      
-      <p class="govuk-body">
-        <a href="https://www.advicenow.org.uk/get-help/going-court/representing-myself-court" class="govuk-link" target="_blank" rel="noopener noreferrer">Read advice about representing myself in court from AdviceNow (opens in new tab)</a>
-      </p>
-      
-      <p class="govuk-body">
-        <a href="https://www.judiciary.uk/wp-content/uploads/2026/03/020326-Preparing-Court-Bundles-for-Family-Proceedings-Guide-for-Litigants-in-Person.pdf" class="govuk-link" target="_blank" rel="noopener noreferrer">Read advice about preparing a court bundle from Judiciary UK (opens in new tab)</a>
-      </p>
-      
-      <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-      
-      {{ gettingHelp(contactEmail) }}
+      <h2 class="govuk-heading-m">Upload documents</h2>
+      <p class="govuk-body">Upload documents to support your financial remedy case.</p>
+      <a href="/upload/before-you-start" role="button" draggable="false" class="govuk-button" data-module="govuk-button">
+        Go to document upload
+      </a>
     </div>
   </div>
 {% endblock %}

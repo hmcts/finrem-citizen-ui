@@ -276,14 +276,6 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       try {
         const invalidCaseData = await invalidateAccessCode(caseData, trimmedAccessCode, role, req.session.caseNumber);
         req.session.caseData = invalidCaseData;
-        req.session.caseRole = role;
-        
-        // Set case user name based on role
-        if (role === CaseRole.APPLICANT) {
-          req.session.caseUserName = invalidCaseData.applicantFlags?.partyName || 'Applicant';
-        } else if (role === CaseRole.RESPONDENT) {
-          req.session.caseUserName = invalidCaseData.respondentFlags?.partyName || 'Respondent';
-        }
       } catch {
         res.render(ViewNames.Error);
       }

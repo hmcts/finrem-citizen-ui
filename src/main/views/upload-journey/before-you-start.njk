@@ -1,5 +1,3 @@
-{% from "../macros/getting-help.njk" import gettingHelp %}
-
 {% extends "template.njk" %}
 
 {% block content %}
@@ -75,7 +73,36 @@
     </div>
 
     <div class="govuk-grid-column-one-third">
-      {{ gettingHelp() }}
+      <aside class="govuk-prototype-kit-common-templates-related-items" role="complementary">
+        <h2 class="govuk-heading-s govuk-!-margin-top-9" id="subsection-title">
+          Getting help
+        </h2>
+        <details class="govuk-details" data-module="govuk-details">
+          <summary class="govuk-details__summary">
+            <span class="govuk-details__summary-text">
+              Contact us for help
+            </span>
+          </summary>
+          <div class="govuk-details__text">
+            <h3 class="govuk-heading-s">Email</h3>
+            <p class="govuk-body">
+              <a href="mailto:FRCexample@justice.gov.uk" class="govuk-link">FRCexample@justice.gov.uk</a>
+            </p>
+            
+            <h3 class="govuk-heading-s">Telephone</h3>
+            <p class="govuk-body">
+              0300 123 5577<br>
+              Monday to Friday, 8.30am to 5pm
+            </p>
+            
+            <p class="govuk-body">
+              <a href="https://www.gov.uk/call-charges" class="govuk-link" target="_blank" rel="noopener noreferrer">
+                Find out about call charges (opens in new tab)
+              </a>
+            </p>
+          </div>
+        </details>
+      </aside>
     </div>
   </div>
 {% endblock %}
