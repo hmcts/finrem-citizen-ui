@@ -17,6 +17,12 @@ export class BasePage {
   readonly navigationLink: Locator;
   readonly serviceNav: Locator;
   readonly signOutBtn: Locator;
+  readonly gettingHelpHeader: Locator;
+  readonly contactUsForHelpSummary: Locator;
+  readonly contactUsForHelpDetails: Locator;
+  readonly helpEmailLink: Locator;
+  readonly helpTelephoneText: Locator;
+  readonly callChargesLink: Locator;
 
   constructor(readonly page: Page) {
     this.headerLogo = this.page.getByRole('img', { name: 'GOV.UK' });
@@ -27,6 +33,14 @@ export class BasePage {
     this.navigationLink = this.page.getByRole('link', { name: 'Dividing your money and property' });
     this.serviceNav = page.locator('.govuk-service-navigation');
     this.signOutBtn = page.getByRole('link', { name: 'Sign out' });
+    this.gettingHelpHeader = this.page.getByRole('heading', { name: 'Getting help' });
+    this.contactUsForHelpSummary = this.page.locator('summary', { hasText: 'Contact us for help' });
+    this.contactUsForHelpDetails = this.page.locator('details', { has: this.contactUsForHelpSummary });
+    this.helpEmailLink = this.contactUsForHelpDetails.getByRole('link', { name: /.+@.+/ });
+    this.helpTelephoneText = this.contactUsForHelpDetails.getByText('0300 123 5577');
+    this.callChargesLink = this.contactUsForHelpDetails.getByRole('link', {
+      name: 'Find out about call charges (opens in new tab)',
+    });
   }
 
   // Assert current page URL matches expected pattern
@@ -94,7 +108,29 @@ export class BasePage {
     await expectVisible(locators);
   }
 
-  // Assert multiple locator attributes have expected values
+  // Expand help panel only when collapsed
+  protected async expandContactHelpIfCollapsed(): Promise<void> {
+    const isExpanded = await this.contactUsForHelpDetails.getAttribute('open');
+    if (isExpanded === null) {
+      await this.contactUsForHelpSummary.click();
+    }
+    await expect(this.contactUsForHelpDetails).toHaveAttribute('open', '');
+  }
+
+  protected async verifyContactHelpClosedByDefault(): Promise<void> {
+    await expect(this.contactUsForHelpDetails).not.toHaveAttribute('open', '');
+  }
+
+  protected async verifyContactHelpCoreContent(): Promise<void> {
+    await this.expandContactHelpIfCollapsed();
+    await this.expectVisible([this.helpEmailLink, this.helpTelephoneText, this.callChargesLink]);
+    await expect(this.helpEmailLink).toHaveAttribute('href', /^mailto:.+@.+$/);
+    await this.expectAttributes([
+      { locator: this.callChargesLink, name: 'target', value: '_blank' },
+      { locator: this.callChargesLink, name: 'rel', value: 'noopener noreferrer' },
+    ]);
+  }
+
   protected async expectAttributes(assertions: AttributeAssertion[]): Promise<void> {
     await expectAttributes(assertions);
   }
