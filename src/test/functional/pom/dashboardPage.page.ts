@@ -20,8 +20,8 @@ export class DashboardPage extends BasePage {
 
   constructor(readonly page: Page) {
     super(page);
-    // Use the first h1 on the page for the user name (dynamic)
-    this.userNameHeader = this.page.locator('h1').first();
+    // Use the first h2 on the page for the user name (dynamic)
+    this.userNameHeader = this.page.locator('h2').first();
     this.caseNumberText = this.page.getByText(/Case number/);
     this.divorceAccountHeading = this.page.getByRole('heading', { name: 'This is your financial remedy account' });
     this.latestInformationHeading = this.page.getByRole('heading', { name: 'Latest information' });
