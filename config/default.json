@@ -28,6 +28,9 @@
     },
     "case": {
       "url": "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
+    },
+    "caseDocumentManagement": {
+      "url": "http://ccd-case-document-am-api-aat.service.core-compute-aat.internal"
     }
   },
   "oidc": {
