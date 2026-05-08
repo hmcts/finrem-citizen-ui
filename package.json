@@ -8,6 +8,7 @@
   "scripts": {
     "start": "NODE_ENV=production ts-node -r tsconfig-paths/register src/main/server.ts",
     "start:dev": "nodemon --config nodemon.json",
+    "start:mock-case-api": "ts-node -r dotenv/config src/main/mock-case-api/server.ts",
     "lint": "eslint .",
     "lint-staged": "lint-staged",
     "lint:fix": "eslint . --fix",
@@ -15,6 +16,7 @@
     "build:prod": "NODE_ENV=production yarn webpack --mode production --config webpack.config.js",
     "test": "npx if-env CI=true && exit 0 || yarn test:unit",
     "test:unit": "jest",
+    "test:api": "jest --roots src/test/api --testRegex='.*\\.test\\.ts$'",
     "test:coverage": "jest --coverage",
     "test:routes": "jest -c jest.routes.config.js",
     "test:a11y": "echo 'placeholder'",
@@ -27,8 +29,8 @@
     "test:full-functional": "playwright test --config playwright.config.mts --project chromium --retries=2",
     "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
     "setup:manual-test": "MOCK_ACCESS_CODES=true jest -c jest.manual.config.js --runTestsByPath src/test/unit/scripts/setupManualTest.manual.test.ts --runInBand --detectOpenHandles",
-    "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes",
-    "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:coverage && yarn test:functional",
+    "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:api && yarn test:coverage",
+    "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:api && yarn test:coverage && yarn test:functional",
     "prepare": "husky install"
   },
   "dependencies": {
@@ -103,7 +105,7 @@
     "jest-circus": "*",
     "jest-html-reporter": "4.4.0",
     "jest-junit": "17.0.0",
-    "lint-staged": "16.4.0",
+    "lint-staged": "17.0.2",
     "mini-css-extract-plugin": "2.10.2",
     "nodemon": "3.1.14",
     "prettier": "3.8.3",

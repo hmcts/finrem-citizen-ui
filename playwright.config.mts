@@ -19,8 +19,6 @@ const getBaseUrl = (): string => {
   }
   // For AAT/demo/etc use the citizen UI, not manage-case (XUI)
   return `https://finrem-citizen-ui.${env}.platform.hmcts.net`;
-  
-  //   return `https://manage-case.${env}.platform.hmcts.net`;
 };
 
 const finalBaseUrl = getBaseUrl();
@@ -39,6 +37,9 @@ if (!process.env.ALREADY_LOGGED && !process.env.PW_WORKER_INDEX) {
 }
 /* eslint-enable no-console */
 
+// Only ignore API tests during functional test runs (not when running API tests explicitly)
+const isRunningApiTests = process.env.RUN_API_TESTS === 'true';
+
 export default defineConfig({
   ...CommonConfig.recommended,
 
@@ -46,7 +47,8 @@ export default defineConfig({
   tsconfig: 'src/test/tsconfig.json',
 
   testDir: './src/test',
-  testMatch: ['a11y/*.test.ts', 'functional/**/*.spec.ts'],
+  testMatch: ['**/*.spec.ts'],
+  testIgnore: isRunningApiTests ? [] : ['api/**/*.spec.ts'],
 
   reporter: [
     ...((CommonConfig.recommended.reporter as ReporterDescription[]) || []),
@@ -69,11 +71,12 @@ export default defineConfig({
   // 3. Merged WebServer logic (Local development support)
   webServer: isLocal
     ? {
-        command: 'NODE_OPTIONS="--openssl-legacy-provider" yarn start',
+        command: 'NODE_OPTIONS="--openssl-legacy-provider" ts-node -r dotenv/config -r tsconfig-paths/register src/main/server.ts',
         url: `${finalBaseUrl}/health`,
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
         env: {
+          ...process.env,
           IDAM_SECRET: process.env.IDAM_SECRET || 'dummy-secret-for-playwright-tests',
           SESSION_SECRET: process.env.SESSION_SECRET || 'dummy-session-secret',
           ENABLE_TEST_SUPPORT_ROUTES: 'true',

@@ -1,6 +1,13 @@
 import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
 
-test.describe('Enter Access Code - Page Content', () => {
+const runRealIntegrationAccessCodeTests = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
+
+test.describe('[real-integration] Enter Access Code - Page Content', () => {
+  test.skip(
+    !runRealIntegrationAccessCodeTests,
+    '[real-integration] skipped by default; run with ACCESS_CODE_REAL_INTEGRATION=true when environment is stable'
+  );
+
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
@@ -24,7 +31,12 @@ test.describe('Enter Access Code - Page Content', () => {
   });
 });
 
-test.describe('Enter Access Code - Validation Errors', () => {
+test.describe('[real-integration] Enter Access Code - Validation Errors', () => {
+  test.skip(
+    !runRealIntegrationAccessCodeTests,
+    '[real-integration] skipped by default; run with ACCESS_CODE_REAL_INTEGRATION=true when environment is stable'
+  );
+
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
@@ -124,7 +136,7 @@ test.describe('Enter Access Code - Validation Errors', () => {
 // access codes (APPCODE1 / RSPCODE1) injected via /__test/inject-case-session.
 // No Form C or FR_manageHearings hearing flow is required.
 // To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
-test.describe('Enter Access Code - Happy Path', () => {
+test.describe('[mock] Enter Access Code - Happy Path', () => {
   test.use({ useMockTestSupport: true });
 
   test.beforeEach(async ({
@@ -144,20 +156,21 @@ test.describe('Enter Access Code - Happy Path', () => {
    * Citizen successfully enters valid applicant access code and views case
    * [mock] Uses hardcoded access codes injected via test session endpoint.
    * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted, the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
+  * This test depends on mock CCD endpoints for invalidate-access-code events.
+  * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
    */
-  test.skip('[mock] Citizen can enter valid applicant access code and view case summary', async ({
+  test('[mock] Citizen can enter valid applicant access code and view case summary', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
     assertionHelpers: _assertionHelpers,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await enterAccessCodePage.submitAccessCode(accessCode);
@@ -168,19 +181,20 @@ test.describe('Enter Access Code - Happy Path', () => {
    * Verify whitespace is trimmed from access code
    * [mock] Uses hardcoded access codes injected via test session endpoint.
    * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted, the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
+  * This test depends on mock CCD endpoints for invalidate-access-code events.
+  * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
    */
-  test.skip('[mock] Success: Access code with leading/trailing whitespace is accepted', async ({
+  test('[mock] Success: Access code with leading/trailing whitespace is accepted', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await enterAccessCodePage.submitAccessCode(`  ${accessCode}  `);
@@ -191,19 +205,20 @@ test.describe('Enter Access Code - Happy Path', () => {
    * Citizen successfully enters valid respondent access code and views case
    * [mock] Uses hardcoded access codes injected via test session endpoint.
    * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted, the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
+  * This test depends on mock CCD endpoints for invalidate-access-code events.
+  * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
    */
-  test.skip('[mock] Citizen can enter valid respondent access code and view case summary', async ({
+  test('[mock] Citizen can enter valid respondent access code and view case summary', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     const accessCode = contestedCaseWithHearing.respondentAccessCode;
 
     await enterAccessCodePage.submitAccessCode(accessCode);
@@ -214,19 +229,20 @@ test.describe('Enter Access Code - Happy Path', () => {
    * Access codes are case-insensitive
    * [mock] Uses hardcoded access codes injected via test session endpoint.
    * 
-   * TODO: RESOLVE - Currently skipped due to implementation of invalidating access code (PR #347).
-   * The mock test framework does not properly mock the CCD triggerEvent() call required for access code invalidation.
-   * When a valid access code is submitted, the system now calls invalidateAccessCode() which triggers a CCD event.
-   * This test requires either:
-   * 1. Mock support for CCD API triggerEvent() in the test framework, or
-   * 2. Bypass access code invalidation in mock test mode via MOCK_INVALIDATE_ACCESS_CODE=false flag
+  * This test depends on mock CCD endpoints for invalidate-access-code events.
+  * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
    */
-  test.skip('[mock] Access code submission is case-insensitive', async ({
+  test('[mock] Access code submission is case-insensitive', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     // Enter access code in lowercase
@@ -234,6 +250,27 @@ test.describe('Enter Access Code - Happy Path', () => {
 
     await enterAccessCodePage.submitAccessCode(lowercaseCode);
 
+    await dashboardPage.verifyDashboardPageContent();
+  });
+});
+
+test.describe('[real-integration] Enter Access Code - Happy Path', () => {
+  test.skip(
+    !runRealIntegrationAccessCodeTests,
+    '[real-integration] skipped by default; run with ACCESS_CODE_REAL_INTEGRATION=true when environment is stable'
+  );
+
+  test('Citizen can submit real applicant access code @real-integration', async ({
+    loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    contestedCaseWithHearing,
+    enterAccessCodePage,
+    dashboardPage,
+  }) => {
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await expect(enterAccessCodePage.page).toHaveURL(/\/enter-access-code$/);
+
+    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
     await dashboardPage.verifyDashboardPageContent();
   });
 });
