@@ -18,7 +18,7 @@
     "useUnknownInCatchVariables": false,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node", "@playwright/test", "jest"],
+    "types": ["node", "@playwright/test", "jest", "multer"],
     "lib": ["es2020", "dom", "dom.iterable"],
     "baseUrl": "src/main",
     "paths": {
