@@ -31,7 +31,39 @@ describe('Upload Journey Configuration', () => {
       expect(step.next!({})).toBeNull();
       expect(step.previous!({})).toBe(UploadStepNames.Confidentiality);
       expect(step.validate).toBeUndefined();
-      expect(step.persist).toBeUndefined();
+      expect(step.persist).toBeDefined();
+    });
+
+    it('should persist fdrHearing value', () => {
+      const step = uploadSteps[UploadStepNames.FDR];
+      const existingData = {};
+      const body = { fdrHearing: 'yes' };
+      
+      const result = step.persist!(body, existingData);
+      
+      expect(result).toEqual({ fdrHearing: 'yes' });
+    });
+
+    it('should persist fdrHearing as no', () => {
+      const step = uploadSteps[UploadStepNames.FDR];
+      const existingData = {};
+      const body = { fdrHearing: 'no' };
+      
+      const result = step.persist!(body, existingData);
+      
+      expect(result).toEqual({ fdrHearing: 'no' });
+    });
+
+    it('should preserve existing data when persisting', () => {
+      const step = uploadSteps[UploadStepNames.FDR];
+      const existingData = { fdrHearing: 'no' as const };
+      const body = { fdrHearing: 'yes' };
+      
+      const result = step.persist!(body, existingData);
+      
+      expect(result).toEqual({ 
+        fdrHearing: 'yes' 
+      });
     });
   });
 });
