@@ -2,7 +2,9 @@ import { UploadStepNames } from '../common-constants';
 
 export type UploadStepId = typeof UploadStepNames[keyof typeof UploadStepNames];
 
-export type UploadJourneyData = Record<string, never>;
+export type UploadJourneyData = {
+  fdrHearing?: 'yes' | 'no';
+};
 
 export type UploadStep = {
   template: string;
@@ -28,6 +30,12 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
   [UploadStepNames.FDR]: {
     template: 'upload-journey/fdr',
+    persist: (body: Record<string, unknown>, data: UploadJourneyData) => {
+      return {
+        ...data,
+        fdrHearing: body.fdrHearing as 'yes' | 'no',
+      };
+    },
     next: () => null,
     previous: () => UploadStepNames.Confidentiality,
   },

@@ -1,3 +1,7 @@
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "../macros/getting-help.njk" import gettingHelp %}
+
 {% extends "template.njk" %}
 
 {% block content %}
@@ -5,17 +9,55 @@
     <div class="govuk-grid-column-two-thirds">
       {% if previousStep %}
         <a href="/upload/{{ previousStep }}" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
+      {% else %}
+        <a href="/dashboard" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
       {% endif %}
 
-      <h1 class="govuk-heading-l">FDR</h1>
-
-      <p class="govuk-body">This is a placeholder page for FDR content.</p>
-
       <form method="post">
-        <button type="submit" class="govuk-button" data-module="govuk-button">
-          Continue
-        </button>
+        {{ govukRadios({
+          name: "fdrHearing",
+          fieldset: {
+            legend: {
+              text: "Are you uploading these documents for a Financial Dispute Resolution hearing?",
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          hint: {
+            text: "This should be written on the hearing notice you received from the court."
+          },
+          items: [
+            {
+              value: "yes",
+              text: "Yes",
+              checked: data.fdrHearing === "yes"
+            },
+            {
+              value: "no",
+              text: "No, they are for a different hearing",
+              checked: data.fdrHearing === "no"
+            }
+          ],
+          errorMessage: errors.fdrHearing and {
+            text: errors.fdrHearing
+          }
+        }) }}
+
+        <div class="govuk-button-group">
+          {{ govukButton({
+            text: "Continue"
+          }) }}
+          <a class="govuk-link" href="{{ cancelUrl }}">Cancel</a>
+        </div>
       </form>
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+      <aside class="govuk-prototype-kit-common-templates-related-items" role="complementary">
+        <div class="govuk-!-margin-top-9">
+          {{ gettingHelp(email) }}
+        </div>
+      </aside>
     </div>
   </div>
 {% endblock %}
