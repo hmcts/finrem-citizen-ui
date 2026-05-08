@@ -12,6 +12,7 @@ export class DashboardPage extends BasePage {
   readonly userNameHeader: Locator;
   readonly caseNumberText: Locator;
   readonly divorceAccountHeading: Locator;
+  readonly divorceAccountLink: Locator;
   readonly latestInformationHeading: Locator;
   readonly goToDocumentUploadButton: Locator;
   readonly viewPreviouslyUploadedLink: Locator;
@@ -24,6 +25,7 @@ export class DashboardPage extends BasePage {
     this.userNameHeader = this.page.locator('h2').first();
     this.caseNumberText = this.page.getByText(/Case number/);
     this.divorceAccountHeading = this.page.getByRole('heading', { name: 'This is your financial remedy account' });
+    this.divorceAccountLink = this.page.getByRole('link', { name: 'go to your divorce account (opens in new tab)' });
     this.latestInformationHeading = this.page.getByRole('heading', { name: 'Latest information' });
     this.goToDocumentUploadButton = this.page.getByRole('button', { name: /Go to document upload/ });
     this.viewPreviouslyUploadedLink = this.page.getByRole('link', { name: 'View previously uploaded documents' });
@@ -50,12 +52,29 @@ export class DashboardPage extends BasePage {
       this.gettingHelpHeading,
     ]);
 
-    await this.expectAttributes([{ locator: this.goToDocumentUploadButton, name: 'href', value: '/upload/before-you-start' }]);
+    await this.expectAttributes([
+      { locator: this.goToDocumentUploadButton, name: 'href', value: '/upload/before-you-start' },
+      { locator: this.viewPreviouslyUploadedLink, name: 'href', value: '#' },
+    ]);
   }
 
   // Verify divorce account inset is visible (only when user has divorce case)
   async verifyDivorceAccountInset(): Promise<void> {
     await this.expectVisible([this.divorceAccountHeading]);
+  }
+
+  // Verify divorce account link when the inset is rendered for users with an open divorce case
+  async verifyDivorceAccountLinkWhenPresent(): Promise<void> {
+    if (!(await this.divorceAccountHeading.isVisible().catch(() => false))) {
+      return;
+    }
+
+    await this.expectVisible([this.divorceAccountLink]);
+    await this.expectAttributes([
+      { locator: this.divorceAccountLink, name: 'href', value: 'https://www.apply-divorce.service.gov.uk/' },
+      { locator: this.divorceAccountLink, name: 'target', value: '_blank' },
+      { locator: this.divorceAccountLink, name: 'rel', value: 'noopener noreferrer' },
+    ]);
   }
 
   // Click the document upload button
