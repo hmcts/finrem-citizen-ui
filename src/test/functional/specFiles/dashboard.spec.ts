@@ -18,6 +18,7 @@ test.describe('Dashboard upload journey', () => {
     axeUtils,
   }) => {
     await dashboardPage.verifyDashboardPageContent();
+    await dashboardPage.verifyDivorceAccountLinkWhenPresent();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
