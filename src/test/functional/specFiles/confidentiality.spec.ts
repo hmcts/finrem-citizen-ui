@@ -69,8 +69,8 @@ test.describe('Confidentiality page @PR', () => {
     axeUtils,
   }) => {
     await confidentialityPage.verifyContinueButton();
-    await confidentialityPage.clickContinueAndExpectUploadStep();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await confidentialityPage.clickContinueAndExpectUploadStep();
   });
 
   // AC8: Cancel link is visible and returns user to the dashboard
