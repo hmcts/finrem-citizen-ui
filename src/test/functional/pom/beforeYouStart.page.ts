@@ -21,12 +21,6 @@ export class BeforeYouStartPage extends BasePage {
   readonly unableToSendDetails: Locator;
   readonly unableToSendDetailsText: Locator;
   readonly startNowButton: Locator;
-  readonly gettingHelpHeader: Locator;
-  readonly contactUsForHelpSummary: Locator;
-  readonly contactUsForHelpDetails: Locator;
-  readonly helpEmailLink: Locator;
-  readonly helpTelephoneText: Locator;
-  readonly callChargesLink: Locator;
   
 
   constructor(readonly page: Page) {
@@ -45,14 +39,6 @@ export class BeforeYouStartPage extends BasePage {
       { exact: false }
     );
     this.startNowButton = this.page.getByRole('button', { name: 'Start now' });
-    this.gettingHelpHeader = this.page.getByRole('heading', { name: 'Getting help' });
-    this.contactUsForHelpSummary = this.page.locator('summary', { hasText: 'Contact us for help' });
-    this.contactUsForHelpDetails = this.page.locator('details', { has: this.contactUsForHelpSummary });
-    this.helpEmailLink = this.page.getByRole('link', { name: 'FRCexample@justice.gov.uk' });
-    this.helpTelephoneText = this.page.getByText('0300 123 5577');
-    this.callChargesLink = this.page.getByRole('link', {
-      name: 'Find out about call charges (opens in new tab)',
-    });
   }
 
   // Verify page URL and content
@@ -90,20 +76,12 @@ export class BeforeYouStartPage extends BasePage {
   // Verify both guidance panels start in collapsed state
   async verifyHelpAndGuidanceClosedByDefault(): Promise<void> {
     await expect(this.unableToSendDetails).not.toHaveAttribute('open', '');
-    await expect(this.contactUsForHelpDetails).not.toHaveAttribute('open', '');
+    await this.verifyContactHelpClosedByDefault();
   }
 
   // Expand contact help panel and verify links are properly configured
   async verifyContactHelpContent(): Promise<void> {
-    await this.contactUsForHelpSummary.click();
-    await expect(this.contactUsForHelpDetails).toHaveAttribute('open', '');
-
-    await this.expectVisible([this.helpEmailLink, this.helpTelephoneText, this.callChargesLink]);
-    await this.expectAttributes([
-      { locator: this.helpEmailLink, name: 'href', value: 'mailto:FRCexample@justice.gov.uk' },
-      { locator: this.callChargesLink, name: 'target', value: '_blank' },
-      { locator: this.callChargesLink, name: 'rel', value: 'noopener noreferrer' },
-    ]);
+    await this.verifyContactHelpCoreContent();
   }
 
   // Click back link and verify navigation to dashboard
