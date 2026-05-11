@@ -158,6 +158,11 @@ test.describe('Enter Access Code - Happy Path', () => {
     contestedCaseWithHearing,
     assertionHelpers: _assertionHelpers,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await enterAccessCodePage.submitAccessCode(accessCode);
@@ -174,6 +179,11 @@ test.describe('Enter Access Code - Happy Path', () => {
     enterAccessCodePage,
     contestedCaseWithHearing,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await enterAccessCodePage.submitAccessCode(`  ${accessCode}  `);
@@ -190,6 +200,11 @@ test.describe('Enter Access Code - Happy Path', () => {
     enterAccessCodePage,
     contestedCaseWithHearing,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     const accessCode = contestedCaseWithHearing.respondentAccessCode;
 
     await enterAccessCodePage.submitAccessCode(accessCode);
@@ -206,6 +221,11 @@ test.describe('Enter Access Code - Happy Path', () => {
     enterAccessCodePage,
     contestedCaseWithHearing,
   }) => {
+    test.skip(
+      runRealIntegrationAccessCodeTests,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+    );
+
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     // Enter access code in lowercase
@@ -213,6 +233,27 @@ test.describe('Enter Access Code - Happy Path', () => {
 
     await enterAccessCodePage.submitAccessCode(lowercaseCode);
 
+    await dashboardPage.verifyDashboardPageContent();
+  });
+});
+
+test.describe('[real-integration] Enter Access Code - Happy Path', () => {
+  test.skip(
+    !runRealIntegrationAccessCodeTests,
+    '[real-integration] skipped by default; run with ACCESS_CODE_REAL_INTEGRATION=true when environment is stable'
+  );
+
+  test('Citizen can submit real applicant access code @real-integration', async ({
+    loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    contestedCaseWithHearing,
+    enterAccessCodePage,
+    dashboardPage,
+  }) => {
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await expect(enterAccessCodePage.page).toHaveURL(/\/enter-access-code$/);
+
+    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
     await dashboardPage.verifyDashboardPageContent();
   });
 });
