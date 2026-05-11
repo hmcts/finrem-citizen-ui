@@ -269,7 +269,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       try {
         await addUserToCaseForRole(req.session.caseNumber, user.uid as string, role);
       } catch {
-        res.render(ViewNames.Error);
+        return res.render(ViewNames.Error);
       } 
 
       // Invalidating access code
@@ -285,7 +285,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
           req.session.caseUserName = invalidCaseData.respondentFlags?.partyName || 'Respondent';
         }
       } catch {
-        res.render(ViewNames.Error);
+        return res.render(ViewNames.Error);
       }
 
       // TODO: Send confirmation email if this is a new account setup
