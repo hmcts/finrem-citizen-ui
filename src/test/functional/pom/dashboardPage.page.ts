@@ -20,12 +20,11 @@ export class DashboardPage extends BasePage {
 
   constructor(readonly page: Page) {
     super(page);
-    // Use the first h2 on the page for the user name (dynamic)
-    this.userNameHeader = this.page.locator('h2').first();
+    this.userNameHeader = this.page.getByRole('heading', { name: 'Your financial remedy case' });
     this.caseNumberText = this.page.getByText(/Case number/);
     this.divorceAccountHeading = this.page.getByRole('heading', { name: 'This is your financial remedy account' });
     this.latestInformationHeading = this.page.getByRole('heading', { name: 'Latest information' });
-    this.goToDocumentUploadButton = this.page.getByRole('button', { name: /Go to document upload/ });
+    this.goToDocumentUploadButton = this.page.getByRole('button', { name: /Go to document upload/ }).first();
     this.viewPreviouslyUploadedLink = this.page.getByRole('link', { name: 'View previously uploaded documents' });
     this.iWantToHeading = this.page.getByRole('heading', { name: 'I want to...' });
     this.gettingHelpHeading = this.page.getByRole('heading', { name: 'Getting help' });
@@ -45,7 +44,6 @@ export class DashboardPage extends BasePage {
       this.caseNumberText,
       this.latestInformationHeading,
       this.goToDocumentUploadButton,
-      this.viewPreviouslyUploadedLink,
       this.iWantToHeading,
       this.gettingHelpHeading,
     ]);
@@ -56,6 +54,19 @@ export class DashboardPage extends BasePage {
   // Verify divorce account inset is visible (only when user has divorce case)
   async verifyDivorceAccountInset(): Promise<void> {
     await this.expectVisible([this.divorceAccountHeading]);
+  }
+
+  // Verify divorce account heading is not shown
+  async verifyDivorceAccountHeadingHidden(): Promise<void> {
+    await expect(this.divorceAccountHeading).toBeHidden();
+  }
+
+  async verifyPreviouslyUploadedLinkVisible(): Promise<void> {
+    await expect(this.viewPreviouslyUploadedLink).toBeVisible();
+  }
+
+  async verifyPreviouslyUploadedLinkHidden(): Promise<void> {
+    await expect(this.viewPreviouslyUploadedLink).toBeHidden();
   }
 
   // Click the document upload button

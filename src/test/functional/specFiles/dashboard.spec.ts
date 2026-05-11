@@ -18,6 +18,7 @@ test.describe('Dashboard upload journey', () => {
     axeUtils,
   }) => {
     await dashboardPage.verifyDashboardPageContent();
+    await dashboardPage.verifyDivorceAccountHeadingHidden();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
@@ -48,6 +49,7 @@ test.describe('Dashboard upload journey', () => {
 
     await beforeYouStartPage.goBackToDashboard();
     await dashboardPage.verifyDashboardPageContent();
+    await dashboardPage.verifyDivorceAccountHeadingHidden();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
 
     await dashboardPage.clickGoToDocumentUpload();
