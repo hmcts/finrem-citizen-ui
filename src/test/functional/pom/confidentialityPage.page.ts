@@ -1,6 +1,7 @@
 import { expect, Locator, Page } from '@playwright/test';
 
 import { BasePage } from './basePage.page';
+import { GettingHelpPanel } from './components/gettingHelpPanel.component';
 
 // URL path constants 
 const URL_PATTERNS = {
@@ -29,13 +30,8 @@ export class ConfidentialityPage extends BasePage {
   readonly warningMessage: Locator;
   readonly continueButton: Locator;
   readonly cancelLink: Locator;
-  readonly gettingHelpHeader: Locator;
-  readonly contactUsForHelpSummary: Locator;
-  readonly contactUsForHelpDetails: Locator;
-  readonly helpEmailLink: Locator;
-  readonly helpTelephoneText: Locator;
+  readonly gettingHelp: GettingHelpPanel;
   readonly helpOpeningHours: Locator;
-  readonly callChargesLink: Locator;
 
   constructor(readonly page: Page) {
     super(page);
@@ -74,15 +70,8 @@ export class ConfidentialityPage extends BasePage {
     );
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
     this.cancelLink = this.page.getByRole('link', { name: 'Cancel' });
-    this.gettingHelpHeader = this.page.getByRole('heading', { name: 'Getting help' });
-    this.contactUsForHelpSummary = this.page.locator('summary', { hasText: 'Contact us for help' });
-    this.contactUsForHelpDetails = this.page.locator('details', { has: this.contactUsForHelpSummary });
-    this.helpEmailLink = this.page.getByRole('link', { name: 'FRCexample@justice.gov.uk' });
-    this.helpTelephoneText = this.page.getByText('0300 123 5577');
+    this.gettingHelp = new GettingHelpPanel(this.page);
     this.helpOpeningHours = this.page.getByText('Monday to Friday, 8.30am to 5pm', { exact: false });
-    this.callChargesLink = this.page.getByRole('link', {
-      name: 'Find out about call charges (opens in new tab)',
-    });
   }
 
     // AC1: Verify page URL and core layout elements
@@ -98,8 +87,8 @@ export class ConfidentialityPage extends BasePage {
       this.backLink,
       this.continueButton,
       this.cancelLink,
-      this.gettingHelpHeader,
-      this.contactUsForHelpSummary,
+      this.gettingHelp.heading,
+      this.gettingHelp.summary,
     ]);
   }
 
@@ -164,45 +153,25 @@ export class ConfidentialityPage extends BasePage {
 
   // Keep panel expansion, so tests do not accidentally toggle it closed
   async expandContactHelpIfCollapsed(): Promise<void> {
-    const isExpanded = await this.contactUsForHelpDetails.getAttribute('open');
-    if (isExpanded === null) {
-      await this.contactUsForHelpSummary.click();
-    }
-    await expect(this.contactUsForHelpDetails).toHaveAttribute('open', '');
+    await this.gettingHelp.expandIfCollapsed();
   }
 
   // Collapse helper for tests to assert closed/open behavior
   async collapseContactHelpIfExpanded(): Promise<void> {
-    const isExpanded = await this.contactUsForHelpDetails.getAttribute('open');
-    if (isExpanded !== null) {
-      await this.contactUsForHelpSummary.click();
-    }
-    await expect(this.contactUsForHelpDetails).not.toHaveAttribute('open', '');
+    await this.gettingHelp.collapseIfExpanded();
   }
 
   // AC9: Expand contact help panel and verify all contact details
   async verifyContactHelpContent(): Promise<void> {
-    await this.expandContactHelpIfCollapsed();
-    
-    // Verify contact information is visible when expanded
-    await this.expectVisible([
-      this.helpEmailLink,
-      this.helpTelephoneText,
-      this.helpOpeningHours,
-      this.callChargesLink,
-    ]);
-
-    await expect(this.helpEmailLink).toHaveAttribute('href', 'mailto:FRCexample@justice.gov.uk');
-    await this.expectAttributes([
-      { locator: this.callChargesLink, name: 'href', value: EXTERNAL_LINKS.CALL_CHARGES },
-      { locator: this.callChargesLink, name: 'target', value: '_blank' },
-      { locator: this.callChargesLink, name: 'rel', value: 'noopener noreferrer' },
-    ]);
+    await this.gettingHelp.verifyContactContent({
+      openingHoursLocator: this.helpOpeningHours,
+      callChargesHref: EXTERNAL_LINKS.CALL_CHARGES,
+    });
   }
 
     // Verify the contact help panel starts collapsed
   async verifyContactHelpClosedByDefault(): Promise<void> {
-    await expect(this.contactUsForHelpDetails).not.toHaveAttribute('open', '');
+    await this.gettingHelp.verifyClosedByDefault();
   }
 
 }
