@@ -38,6 +38,9 @@
     },
     "case": {
       "url": "CCD_URL"
+    },
+    "caseDocumentManagement": {
+      "url": "CASE_DOCUMENT_MANAGEMENT_URL"
     }
   }
 }
