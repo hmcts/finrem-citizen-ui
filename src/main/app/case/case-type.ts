@@ -4,3 +4,5 @@ export const enum EVENT_TYPE {
   INVALIDATE_APPLICANT_ACCESS_CODE = 'CUI_invalidateApplicantAccessCode',
   INVALIDATE_RESPONDENT_ACCESS_CODE = 'CUI_invalidateRespondentAccessCode',
 }
+export const JURISDICTION = 'DIVORCE';
+export const CASE_DOCUMENT_MANAGEMENT_SERVICE_URL = 'services.caseDocumentManagement.url';

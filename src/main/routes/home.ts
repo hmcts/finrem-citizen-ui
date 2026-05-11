@@ -1,4 +1,5 @@
 import { Application } from 'express';
+import multer from 'multer';
 import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../app/auth/user';
@@ -6,7 +7,8 @@ import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { CASE_TYPE } from '../app/case/case-type';
 import { CaseRole } from '../app/case/definition';
-import { UserDetails } from '../app/controller/AppRequest';
+import { AppRequest, UserDetails } from '../app/controller/AppRequest';
+import { DocumentManagerController } from '../app/document/DocumentManagerController';
 import { RouteNames } from '../common-constants';
 import { orchestrateHome } from '../functions/util/homePageUtil';
 import { oidcMiddleware } from '../middleware';
@@ -68,4 +70,36 @@ export default function (app: Application): void {
     const caseId = await caseApi.getExistingUserCase(CASE_TYPE);
     res.json({ id: caseId });
   });
+
+  const upload = multer({
+    storage: multer.memoryStorage(),
+  });
+
+  const documentController = new DocumentManagerController(logger);
+
+  app.get('/documents', oidcMiddleware, (req, res) => {
+
+    const uploadedDocuments = req.session.uploadedDocuments ?? [];
+
+    delete req.session.uploadedDocuments;
+
+    res.render('document', {
+      uploadedDocuments,
+    });
+
+  });
+
+  app.post(
+    '/documents/upload',
+    oidcMiddleware,
+    upload.any(),
+    async (req, res, next) => {
+      try {
+        await documentController.post(req as unknown as AppRequest, res);
+        res.redirect('/documents');
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
 }
