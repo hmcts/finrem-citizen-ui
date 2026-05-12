@@ -1,6 +1,18 @@
-import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
+import { DEFAULT_AXE_OPTIONS, expect, test } from '../../../fixtures/fixtures';
 
-const runRealIntegrationCaseNumberTests = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
+/**
+ * INTEGRATION TESTS: Enter Case Number
+ * 
+ * These tests verify case number entry and validation logic.
+ * Real integration tests create actual CCD cases and verify happy-path submissions.
+ * Validation tests are environment-agnostic (no real case needed).
+ * 
+ * Runs on: All environments (validation tests always run)
+ * Runs on: All environments when ACCESS_CODE_REAL_INTEGRATION=true (happy-path tests)
+ * Happy-path tests skipped by default: Requires real CCD integration
+ */
+
+const runIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
 
 const dataFactory = {
   generateDigits: (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join(''),
@@ -10,10 +22,10 @@ const dataFactory = {
   },
 };
 
-test.describe('Enter Case Number - Citizen Happy Path', () => {
+test.describe('[integration] Enter Case Number - Citizen Happy Path', () => {
   test.skip(
-    !runRealIntegrationCaseNumberTests,
-    '[real-integration] skipped by default; requires reachable CCD and ACCESS_CODE_REAL_INTEGRATION=true'
+    !runIntegration,
+    'Integration disabled by default. Set ACCESS_CODE_REAL_INTEGRATION=true for end-to-end case entry flow.'
   );
 
   test.describe.configure({ mode: 'serial' });
@@ -22,7 +34,7 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
    * This test creates a real contested case via API (caseworker creates it with hearing date),
    * then logs in as a citizen and submits the case number.
    */
-  test('Citizen can enter a valid case number created via API', async ({
+  test('[integration] Citizen can enter a valid case number created via API', async ({
     loggedInPage: _loggedInPage,
     basePage,
     enterCaseNumberPage,
@@ -36,7 +48,7 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
     await expect(page).toHaveURL(/\/enter-access-code$/);
   });
 
-  test('Citizen can enter formatted case number (with hyphens)', async ({
+  test('[integration] Citizen can enter formatted case number (with hyphens)', async ({
     loggedInPage: _loggedInPage,
     basePage,
     enterCaseNumberPage,
@@ -54,7 +66,7 @@ test.describe('Enter Case Number - Citizen Happy Path', () => {
   });
 });
 
-test.describe('Enter Case Number Page Verification', () => {
+test.describe('[mock] Enter Case Number Page Verification - Validation Errors', () => {
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
@@ -67,25 +79,25 @@ test.describe('Enter Case Number Page Verification', () => {
 
   // --- VALIDATION ERROR SCENARIOS (no real case needed) ---
 
-  test('Error: Empty input @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
+  test('[mock] Error: Empty input @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber('');
     await enterCaseNumberPage.expectValidationError('Enter your case number');
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
-  test('Error: Boundary check - 15 characters (Lower Boundary - 1) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
+  test('[mock] Error: Boundary check - 15 characters (Lower Boundary - 1) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(15));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
-  test('Error: Boundary check - 21 characters (Upper Boundary + 1) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
+  test('[mock] Error: Boundary check - 21 characters (Upper Boundary + 1) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(21));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
-  test('Error: Invalid format - Letters @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
+  test('[mock] Error: Invalid format - Letters @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber('1234-5678-ABCD-EFGH');
     await enterCaseNumberPage.expectValidationError(
       'Case number must only include numbers 0 to 9 and special characters such as hyphens'
@@ -93,7 +105,7 @@ test.describe('Enter Case Number Page Verification', () => {
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
-  test('Error: Case number not found @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
+  test('[mock] Error: Case number not found @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber('1111222233334444');
     await enterCaseNumberPage.expectValidationError(
       'We cannot find that case number, Enter the case number that you received from the court'
@@ -104,7 +116,7 @@ test.describe('Enter Case Number Page Verification', () => {
   /**
    * Note: 20-digit is valid length but won't exist in DB - tests length validation passes
    */
-  test('Success Logic: 20 digits (Upper Boundary) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
+  test('[mock] Success Logic: 20 digits (Upper Boundary) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(20));
 
     // Confirm that the length-specific validation is NOT triggered

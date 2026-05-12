@@ -1,8 +1,22 @@
-import { DEFAULT_AXE_OPTIONS, expect, test } from '../../fixtures/fixtures';
-import { BasePage } from '../pom/basePage.page';
-import { DashboardPage } from '../pom/dashboardPage.page';
-import { EnterAccessCodePage } from '../pom/enterAccessCode.page';
+import { DEFAULT_AXE_OPTIONS, expect, test } from '../../../fixtures/fixtures';
+import { BasePage } from '../../pom/basePage.page';
+import { DashboardPage } from '../../pom/dashboardPage.page';
+import { EnterAccessCodePage } from '../../pom/enterAccessCode.page';
 
+/**
+ * MOCK-ONLY TESTS: Persistent Session After Re-login
+ * 
+ * These tests verify that authenticated sessions persist across re-login,
+ * multiple tabs, and navigation within the same session.
+ * 
+ * ⚠️ KNOWN DEFECTS: Tests are currently skipped due to backend issue where session data
+ * (username, case role) is not populated on second login when invalidateAccessCode 
+ * step is skipped. Backend fix is in progress.
+ * 
+ * Runs on: Local environment (when ACCESS_CODE_REAL_INTEGRATION=true and backend is fixed)
+ * Skipped by default: Known defect prevents passing; set ACCESS_CODE_REAL_INTEGRATION=true to enable
+ * Does NOT run on: Preview, AAT as mock tests
+ */
 
 interface CaseWithHearing {
   caseId: string;
@@ -43,6 +57,8 @@ test.describe('[mock] Persistent Session After Re-login', () => {
    * 
   * This test depends on mock CCD endpoints for invalidate-access-code events.
   * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
+   * 
+   * ⚠️ KNOWN DEFECT: Session data not populated on second login.
    */
   test('[mock] User lands on dashboard after re-login without re-entering case details @a11y', async ({
     loggedInPage,
@@ -86,6 +102,8 @@ test.describe('[mock] Persistent Session After Re-login', () => {
    * 
   * This test depends on mock CCD endpoints for invalidate-access-code events.
   * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
+   * 
+   * ⚠️ KNOWN DEFECT: Session data not populated on second login.
    */
   test('[mock] Case session persists across multiple tabs in same browser context @a11y', async ({
     loggedInPage: _loggedInPage,
@@ -124,6 +142,8 @@ test.describe('[mock] Persistent Session After Re-login', () => {
    * 
   * This test depends on mock CCD endpoints for invalidate-access-code events.
   * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
+   * 
+   * ⚠️ KNOWN DEFECT: Session data not populated on second login.
    */
   test('[mock] Case session persists when navigating away and back to dashboard @a11y', async ({
     loggedInPage: _loggedInPage,
