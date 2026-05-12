@@ -1,7 +1,7 @@
 import { CaseType, FinremCaseData } from 'app/case/definition';
 import { Request } from 'express';
+import { SessionData } from 'express-session';
 import { LoggerInstance } from 'winston';
-import {SessionData} from 'express-session';
 
 import { getSystemUser } from '../../app/auth/user';
 import { getCaseApi } from '../../app/case/case-api';

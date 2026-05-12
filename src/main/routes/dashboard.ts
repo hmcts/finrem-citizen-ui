@@ -1,9 +1,10 @@
 import { Application, Request, Response } from 'express';
 
 import { UserDetails } from '../app/controller/AppRequest';
+
 import { RouteNames, ViewNames } from '../common-constants';
-import { oidcMiddleware } from '../middleware';
 import { setCaseUserRole } from '../functions/util/homePageUtil';
+import { oidcMiddleware } from '../middleware';
 
 export default function setupDashboardRoute(app: Application): void {
   app.get(RouteNames.dashboard, oidcMiddleware, async (req: Request, res: Response) => {
