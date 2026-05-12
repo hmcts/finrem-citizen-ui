@@ -135,25 +135,22 @@ test.skip(!runIntegration, 'Integration disabled by default...');
 
 ### `integration/enterAccessCode.integration.spec.ts`
 - **Tests:** Happy-path flows (applicant/respondent access code submission) and full end-to-end journey
-- **Label:** `[integration]`
+- **Label:** `[integration-happy-path]`
 - **Setup:** Real case with valid access codes via API
 - **Environment:** All (when `ACCESS_CODE_REAL_INTEGRATION=true`)
 - **Default:** Skipped
 - **Duration:** ~15-30 seconds per test
-- **Note:** Tests skip individually to allow partial failures
+- **Note:** Skipped by default to avoid unstable external dependency failures in local/dev runs; enable explicitly for real integration coverage
 
 ### `integration/enterCaseNumber.integration.spec.ts`
 - **Tests:**
   - **Happy-path:** Real case number submission (requires CCD)
-  - **Validation:** Format & boundary checks (environment-agnostic)
-- **Labels:** `[integration]` (happy-path), `[mock]` (validation)
-- **Setup:** 
-  - Integration: Real case created via API
-  - Validation: Standard auth fixture
-- **Environment:** 
-  - Happy-path: All (when `ACCESS_CODE_REAL_INTEGRATION=true`)
-  - Validation: All (always runs)
+- **Label:** `[integration-happy-path]`
+- **Setup:** Real case created via API
+- **Environment:** All (when `ACCESS_CODE_REAL_INTEGRATION=true`)
+- **Default:** Skipped
 - **Duration:** ~10-15 seconds
+- **Note:** Skipped by default to avoid unstable external dependency failures in local/dev runs; enable explicitly for real integration coverage
 
 ---
 
@@ -256,9 +253,9 @@ All tests are labeled in their `describe()` or `test()` blocks for easy filterin
 - Prefix: `[mock]`
 - Example: `test('[mock] Dashboard sections visible', async () => { ... })`
 
-**Integration Tests:**
-- Prefix: `[integration]`
-- Example: `test('[integration] Access code happy-path', async () => { ... })`
+**Integration Happy-Path Tests:**
+- Prefix: `[integration-happy-path]`
+- Example: `test('[integration-happy-path] Access code happy-path', async () => { ... })`
 
 **Accessibility Tests:**
 - Suffix: `@a11y`
@@ -297,7 +294,7 @@ export ENABLE_TEST_SUPPORT_ROUTES=true
 yarn test:functional -- src/test/functional/specFiles/mock/
 ```
 
-### Integration Tests Skipped: "Integration disabled by default"
+### Integration Happy-Path Tests Skipped: "Skipped by default"
 **Cause:** `ACCESS_CODE_REAL_INTEGRATION` not set to `true`.
 
 **Fix:**

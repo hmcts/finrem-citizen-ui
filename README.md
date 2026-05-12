@@ -214,8 +214,10 @@ yarn test:playwright:a11y
 **Test Organization:**
 
 - **Functional tests are split into two lanes** by environment:
-  - `mock/` — Local-only tests with session injection (requires `ENABLE_TEST_SUPPORT_ROUTES=true`)
-  - `integration/` — All-environment tests with real CCD (requires `ACCESS_CODE_REAL_INTEGRATION=true`)
+  - `mock/` — Local-only tests that depend on mock session/test-support routes.
+  - `integration/` — Integration-lane tests and `integration-happy-path` tests.
+
+`integration-happy-path` tests are skipped by default and require `ACCESS_CODE_REAL_INTEGRATION=true` plus reachable real CCD dependencies.
 
 **For Detailed Test Strategy, Commands, and Setup:**
 

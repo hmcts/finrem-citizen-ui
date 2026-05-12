@@ -6,19 +6,19 @@ import { expect, test } from '../../../fixtures/fixtures';
  * These tests call invalidateAccessCode() which triggers real CCD events.
  * They require a real contested case created via API with valid access codes.
  * 
- * Runs on: All environments (local, preview, AAT) when ACCESS_CODE_REAL_INTEGRATION=true
+ * Runs on: Environments with reachable real CCD dependencies when ACCESS_CODE_REAL_INTEGRATION=true
  * Requires: Real CCD instance reachable, valid case with real access codes
- * Default: Skipped (set ACCESS_CODE_REAL_INTEGRATION=true to enable)
+ * Default: Skipped to keep local/dev runs deterministic and avoid fragile external dependency failures
  */
 
 // INTEGRATION: Happy-path submission calls invalidateAccessCode(), which triggers
 // a CCD event. These tests require a real case + real access-code integration.
-test.describe('[integration] Enter Access Code - Happy Path', () => {
+test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
   const runAccessCodeIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
 
   test.skip(
     !runAccessCodeIntegration,
-    'Integration disabled by default. Set ACCESS_CODE_REAL_INTEGRATION=true for CCD-backed happy-path tests.'
+    'Skipped by default: real CCD happy-path coverage is opt-in. Set ACCESS_CODE_REAL_INTEGRATION=true to enable in preview/AAT or configured integration environments.'
   );
 
   test.beforeEach(async ({
@@ -36,9 +36,9 @@ test.describe('[integration] Enter Access Code - Happy Path', () => {
 
   /**
    * Citizen successfully enters valid applicant access code and views case.
-   * [integration] Requires real CCD-backed invalidation flow.
+  * [integration-happy-path] Requires real CCD-backed invalidation flow.
    */
-  test('[integration] Citizen can enter valid applicant access code and view case summary', async ({
+  test('[integration-happy-path] Citizen can enter valid applicant access code and view case summary', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
@@ -53,9 +53,9 @@ test.describe('[integration] Enter Access Code - Happy Path', () => {
 
   /**
    * Verify whitespace is trimmed from access code.
-   * [integration] Requires real CCD-backed invalidation flow.
+  * [integration-happy-path] Requires real CCD-backed invalidation flow.
    */
-  test('[integration] Success: Access code with leading/trailing whitespace is accepted', async ({
+  test('[integration-happy-path] Success: Access code with leading/trailing whitespace is accepted', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
@@ -69,9 +69,9 @@ test.describe('[integration] Enter Access Code - Happy Path', () => {
 
   /**
    * Citizen successfully enters valid respondent access code and views case.
-   * [integration] Requires real CCD-backed invalidation flow.
+  * [integration-happy-path] Requires real CCD-backed invalidation flow.
    */
-  test('[integration] Citizen can enter valid respondent access code and view case summary', async ({
+  test('[integration-happy-path] Citizen can enter valid respondent access code and view case summary', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
@@ -85,9 +85,9 @@ test.describe('[integration] Enter Access Code - Happy Path', () => {
 
   /**
    * Access codes are case-insensitive.
-   * [integration] Requires real CCD-backed invalidation flow.
+  * [integration-happy-path] Requires real CCD-backed invalidation flow.
    */
-  test('[integration] Access code submission is case-insensitive', async ({
+  test('[integration-happy-path] Access code submission is case-insensitive', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     enterAccessCodePage,
@@ -104,15 +104,15 @@ test.describe('[integration] Enter Access Code - Happy Path', () => {
   });
 });
 
-test.describe('[integration] Enter Access Code - Full Journey', () => {
+test.describe('[integration-happy-path] Enter Access Code - Full Journey', () => {
   const runIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
 
   test.skip(
     !runIntegration,
-    'Integration disabled by default. Set ACCESS_CODE_REAL_INTEGRATION=true for end-to-end case entry and access code flow.'
+    'Skipped by default: end-to-end happy-path requires real CCD and generated access codes. Set ACCESS_CODE_REAL_INTEGRATION=true to enable in integration environments.'
   );
 
-  test('[integration] Citizen can submit applicant access code without pre-injection @integration', async ({
+  test('[integration-happy-path] Citizen can submit applicant access code without pre-injection @integration', async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
     contestedCaseWithHearing,
