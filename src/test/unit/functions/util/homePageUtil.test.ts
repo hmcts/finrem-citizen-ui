@@ -112,6 +112,7 @@ describe('getHomePageForUser', () => {
     expect(mockGetCaseById).toHaveBeenCalledWith('CASE123');
     expect(homepageResult).toEqual({
       caseData: { id: 'CASE123' },
+      caseNumber: 'CASE123',
       url: RouteNames.dashboard,
     });
     expect(getSystemUser).toHaveBeenCalled();
