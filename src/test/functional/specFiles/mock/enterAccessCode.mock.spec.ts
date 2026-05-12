@@ -55,75 +55,86 @@ test.describe('[mock] Enter Access Code - Validation Errors', () => {
   /**
    * MOCK-ONLY: Verify empty access code input validation.
    */
-  test('[mock] Error: Access code is empty', async ({
+  test('[mock] Error: Access code is empty @a11y', async ({
     enterAccessCodePage,
     assertionHelpers: _assertionHelpers,
     page: _page,
+    axeUtils,
   }) => {
     // Submit without entering access code
     await enterAccessCodePage.continueBtn.click();
 
     await enterAccessCodePage.expectValidationError('Enter your access code');
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   /**
    * MOCK-ONLY: Verify access code length validation (too short).
    */
-  test('[mock] Error: Access code is too short', async ({
+  test('[mock] Error: Access code is too short @a11y', async ({
     enterAccessCodePage,
     page: _page,
+    axeUtils,
   }) => {
     await enterAccessCodePage.submitAccessCode('ABC123');
 
     await enterAccessCodePage.expectValidationError('Access code must be 8 characters');
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   /**
    * MOCK-ONLY: Verify access code length validation (too long).
    */
-  test('[mock] Error: Access code is too long', async ({
+  test('[mock] Error: Access code is too long @a11y', async ({
     enterAccessCodePage,
     page: _page,
+    axeUtils,
   }) => {
     await enterAccessCodePage.submitAccessCode('ABCDEF1234');
 
     await enterAccessCodePage.expectValidationError('Access code must be 8 characters');
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   /**
    * MOCK-ONLY: Verify access code format validation (special characters not allowed).
    */
-  test('[mock] Error: Access code contains invalid characters', async ({
+  test('[mock] Error: Access code contains invalid characters @a11y', async ({
     enterAccessCodePage,
     page: _page,
+    axeUtils,
   }) => {
     await enterAccessCodePage.submitAccessCode('ABC-1234');
 
     await enterAccessCodePage.expectValidationError(
       'Access code must only include letters a-z, and numbers 0-9'
     );
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   /**
    * MOCK-ONLY: Verify access code format validation (spaces not allowed).
    */
-  test('[mock] Error: Access code contains spaces', async ({
+  test('[mock] Error: Access code contains spaces @a11y', async ({
     enterAccessCodePage,
     page: _page,
+    axeUtils,
   }) => {
     await enterAccessCodePage.submitAccessCode('ABC 1234');
 
     await enterAccessCodePage.expectValidationError(
       'Access code must only include letters a-z, and numbers 0-9'
     );
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   /**
    * MOCK-ONLY: Verify invalid access code not found in injected case data.
    */
-  test('[mock] Error: Access code not found in case', async ({
+  test('[mock] Error: Access code not found in case @a11y', async ({
     enterAccessCodePage,
     page: _page,
+    axeUtils,
   }) => {
     // Submit a valid format code that doesn't match any code on the case
     await enterAccessCodePage.submitAccessCode('XXXXXXXX');
@@ -131,6 +142,7 @@ test.describe('[mock] Enter Access Code - Validation Errors', () => {
     await enterAccessCodePage.expectValidationError(
       'Access code does not match case number'
     );
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
 });
