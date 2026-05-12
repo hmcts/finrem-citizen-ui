@@ -280,6 +280,12 @@ const buildMockCaseData = (
     respondentAccessCodes: [
       { id: '2', value: { accessCode: respondentCode, createdAt: '2024-01-01', validUntil, isValid } },
     ],
+    applicantFlags: {
+      partyName: 'Test Applicant Name',
+    },
+    respondentFlags: {
+      partyName: 'Test Respondent Name',
+    },
   } as unknown as FinremCaseData);
 
 const buildTestApp = (sessionOverrides: Record<string, unknown> = {}) => {
@@ -331,6 +337,7 @@ describe('POST /enter-access-code route handler', () => {
     jest.clearAllMocks();
     mockAddUsersToCase = jest.fn() as unknown as jest.MockedFunction<(users: unknown[]) => Promise<void>>;
     mockAddUsersToCase.mockResolvedValue(undefined);
+    mockTriggerEvent.mockResolvedValue(buildMockCaseData());
     jest.mocked(getCaseApi).mockReturnValue({ addUsersToCase: mockAddUsersToCase, triggerEvent: mockTriggerEvent } as unknown as ReturnType<typeof getCaseApi>);
     jest.mocked(getSystemUser).mockResolvedValue({
       accessToken: 'mock-access', sub: '123', id: 'system-user',
@@ -395,6 +402,14 @@ describe('POST /enter-access-code route handler', () => {
     const caseData = buildMockCaseData();
     const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
       .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/dashboard');
+  });
+
+  it('redirects to dashboard for respondent access code', async () => {
+    const caseData = buildMockCaseData();
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+      .post('/enter-access-code').send({ accessCode: 'RSPCODE1' });
     expect(res.status).toBe(302);
     expect(res.header.location).toBe('/dashboard');
   });

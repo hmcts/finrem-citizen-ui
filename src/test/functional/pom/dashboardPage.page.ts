@@ -1,6 +1,7 @@
 import { expect, Locator, Page } from '@playwright/test';
 
 import { BasePage } from './basePage.page';
+import { GettingHelpPanel } from './components/gettingHelpPanel.component';
 
 // URL path constants for clarity and maintainability
 const URL_PATTERNS = {
@@ -9,23 +10,53 @@ const URL_PATTERNS = {
 };
 
 export class DashboardPage extends BasePage {
-  readonly dashboardHeader: Locator;
-  readonly placeholderBodyText: Locator;
-  readonly redirectedBodyText: Locator;
-  readonly uploadDocumentsHeader: Locator;
-  readonly uploadDocumentsText: Locator;
+  readonly userNameHeader: Locator;
+  readonly caseNumberText: Locator;
+  readonly divorceAccountHeading: Locator;
+  readonly divorceAccountLink: Locator;
+  readonly latestInformationHeading: Locator;
+  readonly latestInformationText: Locator;
+  readonly warningText: Locator;
   readonly goToDocumentUploadButton: Locator;
+  readonly viewPreviouslyUploadedLink: Locator;
+  readonly iWantToHeading: Locator;
+  readonly templatesLink: Locator;
+  readonly courtExpectationsLink: Locator;
+  readonly adviceNowLink: Locator;
+  readonly courtBundleLink: Locator;
+  readonly gettingHelp: GettingHelpPanel;
 
   constructor(readonly page: Page) {
     super(page);
-    this.dashboardHeader = this.page.getByRole('heading', { name: 'Financial Remedy Dashboard' });
-    this.placeholderBodyText = this.page.getByText('This is a placeholder dashboard page.');
-    this.redirectedBodyText = this.page.getByText(
-      'You have been redirected here because you already have a linked Financial Remedy case.'
+    this.userNameHeader = this.page.getByRole('heading', { name: 'Your financial remedy case' });
+    this.caseNumberText = this.page.getByText(/Case number/);
+    this.divorceAccountHeading = this.page.getByRole('heading', { name: 'This is your financial remedy account' });
+    this.divorceAccountLink = this.page.getByRole('link', { name: 'go to your divorce account (opens in new tab)' });
+    this.latestInformationHeading = this.page.getByRole('heading', { name: 'Latest information' });
+    this.latestInformationText = this.page.getByText(
+      'You are involved in a contested financial remedy case.',
+      { exact: false }
     );
-    this.uploadDocumentsHeader = this.page.getByRole('heading', { name: 'Upload documents' });
-    this.uploadDocumentsText = this.page.getByText('Upload documents to support your financial remedy case.');
-    this.goToDocumentUploadButton = this.page.getByRole('button', { name: 'Go to document upload' });
+    this.warningText = this.page.getByText(
+      'Do not use this service to submit applications or anything else that needs a court response.',
+      { exact: false }
+    );
+    this.goToDocumentUploadButton = this.page.getByRole('button', { name: /Go to document upload/ }).first();
+    this.viewPreviouslyUploadedLink = this.page.getByRole('link', { name: 'View previously uploaded documents' });
+    this.iWantToHeading = this.page.getByRole('heading', { name: 'I want to...' });
+    this.templatesLink = this.page.getByRole('link', {
+      name: 'Find templates for the most commonly requested documents (opens in new tab)',
+    });
+    this.courtExpectationsLink = this.page.getByRole('link', {
+      name: 'Find out what to expect coming to a court (opens in new tab)',
+    });
+    this.adviceNowLink = this.page.getByRole('link', {
+      name: 'Read advice about representing myself in court from AdviceNow (opens in new tab)',
+    });
+    this.courtBundleLink = this.page.getByRole('link', {
+      name: 'Read advice about preparing a court bundle from Judiciary UK (opens in new tab)',
+    });
+    this.gettingHelp = new GettingHelpPanel(this.page);
   }
 
   // Navigate to the dashboard
@@ -38,15 +69,57 @@ export class DashboardPage extends BasePage {
     await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
 
     await this.expectVisible([
-      this.dashboardHeader,
-      this.uploadDocumentsHeader,
+      this.userNameHeader,
+      this.caseNumberText,
+      this.latestInformationHeading,
+      this.latestInformationText,
+      this.warningText,
       this.goToDocumentUploadButton,
-      this.placeholderBodyText,
-      this.redirectedBodyText,
-      this.uploadDocumentsText,
+      this.viewPreviouslyUploadedLink,
+      this.iWantToHeading,
+      this.templatesLink,
+      this.courtExpectationsLink,
+      this.adviceNowLink,
+      this.courtBundleLink,
+      this.gettingHelp.heading,
+      this.gettingHelp.summary,
     ]);
 
-    await this.expectAttributes([{ locator: this.goToDocumentUploadButton, name: 'href', value: '/upload/before-you-start' }]);
+    await this.expectAttributes([
+      { locator: this.goToDocumentUploadButton, name: 'href', value: '/upload/before-you-start' },
+      { locator: this.templatesLink, name: 'target', value: '_blank' },
+      { locator: this.templatesLink, name: 'rel', value: 'noopener noreferrer' },
+      { locator: this.courtExpectationsLink, name: 'target', value: '_blank' },
+      { locator: this.courtExpectationsLink, name: 'rel', value: 'noopener noreferrer' },
+      { locator: this.adviceNowLink, name: 'target', value: '_blank' },
+      { locator: this.adviceNowLink, name: 'rel', value: 'noopener noreferrer' },
+      { locator: this.courtBundleLink, name: 'target', value: '_blank' },
+      { locator: this.courtBundleLink, name: 'rel', value: 'noopener noreferrer' },
+    ]);
+  }
+
+  // Verify divorce account inset is visible (only when user has divorce case)
+  async verifyDivorceAccountInset(): Promise<void> {
+    await this.expectVisible([this.divorceAccountHeading, this.divorceAccountLink]);
+
+    await this.expectAttributes([
+      { locator: this.divorceAccountLink, name: 'href', value: 'https://www.apply-divorce.service.gov.uk/' },
+      { locator: this.divorceAccountLink, name: 'target', value: '_blank' },
+      { locator: this.divorceAccountLink, name: 'rel', value: 'noopener noreferrer' },
+    ]);
+  }
+
+  // Verify divorce account heading is not shown
+  async verifyDivorceAccountHeadingHidden(): Promise<void> {
+    await expect(this.divorceAccountHeading).toBeHidden();
+  }
+
+  async verifyPreviouslyUploadedLinkVisible(): Promise<void> {
+    await expect(this.viewPreviouslyUploadedLink).toBeVisible();
+  }
+
+  async verifyPreviouslyUploadedLinkHidden(): Promise<void> {
+    await expect(this.viewPreviouslyUploadedLink).toBeHidden();
   }
 
   // Click the document upload button

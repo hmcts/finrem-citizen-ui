@@ -7,6 +7,13 @@ import { taskListFormItems } from '../../functions/task-list/task-list-form-item
 import { taskListWarningMessage } from '../../functions/task-list/task-list-warning-message';
 import { taskStatus } from '../../functions/task-list/task-status';
 
+const formatCaseNumber = (caseNumber: string): string => {
+  if (!caseNumber) {
+    return '';
+  }
+  return caseNumber.replace(/(\d{4})(?=\d)/g, '$1-');
+};
+
 export class Nunjucks {
   constructor(public developmentMode: boolean) {
     this.developmentMode = developmentMode;
@@ -27,6 +34,7 @@ export class Nunjucks {
     env.addFilter('taskStatus', taskStatus);
     env.addFilter('taskListWarningMessage', taskListWarningMessage);
     env.addFilter('taskListFormItems', taskListFormItems);
+    env.addFilter('formatCaseNumber', formatCaseNumber);
 
     app.use((req, res, next) => {
       res.locals.pagePath = req.path;
