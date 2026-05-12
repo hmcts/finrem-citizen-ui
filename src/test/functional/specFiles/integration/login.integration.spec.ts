@@ -1,18 +1,17 @@
 import { DEFAULT_AXE_OPTIONS, expect, test } from '../../../fixtures/fixtures';
 
 /**
- * MOCK-ONLY TESTS: Authenticated User Journey
+ * INTEGRATION TESTS: Authenticated User Journey
  * 
  * These tests verify the login flow, authentication, and sign-out behavior.
  * They rely on IDAM integration and the loggedInPage fixture for automatic setup.
  * 
- * Runs on: Local environment with IDAM integration
- * Does NOT run on: Preview, AAT as mock tests
+ * Runs on: Environments with working IDAM integration
  */
 
 const idamAuthEntryUrl = /https:\/\/hmcts-access\.[^/]+\/(sign-in-or-create|enter-email)(\?.*)?$/;
 
-test.describe('[mock] Authenticated Citizen User Journey Verification', () => {
+test.describe('[integration] Authenticated Citizen User Journey Verification', () => {
   /**
    * AUTOMATIC SETUP (via beforeEach)
    * By requesting 'loggedInPage', we trigger the fixtures file:
@@ -32,12 +31,12 @@ test.describe('[mock] Authenticated Citizen User Journey Verification', () => {
     await basePage.verifyGlobalHeaderAndFooter();
   });
 
-  test('[mock] User can see access case number page after successful login @a11y', async ({ axeUtils: _axeUtils }) => {
+  test('[integration] User can see access case number page after successful login @a11y', async ({ axeUtils: _axeUtils }) => {
     // No logic assertions here since the beforeEach already confirms we're on the correct page.
     await _axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
-  test('[mock] User can sign out via the UI and is redirected to IDAM @a11y', async ({ page, basePage, idamPage, axeUtils: _axeUtils }) => {
+  test('[integration] User can sign out via the UI and is redirected to IDAM @a11y', async ({ page, basePage, idamPage, axeUtils: _axeUtils }) => {
     // Perform the UI-driven sign out
     await basePage.signOut();
 
@@ -62,7 +61,7 @@ test.describe('[mock] Authenticated Citizen User Journey Verification', () => {
     await _axeUtils.audit(DEFAULT_AXE_OPTIONS); 
   });
 
-  test('[mock] Verify Global Layout elements: Header, Footer @a11y', async ({ page, basePage, axeUtils: _axeUtils }) => {
+  test('[integration] Verify Global Layout elements: Header, Footer @a11y', async ({ page, basePage, axeUtils: _axeUtils }) => {
     // Verify footer links navigate correctly
     await basePage.licenceLink.click();
     await basePage.verifyUrl(/.*open-government-licence.*/);
