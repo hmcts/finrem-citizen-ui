@@ -20,7 +20,7 @@ export default function (app: Application): void {
     const result = await orchestrateHome(user, logger);
     if (result.caseData) {
       req.session.caseData = result.caseData;
-      req.session.caseNumber = result.caseId;
+      req.session.caseNumber = result.caseNumber;
     }
     if (result.caseNumber) {
       req.session.caseNumber = result.caseNumber;

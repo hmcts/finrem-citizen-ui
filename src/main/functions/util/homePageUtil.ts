@@ -34,7 +34,7 @@ export async function getHomePageForUser(userDetails: UserDetails): Promise<User
     const caseData = await caseworkerUserApi.getCaseById(caseId);
 
     logger.info('Routing to : ', RouteNames.dashboard);
-    return { caseData, caseNumber: caseId, url: RouteNames.dashboard, caseId };
+    return { caseData, caseNumber: caseId, url: RouteNames.dashboard };
   } else {
     logger.info('Routing to : ', RouteNames.enterCaseNumber);
     return { url: RouteNames.enterCaseNumber };
