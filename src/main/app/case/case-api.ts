@@ -33,6 +33,11 @@ export class CaseApi {
     return String(userCases[0].id);
   }
 
+  public async getUsersRoleOnCase(caseId: string, userId: string): Promise<CaseRole | undefined> {
+    const response = await this.apiClient.getCaseUserRoles({ case_ids: [caseId], user_ids: [userId] });
+    return response.case_users[0]?.case_role;
+  }
+
   public async triggerEvent(caseId: string, partialCaseData: Partial<FinremCaseData>, eventName: string): Promise<FinremCaseData> {
     return this.apiClient.sendEvent(caseId, partialCaseData, eventName);
   }

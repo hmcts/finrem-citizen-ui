@@ -23,6 +23,7 @@ export const PrivateRoutes = {
   enterAccessCode: '/enter-access-code',
   taskListUpload: '/task-list-upload-dashboard',
   uploadJourney: '/upload',
+  getCaseRole: '/getCaseRole',
 } as const;
 
 export const RouteNames = {
@@ -56,4 +57,5 @@ export const UrlEndPoints = {
   CaseId: (caseId: string) => `/cases/${caseId}`,
   SearchCases: (caseType: string) => `/searchCases?ctid=${caseType}`,
   UploadDocument: '/cases/documents',
+  CaseRoles: 'case-users/search',
 } as const;

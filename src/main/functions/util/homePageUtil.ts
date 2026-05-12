@@ -1,6 +1,7 @@
 import { CaseType, FinremCaseData } from 'app/case/definition';
 import { Request } from 'express';
 import { LoggerInstance } from 'winston';
+import {SessionData} from 'express-session';
 
 import { getSystemUser } from '../../app/auth/user';
 import { getCaseApi } from '../../app/case/case-api';
@@ -33,7 +34,7 @@ export async function getHomePageForUser(userDetails: UserDetails): Promise<User
     const caseData = await caseworkerUserApi.getCaseById(caseId);
 
     logger.info('Routing to : ', RouteNames.dashboard);
-    return { caseData, caseNumber: caseId, url: RouteNames.dashboard };
+    return { caseData, caseNumber: caseId, url: RouteNames.dashboard, caseId };
   } else {
     logger.info('Routing to : ', RouteNames.enterCaseNumber);
     return { url: RouteNames.enterCaseNumber };
@@ -88,4 +89,15 @@ export async function loadCaseAndReloadSession(
     logger.error(`Failed to load case ${caseId} from CCD:`, error);
     throw error;
   }
+}
+
+export async function setCaseUserRole(session: SessionData): Promise<void> {
+  const logger: LoggerInstance = console as unknown as LoggerInstance;
+  const user = session.user as UserDetails;
+  if (session.caseNumber && !user.caseRole) {
+    const caseApi = getCaseApi(user, logger);
+    const caseRole = await caseApi.getUsersRoleOnCase(session.caseNumber, user.id);
+    user.caseRole = caseRole;
+  }
+  logger.info('case role is ', user.caseRole);
 }

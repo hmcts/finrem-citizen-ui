@@ -9,3 +9,8 @@ export interface CaseAssignedUserRole {
   user_id: string;
   case_role: CaseRole;
 }
+
+export interface SearchCaseAssignedUserRolesRequest {
+  case_ids: string[];
+  user_ids: string[];
+}

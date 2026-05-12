@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { Request } from 'express';
 import { LoggerInstance } from 'winston';
+import { SessionData } from 'express-session';
 
 import { getSystemUser } from '../../../../main/app/auth/user';
 import { getCaseApi } from '../../../../main/app/case/case-api';
@@ -114,6 +115,7 @@ describe('getHomePageForUser', () => {
       caseData: { id: 'CASE123' },
       caseNumber: 'CASE123',
       url: RouteNames.dashboard,
+      caseId: 'CASE123',
     });
     expect(getSystemUser).toHaveBeenCalled();
   });
@@ -147,7 +149,7 @@ describe('getHomePageForUser', () => {
     expect(result).toEqual({
       url: RouteNames.dashboard,
       caseData: { id: 'CASE123' },
-      caseNumber: 'NFD123'
+      caseId: 'NFD123',
     });
   });
 
@@ -167,7 +169,7 @@ describe('getHomePageForUser', () => {
     expect(result).toEqual({
       url: RouteNames.dashboard,
       caseData: { id: 'CASE123' },
-      caseNumber: 'CASE123'
+      caseId: 'CASE123',
     });
   });
 
@@ -284,5 +286,64 @@ describe('loadCaseAndReloadSession', () => {
       'Failed to load case 1234567890123456 from CCD:',
       systemUserError
     );
+  });
+});
+
+describe('setCaseUserRole', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('sets caseRole when caseNumber exists and caseRole is undefined', async () => {
+    const session = {
+      caseNumber: 'CASE123',
+      user: {
+        id: 'user-1',
+      },
+    } as unknown as SessionData;
+
+    const getUsersRoleOnCase = jest.fn().mockImplementation(
+      async () => 'APPLICANT'
+    );
+
+    jest.mocked(getCaseApi).mockReturnValue({
+      getUsersRoleOnCase,
+    } as unknown as ReturnType<typeof getCaseApi>);
+
+    await homePageUtil.setCaseUserRole(session);
+
+    expect(getUsersRoleOnCase).toHaveBeenCalledWith('CASE123', 'user-1');
+    const typedSession = session as unknown as {
+      user: { caseRole?: string };
+    };
+
+    expect(typedSession.user.caseRole).toBe('APPLICANT');
+
+  });
+
+  test('does nothing when caseNumber is missing', async () => {
+    const session = {
+      user: {
+        id: 'user-2',
+      },
+    } as unknown as SessionData;
+
+    await homePageUtil.setCaseUserRole(session);
+
+    expect(getCaseApi).not.toHaveBeenCalled();
+  });
+
+  test('does nothing when caseRole is already set', async () => {
+    const session = {
+      caseNumber: 'CASE456',
+      user: {
+        id: 'user-3',
+        caseRole: 'RESPONDENT',
+      },
+    } as unknown as SessionData;
+
+    await homePageUtil.setCaseUserRole(session);
+
+    expect(getCaseApi).not.toHaveBeenCalled();
   });
 });

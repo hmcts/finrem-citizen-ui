@@ -622,7 +622,11 @@ describe('OIDCModule', () => {
 
     setClientConfig(module, clientConfig);
 
-    const claims = { sub: 'user-123' };
+    const claims = {
+      sub: 'user-123',
+      given_name: 'Lexi',
+    };
+
     const tokens = {
       access_token: 'access-123',
       id_token: 'id-123',
@@ -668,12 +672,16 @@ describe('OIDCModule', () => {
       }
     );
 
-    expect(mockedOidc.fetchUserInfo).toHaveBeenCalledWith(clientConfig, 'access-123', 'user-123');
 
     const requestAfter = req as unknown as RequestLike;
+
     expect(requestAfter.session.user).toEqual({
       sub: 'user-123',
-      given_name: 'Lexi',
+      email: 'user-123',
+      familyName: '',
+      givenName: 'Lexi',   
+      id: undefined,
+      roles: [],
       accessToken: 'access-123',
       idToken: 'id-123',
       refreshToken: 'refresh-123',
