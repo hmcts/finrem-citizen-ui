@@ -159,8 +159,8 @@ test.describe('Enter Access Code - Happy Path', () => {
     assertionHelpers: _assertionHelpers,
   }) => {
     test.skip(
-      runRealIntegrationAccessCodeTests,
-      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+      !runAccessCodeIntegration,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=false'
     );
 
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
@@ -180,8 +180,8 @@ test.describe('Enter Access Code - Happy Path', () => {
     contestedCaseWithHearing,
   }) => {
     test.skip(
-      runRealIntegrationAccessCodeTests,
-      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+      !runAccessCodeIntegration,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=false'
     );
 
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
@@ -201,8 +201,8 @@ test.describe('Enter Access Code - Happy Path', () => {
     contestedCaseWithHearing,
   }) => {
     test.skip(
-      runRealIntegrationAccessCodeTests,
-      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+      !runAccessCodeIntegration,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=false'
     );
 
     const accessCode = contestedCaseWithHearing.respondentAccessCode;
@@ -222,8 +222,8 @@ test.describe('Enter Access Code - Happy Path', () => {
     contestedCaseWithHearing,
   }) => {
     test.skip(
-      runRealIntegrationAccessCodeTests,
-      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=true requests real CCD access-code flow'
+      !runAccessCodeIntegration,
+      '[mock] disabled because ACCESS_CODE_REAL_INTEGRATION=false'
     );
 
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
@@ -238,6 +238,8 @@ test.describe('Enter Access Code - Happy Path', () => {
 });
 
 test.describe('[real-integration] Enter Access Code - Happy Path', () => {
+  const runRealIntegrationAccessCodeTests = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
+
   test.skip(
     !runRealIntegrationAccessCodeTests,
     '[real-integration] skipped by default; run with ACCESS_CODE_REAL_INTEGRATION=true when environment is stable'
