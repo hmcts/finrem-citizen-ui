@@ -30,6 +30,13 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
   [UploadStepNames.FDR]: {
     template: 'upload-journey/fdr',
+    validate: (body: Record<string, unknown>) => {
+      const errors: Record<string, string> = {};
+      if (!body.fdrHearing) {
+        errors.fdrHearing = 'Select yes if you are uploading these documents for a Financial Dispute Resolution hearing';
+      }
+      return errors;
+    },
     persist: (body: Record<string, unknown>, data: UploadJourneyData) => {
       return {
         ...data,
