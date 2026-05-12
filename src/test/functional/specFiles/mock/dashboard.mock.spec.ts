@@ -1,7 +1,16 @@
-import { DEFAULT_AXE_OPTIONS, test } from '../../fixtures/fixtures';
+import { DEFAULT_AXE_OPTIONS, test } from '../../../fixtures/fixtures';
 
+/**
+ * MOCK-ONLY TESTS: Dashboard Upload Journey
+ * 
+ * These tests verify dashboard page layout, navigation, and upload journey flow.
+ * They rely on authenticated sessions via the standard loggedInPage fixture.
+ * 
+ * Runs on: Local environment (requires authentication/session)
+ * Does NOT run on: Preview, AAT as mock tests (can run as general auth tests)
+ */
 
-test.describe('Dashboard upload journey', () => {
+test.describe('[mock] Dashboard upload journey', () => {
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
@@ -13,7 +22,7 @@ test.describe('Dashboard upload journey', () => {
     await basePage.verifyGlobalHeaderAndFooter();
   });
 
-  test('Dashboard sections and upload document button visible and accessible @a11y', async ({
+  test('[mock] Dashboard sections and upload document button visible and accessible @a11y', async ({
     dashboardPage,
     axeUtils,
   }) => {
@@ -22,7 +31,7 @@ test.describe('Dashboard upload journey', () => {
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
-  test('Before-you-start sections and help details are visible and accessible @a11y', async ({
+  test('[mock] Before-you-start sections and help details are visible and accessible @a11y', async ({
     dashboardPage,
     beforeYouStartPage,
     axeUtils,
@@ -36,7 +45,7 @@ test.describe('Dashboard upload journey', () => {
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
-  test('Before-you-start supports back navigation and start-now progression @a11y', async ({
+  test('[mock] Before-you-start supports back navigation and start-now progression @a11y', async ({
     dashboardPage,
     beforeYouStartPage,
     axeUtils,
