@@ -264,17 +264,20 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
         accessCode: trimmedAccessCode,
       });
       
+      // Remove hyphens from case number for CCD API calls
+      const caseId = req.session.caseNumber?.replace(/-/g, '') || '';
+      
       // Assigning user to case
       const user = req.session.user as UserDetails;
       try {
-        await addUserToCaseForRole(req.session.caseNumber, user.uid as string, role);
+        await addUserToCaseForRole(caseId, user.uid as string, role);
       } catch {
         return res.render(ViewNames.Error);
       } 
 
       // Invalidating access code
       try {
-        const invalidCaseData = await invalidateAccessCode(caseData, trimmedAccessCode, role, req.session.caseNumber);
+        const invalidCaseData = await invalidateAccessCode(caseData, trimmedAccessCode, role, caseId);
         req.session.caseData = invalidCaseData;
         req.session.caseRole = role;
         
