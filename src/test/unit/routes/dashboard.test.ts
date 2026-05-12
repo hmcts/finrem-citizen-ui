@@ -1,34 +1,52 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { Application, Request, Response } from 'express';
+import type { Application, NextFunction, Request, Response } from 'express';
 
 import { CaseRole } from '../../../main/app/case/definition';
 import { RouteNames, ViewNames } from '../../../main/common-constants';
 import setupDashboardRoute from '../../../main/routes/dashboard';
 
+
+jest.mock('../../../main/functions/util/homePageUtil', () => ({
+  setCaseUserRole: jest.fn().mockImplementation(async () => {}),
+}));
+
+jest.mock('../../../main/middleware', () => ({
+  oidcMiddleware: jest.fn(
+    (_req: Request, _res: Response, next: NextFunction) => next()
+  ),
+}));
+
 describe('Dashboard Route', () => {
   let mockGet: jest.Mock;
-  let handler: (req: Request, res: Response) => void;
+  let handler: (req: Request, res: Response) => Promise<void>;
 
-  // Creates mock req/res, calls the route handler, and returns res for assertions
-  function callHandler(session: Record<string, unknown> = {}) {
+  async function callHandler(session: Record<string, unknown> = {}) {
     const req = { session } as unknown as Request;
     const res = { render: jest.fn() } as unknown as Response;
-    handler(req, res);
+
+    await handler(req, res);
     return res;
   }
 
   beforeEach(() => {
+    jest.clearAllMocks();
+
     mockGet = jest.fn();
     setupDashboardRoute({ get: mockGet } as unknown as Application);
+
     handler = mockGet.mock.calls[0][2] as typeof handler;
   });
 
   it('should register dashboard route with oidc middleware', () => {
-    expect(mockGet).toHaveBeenCalledWith(RouteNames.dashboard, expect.any(Function), expect.any(Function));
+    expect(mockGet).toHaveBeenCalledWith(
+      RouteNames.dashboard,
+      expect.any(Function),
+      expect.any(Function)
+    );
   });
 
-  it('should render dashboard view with applicant name from caseData', () => {
-    const res = callHandler({
+  it('should render dashboard view with applicant name from caseData', async () => {
+    const res = await callHandler({
       caseNumber: '1234-5678-9012-3456',
       user: { hasNFDCase: true },
       caseRole: CaseRole.APPLICANT,
@@ -50,8 +68,8 @@ describe('Dashboard Route', () => {
     );
   });
 
-  it('should render dashboard view with respondent name from caseData', () => {
-    const res = callHandler({
+  it('should render dashboard view with respondent name from caseData', async () => {
+    const res = await callHandler({
       caseNumber: '1234-5678-9012-3456',
       user: { hasNFDCase: false },
       caseRole: CaseRole.RESPONDENT,
@@ -72,8 +90,8 @@ describe('Dashboard Route', () => {
     );
   });
 
-  it('should pass undefined when session data is missing', () => {
-    const res = callHandler();
+  it('should pass undefined when session data is missing', async () => {
+    const res = await callHandler();
 
     expect(res.render).toHaveBeenCalledWith(
       ViewNames.Dashboard,
@@ -86,8 +104,8 @@ describe('Dashboard Route', () => {
     );
   });
 
-  it('should use role fallback when partyName is missing', () => {
-    const res = callHandler({
+  it('should use role fallback when partyName is missing', async () => {
+    const res = await callHandler({
       caseNumber: '1234-5678-9012-3456',
       caseRole: CaseRole.APPLICANT,
       caseUserName: 'Applicant',
@@ -105,8 +123,8 @@ describe('Dashboard Route', () => {
     );
   });
 
-  it('should set hasDivorceCase to true when user has NFD case (shows blue divorce account box)', () => {
-    const res = callHandler({
+  it('should set hasDivorceCase to true when user has NFD case (shows blue divorce account box)', async () => {
+    const res = await callHandler({
       caseNumber: '1234-5678-9012-3456',
       user: { hasNFDCase: true },
       caseRole: CaseRole.APPLICANT,
@@ -125,8 +143,8 @@ describe('Dashboard Route', () => {
     );
   });
 
-  it('should set hasDivorceCase to false when user does not have NFD case (hides blue divorce account box)', () => {
-    const res = callHandler({
+  it('should set hasDivorceCase to false when user does not have NFD case (hides blue divorce account box)', async () => {
+    const res = await callHandler({
       caseNumber: '1234-5678-9012-3456',
       user: { hasNFDCase: false },
       caseRole: CaseRole.RESPONDENT,
@@ -145,8 +163,8 @@ describe('Dashboard Route', () => {
     );
   });
 
-  it('should default hasDivorceCase to false when user object is missing', () => {
-    const res = callHandler({
+  it('should default hasDivorceCase to false when user object is missing', async () => {
+    const res = await callHandler({
       caseNumber: '1234-5678-9012-3456',
       caseUserName: 'Test User',
     });

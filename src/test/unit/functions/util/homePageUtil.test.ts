@@ -115,7 +115,6 @@ describe('getHomePageForUser', () => {
       caseData: { id: 'CASE123' },
       caseNumber: 'CASE123',
       url: RouteNames.dashboard,
-      caseId: 'CASE123',
     });
     expect(getSystemUser).toHaveBeenCalled();
   });
@@ -149,7 +148,7 @@ describe('getHomePageForUser', () => {
     expect(result).toEqual({
       url: RouteNames.dashboard,
       caseData: { id: 'CASE123' },
-      caseId: 'NFD123',
+      caseNumber: 'NFD123',
     });
   });
 
@@ -169,7 +168,7 @@ describe('getHomePageForUser', () => {
     expect(result).toEqual({
       url: RouteNames.dashboard,
       caseData: { id: 'CASE123' },
-      caseId: 'CASE123',
+      caseNumber: 'CASE123',
     });
   });
 
