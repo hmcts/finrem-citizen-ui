@@ -228,7 +228,7 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as Request, mockRes as Response);
 
       expect(mockReq.session?.uploadJourneyData).toEqual({ fdrHearing: 'yes' });
-      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/fdr`);
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
     });
 
     it('should persist FDR hearing selection as no', () => {
@@ -245,7 +245,7 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as Request, mockRes as Response);
 
       expect(mockReq.session?.uploadJourneyData).toEqual({ fdrHearing: 'no' });
-      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/fdr`);
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
     });
   });
 
