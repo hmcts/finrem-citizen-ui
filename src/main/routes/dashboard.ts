@@ -1,7 +1,6 @@
 import { Application, Request, Response } from 'express';
 
 import { UserDetails } from '../app/controller/AppRequest';
-
 import { RouteNames, ViewNames } from '../common-constants';
 import { setCaseUserRole } from '../functions/util/homePageUtil';
 import { oidcMiddleware } from '../middleware';
