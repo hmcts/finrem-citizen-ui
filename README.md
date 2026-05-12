@@ -272,26 +272,13 @@ ACCESS_CODE_REAL_INTEGRATION=false
 ENABLE_TEST_SUPPORT_ROUTES=true
 ```
 
-With that setup:
+How the skip logic works:
 
-- mock suites run locally when `CCD_URL` points to `http://localhost:4100`
-- real-integration suites remain visible in Playwright output but are skipped by default
+- Local runs: `[mock]` tests run when `CCD_URL` points to `http://localhost:4100` and test-support routes are enabled; `[real-integration]` tests stay skipped unless `ACCESS_CODE_REAL_INTEGRATION=true`.
+- Preview runs: `[mock]` tests that depend on local mock CCD, seeded session injection, or other local-only setup are skipped by design; `[real-integration]` tests stay skipped unless explicitly opted in and the preview environment has the required backing services.
+- AAT runs: the same rules apply, but AAT usually points at real services rather than the local mock API, so mock-only flows are not expected to execute there.
 
-### Why Mock Tests Do Not Run In Preview Or AAT
-
-This is intentional and enforced by shared Playwright fixtures.
-
-Mock tests are designed for local deterministic runs only and require both of the following:
-
-- `CCD_URL` (or `CCD_DATA_STORE_API_URL`) set to `http://localhost:4100`
-- test-support session injection route `'/__test/inject-case-session'` available
-
-In preview/AAT:
-
-- CCD URLs point to real environment services, not the local mock API
-- test-support routes are commonly disabled or restricted
-
-As a result, mock-tagged tests are skipped there by design, while real integration paths are used when enabled. This avoids false confidence from mock behavior in shared environments and keeps CI behavior predictable.
+This separation keeps the suite deterministic locally and avoids false failures or false confidence in shared environments.
 
 ### Commands By Environment
 
@@ -305,6 +292,11 @@ Use this when you want fast, reliable local functional coverage without real CCD
 - comment out preview and aat blocks
 - keep `ACCESS_CODE_REAL_INTEGRATION=false`
 - keep `ENABLE_TEST_SUPPORT_ROUTES=true`
+
+What runs:
+
+- `[mock]` functional tests run against the local mock case API
+- `[real-integration]` tests are shown in the report but skipped by default
 
 Commands:
 
@@ -326,6 +318,11 @@ Use this when running against a preview environment.
 - comment out local and aat blocks
 - keep `ACCESS_CODE_REAL_INTEGRATION=false` unless you explicitly want real integration access-code coverage
 
+What runs:
+
+- `[mock]` tests that require local-only mock services or test-support routes are skipped
+- `[real-integration]` tests remain skipped unless the preview environment is set up for them and the flag is enabled
+
 Command:
 
 ```bash
@@ -341,6 +338,11 @@ Use this only when the environment is reachable and you want real CCD-backed int
 - uncomment the aat block
 - comment out local and preview blocks
 - set `ACCESS_CODE_REAL_INTEGRATION=true` only if you want the real integration access-code paths to execute
+
+What runs:
+
+- `[mock]` tests that rely on local mock CCD or injected session data are skipped
+- `[real-integration]` tests run only when the environment supports the full CCD flow and the flag is enabled
 
 Command:
 
