@@ -10,12 +10,14 @@ import { RouteNames } from '../../common-constants';
 
 export interface UserDefaultPageDetails {
   url: string;
-  caseData?: FinremCaseData
+  caseData?: FinremCaseData;
+  caseNumber?: string;
 }
 
 export interface HomeOrchestratorResult {
   url: string;
   caseData?: FinremCaseData;
+  caseNumber?: string;
 }
 
 export async function getHomePageForUser(userDetails: UserDetails): Promise<UserDefaultPageDetails> {
@@ -31,7 +33,7 @@ export async function getHomePageForUser(userDetails: UserDetails): Promise<User
     const caseData = await caseworkerUserApi.getCaseById(caseId);
 
     logger.info('Routing to : ', RouteNames.dashboard);
-    return { caseData, url: RouteNames.dashboard };
+    return { caseData, caseNumber: caseId, url: RouteNames.dashboard };
   } else {
     logger.info('Routing to : ', RouteNames.enterCaseNumber);
     return { url: RouteNames.enterCaseNumber };
@@ -49,9 +51,9 @@ export async function orchestrateHome(
     user.hasNFDCase = nfdCase !== undefined;
   }
   logger.info('user has NFD case registered : ', user.hasNFDCase);
-  const { url, caseData } = await getHomePageForUser(user);
+  const { url, caseData, caseNumber } = await getHomePageForUser(user);
 
-  return { url, caseData };
+  return { url, caseData, caseNumber };
 }
 
 /**

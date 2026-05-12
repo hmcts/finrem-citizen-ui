@@ -21,6 +21,9 @@ export default function (app: Application): void {
     if (result.caseData) {
       req.session.caseData = result.caseData;
     }
+    if (result.caseNumber) {
+      req.session.caseNumber = result.caseNumber;
+    }
     res.redirect(result.url);
   });
 
