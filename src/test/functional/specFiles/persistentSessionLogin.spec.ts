@@ -32,6 +32,7 @@ async function navigateToLinkedDashboard(
 // To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
 test.describe('[mock] Persistent Session After Re-login', () => {
   test.use({ useMockTestSupport: true });
+  const runRealIntegrationAccessCodeTests = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
 
   /**
    * Verify that after logging in, entering case number and access code,
@@ -54,7 +55,7 @@ test.describe('[mock] Persistent Session After Re-login', () => {
     axeUtils,
   }) => {
     test.skip(
-      true,
+      !runRealIntegrationAccessCodeTests,
       'KNOWN DEFECT: On second login, session data (username, case role) not populated because invalidateAccessCode step is skipped. Backend fix in progress.'
     );
 
@@ -96,7 +97,7 @@ test.describe('[mock] Persistent Session After Re-login', () => {
     axeUtils,
   }) => {
     test.skip(
-      true,
+      !runRealIntegrationAccessCodeTests,
       'KNOWN DEFECT: On second login, session data (username, case role) not populated because invalidateAccessCode step is skipped. Backend fix in progress.'
     );
 
@@ -134,7 +135,7 @@ test.describe('[mock] Persistent Session After Re-login', () => {
     axeUtils,
   }) => {
     test.skip(
-      true,
+      !runRealIntegrationAccessCodeTests,
       'KNOWN DEFECT: On second login, session data (username, case role) not populated because invalidateAccessCode step is skipped. Backend fix in progress.'
     );
 
