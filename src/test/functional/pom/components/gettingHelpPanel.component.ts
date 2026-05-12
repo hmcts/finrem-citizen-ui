@@ -3,6 +3,7 @@ import { expect, Locator, Page } from '@playwright/test';
 type VerifyContactContentOptions = {
   openingHoursLocator?: Locator;
   callChargesHref?: string;
+  expectedEmail?: string;
 };
 
 export class GettingHelpPanel {
@@ -61,7 +62,12 @@ export class GettingHelpPanel {
       await expect(locator).toBeVisible();
     }
 
-    await expect(this.emailLink).toHaveAttribute('href', /mailto:.+@.+/);
+    // Verify email link format, optionally matching a specific email address
+    if (options?.expectedEmail) {
+      await expect(this.emailLink).toHaveAttribute('href', `mailto:${options.expectedEmail}`);
+    } else {
+      await expect(this.emailLink).toHaveAttribute('href', /mailto:.+@.+/);
+    }
 
     if (options?.callChargesHref) {
       await expect(this.callChargesLink).toHaveAttribute('href', options.callChargesHref);

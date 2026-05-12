@@ -48,7 +48,7 @@
     "@types/multer": "^2.1.0",
     "@types/nunjucks": "3.2.6",
     "accessible-autocomplete": "^3.0.1",
-    "applicationinsights": "3.14.0",
+    "applicationinsights": "^3.14.0",
     "axios": "1.16.0",
     "body-parser": "2.2.2",
     "config": "4.4.1",
@@ -144,6 +144,8 @@
     "picomatch": "4.0.4",
     "path-to-regexp": "8.4.2",
     "protobufjs": "8.2.0",
-    "uuid": "14.0.0"
+    "uuid": "14.0.0",
+    "@opentelemetry/sdk-node": "0.217.0",
+    "@opentelemetry/exporter-prometheus": "0.217.0"
   }
 }

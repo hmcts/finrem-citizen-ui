@@ -104,4 +104,59 @@ describe('Dashboard Route', () => {
       })
     );
   });
+
+  it('should set hasDivorceCase to true when user has NFD case (shows blue divorce account box)', () => {
+    const res = callHandler({
+      caseNumber: '1234-5678-9012-3456',
+      user: { hasNFDCase: true },
+      caseRole: CaseRole.APPLICANT,
+      caseUserName: 'John Smith',
+      caseData: {
+        applicantFlags: { partyName: 'John Smith' },
+      },
+    });
+
+    expect(res.render).toHaveBeenCalledWith(
+      ViewNames.Dashboard,
+      expect.objectContaining({
+        hasDivorceCase: true,
+        showPreviouslyUploaded: true,
+      })
+    );
+  });
+
+  it('should set hasDivorceCase to false when user does not have NFD case (hides blue divorce account box)', () => {
+    const res = callHandler({
+      caseNumber: '1234-5678-9012-3456',
+      user: { hasNFDCase: false },
+      caseRole: CaseRole.RESPONDENT,
+      caseUserName: 'Jane Doe',
+      caseData: {
+        respondentFlags: { partyName: 'Jane Doe' },
+      },
+    });
+
+    expect(res.render).toHaveBeenCalledWith(
+      ViewNames.Dashboard,
+      expect.objectContaining({
+        hasDivorceCase: false,
+        showPreviouslyUploaded: true,
+      })
+    );
+  });
+
+  it('should default hasDivorceCase to false when user object is missing', () => {
+    const res = callHandler({
+      caseNumber: '1234-5678-9012-3456',
+      caseUserName: 'Test User',
+    });
+
+    expect(res.render).toHaveBeenCalledWith(
+      ViewNames.Dashboard,
+      expect.objectContaining({
+        hasDivorceCase: false,
+        showPreviouslyUploaded: true,
+      })
+    );
+  });
 });
