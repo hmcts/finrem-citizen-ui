@@ -1,6 +1,7 @@
 import { expect, Locator, Page } from '@playwright/test';
 
 import { BasePage } from './basePage.page';
+import { GettingHelpPanel } from './components/gettingHelpPanel.component';
 
 // URL path constants for clarity and maintainability
 const URL_PATTERNS = {
@@ -23,7 +24,7 @@ export class DashboardPage extends BasePage {
   readonly courtExpectationsLink: Locator;
   readonly adviceNowLink: Locator;
   readonly courtBundleLink: Locator;
-  readonly gettingHelpHeading: Locator;
+  readonly gettingHelp: GettingHelpPanel;
 
   constructor(readonly page: Page) {
     super(page);
@@ -55,7 +56,7 @@ export class DashboardPage extends BasePage {
     this.courtBundleLink = this.page.getByRole('link', {
       name: 'Read advice about preparing a court bundle from Judiciary UK (opens in new tab)',
     });
-    this.gettingHelpHeading = this.page.getByRole('heading', { name: 'Getting help' });
+    this.gettingHelp = new GettingHelpPanel(this.page);
   }
 
   // Navigate to the dashboard
@@ -80,7 +81,8 @@ export class DashboardPage extends BasePage {
       this.courtExpectationsLink,
       this.adviceNowLink,
       this.courtBundleLink,
-      this.gettingHelpHeading,
+      this.gettingHelp.heading,
+      this.gettingHelp.summary,
     ]);
 
     await this.expectAttributes([
