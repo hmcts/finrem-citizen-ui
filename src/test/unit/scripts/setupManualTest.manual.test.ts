@@ -14,6 +14,9 @@ dotenv.config({ quiet: true });
 
 const getApplicationUrl = (): string => {
   const env = process.env.RUNNING_ENV || 'aat';
+  if (env === 'local') {
+    return process.env.TEST_URL || 'http://localhost:3100';
+  }
   if (env.startsWith('pr-')) {
     return `https://finrem-citizen-ui-${env}.preview.platform.hmcts.net`;
   }
@@ -34,6 +37,16 @@ const buildMockAccessCodeInjectionUrl = (
 
   return `${applicationUrl}/__test/inject-case-session?${params.toString()}`;
 };
+
+const getLocalMockCaseDetails = (): {
+  caseId: string;
+  applicantCode: string;
+  respondentCode: string;
+} => ({
+  caseId: process.env.MOCK_CASE_ID || '1616591401473378',
+  applicantCode: process.env.MOCK_APPLICANT_ACCESS_CODE || 'APPCODE1',
+  respondentCode: process.env.MOCK_RESPONDENT_ACCESS_CODE || 'RSPCODE1',
+});
 
 describe('Setup Manual Test', () => {
   it(
@@ -63,7 +76,11 @@ describe('Setup Manual Test', () => {
       if (useRealIntegration) {
         caseDetails = await ContestedCaseFactory.createContestedCaseWithHearingAndAccessCode();
       } else if (useMockAccessCodes) {
-        caseDetails = await ContestedCaseFactory.createContestedCaseWithMockedAccessCode();
+        if (appEnv === 'local') {
+          caseDetails = getLocalMockCaseDetails();
+        } else {
+          caseDetails = await ContestedCaseFactory.createContestedCaseWithMockedAccessCode();
+        }
       } else {
         caseDetails = {
           caseId: String(await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)),
@@ -73,6 +90,12 @@ describe('Setup Manual Test', () => {
       }
       const caseId = caseDetails.caseId;
       const formattedCaseId = caseId.replace(/(\d{4})(?=\d)/g, '$1-');
+      const hasAccessCodes = Boolean(caseDetails.applicantCode && caseDetails.respondentCode);
+      const accessCodeSection = hasAccessCodes
+        ? `Access Codes:
+  Applicant: ${caseDetails.applicantCode}
+  Respondent: ${caseDetails.respondentCode}`
+        : 'Access Codes: (none generated in this mode)';
       const mockInjectionUrl =
         caseDetails.applicantCode && caseDetails.respondentCode
           ? buildMockAccessCodeInjectionUrl(
@@ -105,13 +128,11 @@ Case:
   Formatted: ${formattedCaseId}
   Raw:       ${caseId}
 
-${
-  useMockAccessCodes
-    ? `Mock Access Codes:
-  Applicant: ${caseDetails.applicantCode}
-  Respondent: ${caseDetails.respondentCode}
+${accessCodeSection}
 
-Mock Session Injection URL:
+${
+  useMockAccessCodes && hasAccessCodes
+    ? `Mock Session Injection URL:
   ${mockInjectionUrl}
 
 Mock Access Code Workflow:
@@ -121,6 +142,15 @@ Mock Access Code Workflow:
   4. Enter APPCODE1 or RSPCODE1 to continue.
 
 Note: this only works where ENABLE_TEST_SUPPORT_ROUTES=true.`
+    : ''
+}
+
+${
+  useRealIntegration && hasAccessCodes
+    ? `Real Access Code Workflow:
+  1. Log in with the credentials above.
+  2. Enter the formatted case number.
+  3. Enter Applicant or Respondent access code shown above.`
     : ''
 }
 

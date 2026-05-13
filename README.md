@@ -223,13 +223,36 @@ yarn test:playwright:a11y
 
 👉 See [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md) — Complete guide to functional test organization, environment setup, and known issues (Form C dependency).
 
-**Manual Testing Setup:**
+**Manual Testing (Local Mock Only):**
+
+Use this flow when you want a fast local manual test with mock access-code injection.
+
+1. Start the local mock case API:
+
+```bash
+yarn start:mock-case-api
+```
+
+2. Start the app with test-support routes enabled:
+
+```bash
+ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
+```
+
+3. Generate manual-test credentials and case details:
 
 ```bash
 yarn setup:manual-test
 ```
 
-Creates a citizen user and real contested case with mocked access codes on preview environments. Prints login credentials and a ready-to-use session injection URL.
+4. Log in with the printed credentials, then open the printed mock injection URL in the same browser session.
+
+Why this does not work on preview/AAT in mock mode:
+
+- Mock mode depends on `GET /__test/inject-case-session`.
+- That endpoint is only registered when `ENABLE_TEST_SUPPORT_ROUTES=true`.
+- Preview/AAT typically do not enable test-support routes, so injection URL requests return `404`.
+- Use local mock mode for injection-based testing, or use `yarn setup:manual-test:real` for real integration (requires reachable external dependencies).
 
 ## Linting
 
