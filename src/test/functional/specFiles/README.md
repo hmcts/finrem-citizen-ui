@@ -15,11 +15,10 @@ This structure ensures clear visibility into which tests can run where, making i
 
 ```
 specFiles/
+├── journeyHelpers/                    # Shared journey/navigation helpers for integration specs
+│   └── uploadJourneyNavigation.helper.ts  # Reusable authenticated upload journey setup
+│
 ├── mock/                              # Local-only tests
-│   ├── dashboard.mock.spec.ts          # Dashboard upload journey (requires auth)
-│   ├── confidentiality.mock.spec.ts    # Confidentiality page verification
-│   ├── fdr.mock.spec.ts                # FDR + document-selection journey and validation
-│   ├── login.mock.spec.ts              # Authentication & IDAM integration
 │   ├── persistentSessionLogin.mock.spec.ts  # Session persistence (known defects)
 │   └── enterAccessCode.mock.spec.ts    # Access code validation with mock CCD
 │
@@ -27,8 +26,10 @@ specFiles/
 │   ├── dashboard.integration.spec.ts   # Dashboard upload journey
 │   ├── confidentiality.integration.spec.ts  # Confidentiality page verification
 │   ├── fdr.integration.spec.ts         # FDR + document-selection journey and validation
+│   ├── login.integration.spec.ts       # Authentication & IDAM integration
 │   ├── enterAccessCode.integration.spec.ts  # Access code happy-path (requires CCD)
-│   └── enterCaseNumber.integration.spec.ts  # Case number entry (mixed: mock validation + integration happy-path)
+│   ├── enterCaseNumber.integration.spec.ts  # Case number entry (mixed: validation + integration happy-path)
+│   └── enterCaseNumber.validation.integration.spec.ts  # Case number validation scenarios
 │
 └── README.md                          # This file
 ```
@@ -100,34 +101,6 @@ test.skip(!runIntegration, 'Integration disabled by default...');
 
 ## Test File Reference
 
-### `mock/dashboard.mock.spec.ts`
-- **Tests:** Dashboard page layout, navigation, upload journey
-- **Label:** `[mock]`
-- **Setup:** `loggedInPage` fixture (authenticated session)
-- **Environment:** Local
-- **Duration:** ~5-10 seconds
-
-### `mock/confidentiality.mock.spec.ts`
-- **Tests:** Confidentiality/redaction guidance page
-- **Label:** `[mock]`
-- **Setup:** Navigate through dashboard → before-you-start → confidentiality
-- **Environment:** Local
-- **Duration:** ~10-15 seconds
-
-### `mock/fdr.mock.spec.ts`
-- **Tests:** Financial Dispute Resolution (FDR) page, required selection validation, document-selection step navigation
-- **Label:** `[mock]`
-- **Setup:** Navigate through dashboard → before-you-start → confidentiality → FDR
-- **Environment:** Local
-- **Duration:** ~10-20 seconds
-
-### `mock/login.mock.spec.ts`
-- **Tests:** IDAM authentication, sign-out, global layout
-- **Label:** `[mock]`
-- **Setup:** `loggedInPage` fixture (automated login)
-- **Environment:** Local (requires IDAM integration)
-- **Duration:** ~15-20 seconds per test
-
 ### `mock/persistentSessionLogin.mock.spec.ts`
 - **Tests:** Session persistence across re-login, tabs, navigation
 - **Label:** `[mock]`
@@ -149,9 +122,9 @@ test.skip(!runIntegration, 'Integration disabled by default...');
 - **Label:** `[integration-happy-path]`
 - **Setup:** Real case with valid access codes via API
 - **Environment:** All (when `ACCESS_CODE_REAL_INTEGRATION=true`)
-- **Default:** Skipped
+- **Default:** Skipped for now (real CCD flow implementation flag is currently disabled in code)
 - **Duration:** ~15-30 seconds per test
-- **Note:** Skipped by default to avoid unstable external dependency failures in local/dev runs; enable explicitly for real integration coverage
+- **Note:** Requires both `ACCESS_CODE_REAL_INTEGRATION=true` and the temporary in-file implementation flag to be enabled once real-flow work is complete
 
 ### `integration/enterCaseNumber.integration.spec.ts`
 - **Tests:**
@@ -163,21 +136,66 @@ test.skip(!runIntegration, 'Integration disabled by default...');
 - **Duration:** ~10-15 seconds
 - **Note:** Skipped by default to avoid unstable external dependency failures in local/dev runs; enable explicitly for real integration coverage
 
+### `integration/enterCaseNumber.validation.integration.spec.ts`
+- **Tests:** Case number validation scenarios and error messaging
+- **Label:** `[integration]`
+- **Setup:** Logged-in journey to enter-case-number page
+- **Environment:** Environments with working authentication/session support
+- **Duration:** ~10-20 seconds
+
 ### `integration/confidentiality.integration.spec.ts`
 - **Tests:** Confidentiality/redaction guidance page and navigation to FDR
 - **Label:** `[integration]`
-- **Setup:** Navigate through dashboard → before-you-start → confidentiality
+- **Setup:** Uses `navigateToConfidentialityStep(...)` helper (dashboard + layout + before-you-start + confidentiality)
 - **Environment:** All environments with working authentication
 - **Duration:** ~10-15 seconds
 
 ### `integration/fdr.integration.spec.ts`
 - **Tests:** Financial Dispute Resolution (FDR) page, required selection validation, document-selection step navigation
 - **Label:** `[integration]`
-- **Setup:** Navigate through dashboard → before-you-start → confidentiality → FDR
+- **Setup:** Uses `navigateToFdrStep(...)` helper (composed confidentiality navigation + continue to FDR)
 - **Environment:** All environments with working authentication
 - **Duration:** ~10-20 seconds
 
+### `integration/dashboard.integration.spec.ts`
+- **Tests:** Dashboard and before-you-start page verification
+- **Label:** `[integration]`
+- **Setup:** Uses `navigateToDashboardStep(...)` helper in `beforeEach`
+- **Environment:** All environments with working authentication
+- **Duration:** ~10-20 seconds
+
+### `integration/login.integration.spec.ts`
+- **Tests:** IDAM authentication, sign-out, global layout
+- **Label:** `[integration]`
+- **Setup:** `loggedInPage` fixture (automated login)
+- **Environment:** All environments with working IDAM integration
+- **Duration:** ~15-20 seconds per test
+
 ---
+
+## Shared Helpers
+
+The `journeyHelpers/uploadJourneyNavigation.helper.ts` module centralizes common authenticated setup/navigation steps used by upload-journey integration specs.
+
+### `navigateToDashboardStep(dashboardPage, basePage)`
+- Navigates to dashboard via authenticated fixture flow
+- Verifies global header and footer once, in one reusable step
+- Used by dashboard integration tests and composed by deeper journey helpers
+
+### `navigateToConfidentialityStep(dashboardPage, beforeYouStartPage, basePage)`
+- Builds on dashboard setup
+- Executes: dashboard → click upload → start upload journey
+- Leaves tests on the confidentiality step
+
+### `navigateToFdrStep(dashboardPage, beforeYouStartPage, confidentialityPage, basePage)`
+- Builds on confidentiality navigation
+- Executes: confidentiality continue action
+- Leaves tests on the FDR step
+
+### Why this helper exists
+- Reduces duplicate setup code in spec `beforeEach` blocks
+- Keeps journey setup consistent across integration specs
+- Makes future journey step changes easier (single helper update)
 
 ## Environment Variables
 
@@ -225,7 +243,7 @@ ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional -- src/test/functional/sp
 ### Run Specific Test File
 ```bash
 # Mock tests
-yarn test:functional -- src/test/functional/specFiles/mock/dashboard.mock.spec.ts
+yarn test:functional -- src/test/functional/specFiles/mock/enterAccessCode.mock.spec.ts
 
 # Integration tests
 ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional -- src/test/functional/specFiles/integration/enterAccessCode.integration.spec.ts
@@ -359,13 +377,15 @@ yarn test:functional -- src/test/functional/specFiles/mock/
 ```
 
 ### Integration Happy-Path Tests Skipped: "Skipped by default"
-**Cause:** `ACCESS_CODE_REAL_INTEGRATION` not set to `true`.
+**Cause:** `ACCESS_CODE_REAL_INTEGRATION` is not set to `true`, or the suite is intentionally feature-gated in code until implementation is completed.
 
 **Fix:**
 ```bash
 export ACCESS_CODE_REAL_INTEGRATION=true
 yarn test:functional -- src/test/functional/specFiles/integration/
 ```
+
+If still skipped, check the spec for a temporary implementation gate (for example `realCcdFlowImplemented = false`).
 
 ### Tests Cannot Reach CCD
 **Cause:** CCD instance not running or incorrect URL.
