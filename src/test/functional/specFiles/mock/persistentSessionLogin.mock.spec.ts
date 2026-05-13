@@ -44,9 +44,14 @@ async function navigateToLinkedDashboard(
 // access codes (APPCODE1 / RSPCODE1) injected via /__test/inject-case-session.
 // No Form C or FR_manageHearings hearing flow is required.
 // To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
+const runRealIntegrationAccessCodeTests = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
+
 test.describe('[mock] Persistent Session After Re-login', () => {
   test.use({ useMockTestSupport: true });
-  const runRealIntegrationAccessCodeTests = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
+  test.skip(
+    !runRealIntegrationAccessCodeTests,
+    'KNOWN DEFECT: On second login, session data (username, case role) not populated because invalidateAccessCode step is skipped. Backend fix in progress.'
+  );
 
   /**
    * Verify that after logging in, entering case number and access code,
@@ -70,11 +75,6 @@ test.describe('[mock] Persistent Session After Re-login', () => {
     page,
     axeUtils,
   }) => {
-    test.skip(
-      !runRealIntegrationAccessCodeTests,
-      'KNOWN DEFECT: On second login, session data (username, case role) not populated because invalidateAccessCode step is skipped. Backend fix in progress.'
-    );
-
     // Two full login cycles: loggedInPage fixture + explicit re-login after sign-out.
     // Longer timeout required for login flow
     test.setTimeout(90_000);
@@ -114,11 +114,6 @@ test.describe('[mock] Persistent Session After Re-login', () => {
     context,
     axeUtils,
   }) => {
-    test.skip(
-      !runRealIntegrationAccessCodeTests,
-      'KNOWN DEFECT: On second login, session data (username, case role) not populated because invalidateAccessCode step is skipped. Backend fix in progress.'
-    );
-
     await navigateToLinkedDashboard(basePage, enterAccessCodePage, dashboardPage, contestedCaseWithHearing);
 
     // Open a new tab in the same browser context (shares cookies/session)
@@ -154,11 +149,6 @@ test.describe('[mock] Persistent Session After Re-login', () => {
     page,
     axeUtils,
   }) => {
-    test.skip(
-      !runRealIntegrationAccessCodeTests,
-      'KNOWN DEFECT: On second login, session data (username, case role) not populated because invalidateAccessCode step is skipped. Backend fix in progress.'
-    );
-
     await navigateToLinkedDashboard(basePage, enterAccessCodePage, dashboardPage, contestedCaseWithHearing);
 
     // Navigate away then back to dashboard within the same authenticated session
