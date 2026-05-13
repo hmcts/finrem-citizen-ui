@@ -22,10 +22,11 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
   );
 
   test.beforeEach(async ({
-    loggedInPage: _loggedInPage,
+    loggedInPage,
     basePage,
     contestedCaseWithHearing,
   }) => {
+    expect(loggedInPage.authStatus).toBe('success');
     await basePage.injectCaseSession(
       contestedCaseWithHearing.caseId,
       contestedCaseWithHearing.applicantAccessCode,
@@ -39,13 +40,13 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
   * [integration-happy-path] Requires real CCD-backed invalidation flow.
    */
   test('[integration-happy-path] Citizen can enter valid applicant access code and view case summary @a11y', async ({
-    loggedInPage: _loggedInPage,
+    loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
-    assertionHelpers: _assertionHelpers,
     axeUtils,
   }) => {
+    expect(loggedInPage.authStatus).toBe('success');
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await enterAccessCodePage.submitAccessCode(accessCode);
@@ -58,12 +59,13 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
   * [integration-happy-path] Requires real CCD-backed invalidation flow.
    */
   test('[integration-happy-path] Success: Access code with leading/trailing whitespace is accepted @a11y', async ({
-    loggedInPage: _loggedInPage,
+    loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
     axeUtils,
   }) => {
+    expect(loggedInPage.authStatus).toBe('success');
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await enterAccessCodePage.submitAccessCode(`  ${accessCode}  `);
@@ -76,12 +78,13 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
   * [integration-happy-path] Requires real CCD-backed invalidation flow.
    */
   test('[integration-happy-path] Citizen can enter valid respondent access code and view case summary @a11y', async ({
-    loggedInPage: _loggedInPage,
+    loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
     axeUtils,
   }) => {
+    expect(loggedInPage.authStatus).toBe('success');
     const accessCode = contestedCaseWithHearing.respondentAccessCode;
 
     await enterAccessCodePage.submitAccessCode(accessCode);
@@ -94,12 +97,13 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
   * [integration-happy-path] Requires real CCD-backed invalidation flow.
    */
   test('[integration-happy-path] Access code submission is case-insensitive @a11y', async ({
-    loggedInPage: _loggedInPage,
+    loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
     axeUtils,
   }) => {
+    expect(loggedInPage.authStatus).toBe('success');
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     // Enter access code in lowercase
@@ -121,13 +125,14 @@ test.describe('[integration-happy-path] Enter Access Code - Full Journey', () =>
   );
 
   test('[integration-happy-path] Citizen can submit applicant access code without pre-injection @integration @a11y', async ({
-    loggedInPage: _loggedInPage,
+    loggedInPage,
     enterCaseNumberPage,
     contestedCaseWithHearing,
     enterAccessCodePage,
     dashboardPage,
     axeUtils,
   }) => {
+    expect(loggedInPage.authStatus).toBe('success');
     await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
     await expect(enterAccessCodePage.page).toHaveURL(/\/enter-access-code$/);
 
