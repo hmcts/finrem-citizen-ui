@@ -18,11 +18,15 @@ specFiles/
 ├── mock/                              # Local-only tests
 │   ├── dashboard.mock.spec.ts          # Dashboard upload journey (requires auth)
 │   ├── confidentiality.mock.spec.ts    # Confidentiality page verification
+│   ├── fdr.mock.spec.ts                # FDR + document-selection journey and validation
 │   ├── login.mock.spec.ts              # Authentication & IDAM integration
 │   ├── persistentSessionLogin.mock.spec.ts  # Session persistence (known defects)
 │   └── enterAccessCode.mock.spec.ts    # Access code validation with mock CCD
 │
 ├── integration/                       # All-environment tests
+│   ├── dashboard.integration.spec.ts   # Dashboard upload journey
+│   ├── confidentiality.integration.spec.ts  # Confidentiality page verification
+│   ├── fdr.integration.spec.ts         # FDR + document-selection journey and validation
 │   ├── enterAccessCode.integration.spec.ts  # Access code happy-path (requires CCD)
 │   └── enterCaseNumber.integration.spec.ts  # Case number entry (mixed: mock validation + integration happy-path)
 │
@@ -110,6 +114,13 @@ test.skip(!runIntegration, 'Integration disabled by default...');
 - **Environment:** Local
 - **Duration:** ~10-15 seconds
 
+### `mock/fdr.mock.spec.ts`
+- **Tests:** Financial Dispute Resolution (FDR) page, required selection validation, document-selection step navigation
+- **Label:** `[mock]`
+- **Setup:** Navigate through dashboard → before-you-start → confidentiality → FDR
+- **Environment:** Local
+- **Duration:** ~10-20 seconds
+
 ### `mock/login.mock.spec.ts`
 - **Tests:** IDAM authentication, sign-out, global layout
 - **Label:** `[mock]`
@@ -151,6 +162,20 @@ test.skip(!runIntegration, 'Integration disabled by default...');
 - **Default:** Skipped
 - **Duration:** ~10-15 seconds
 - **Note:** Skipped by default to avoid unstable external dependency failures in local/dev runs; enable explicitly for real integration coverage
+
+### `integration/confidentiality.integration.spec.ts`
+- **Tests:** Confidentiality/redaction guidance page and navigation to FDR
+- **Label:** `[integration]`
+- **Setup:** Navigate through dashboard → before-you-start → confidentiality
+- **Environment:** All environments with working authentication
+- **Duration:** ~10-15 seconds
+
+### `integration/fdr.integration.spec.ts`
+- **Tests:** Financial Dispute Resolution (FDR) page, required selection validation, document-selection step navigation
+- **Label:** `[integration]`
+- **Setup:** Navigate through dashboard → before-you-start → confidentiality → FDR
+- **Environment:** All environments with working authentication
+- **Duration:** ~10-20 seconds
 
 ---
 
