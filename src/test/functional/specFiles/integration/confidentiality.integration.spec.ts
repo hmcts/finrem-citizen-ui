@@ -1,7 +1,5 @@
 import { DEFAULT_AXE_OPTIONS, test } from '../../../fixtures/fixtures';
-import { BasePage } from '../../pom/basePage.page';
-import { BeforeYouStartPage } from '../../pom/beforeYouStart.page';
-import { DashboardPage } from '../../pom/dashboardPage.page';
+import { navigateToConfidentialityPage } from '../helpers/uploadJourneyNavigation.helper';
 
 /**
  * INTEGRATION TESTS: Confidentiality Page
@@ -12,17 +10,6 @@ import { DashboardPage } from '../../pom/dashboardPage.page';
  * Runs on: Environments with working authentication flow
  */
 
-async function navigateToConfidentialityPage(
-  dashboardPage: DashboardPage,
-  beforeYouStartPage: BeforeYouStartPage,
-  basePage: BasePage
-): Promise<void> {
-  await dashboardPage.navigateToDashboard();
-  await dashboardPage.clickGoToDocumentUpload();
-  await beforeYouStartPage.startUploadJourney();
-  await basePage.verifyGlobalHeaderAndFooter();
-}
- 
 test.describe('[integration] Confidentiality page', () => {
   test.beforeEach(async ({ loggedInPage: _loggedInPage, dashboardPage, beforeYouStartPage, basePage }) => {
     await navigateToConfidentialityPage(dashboardPage, beforeYouStartPage, basePage);
@@ -111,8 +98,7 @@ test.describe('[integration] Confidentiality page', () => {
     confidentialityPage,
     axeUtils,
   }) => {
-    await confidentialityPage.verifyContactHelpClosedByDefault();
-    await confidentialityPage.verifyContactHelpContent();
+    await confidentialityPage.verifyGettingHelpSection();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 });
