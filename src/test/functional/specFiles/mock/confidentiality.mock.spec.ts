@@ -39,38 +39,48 @@ test.describe('[mock] Confidentiality page', () => {
   });
  
   // AC2: Form C8 link is present with the correct href and opens in a new tab
-  test('[mock] Form C8 link is present and correctly configured', async ({
+  test('[mock] Form C8 link is present and correctly configured @a11y', async ({
     confidentialityPage,
+    axeUtils,
   }) => {
     await confidentialityPage.verifyFormC8Link();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
  
   // AC3: Redaction instructions are shown
-  test('[mock] Redaction instructions are displayed', async ({
+  test('[mock] Redaction instructions are displayed @a11y', async ({
     confidentialityPage,
+    axeUtils,
   }) => {
     await confidentialityPage.verifyRedactionInstructions();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
  
   // AC4: Court staff disclaimer is shown
-  test('[mock] Court staff disclaimer is displayed', async ({
+  test('[mock] Court staff disclaimer is displayed @a11y', async ({
     confidentialityPage,
+    axeUtils,
   }) => {
     await confidentialityPage.verifyCourtStaffDisclaimer();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
  
   // AC5: Confidential information examples and do-not-redact guidance are shown
-  test('[mock] Confidential information examples are displayed', async ({
+  test('[mock] Confidential information examples are displayed @a11y', async ({
     confidentialityPage,
+    axeUtils,
   }) => {
     await confidentialityPage.verifyConfidentialInformationExamples();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
  
   // AC6: Warning message about documents being placed on the court record is shown
-  test('[mock] Court record warning message is displayed', async ({
+  test('[mock] Court record warning message is displayed @a11y', async ({
     confidentialityPage,
+    axeUtils,
   }) => {
     await confidentialityPage.verifyCourtRecordWarning();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
  
   // AC7: Continue button is visible, enabled, and navigates to the FDR step

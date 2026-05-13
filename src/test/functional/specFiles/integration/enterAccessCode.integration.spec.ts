@@ -1,4 +1,4 @@
-import { expect, test } from '../../../fixtures/fixtures';
+import { DEFAULT_AXE_OPTIONS, expect, test } from '../../../fixtures/fixtures';
 
 /**
  * INTEGRATION TESTS: Enter Access Code
@@ -22,10 +22,11 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
   );
 
   test.beforeEach(async ({
-    loggedInPage: _loggedInPage,
+    loggedInPage,
     basePage,
     contestedCaseWithHearing,
   }) => {
+    expect(loggedInPage.authStatus).toBe('success');
     await basePage.injectCaseSession(
       contestedCaseWithHearing.caseId,
       contestedCaseWithHearing.applicantAccessCode,
@@ -38,61 +39,71 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
    * Citizen successfully enters valid applicant access code and views case.
   * [integration-happy-path] Requires real CCD-backed invalidation flow.
    */
-  test('[integration-happy-path] Citizen can enter valid applicant access code and view case summary', async ({
-    loggedInPage: _loggedInPage,
+  test('[integration-happy-path] Citizen can enter valid applicant access code and view case summary @a11y', async ({
+    loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
-    assertionHelpers: _assertionHelpers,
+    axeUtils,
   }) => {
+    expect(loggedInPage.authStatus).toBe('success');
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await enterAccessCodePage.submitAccessCode(accessCode);
     await dashboardPage.verifyDashboardPageContent();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   /**
    * Verify whitespace is trimmed from access code.
   * [integration-happy-path] Requires real CCD-backed invalidation flow.
    */
-  test('[integration-happy-path] Success: Access code with leading/trailing whitespace is accepted', async ({
-    loggedInPage: _loggedInPage,
+  test('[integration-happy-path] Success: Access code with leading/trailing whitespace is accepted @a11y', async ({
+    loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
+    axeUtils,
   }) => {
+    expect(loggedInPage.authStatus).toBe('success');
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await enterAccessCodePage.submitAccessCode(`  ${accessCode}  `);
     await dashboardPage.verifyDashboardPageContent();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   /**
    * Citizen successfully enters valid respondent access code and views case.
   * [integration-happy-path] Requires real CCD-backed invalidation flow.
    */
-  test('[integration-happy-path] Citizen can enter valid respondent access code and view case summary', async ({
-    loggedInPage: _loggedInPage,
+  test('[integration-happy-path] Citizen can enter valid respondent access code and view case summary @a11y', async ({
+    loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
+    axeUtils,
   }) => {
+    expect(loggedInPage.authStatus).toBe('success');
     const accessCode = contestedCaseWithHearing.respondentAccessCode;
 
     await enterAccessCodePage.submitAccessCode(accessCode);
     await dashboardPage.verifyDashboardPageContent();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
   /**
    * Access codes are case-insensitive.
   * [integration-happy-path] Requires real CCD-backed invalidation flow.
    */
-  test('[integration-happy-path] Access code submission is case-insensitive', async ({
-    loggedInPage: _loggedInPage,
+  test('[integration-happy-path] Access code submission is case-insensitive @a11y', async ({
+    loggedInPage,
     dashboardPage,
     enterAccessCodePage,
     contestedCaseWithHearing,
+    axeUtils,
   }) => {
+    expect(loggedInPage.authStatus).toBe('success');
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     // Enter access code in lowercase
@@ -101,6 +112,7 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
     await enterAccessCodePage.submitAccessCode(lowercaseCode);
 
     await dashboardPage.verifyDashboardPageContent();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 });
 
@@ -112,17 +124,20 @@ test.describe('[integration-happy-path] Enter Access Code - Full Journey', () =>
     'Skipped by default: end-to-end happy-path requires real CCD and generated access codes. Set ACCESS_CODE_REAL_INTEGRATION=true to enable in integration environments.'
   );
 
-  test('[integration-happy-path] Citizen can submit applicant access code without pre-injection @integration', async ({
-    loggedInPage: _loggedInPage,
+  test('[integration-happy-path] Citizen can submit applicant access code without pre-injection @integration @a11y', async ({
+    loggedInPage,
     enterCaseNumberPage,
     contestedCaseWithHearing,
     enterAccessCodePage,
     dashboardPage,
+    axeUtils,
   }) => {
+    expect(loggedInPage.authStatus).toBe('success');
     await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
     await expect(enterAccessCodePage.page).toHaveURL(/\/enter-access-code$/);
 
     await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
     await dashboardPage.verifyDashboardPageContent();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 });

@@ -288,6 +288,45 @@ All tests are labeled in their `describe()` or `test()` blocks for easy filterin
 
 ---
 
+## Accessibility (axe) Coverage
+
+All `@a11y` tests call:
+
+```typescript
+await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+```
+
+This is wired in [src/test/fixtures/fixtures.ts](../fixtures/fixtures.ts) and uses `AxeUtils` from `@hmcts/playwright-common`.
+
+### WCAG scope currently enforced
+
+By default, `AxeUtils.audit()` runs axe-core with these tags:
+
+- `wcag2a`
+- `wcag2aa`
+- `wcag21a`
+- `wcag21aa`
+- `wcag22a`
+- `wcag22aa`
+
+This means automated checks target **WCAG 2.0, 2.1, and 2.2** at **Level A and AA** rule sets supported by axe-core.
+
+### Current project exception
+
+`DEFAULT_AXE_OPTIONS` disables one rule:
+
+- `target-size` (WCAG 2.5.8)
+
+Reason: this currently reports violations in standard GOV.UK Frontend components used by the app; this is documented inline in [src/test/fixtures/fixtures.ts](../fixtures/fixtures.ts).
+
+### Important limitations
+
+- Axe checks are **automated** checks only; they do not replace manual accessibility testing.
+- They do not fully validate keyboard-only journey quality, screen-reader UX, content clarity, or legal compliance sign-off.
+- In Playwright these are asserted with `expect.soft`, so all checks in a test continue running and failures are reported together at test end.
+
+---
+
 ## Known Issues
 
 ### `persistentSessionLogin.mock.spec.ts` — Known Defects ⚠️
