@@ -56,7 +56,7 @@ test.describe('[mock] Persistent Session After Re-login', () => {
    * [mock] Uses hardcoded access codes injected via test session endpoint.
    * 
   * This test depends on mock CCD endpoints for invalidate-access-code events.
-  * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
+  * It is skipped unless ACCESS_CODE_REAL_INTEGRATION=true.
    * 
    * ⚠️ KNOWN DEFECT: Session data not populated on second login.
    */
@@ -101,7 +101,7 @@ test.describe('[mock] Persistent Session After Re-login', () => {
    * [mock] Uses hardcoded access codes injected via test session endpoint.
    * 
   * This test depends on mock CCD endpoints for invalidate-access-code events.
-  * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
+  * It is skipped unless ACCESS_CODE_REAL_INTEGRATION=true.
    * 
    * ⚠️ KNOWN DEFECT: Session data not populated on second login.
    */
@@ -141,7 +141,7 @@ test.describe('[mock] Persistent Session After Re-login', () => {
    * [mock] Uses hardcoded access codes injected via test session endpoint.
    * 
   * This test depends on mock CCD endpoints for invalidate-access-code events.
-  * It is auto-skipped when ACCESS_CODE_REAL_INTEGRATION=true.
+  * It is skipped unless ACCESS_CODE_REAL_INTEGRATION=true.
    * 
    * ⚠️ KNOWN DEFECT: Session data not populated on second login.
    */
