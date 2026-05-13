@@ -66,6 +66,33 @@ describe('Upload Journey Routes', () => {
         values: {},
         previousStep: null,
         cancelUrl: RouteNames.dashboard,
+        email: 'FRCexample@justice.gov.uk',
+      });
+    });
+
+    it('should render FDR step with session data', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.FDR },
+        session: {
+          uploadJourneyData: { fdrHearing: 'yes' },
+        } as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        render: jest.fn(),
+        status: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/fdr', {
+        data: { fdrHearing: 'yes' },
+        errors: {},
+        values: { fdrHearing: 'yes' },
+        previousStep: UploadStepNames.Confidentiality,
+        cancelUrl: RouteNames.dashboard,
+        email: 'FRCexample@justice.gov.uk',
       });
     });
 
@@ -185,6 +212,40 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as Request, mockRes as Response);
 
       expect(mockRes.redirect).toHaveBeenCalled();
+    });
+
+    it('should persist FDR hearing selection', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.FDR },
+        session: {} as unknown as Request['session'],
+        body: { fdrHearing: 'yes' },
+      } as Partial<Request>;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockReq.session?.uploadJourneyData).toEqual({ fdrHearing: 'yes' });
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
+    });
+
+    it('should persist FDR hearing selection as no', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.FDR },
+        session: {} as unknown as Request['session'],
+        body: { fdrHearing: 'no' },
+      } as Partial<Request>;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockReq.session?.uploadJourneyData).toEqual({ fdrHearing: 'no' });
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
     });
   });
 

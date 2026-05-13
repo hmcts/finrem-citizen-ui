@@ -90,4 +90,5 @@ describe('Smoke Test - Page Availability', () => {
     expect(getContentTypeHeader(response)).toContain('text/html');
     expect(response.data).toContain('Page not found');
   });
+  
 });

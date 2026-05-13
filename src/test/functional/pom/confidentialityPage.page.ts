@@ -7,7 +7,7 @@ import { GettingHelpPanel } from './components/gettingHelpPanel.component';
 const URL_PATTERNS = {
   CONFIDENTIALITY: /\/upload\/confidentiality/,
   DASHBOARD: /\/dashboard/,
-  UPLOAD: /\/upload/,
+  FDR: /\/upload\/fdr/,
 };
 
 const EXTERNAL_LINKS = {
@@ -134,10 +134,10 @@ export class ConfidentialityPage extends BasePage {
     await expect(this.continueButton).toBeEnabled();
   }
 
-  // AC7: Click Continue and assert navigation to next upload step
-  async clickContinueAndExpectUploadStep(): Promise<void> {
+  // AC7: Click Continue and assert navigation to FDR step
+  async clickContinueAndExpectFdrStep(): Promise<void> {
     await this.continueButton.click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.UPLOAD);
+    await expect(this.page).toHaveURL(URL_PATTERNS.FDR);
   }
 
   // AC8: Assert Cancel link is visible
@@ -161,17 +161,12 @@ export class ConfidentialityPage extends BasePage {
     await this.gettingHelp.collapseIfExpanded();
   }
 
-  // AC9: Expand contact help panel and verify all contact details
-  async verifyContactHelpContent(): Promise<void> {
-    await this.gettingHelp.verifyContactContent({
+  // AC9: Verify getting help section end-to-end (collapsed state + expanded content)
+  async verifyGettingHelpSection(): Promise<void> {
+    await this.gettingHelp.verifySection({
       openingHoursLocator: this.helpOpeningHours,
       callChargesHref: EXTERNAL_LINKS.CALL_CHARGES,
     });
-  }
-
-    // Verify the contact help panel starts collapsed
-  async verifyContactHelpClosedByDefault(): Promise<void> {
-    await this.gettingHelp.verifyClosedByDefault();
   }
 
 }

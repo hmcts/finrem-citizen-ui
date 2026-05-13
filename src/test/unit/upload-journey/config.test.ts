@@ -28,8 +28,69 @@ describe('Upload Journey Configuration', () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.FDR];
       expect(step.template).toBe('upload-journey/fdr');
-      expect(step.next!({})).toBeNull();
+      expect(step.next!({})).toBe(UploadStepNames.DocumentSelection);
       expect(step.previous!({})).toBe(UploadStepNames.Confidentiality);
+      expect(step.validate).toBeDefined();
+      expect(step.persist).toBeDefined();
+    });
+
+    it('should persist fdrHearing value', () => {
+      const step = uploadSteps[UploadStepNames.FDR];
+      const existingData = {};
+      const body = { fdrHearing: 'yes' };
+      
+      const result = step.persist!(body, existingData);
+      
+      expect(result).toEqual({ fdrHearing: 'yes' });
+    });
+
+    it('should persist fdrHearing as no', () => {
+      const step = uploadSteps[UploadStepNames.FDR];
+      const existingData = {};
+      const body = { fdrHearing: 'no' };
+      
+      const result = step.persist!(body, existingData);
+      
+      expect(result).toEqual({ fdrHearing: 'no' });
+    });
+
+    it('should preserve existing data when persisting', () => {
+      const step = uploadSteps[UploadStepNames.FDR];
+      const existingData = { fdrHearing: 'no' as const };
+      const body = { fdrHearing: 'yes' };
+      
+      const result = step.persist!(body, existingData);
+      
+      expect(result).toEqual({ 
+        fdrHearing: 'yes' 
+      });
+    });
+
+    it('should return error when fdrHearing is not provided', () => {
+      const step = uploadSteps[UploadStepNames.FDR];
+      const body = {};
+      
+      const errors = step.validate!(body);
+      
+      expect(errors.fdrHearing).toBe('Select yes if you are uploading these documents for a Financial Dispute Resolution hearing');
+    });
+
+    it('should return no errors when fdrHearing is provided', () => {
+      const step = uploadSteps[UploadStepNames.FDR];
+      const body = { fdrHearing: 'yes' };
+      
+      const errors = step.validate!(body);
+      
+      expect(errors).toEqual({});
+    });
+  });
+
+  describe(UploadStepNames.DocumentSelection, () => {
+    it('should have correct configuration', () => {
+      const step = uploadSteps[UploadStepNames.DocumentSelection];
+      expect(step.template).toBe('upload-journey/document-selection');
+      expect(step.next!({})).toBeNull();
+      expect(step.previous!({})).toBe(UploadStepNames.FDR);
       expect(step.validate).toBeUndefined();
       expect(step.persist).toBeUndefined();
     });

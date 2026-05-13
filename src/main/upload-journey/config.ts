@@ -2,7 +2,9 @@ import { UploadStepNames } from '../common-constants';
 
 export type UploadStepId = typeof UploadStepNames[keyof typeof UploadStepNames];
 
-export type UploadJourneyData = Record<string, never>;
+export type UploadJourneyData = {
+  fdrHearing?: 'yes' | 'no';
+};
 
 export type UploadStep = {
   template: string;
@@ -28,8 +30,27 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
   [UploadStepNames.FDR]: {
     template: 'upload-journey/fdr',
-    next: () => null,
+    validate: (body: Record<string, unknown>) => {
+      const errors: Record<string, string> = {};
+      if (!body.fdrHearing) {
+        errors.fdrHearing = 'Select yes if you are uploading these documents for a Financial Dispute Resolution hearing';
+      }
+      return errors;
+    },
+    persist: (body: Record<string, unknown>, data: UploadJourneyData) => {
+      return {
+        ...data,
+        fdrHearing: body.fdrHearing as 'yes' | 'no',
+      };
+    },
+    next: () => UploadStepNames.DocumentSelection,
     previous: () => UploadStepNames.Confidentiality,
+  },
+
+  [UploadStepNames.DocumentSelection]: {
+    template: 'upload-journey/document-selection',
+    next: () => null,
+    previous: () => UploadStepNames.FDR,
   },
   
 };

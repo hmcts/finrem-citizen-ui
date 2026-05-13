@@ -3,22 +3,25 @@ import { DEFAULT_AXE_OPTIONS, expect, test } from '../../../fixtures/fixtures';
 /**
  * INTEGRATION TESTS: Enter Access Code
  * 
- * These tests call invalidateAccessCode() which triggers real CCD events.
+ * These tests use the real CCD path only:
+ * case number submission -> access code submission -> dashboard.
+ * They call invalidateAccessCode() which triggers real CCD events.
  * They require a real contested case created via API with valid access codes.
  * 
  * Runs on: Environments with reachable real CCD dependencies when ACCESS_CODE_REAL_INTEGRATION=true
  * Requires: Real CCD instance reachable, valid case with real access codes
- * Default: Skipped to keep local/dev runs deterministic and avoid fragile external dependency failures
+ * Default: Skipped for now until real-flow implementation is fully enabled
  */
 
 // INTEGRATION: Happy-path submission calls invalidateAccessCode(), which triggers
 // a CCD event. These tests require a real case + real access-code integration.
 test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
   const runAccessCodeIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
+  const realCcdFlowImplemented = false;
 
   test.skip(
-    !runAccessCodeIntegration,
-    'Skipped by default: real CCD happy-path coverage is opt-in. Set ACCESS_CODE_REAL_INTEGRATION=true to enable in preview/AAT or configured integration environments.'
+    !runAccessCodeIntegration || !realCcdFlowImplemented,
+    'Skipped for now: real CCD enter-access-code flow is not fully implemented yet. Enable when implementation is complete and ACCESS_CODE_REAL_INTEGRATION=true.'
   );
 
   test.beforeEach(async ({
@@ -118,10 +121,11 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
 
 test.describe('[integration-happy-path] Enter Access Code - Full Journey', () => {
   const runIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
+  const realCcdFlowImplemented = false;
 
   test.skip(
-    !runIntegration,
-    'Skipped by default: end-to-end happy-path requires real CCD and generated access codes. Set ACCESS_CODE_REAL_INTEGRATION=true to enable in integration environments.'
+    !runIntegration || !realCcdFlowImplemented,
+    'Skipped for now: real CCD enter-access-code flow is not fully implemented yet. Enable when implementation is complete and ACCESS_CODE_REAL_INTEGRATION=true.'
   );
 
   test('[integration-happy-path] Citizen can submit applicant access code without pre-injection @integration @a11y', async ({

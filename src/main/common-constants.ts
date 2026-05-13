@@ -46,6 +46,7 @@ export const UploadStepNames = {
   BeforeYouStart: 'before-you-start',
   Confidentiality: 'confidentiality',
   FDR: 'fdr',
+  DocumentSelection: 'document-selection',
 };
 
 

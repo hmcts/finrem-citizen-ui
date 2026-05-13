@@ -1,7 +1,5 @@
 import { DEFAULT_AXE_OPTIONS, test } from '../../../fixtures/fixtures';
-import { BasePage } from '../../pom/basePage.page';
-import { BeforeYouStartPage } from '../../pom/beforeYouStart.page';
-import { DashboardPage } from '../../pom/dashboardPage.page';
+import { navigateToConfidentialityStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
 /**
  * INTEGRATION TESTS: Confidentiality Page
@@ -12,20 +10,9 @@ import { DashboardPage } from '../../pom/dashboardPage.page';
  * Runs on: Environments with working authentication flow
  */
 
-async function navigateToConfidentialityPage(
-  dashboardPage: DashboardPage,
-  beforeYouStartPage: BeforeYouStartPage,
-  basePage: BasePage
-): Promise<void> {
-  await dashboardPage.navigateToDashboard();
-  await dashboardPage.clickGoToDocumentUpload();
-  await beforeYouStartPage.startUploadJourney();
-  await basePage.verifyGlobalHeaderAndFooter();
-}
- 
 test.describe('[integration] Confidentiality page', () => {
   test.beforeEach(async ({ loggedInPage: _loggedInPage, dashboardPage, beforeYouStartPage, basePage }) => {
-    await navigateToConfidentialityPage(dashboardPage, beforeYouStartPage, basePage);
+    await navigateToConfidentialityStep(dashboardPage, beforeYouStartPage, basePage);
   });
  
   // AC1: Page renders with correct URL and key layout elements
@@ -38,7 +25,7 @@ test.describe('[integration] Confidentiality page', () => {
   });
  
   // AC2: Form C8 link is present with the correct href and opens in a new tab
-  test('[integration] Form C8 link is present and correctly configured @a11y', async ({
+  test('[integration] Form C8 link is present and correctly configured', async ({
     confidentialityPage,
     axeUtils,
   }) => {
@@ -82,13 +69,15 @@ test.describe('[integration] Confidentiality page', () => {
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
  
-  // AC7: Continue button is visible, enabled, and navigates to the next upload step
-  test('[integration] Continue button navigates to upload step @a11y', async ({
+  // AC7: Continue button is visible, enabled, and navigates to the FDR step
+  test('[integration] Continue button navigates to FDR step @a11y', async ({
     confidentialityPage,
+    fdrPage,
     axeUtils,
   }) => {
     await confidentialityPage.verifyContinueButton();
-    await confidentialityPage.clickContinueAndExpectUploadStep();
+    await confidentialityPage.clickContinueAndExpectFdrStep();
+    await fdrPage.verifyFdrPageContent();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
@@ -109,8 +98,7 @@ test.describe('[integration] Confidentiality page', () => {
     confidentialityPage,
     axeUtils,
   }) => {
-    await confidentialityPage.verifyContactHelpClosedByDefault();
-    await confidentialityPage.verifyContactHelpContent();
+    await confidentialityPage.verifyGettingHelpSection();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 });
