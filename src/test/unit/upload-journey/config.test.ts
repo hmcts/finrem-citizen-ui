@@ -28,7 +28,7 @@ describe('Upload Journey Configuration', () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.FDR];
       expect(step.template).toBe('upload-journey/fdr');
-      expect(step.next!({})).toBe(UploadStepNames.DocumentSelection);
+      expect(step.next!({})).toBe(UploadStepNames.UploadDocuments);
       expect(step.previous!({})).toBe(UploadStepNames.Confidentiality);
       expect(step.validate).toBeDefined();
       expect(step.persist).toBeDefined();
@@ -85,10 +85,10 @@ describe('Upload Journey Configuration', () => {
     });
   });
 
-  describe(UploadStepNames.DocumentSelection, () => {
+  describe(UploadStepNames.UploadDocuments, () => {
     it('should have correct configuration', () => {
-      const step = uploadSteps[UploadStepNames.DocumentSelection];
-      expect(step.template).toBe('upload-journey/document-selection');
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      expect(step.template).toBe('upload-journey/upload-documents');
       expect(step.next!({})).toBeNull();
       expect(step.previous!({})).toBe(UploadStepNames.FDR);
       expect(step.validate).toBeUndefined();

@@ -135,7 +135,7 @@ describe('Upload Journey Routes', () => {
       expect(mockRes.status).toHaveBeenCalledWith(404);
     });
 
-    it('should redirect to next step', () => {
+    it('should redirect to next step from before-you-start', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.BeforeYouStart },
@@ -152,6 +152,25 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as Request, mockRes as Response);
 
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confidentiality`);
+    });
+
+    it('should redirect to next step from FDR', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.FDR },
+        session: {} as unknown as Request['session'],
+        body: {},
+      } as Partial<Request>;
+      const mockRes = {
+        render: jest.fn(),
+        redirect: jest.fn(),
+        status: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/upload-documents`);
     });
 
     it('should handle validation errors', () => {

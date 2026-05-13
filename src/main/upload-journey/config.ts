@@ -43,12 +43,12 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
         fdrHearing: body.fdrHearing as 'yes' | 'no',
       };
     },
-    next: () => UploadStepNames.DocumentSelection,
+    next: () => UploadStepNames.UploadDocuments,
     previous: () => UploadStepNames.Confidentiality,
   },
 
-  [UploadStepNames.DocumentSelection]: {
-    template: 'upload-journey/document-selection',
+  [UploadStepNames.UploadDocuments]: {
+    template: 'upload-journey/upload-documents',
     next: () => null,
     previous: () => UploadStepNames.FDR,
   },
