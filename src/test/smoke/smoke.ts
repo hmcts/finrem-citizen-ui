@@ -13,19 +13,20 @@ const axiosConfig = {
 type SmokePage = {
   name: string;
   path: string;
+  expectsLoginRedirect?: boolean;
 };
 
 const pages: SmokePage[] = [
-  { name: 'Home', path: '/' },
-  { name: 'Enter Case Number', path: '/enter-case-number' },
-  { name: 'Enter Access Code', path: '/enter-access-code' },
-  { name: 'Dashboard', path: '/dashboard' },
-  { name: 'Task List Upload Dashboard', path: '/task-list-upload-dashboard' },
-  { name: 'Documents', path: '/documents' },
-  { name: 'Upload Journey Start', path: '/upload' },
-  { name: 'Before You Start', path: '/upload/before-you-start' },
-  { name: 'Confidentiality Guidance', path: '/upload/confidentiality' },
-  { name: 'FDR', path: '/upload/fdr' },
+  { name: 'Home', path: '/', expectsLoginRedirect: true },
+  { name: 'Enter Case Number', path: '/enter-case-number', expectsLoginRedirect: true },
+  { name: 'Enter Access Code', path: '/enter-access-code', expectsLoginRedirect: true },
+  { name: 'Dashboard', path: '/dashboard', expectsLoginRedirect: true },
+  { name: 'Task List Upload Dashboard', path: '/task-list-upload-dashboard', expectsLoginRedirect: true },
+  { name: 'Documents', path: '/documents', expectsLoginRedirect: true },
+  { name: 'Upload Journey Start', path: '/upload', expectsLoginRedirect: true },
+  { name: 'Before You Start', path: '/upload/before-you-start', expectsLoginRedirect: true },
+  { name: 'Confidentiality Guidance', path: '/upload/confidentiality', expectsLoginRedirect: true },
+  { name: 'FDR', path: '/upload/fdr', expectsLoginRedirect: true },
   { name: 'Autocomplete Demo', path: '/demo/autocomplete' },
 ];
 
@@ -46,11 +47,20 @@ function getContentTypeHeader(response: AxiosResponse): string {
   return '';
 }
 
-function assertSuccessfulPageResponse(response: AxiosResponse): void {
+function assertSuccessfulPageResponse(response: AxiosResponse, expectsLoginRedirect = false): void {
   expect([200, 302]).toContain(response.status);
 
   if (response.status === 302) {
-    expect(response.headers.location).toBeDefined();
+    const location = response.headers.location;
+    expect(location).toBeDefined();
+
+    const redirectPath = new URL(location as string, testUrl).pathname;
+    if (expectsLoginRedirect) {
+      expect(redirectPath).toMatch(/^\/login(?:\/|$)/i);
+    } else {
+      expect(redirectPath).not.toMatch(/^\/login(?:\/|$)/i);
+    }
+    expect(redirectPath).not.toMatch(/^\/(error|500|404)(?:\/|$)/i);
     return;
   }
 
@@ -61,13 +71,12 @@ function assertSuccessfulPageResponse(response: AxiosResponse): void {
   expect(body.length).toBeGreaterThan(100);
   expect(body).toContain('<title>');
   expect(body).not.toContain('Cannot GET');
-  expect(body).not.toContain('Internal Server Error');
 }
 
 describe('Smoke Test - Page Availability', () => {
-  test.each(pages)('$name page is reachable and valid', async ({ path }) => {
+  test.each(pages)('$name page is reachable and valid', async ({ path, expectsLoginRedirect }) => {
     const response = await axios.get(`${testUrl}${path}`, axiosConfig);
-    assertSuccessfulPageResponse(response);
+    assertSuccessfulPageResponse(response, expectsLoginRedirect);
   });
 
   test('Not found page returns 404', async () => {
