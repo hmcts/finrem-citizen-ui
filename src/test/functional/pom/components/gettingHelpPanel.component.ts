@@ -76,4 +76,9 @@ export class GettingHelpPanel {
     await expect(this.callChargesLink).toHaveAttribute('target', '_blank');
     await expect(this.callChargesLink).toHaveAttribute('rel', 'noopener noreferrer');
   }
+
+  async verifySection(options?: VerifyContactContentOptions): Promise<void> {
+    await this.verifyClosedByDefault();
+    await this.verifyContactContent(options);
+  }
 }

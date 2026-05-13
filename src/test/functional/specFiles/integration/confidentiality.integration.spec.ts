@@ -1,7 +1,5 @@
 import { DEFAULT_AXE_OPTIONS, test } from '../../../fixtures/fixtures';
-import { BasePage } from '../../pom/basePage.page';
-import { BeforeYouStartPage } from '../../pom/beforeYouStart.page';
-import { DashboardPage } from '../../pom/dashboardPage.page';
+import { navigateToConfidentialityStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
 /**
  * INTEGRATION TESTS: Confidentiality Page
@@ -12,20 +10,9 @@ import { DashboardPage } from '../../pom/dashboardPage.page';
  * Runs on: Environments with working authentication flow
  */
 
-async function navigateToConfidentialityPage(
-  dashboardPage: DashboardPage,
-  beforeYouStartPage: BeforeYouStartPage,
-  basePage: BasePage
-): Promise<void> {
-  await dashboardPage.navigateToDashboard();
-  await dashboardPage.clickGoToDocumentUpload();
-  await beforeYouStartPage.startUploadJourney();
-  await basePage.verifyGlobalHeaderAndFooter();
-}
- 
 test.describe('[integration] Confidentiality page', () => {
   test.beforeEach(async ({ loggedInPage: _loggedInPage, dashboardPage, beforeYouStartPage, basePage }) => {
-    await navigateToConfidentialityPage(dashboardPage, beforeYouStartPage, basePage);
+    await navigateToConfidentialityStep(dashboardPage, beforeYouStartPage, basePage);
   });
  
   // AC1: Page renders with correct URL and key layout elements
@@ -38,47 +25,59 @@ test.describe('[integration] Confidentiality page', () => {
   });
  
   // AC2: Form C8 link is present with the correct href and opens in a new tab
-  test('[integration] Form C8 link is present and correctly configured', async ({
-    confidentialityPage,
-  }) => {
-    await confidentialityPage.verifyFormC8Link();
-  });
- 
-  // AC3: Redaction instructions are shown
-  test('[integration] Redaction instructions are displayed', async ({
-    confidentialityPage,
-  }) => {
-    await confidentialityPage.verifyRedactionInstructions();
-  });
- 
-  // AC4: Court staff disclaimer is shown
-  test('[integration] Court staff disclaimer is displayed', async ({
-    confidentialityPage,
-  }) => {
-    await confidentialityPage.verifyCourtStaffDisclaimer();
-  });
- 
-  // AC5: Confidential information examples and do-not-redact guidance are shown
-  test('[integration] Confidential information examples are displayed', async ({
-    confidentialityPage,
-  }) => {
-    await confidentialityPage.verifyConfidentialInformationExamples();
-  });
- 
-  // AC6: Warning message about documents being placed on the court record is shown
-  test('[integration] Court record warning message is displayed', async ({
-    confidentialityPage,
-  }) => {
-    await confidentialityPage.verifyCourtRecordWarning();
-  });
- 
-  // AC7: Continue button is visible, enabled, and navigates to the next upload step
-  test('[integration] Continue button navigates to upload step @a11y', async ({
+  test('[integration] Form C8 link is present and correctly configured @a11y', async ({
     confidentialityPage,
     axeUtils,
   }) => {
+    await confidentialityPage.verifyFormC8Link();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  });
+ 
+  // AC3: Redaction instructions are shown
+  test('[integration] Redaction instructions are displayed @a11y', async ({
+    confidentialityPage,
+    axeUtils,
+  }) => {
+    await confidentialityPage.verifyRedactionInstructions();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  });
+ 
+  // AC4: Court staff disclaimer is shown
+  test('[integration] Court staff disclaimer is displayed @a11y', async ({
+    confidentialityPage,
+    axeUtils,
+  }) => {
+    await confidentialityPage.verifyCourtStaffDisclaimer();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  });
+ 
+  // AC5: Confidential information examples and do-not-redact guidance are shown
+  test('[integration] Confidential information examples are displayed @a11y', async ({
+    confidentialityPage,
+    axeUtils,
+  }) => {
+    await confidentialityPage.verifyConfidentialInformationExamples();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  });
+ 
+  // AC6: Warning message about documents being placed on the court record is shown
+  test('[integration] Court record warning message is displayed @a11y', async ({
+    confidentialityPage,
+    axeUtils,
+  }) => {
+    await confidentialityPage.verifyCourtRecordWarning();
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  });
+ 
+  // AC7: Continue button is visible, enabled, and navigates to the FDR step
+  test('[integration] Continue button navigates to FDR step @a11y', async ({
+    confidentialityPage,
+    fdrPage,
+    axeUtils,
+  }) => {
     await confidentialityPage.verifyContinueButton();
-    await confidentialityPage.clickContinueAndExpectUploadStep();
+    await confidentialityPage.clickContinueAndExpectFdrStep();
+    await fdrPage.verifyFdrPageContent();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
@@ -99,8 +98,7 @@ test.describe('[integration] Confidentiality page', () => {
     confidentialityPage,
     axeUtils,
   }) => {
-    await confidentialityPage.verifyContactHelpClosedByDefault();
-    await confidentialityPage.verifyContactHelpContent();
+    await confidentialityPage.verifyGettingHelpSection();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 });

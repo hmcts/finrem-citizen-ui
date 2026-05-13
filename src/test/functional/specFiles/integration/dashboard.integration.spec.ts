@@ -1,4 +1,5 @@
 import { DEFAULT_AXE_OPTIONS, test } from '../../../fixtures/fixtures';
+import { navigateToDashboardStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
 /**
  * INTEGRATION TESTS: Dashboard Upload Journey
@@ -17,8 +18,7 @@ test.describe('[integration] Dashboard upload journey', () => {
     basePage,
   }) => {
     // Ensure logged-in session and navigate to dashboard for each test
-    await dashboardPage.navigateToDashboard();
-    await basePage.verifyGlobalHeaderAndFooter();
+    await navigateToDashboardStep(dashboardPage, basePage);
   });
 
   test('[integration] Dashboard sections and upload document button visible and accessible @a11y', async ({
@@ -40,7 +40,7 @@ test.describe('[integration] Dashboard upload journey', () => {
     await beforeYouStartPage.verifyBeforeYouStartPageContent();
     await beforeYouStartPage.verifyHelpAndGuidanceClosedByDefault();
     await beforeYouStartPage.verifyUnableToSendGuidance();
-    await beforeYouStartPage.verifyContactHelpContent();
+    await beforeYouStartPage.verifyGettingHelpSection();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 

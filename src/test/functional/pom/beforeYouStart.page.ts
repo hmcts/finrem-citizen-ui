@@ -82,9 +82,9 @@ export class BeforeYouStartPage extends BasePage {
     await this.gettingHelp.verifyClosedByDefault();
   }
 
-  // Expand contact help panel and verify links are properly configured
-  async verifyContactHelpContent(): Promise<void> {
-    await this.gettingHelp.verifyContactContent();
+  // Verify getting help section end-to-end (collapsed state + expanded content)
+  async verifyGettingHelpSection(): Promise<void> {
+    await this.gettingHelp.verifySection();
   }
 
   // Click back link and verify navigation to dashboard

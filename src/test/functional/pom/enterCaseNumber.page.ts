@@ -1,6 +1,10 @@
 import { expect, Locator, Page } from '@playwright/test';
 
-import { expectVisible } from '../utils/helpers/pomAssertions';
+import {
+  expectNoSpecificValidationErrors,
+  expectValidationError,
+  expectVisible,
+} from '../utils/helpers/pomAssertions';
 
 export class EnterCaseNumberPage {
   readonly caseNumberHeader: Locator;
@@ -28,7 +32,6 @@ export class EnterCaseNumberPage {
 
   async submitCaseNumber(caseNumber: string): Promise<void> {
     await this.caseNumberInput.focus();
-    await this.caseNumberInput.fill('');
     await this.caseNumberInput.fill(caseNumber);
     await this.caseNumberInput.press('Tab');
     await this.continueBtn.waitFor({ state: 'visible' });
@@ -36,16 +39,15 @@ export class EnterCaseNumberPage {
   }
 
   async expectValidationError(message: string): Promise<void> {
-    await expectVisible([
+    await expectValidationError(
       this.errorSummaryTitle,
-      this.errorSummary.getByRole('link', { name: message }),
-    ]);
-    await expect(this.fieldError).toContainText(message);
+      this.errorSummary,
+      this.fieldError,
+      message
+    );
   }
 
   async expectNoSpecificValidationErrors(messages: string[]): Promise<void> {
-    for (const message of messages) {
-      await expect(this.errorSummary.getByRole('link', { name: message })).not.toBeVisible();
-    }
+    await expectNoSpecificValidationErrors(this.errorSummary, messages);
   }
 }

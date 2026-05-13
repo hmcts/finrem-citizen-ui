@@ -145,7 +145,7 @@
     "path-to-regexp": "8.4.2",
     "protobufjs": "8.2.0",
     "uuid": "14.0.0",
-    "@opentelemetry/sdk-node": "0.217.0",
-    "@opentelemetry/exporter-prometheus": "0.217.0"
+    "@opentelemetry/sdk-node": "0.218.0",
+    "@opentelemetry/exporter-prometheus": "0.218.0"
   }
 }

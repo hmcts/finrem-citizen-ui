@@ -1,6 +1,10 @@
-import { expect, Locator, Page } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 
-import { expectVisible } from '../utils/helpers/pomAssertions';
+import {
+  expectNoSpecificValidationErrors,
+  expectValidationError,
+  expectVisible,
+} from '../utils/helpers/pomAssertions';
 
 export class EnterAccessCodePage {
   readonly accessCodeHeader: Locator;
@@ -32,7 +36,6 @@ export class EnterAccessCodePage {
 
   async submitAccessCode(accessCode: string): Promise<void> {
     await this.accessCodeInput.focus();
-    await this.accessCodeInput.fill('');
     await this.accessCodeInput.fill(accessCode);
     await this.accessCodeInput.press('Tab');
     await this.continueBtn.waitFor({ state: 'visible' });
@@ -41,16 +44,15 @@ export class EnterAccessCodePage {
 
   async expectValidationError(message: string): Promise<void> {
     const resolvedMessage = this.validationMessageAliases[message] ?? message;
-    await expectVisible([
+    await expectValidationError(
       this.errorSummaryTitle,
-      this.errorSummary.getByRole('link', { name: resolvedMessage }),
-    ]);
-    await expect(this.fieldError).toContainText(resolvedMessage);
+      this.errorSummary,
+      this.fieldError,
+      resolvedMessage
+    );
   }
 
   async expectNoSpecificValidationErrors(messages: string[]): Promise<void> {
-    for (const message of messages) {
-      await expect(this.errorSummary.getByRole('link', { name: message })).not.toBeVisible();
-    }
+    await expectNoSpecificValidationErrors(this.errorSummary, messages);
   }
 }
