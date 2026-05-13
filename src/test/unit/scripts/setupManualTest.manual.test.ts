@@ -13,14 +13,7 @@ import { IdamApiService } from '../../functional/utils/helpers/idamCreateUser';
 dotenv.config({ quiet: true });
 
 const getApplicationUrl = (): string => {
-  const env = process.env.RUNNING_ENV || 'aat';
-  if (env === 'local') {
-    return process.env.TEST_URL || 'http://localhost:3100';
-  }
-  if (env.startsWith('pr-')) {
-    return `https://finrem-citizen-ui-${env}.preview.platform.hmcts.net`;
-  }
-  return `https://finrem-citizen-ui.${env}.platform.hmcts.net`;
+  return process.env.TEST_URL || 'http://localhost:3100';
 };
 
 const buildMockAccessCodeInjectionUrl = (
@@ -54,14 +47,8 @@ describe('Setup Manual Test', () => {
     async () => {
       const appEnv = process.env.RUNNING_ENV || 'aat';
       const applicationUrl = getApplicationUrl();
-      const useRealIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
-      const useMockAccessCodes = !useRealIntegration && process.env.MOCK_ACCESS_CODES !== 'false';
-      let modeLabel = 'real case only';
-      if (useRealIntegration) {
-        modeLabel = 'real integration (Form C at hearing)';
-      } else if (useMockAccessCodes) {
-        modeLabel = 'mock access codes enabled';
-      }
+      const useMockAccessCodes = process.env.MOCK_ACCESS_CODES !== 'false';
+      const modeLabel = useMockAccessCodes ? 'mock access codes' : 'case only (no codes)';
 
       console.log('\n========================================\n📋 Creating test setup...\n========================================\n');
 
@@ -73,9 +60,7 @@ describe('Setup Manual Test', () => {
 
       console.log('Creating contested case...');
       let caseDetails;
-      if (useRealIntegration) {
-        caseDetails = await ContestedCaseFactory.createContestedCaseWithHearingAndAccessCode();
-      } else if (useMockAccessCodes) {
+      if (useMockAccessCodes) {
         if (appEnv === 'local') {
           caseDetails = getLocalMockCaseDetails();
         } else {
@@ -142,15 +127,6 @@ Mock Access Code Workflow:
   4. Enter APPCODE1 or RSPCODE1 to continue.
 
 Note: this only works where ENABLE_TEST_SUPPORT_ROUTES=true.`
-    : ''
-}
-
-${
-  useRealIntegration && hasAccessCodes
-    ? `Real Access Code Workflow:
-  1. Log in with the credentials above.
-  2. Enter the formatted case number.
-  3. Enter Applicant or Respondent access code shown above.`
     : ''
 }
 
