@@ -28,6 +28,7 @@ const pages: SmokePage[] = [
   { name: 'Confidentiality Guidance', path: '/upload/confidentiality', expectsLoginRedirect: true },
   { name: 'FDR', path: '/upload/fdr', expectsLoginRedirect: true },
   { name: 'Autocomplete Demo', path: '/demo/autocomplete' },
+  { name: 'Document Selection', path: '/upload/document-selection', expectsLoginRedirect: true },
 ];
 
 function getContentTypeHeader(response: AxiosResponse): string {
@@ -90,14 +91,5 @@ describe('Smoke Test - Page Availability', () => {
     expect(getContentTypeHeader(response)).toContain('text/html');
     expect(response.data).toContain('Page not found');
   });
-
-  test('FDR page loads', async () => {
-    const response = await axios.get(`${testUrl}/upload/fdr`, axiosConfig);
-    expect([200, 302]).toContain(response.status);
-  });
-
-  test('Document Selection page loads', async () => {
-    const response = await axios.get(`${testUrl}/upload/document-selection`, axiosConfig);
-    expect([200, 302]).toContain(response.status);
-  });
+  
 });
