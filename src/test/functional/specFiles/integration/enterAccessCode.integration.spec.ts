@@ -26,13 +26,16 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
 
   test.beforeEach(async ({
     loggedInPage,
-    enterCaseNumberPage,
+    basePage,
     contestedCaseWithHearing,
-    enterAccessCodePage,
   }) => {
     expect(loggedInPage.authStatus).toBe('success');
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-    await expect(enterAccessCodePage.page).toHaveURL(/\/enter-access-code$/);
+    await basePage.injectCaseSession(
+      contestedCaseWithHearing.caseId,
+      contestedCaseWithHearing.applicantAccessCode,
+      contestedCaseWithHearing.respondentAccessCode
+    );
+    await basePage.verifyGlobalHeaderAndFooter();
   });
 
   /**
