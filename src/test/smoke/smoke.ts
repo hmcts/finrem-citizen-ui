@@ -41,4 +41,14 @@ describe('Smoke Test - Page Availability', () => {
     const response = await axios.get(`${testUrl}/upload/confidentiality`, axiosConfig);
     expect([200, 302]).toContain(response.status);
   });
+
+  test('FDR page loads', async () => {
+    const response = await axios.get(`${testUrl}/upload/fdr`, axiosConfig);
+    expect([200, 302]).toContain(response.status);
+  });
+
+  test('Document Selection page loads', async () => {
+    const response = await axios.get(`${testUrl}/upload/document-selection`, axiosConfig);
+    expect([200, 302]).toContain(response.status);
+  });
 });
