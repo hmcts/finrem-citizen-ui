@@ -7,7 +7,7 @@ import { GettingHelpPanel } from './components/gettingHelpPanel.component';
 const URL_PATTERNS = {
   CONFIDENTIALITY: /\/upload\/confidentiality/,
   DASHBOARD: /\/dashboard/,
-  UPLOAD: /\/upload/,
+  FDR: /\/upload\/fdr/,
 };
 
 const EXTERNAL_LINKS = {
@@ -134,10 +134,10 @@ export class ConfidentialityPage extends BasePage {
     await expect(this.continueButton).toBeEnabled();
   }
 
-  // AC7: Click Continue and assert navigation to next upload step
-  async clickContinueAndExpectUploadStep(): Promise<void> {
+  // AC7: Click Continue and assert navigation to FDR step
+  async clickContinueAndExpectFdrStep(): Promise<void> {
     await this.continueButton.click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.UPLOAD);
+    await expect(this.page).toHaveURL(URL_PATTERNS.FDR);
   }
 
   // AC8: Assert Cancel link is visible
