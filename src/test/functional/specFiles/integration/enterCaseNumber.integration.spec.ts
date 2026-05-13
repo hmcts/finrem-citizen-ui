@@ -25,14 +25,14 @@ test.describe('[integration-happy-path] Enter Case Number - Happy Path', () => {
    * then logs in as a citizen and submits the case number.
    */
   test('[integration-happy-path] Citizen can enter a valid case number created via API @a11y', async ({
-    loggedInPage: _loggedInPage,
+    loggedInPage,
     basePage,
     enterCaseNumberPage,
     contestedCaseForCaseNumber,
-    assertionHelpers: _assertionHelpers,
     page,
     axeUtils,
   }) => {
+    expect(loggedInPage.authStatus).toBe('success');
     await enterCaseNumberPage.verifyCaseNumberPageContent();
     await basePage.verifyGlobalHeaderAndFooter();
     await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
@@ -41,14 +41,14 @@ test.describe('[integration-happy-path] Enter Case Number - Happy Path', () => {
   });
 
   test('[integration-happy-path] Citizen can enter formatted case number (with hyphens) @a11y', async ({
-    loggedInPage: _loggedInPage,
+    loggedInPage,
     basePage,
     enterCaseNumberPage,
     contestedCaseForCaseNumber,
-    assertionHelpers: _assertionHelpers,
     page,
     axeUtils,
   }) => {
+    expect(loggedInPage.authStatus).toBe('success');
     await enterCaseNumberPage.verifyCaseNumberPageContent();
     await basePage.verifyGlobalHeaderAndFooter();
     // Use the formatted case ID (XXXX-XXXX-XXXX-XXXX)
