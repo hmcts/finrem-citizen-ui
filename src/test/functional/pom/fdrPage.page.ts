@@ -90,11 +90,7 @@ export class FdrPage extends BasePage {
     await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
   }
 
-  async verifyContactHelpClosedByDefault(): Promise<void> {
-    await this.gettingHelp.verifyClosedByDefault();
-  }
-
-  async verifyContactHelpContent(): Promise<void> {
-    await this.gettingHelp.verifyContactContent({ expectedEmail: FDR_EMAIL });
+  async verifyGettingHelpSection(): Promise<void> {
+    await this.gettingHelp.verifySection({ expectedEmail: FDR_EMAIL });
   }
 }
