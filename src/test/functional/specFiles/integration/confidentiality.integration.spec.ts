@@ -1,5 +1,5 @@
 import { DEFAULT_AXE_OPTIONS, test } from '../../../fixtures/fixtures';
-import { navigateToConfidentialityPage } from '../helpers/uploadJourneyNavigation.helper';
+import { navigateToConfidentialityStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
 /**
  * INTEGRATION TESTS: Confidentiality Page
@@ -12,7 +12,7 @@ import { navigateToConfidentialityPage } from '../helpers/uploadJourneyNavigatio
 
 test.describe('[integration] Confidentiality page', () => {
   test.beforeEach(async ({ loggedInPage: _loggedInPage, dashboardPage, beforeYouStartPage, basePage }) => {
-    await navigateToConfidentialityPage(dashboardPage, beforeYouStartPage, basePage);
+    await navigateToConfidentialityStep(dashboardPage, beforeYouStartPage, basePage);
   });
  
   // AC1: Page renders with correct URL and key layout elements

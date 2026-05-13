@@ -1,5 +1,5 @@
 import { DEFAULT_AXE_OPTIONS, test } from '../../../fixtures/fixtures';
-import { navigateToDashboardAndVerifyLayout } from '../helpers/uploadJourneyNavigation.helper';
+import { navigateToDashboardStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
 /**
  * INTEGRATION TESTS: Dashboard Upload Journey
@@ -18,7 +18,7 @@ test.describe('[integration] Dashboard upload journey', () => {
     basePage,
   }) => {
     // Ensure logged-in session and navigate to dashboard for each test
-    await navigateToDashboardAndVerifyLayout(dashboardPage, basePage);
+    await navigateToDashboardStep(dashboardPage, basePage);
   });
 
   test('[integration] Dashboard sections and upload document button visible and accessible @a11y', async ({
