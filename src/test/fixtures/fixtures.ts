@@ -6,8 +6,10 @@ import { BasePage } from '../functional/pom/basePage.page';
 import { BeforeYouStartPage } from '../functional/pom/beforeYouStart.page';
 import { ConfidentialityPage } from '../functional/pom/confidentialityPage.page';
 import { DashboardPage } from '../functional/pom/dashboardPage.page';
+import { DocumentSelectionPage } from '../functional/pom/documentSelectionPage.page';
 import { EnterAccessCodePage } from '../functional/pom/enterAccessCode.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
+import { FdrPage } from '../functional/pom/fdrPage.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
 import { ContestedCaseFactory } from '../functional/utils/factories/contested/ContestedCaseFactory';
 import {
@@ -107,6 +109,8 @@ type MyFixtures = {
   axeUtils: AxeUtils;
   beforeYouStartPage: BeforeYouStartPage;
   confidentialityPage: ConfidentialityPage;
+  fdrPage: FdrPage;
+  documentSelectionPage: DocumentSelectionPage;
   assertionHelpers: AssertionHelpers;
 };
 
@@ -179,6 +183,14 @@ export const test = base.extend<MyFixtures & MockOptions>({
 
   confidentialityPage: async ({ page }, use) => {
     await use(new ConfidentialityPage(page));
+  },
+
+  fdrPage: async ({ page }, use) => {
+    await use(new FdrPage(page));
+  },
+
+  documentSelectionPage: async ({ page }, use) => {
+    await use(new DocumentSelectionPage(page));
   },
 
   /**
