@@ -252,7 +252,7 @@ Why this does not work on preview/AAT in mock mode:
 - Mock mode depends on `GET /__test/inject-case-session`.
 - That endpoint is only registered when `ENABLE_TEST_SUPPORT_ROUTES=true`.
 - Preview/AAT typically do not enable test-support routes, so injection URL requests return `404`.
-- Use local mock mode for injection-based testing, or use `yarn setup:manual-test:real` for real integration (requires reachable external dependencies).
+- Use local mock mode for injection-based testing
 
 ## Linting
 
