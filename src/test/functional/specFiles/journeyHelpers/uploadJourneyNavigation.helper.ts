@@ -3,7 +3,7 @@ import { BeforeYouStartPage } from '../../pom/beforeYouStart.page';
 import { ConfidentialityPage } from '../../pom/confidentialityPage.page';
 import { DashboardPage } from '../../pom/dashboardPage.page';
 
-export async function navigateToDashboardAndVerifyLayout(
+export async function navigateToDashboardStep(
   dashboardPage: DashboardPage,
   basePage: BasePage
 ): Promise<void> {
@@ -11,22 +11,22 @@ export async function navigateToDashboardAndVerifyLayout(
   await basePage.verifyGlobalHeaderAndFooter();
 }
 
-export async function navigateToConfidentialityPage(
+export async function navigateToConfidentialityStep(
   dashboardPage: DashboardPage,
   beforeYouStartPage: BeforeYouStartPage,
   basePage: BasePage
 ): Promise<void> {
-  await navigateToDashboardAndVerifyLayout(dashboardPage, basePage);
+  await navigateToDashboardStep(dashboardPage, basePage);
   await dashboardPage.clickGoToDocumentUpload();
   await beforeYouStartPage.startUploadJourney();
 }
 
-export async function navigateToFdrPage(
+export async function navigateToFdrStep(
   dashboardPage: DashboardPage,
   beforeYouStartPage: BeforeYouStartPage,
   confidentialityPage: ConfidentialityPage,
   basePage: BasePage
 ): Promise<void> {
-  await navigateToConfidentialityPage(dashboardPage, beforeYouStartPage, basePage);
+  await navigateToConfidentialityStep(dashboardPage, beforeYouStartPage, basePage);
   await confidentialityPage.clickContinueAndExpectFdrStep();
 }
