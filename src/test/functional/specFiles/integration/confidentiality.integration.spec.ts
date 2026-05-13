@@ -72,13 +72,15 @@ test.describe('[integration] Confidentiality page', () => {
     await confidentialityPage.verifyCourtRecordWarning();
   });
  
-  // AC7: Continue button is visible, enabled, and navigates to the next upload step
-  test('[integration] Continue button navigates to upload step @a11y', async ({
+  // AC7: Continue button is visible, enabled, and navigates to the FDR step
+  test('[integration] Continue button navigates to FDR step @a11y', async ({
     confidentialityPage,
+    fdrPage,
     axeUtils,
   }) => {
     await confidentialityPage.verifyContinueButton();
-    await confidentialityPage.clickContinueAndExpectUploadStep();
+    await confidentialityPage.clickContinueAndExpectFdrStep();
+    await fdrPage.verifyFdrPageContent();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
