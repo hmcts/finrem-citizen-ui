@@ -57,7 +57,7 @@ test.describe('[integration] Enter Case Number Page Verification - Validation Er
   });
 
   test('[integration] Error: Case number not found @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
-    await enterCaseNumberPage.submitCaseNumber('1111222233334444');
+    await enterCaseNumberPage.submitCaseNumber('9999999999999999');
     await enterCaseNumberPage.expectValidationError(
       'We cannot find that case number, Enter the case number that you received from the court'
     );
