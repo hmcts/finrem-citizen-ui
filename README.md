@@ -219,6 +219,20 @@ yarn test:playwright:a11y
 
 `integration-happy-path` tests are skipped by default and require `ACCESS_CODE_REAL_INTEGRATION=true` plus reachable real CCD dependencies.
 
+**Running Functional Tests Locally:**
+
+Functional tests require the mock CCD API server running:
+
+```bash
+# Terminal 1 - Start mock server
+yarn start:mock-case-api
+
+# Terminal 2 - Run functional tests
+yarn test:functional
+```
+
+Tests will use the mock server endpoints or real CCD (if `CCD_URL` is overridden).
+
 **For Detailed Test Strategy, Commands, and Setup:**
 
 👉 See [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md) — Complete guide to functional test organization, environment setup, and known issues (Form C dependency).
