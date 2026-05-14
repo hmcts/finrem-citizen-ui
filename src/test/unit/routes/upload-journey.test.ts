@@ -159,7 +159,7 @@ describe('Upload Journey Routes', () => {
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
         session: {} as unknown as Request['session'],
-        body: {},
+        body: { fdrHearing: 'yes' },
       } as Partial<Request>;
       const mockRes = {
         render: jest.fn(),
@@ -247,7 +247,7 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as Request, mockRes as Response);
 
       expect(mockReq.session?.uploadJourneyData).toEqual({ fdrHearing: 'yes' });
-      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/upload-documents`);
     });
 
     it('should persist FDR hearing selection as no', () => {
@@ -264,7 +264,7 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as Request, mockRes as Response);
 
       expect(mockReq.session?.uploadJourneyData).toEqual({ fdrHearing: 'no' });
-      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/upload-documents`);
     });
   });
 
