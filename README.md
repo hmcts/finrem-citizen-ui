@@ -47,23 +47,30 @@ Build assets:
 yarn build
 ```
 
-Start app:
+For local functional testing, run these commands in order:
 
-```bash
-yarn start:dev
-```
-
-Run the local mock CCD/Azure case API stub:
+1. Start the local mock CCD/Azure case API stub:
 
 ```bash
 yarn start:mock-case-api
 ```
 
-Point the main app at the stub by overriding `CCD_URL`:
+2. Start the app with test-support routes enabled (in a separate terminal):
 
 ```bash
-CCD_URL=http://localhost:4100 yarn start:dev
+ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 ```
+
+3. Run functional tests (in a third terminal):
+
+```bash
+yarn test:functional
+```
+
+`CCD_URL` and `CCD_DATA_STORE_API_URL` are set by the active target in `.env`.
+Use the `.env` `Target selection` section to choose local, preview, or aat before running tests.
+
+If you need to point to a different CCD URL for one run, override `CCD_URL` when starting the app.
 
 The mock server implements these five endpoints used by the app:
 
@@ -114,6 +121,8 @@ In practice this means:
 
 - uncomment the four lines for the target you want to use
 - comment out the equivalent lines in the other target blocks
+
+This target selection controls both `CCD_URL` and `CCD_DATA_STORE_API_URL` used by local runs.
 
 The active target lines are:
 
@@ -221,17 +230,18 @@ yarn test:playwright:a11y
 
 **Running Functional Tests Locally:**
 
-Functional tests require the mock CCD API server running:
+Functional tests require this startup sequence:
 
 ```bash
-# Terminal 1 - Start mock server
+# Terminal 1 - Start mock server (must run first)
 yarn start:mock-case-api
 
-# Terminal 2 - Run functional tests
+# Terminal 2 - Start app with test-support routes (must run second)
+ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
+
+# Terminal 3 - Run functional tests
 yarn test:functional
 ```
-
-Tests will use the mock server endpoints or real CCD (if `CCD_URL` is overridden).
 
 **For Detailed Test Strategy, Commands, and Setup:**
 

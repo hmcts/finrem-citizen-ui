@@ -43,8 +43,8 @@ specFiles/
 **Environment:** Local only
 
 **Requirements:**
-- Mock CCD API running on `http://localhost:4100` by running 'yarn start:mock-case-api'
-- Test-support routes enabled (`ENABLE_TEST_SUPPORT_ROUTES=true`)
+- Mock CCD API running on `http://localhost:4100` (`yarn start:mock-case-api`)
+- App started with test-support routes enabled (`ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev`)
 - `injectCaseSession()` endpoint available for deterministic session setup
 
 **Behavior:**
@@ -225,9 +225,35 @@ Controls whether test-support injection endpoints are available.
 - `true` — Mock server test routes enabled
 - `false` (default on preview/AAT) — Mock server test routes disabled
 
+### `.env` Target Selection (`CCD_URL`, `CCD_DATA_STORE_API_URL`)
+The app reads CCD endpoints from the root `.env` file.
+
+Before running tests, select one active target block in `.env`:
+- local
+- preview
+- aat
+
+The active target sets:
+- `CCD_URL`
+- `CCD_DATA_STORE_API_URL`
+
+For local mock runs, these should point to `http://localhost:4100`.
+
 ---
 
 ## Running Tests by Category
+
+### Local Mock Startup (Required First)
+```bash
+# Terminal 1 - Start mock API (must run first)
+yarn start:mock-case-api
+
+# Terminal 2 - Start app with test-support routes (must run second)
+ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
+
+# Terminal 3 - Run functional tests
+yarn test:functional
+```
 
 ### Run All Mock Tests (Local Only)
 ```bash
@@ -368,11 +394,13 @@ Reason: this currently reports violations in standard GOV.UK Frontend components
 
 **Fix:**
 ```bash
-# Ensure mock server is running
-docker-compose up -d
+# Terminal 1
+yarn start:mock-case-api
 
-# Enable test-support routes
-export ENABLE_TEST_SUPPORT_ROUTES=true
+# Terminal 2
+ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
+
+# Terminal 3
 yarn test:functional -- src/test/functional/specFiles/mock/
 ```
 
