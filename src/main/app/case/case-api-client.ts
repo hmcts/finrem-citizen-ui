@@ -5,7 +5,7 @@ import { LoggerInstance } from 'winston';
 import { UrlEndPoints } from '../../common-constants';
 import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
 import { UserDetails } from '../controller/AppRequest';
-import { CaseAssignedUserRole } from './case-roles';
+import { CaseAssignedUserRole, CaseAssignedUserRoles, SearchCaseAssignedUserRolesRequest } from './case-roles';
 import { FinremCaseData, FinremCaseDetails, State } from './definition';
 
 export class CaseApiClient {
@@ -56,6 +56,16 @@ export class CaseApiClient {
       }
       this.logError(err);
       throw new Error('Case could not be retrieved.');
+    }
+  }
+
+  public async getCaseUserRoles(userRoles: SearchCaseAssignedUserRolesRequest): Promise<CaseAssignedUserRoles> {
+    try {
+      const response = await this.server.post(UrlEndPoints.CaseRoles, userRoles);
+      return response.data;
+    } catch (err) {
+      this.logError(err);
+      throw new Error('Case roles could not be fetched.');
     }
   }
 

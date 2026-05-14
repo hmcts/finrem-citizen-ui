@@ -1,5 +1,6 @@
 import { CaseType, FinremCaseData } from 'app/case/definition';
 import { Request } from 'express';
+import { SessionData } from 'express-session';
 import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../../app/auth/user';
@@ -88,4 +89,15 @@ export async function loadCaseAndReloadSession(
     logger.error(`Failed to load case ${caseId} from CCD:`, error);
     throw error;
   }
+}
+
+export async function setCaseUserRole(session: SessionData): Promise<void> {
+  const logger: LoggerInstance = console as unknown as LoggerInstance;
+  const user = session.user as UserDetails;
+  if (session.caseNumber && !user.caseRole) {
+    const caseApi = getCaseApi(user, logger);
+    const caseRole = await caseApi.getUsersRoleOnCase(session.caseNumber, user.id);
+    user.caseRole = caseRole;
+  }
+  logger.info('case role is ', user.caseRole);
 }

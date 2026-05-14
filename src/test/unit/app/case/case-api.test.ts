@@ -219,3 +219,58 @@ describe('CaseApi.triggerEvent', () => {
     expect(mockApiClient.sendEvent).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('CaseApi.getUsersRoleOnCase', () => {
+  const mockApiClient = {
+    getCaseUserRoles: jest.fn(),
+  };
+
+  const mockLogger = {
+    error: jest.fn(),
+    info: jest.fn(),
+  } as unknown as LoggerInstance;
+
+  let api: CaseApi;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    api = new CaseApi(
+      mockApiClient as unknown as caseApiClient.CaseApiClient,
+      mockLogger
+    );
+  });
+
+  test('returns the user case role when one exists', async () => {
+    mockApiClient.getCaseUserRoles.mockResolvedValue({
+      case_users: [
+        {
+          case_id: '1234',
+          user_id: 'user1',
+          case_role: CaseRole.APPLICANT,
+        },
+      ],
+    });
+
+    const result = await api.getUsersRoleOnCase('1234', 'user1');
+
+    expect(mockApiClient.getCaseUserRoles).toHaveBeenCalledWith({
+      case_ids: ['1234'],
+      user_ids: ['user1'],
+    });
+    expect(result).toBe(CaseRole.APPLICANT);
+  });
+
+  test('returns undefined when the user has no role on the case', async () => {
+    mockApiClient.getCaseUserRoles.mockResolvedValue({
+      case_users: [],
+    });
+
+    const result = await api.getUsersRoleOnCase('1234', 'user1');
+
+    expect(mockApiClient.getCaseUserRoles).toHaveBeenCalledWith({
+      case_ids: ['1234'],
+      user_ids: ['user1'],
+    });
+    expect(result).toBeUndefined();
+  });
+});

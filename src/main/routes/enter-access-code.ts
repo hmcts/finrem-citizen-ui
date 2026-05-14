@@ -63,7 +63,7 @@ export function validateAccessCodeAgainstCase(
   // Check if access code has expired
   const validUntilDate = new Date(matchingAccessCode.value.validUntil);
   const now = new Date();
-  
+
   if (now > validUntilDate) {
     return {
       isValid: false,
@@ -231,7 +231,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
     try {
       // Retrieve case data from session
       const caseData = retrieveCaseData(req.session.caseData);
-      
+
       if (!caseData) {
         logger.error('Case data not found in session');
         return res.redirect(RouteNames.enterCaseNumber);
@@ -263,24 +263,24 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
         caseNumber: req.session.caseNumber,
         accessCode: trimmedAccessCode,
       });
-      
+
       // Remove hyphens from case number for CCD API calls
       const caseId = req.session.caseNumber?.replace(/-/g, '') || '';
-      
+
       // Assigning user to case
       const user = req.session.user as UserDetails;
       try {
-        await addUserToCaseForRole(caseId, user.uid as string, role);
+        await addUserToCaseForRole(caseId, user.id as string, role);
       } catch {
         return res.render(ViewNames.Error);
-      } 
+      }
 
       // Invalidating access code
       try {
         const invalidCaseData = await invalidateAccessCode(caseData, trimmedAccessCode, role, caseId);
         req.session.caseData = invalidCaseData;
         req.session.caseRole = role;
-        
+
         // Set case user name based on role
         if (role === CaseRole.APPLICANT) {
           req.session.caseUserName = invalidCaseData.applicantFlags?.partyName || 'Applicant';
@@ -292,12 +292,12 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       }
 
       // TODO: Send confirmation email if this is a new account setup
-      
+
       return res.redirect(RouteNames.dashboard);
     } catch (error) {
       const err = error as Error;
       logger.error('Error validating access code', { error: err.message });
-      
+
       // Handle case not found or other CCD errors
       return res.render('enter-access-code', {
         errors: { accessCode: 'Access code does not match case number' },

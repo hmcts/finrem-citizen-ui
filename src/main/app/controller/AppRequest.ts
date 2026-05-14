@@ -4,6 +4,7 @@ import type { LoggerInstance } from 'winston';
 
 import { Case, CaseWithId } from '../case/case';
 import { CaseApi } from '../case/case-api';
+import { CaseRole } from '../case/definition';
 
 export interface AppRequest<T = Partial<Case>> extends Request {
   session: AppSession;
@@ -34,6 +35,7 @@ export interface UserDetails {
   roles: string[];
   [key: string]: unknown;
   hasNFDCase?: boolean;
+  caseRole?: CaseRole;
 }
 
 export type FormError = {

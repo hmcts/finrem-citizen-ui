@@ -1,16 +1,11 @@
 import type { CaseRole, FinremCaseData } from '../app/case/definition';
+import { UserDetails } from '../app/controller/AppRequest';
 
 export {};
 
 declare module 'express-session' {
-  interface SessionData {
-    user?: {
-      accessToken: string;
-      idToken: string;
-      refreshToken: string | undefined;
-      sub: string;
-      [key: string]: unknown;
-    };
+interface SessionData {
+    user?: UserDetails;
     returnTo?: string;
     codeVerifier?: string;
     nonce?: string;

@@ -362,3 +362,82 @@ const applicantAccessCodes = [
     );
   });
 });
+
+describe('CaseApiClient.getCaseUserRoles', () => {
+  let mockAxios: jest.Mocked<Pick<typeof axios, 'post'>>;
+  let mockLogger: LoggerInstance;
+  let api: CaseApiClient;
+
+  beforeEach(() => {
+    mockAxios = {
+      post: jest.fn(),
+    } as unknown as jest.Mocked<Pick<typeof axios, 'post'>>;
+
+    mockLogger = {
+      error: jest.fn().mockImplementation((msg: string) => msg),
+      info: jest.fn().mockImplementation((msg: string) => msg),
+    } as unknown as LoggerInstance;
+
+    api = new CaseApiClient(mockAxios as unknown as AxiosInstance, mockLogger);
+  });
+
+  test('should POST search request and return case user roles', async () => {
+    const request = {
+      case_ids: ['1234'],
+      user_ids: ['user1'],
+    };
+
+    const responseData = {
+      case_users: [
+        {
+          case_id: '1234',
+          user_id: 'user1',
+          case_role: CaseRole.APPLICANT,
+        },
+      ],
+    };
+
+    mockAxios.post.mockResolvedValue({
+      data: responseData,
+    });
+
+    const result = await api.getCaseUserRoles(request);
+
+    expect(mockAxios.post).toHaveBeenCalledTimes(1);
+    expect(mockAxios.post).toHaveBeenCalledWith(
+      'case-users/search',
+      request
+    );
+    expect(result).toEqual(responseData);
+  });
+
+  test('should log error and throw when API call fails', async () => {
+    const request = {
+      case_ids: ['1234'],
+      user_ids: ['user1'],
+    };
+
+    const axiosError = {
+      config: { method: 'post', url: 'case-users/search' },
+      response: {
+        status: 500,
+        data: { error: 'Internal error' },
+      },
+    };
+
+    mockAxios.post.mockRejectedValue(axiosError);
+
+    await expect(api.getCaseUserRoles(request))
+      .rejects
+      .toThrow('Case roles could not be fetched.');
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'API Error post case-users/search 500'
+    );
+
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Response: ',
+      { error: 'Internal error' }
+    );
+  });
+});

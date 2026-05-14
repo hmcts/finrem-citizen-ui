@@ -20,6 +20,7 @@ export default function (app: Application): void {
     const result = await orchestrateHome(user, logger);
     if (result.caseData) {
       req.session.caseData = result.caseData;
+      req.session.caseNumber = result.caseNumber;
     }
     if (result.caseNumber) {
       req.session.caseNumber = result.caseNumber;
@@ -105,4 +106,9 @@ export default function (app: Application): void {
       }
     }
   );
+
+  app.get(RouteNames.getCaseRole, oidcMiddleware, async (req, res) => {
+    const user = req.session.user as UserDetails;
+    res.json({ caseRole: user.caseRole });
+  });
 }
