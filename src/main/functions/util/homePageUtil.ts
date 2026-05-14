@@ -1,4 +1,4 @@
-import { CaseType, FinremCaseData } from 'app/case/definition';
+import { CaseRole, CaseType, FinremCaseData } from 'app/case/definition';
 import { Request } from 'express';
 import { SessionData } from 'express-session';
 import { LoggerInstance } from 'winston';
@@ -100,4 +100,13 @@ export async function setCaseUserRole(session: SessionData): Promise<void> {
     user.caseRole = caseRole;
   }
   logger.info('case role is ', user.caseRole);
+
+  if (user.caseRole && session.caseData && !session.caseUserName) {
+    if (user.caseRole === CaseRole.APPLICANT) {
+      session.caseUserName = session.caseData.applicantFlags?.partyName || 'Applicant';
+    } else if (user.caseRole === CaseRole.RESPONDENT) {
+      session.caseUserName = session.caseData.respondentFlags?.partyName || 'Respondent';
+    }
+    logger.info('case user name set to ', session.caseUserName);
+  }
 }
