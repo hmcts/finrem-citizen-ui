@@ -28,7 +28,8 @@
     "test:functional:headed:slowmo": "PWDEBUG=1 playwright test --config playwright.config.mts --project chromium --headed --workers=1",
     "test:full-functional": "playwright test --config playwright.config.mts --project chromium --retries=2",
     "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
-    "setup:manual-test": "MOCK_ACCESS_CODES=true jest -c jest.manual.config.js --runTestsByPath src/test/unit/scripts/setupManualTest.manual.test.ts --runInBand --detectOpenHandles",
+    "setup:manual-test": "yarn setup:manual-test:mock",
+    "setup:manual-test:mock": "RUNNING_ENV=local MOCK_ACCESS_CODES=true jest -c jest.manual.config.js --runTestsByPath src/test/unit/scripts/setupManualTest.manual.test.ts --runInBand --detectOpenHandles",
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:api && yarn test:coverage",
     "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:api && yarn test:coverage && yarn test:functional",
     "prepare": "husky install"

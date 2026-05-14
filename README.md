@@ -223,13 +223,31 @@ yarn test:playwright:a11y
 
 👉 See [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md) — Complete guide to functional test organization, environment setup, and known issues (Form C dependency).
 
-**Manual Testing Setup:**
+**Manual Testing (Local Mock Only):**
+
+The manual test setup script creates a local citizen user and seeded mock case for local testing only. This script always runs in local mode with mock access codes.
+
+1. Start the local mock case API:
+
+```bash
+yarn start:mock-case-api
+```
+
+2. Start the app with test-support routes enabled:
+
+```bash
+ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
+```
+
+3. Generate manual-test credentials and case details:
 
 ```bash
 yarn setup:manual-test
 ```
 
-Creates a citizen user and real contested case with mocked access codes on preview environments. Prints login credentials and a ready-to-use session injection URL.
+4. Log in with the printed credentials, then open the printed mock injection URL in the same browser session.
+
+**Note:** This script is designed for local testing only. It will not work on preview/AAT environments.
 
 ## Linting
 
