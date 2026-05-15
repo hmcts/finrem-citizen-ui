@@ -100,6 +100,11 @@ export async function setCaseUserRole(session: SessionData): Promise<void> {
     user.caseRole = caseRole;
   }
   logger.info('case role is ', user.caseRole);
+}
+
+export function setCaseUserName(session: SessionData): void {
+  const logger: LoggerInstance = console as unknown as LoggerInstance;
+  const user = session.user as UserDetails;
 
   if (user.caseRole && session.caseData && !session.caseUserName) {
     if (user.caseRole === CaseRole.APPLICANT) {
