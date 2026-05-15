@@ -8,7 +8,7 @@ import { getCaseApi } from '../../../../main/app/case/case-api';
 import { CASE_TYPE } from '../../../../main/app/case/case-type';
 import { CaseType } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
-import { RouteNames } from '../../../../main/common-constants';
+import { CaseUserNames, RouteNames } from '../../../../main/common-constants';
 import * as homePageUtil from '../../../../main/functions/util/homePageUtil';
 import {
   getHomePageForUser,
@@ -416,7 +416,7 @@ describe('setCaseUserName', () => {
       caseUserName?: string;
     };
 
-    expect(typedSession.caseUserName).toBe('Applicant');
+    expect(typedSession.caseUserName).toBe(CaseUserNames.APPLICANT);
   });
 
   test('sets default caseUserName for RESPONDENT when partyName is missing', () => {
@@ -437,7 +437,7 @@ describe('setCaseUserName', () => {
       caseUserName?: string;
     };
 
-    expect(typedSession.caseUserName).toBe('Respondent');
+    expect(typedSession.caseUserName).toBe(CaseUserNames.RESPONDENT);
   });
 
   test('does not set caseUserName when caseUserName is already set', () => {

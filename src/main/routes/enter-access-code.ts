@@ -6,7 +6,7 @@ import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { AccessCodeCollection, CaseRole, FinremCaseData, YesOrNo } from '../app/case/definition';
 import { UserDetails } from '../app/controller/AppRequest';
-import { RouteNames, ViewNames } from '../common-constants';
+import { CaseUserNames, RouteNames, ViewNames } from '../common-constants';
 import { oidcMiddleware } from '../middleware';
 
 const { Logger } = require('@hmcts/nodejs-logging');
@@ -283,9 +283,9 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
 
         // Set case user name based on role
         if (role === CaseRole.APPLICANT) {
-          req.session.caseUserName = invalidCaseData.applicantFlags?.partyName || 'Applicant';
+          req.session.caseUserName = invalidCaseData.applicantFlags?.partyName || CaseUserNames.APPLICANT;
         } else if (role === CaseRole.RESPONDENT) {
-          req.session.caseUserName = invalidCaseData.respondentFlags?.partyName || 'Respondent';
+          req.session.caseUserName = invalidCaseData.respondentFlags?.partyName || CaseUserNames.RESPONDENT;
         }
       } catch {
         return res.render(ViewNames.Error);

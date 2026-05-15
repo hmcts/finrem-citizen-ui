@@ -7,7 +7,7 @@ import { getCaseApi } from '../../app/case/case-api';
 import { CASE_TYPE } from '../../app/case/case-type';
 import { CaseRole, CaseType, FinremCaseData } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
-import { RouteNames } from '../../common-constants';
+import { CaseUserNames, RouteNames } from '../../common-constants';
 
 export interface UserDefaultPageDetails {
   url: string;
@@ -108,9 +108,9 @@ export function setCaseUserName(session: SessionData): void {
 
   if (user.caseRole && session.caseData && !session.caseUserName) {
     if (user.caseRole === CaseRole.APPLICANT) {
-      session.caseUserName = session.caseData.applicantFlags?.partyName || 'Applicant';
+      session.caseUserName = session.caseData.applicantFlags?.partyName || CaseUserNames.APPLICANT;
     } else if (user.caseRole === CaseRole.RESPONDENT) {
-      session.caseUserName = session.caseData.respondentFlags?.partyName || 'Respondent';
+      session.caseUserName = session.caseData.respondentFlags?.partyName || CaseUserNames.RESPONDENT;
     }
     logger.info('case user name set to ', session.caseUserName);
   }
