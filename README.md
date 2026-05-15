@@ -47,28 +47,45 @@ Build assets:
 yarn build
 ```
 
-For local functional testing, run these commands in order:
+### Local App Startup
 
-1. Start the local mock CCD/Azure case API stub:
+Start the app for development:
+
+```bash
+yarn start:dev
+```
+
+Default local URL: `http://localhost:3100`
+
+### Local Functional Testing (with Mock CCD API)
+
+**Note:** The mock CCD server is only required for local functional testing. Skip this section for preview/AAT testing.
+
+For local functional testing with mock infrastructure, run these commands in order:
+
+1. Start the local mock CCD/Azure case API stub (Terminal 1):
 
 ```bash
 yarn start:mock-case-api
 ```
 
-2. Start the app with test-support routes enabled (in a separate terminal):
+2. Start the app with test-support routes enabled (Terminal 2):
 
 ```bash
 ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 ```
 
-3. Run functional tests (in a third terminal):
+3. Run functional tests (Terminal 3):
 
 ```bash
 yarn test:functional
 ```
 
-`CCD_URL` and `CCD_DATA_STORE_API_URL` are set by the active target in `.env`.
-Use the `.env` `Target selection` section to choose local, preview, or aat before running tests.
+Before running tests, ensure `.env` is configured for local:
+- `CCD_URL=http://localhost:4100`
+- `CCD_DATA_STORE_API_URL=http://localhost:4100`
+
+See the `.env` `Target selection` section to switch between local, preview, or aat.
 
 If you need to point to a different CCD URL for one run, override `CCD_URL` when starting the app.
 
@@ -102,10 +119,6 @@ Debug in VS Code:
 ```text
 Run and Debug -> Finrem Citizen UI
 ```
-
-Default local URL:
-
-- `http://localhost:3100`
 
 ## Environment Profiles
 
@@ -245,7 +258,30 @@ yarn test:functional
 
 **For Detailed Test Strategy, Commands, and Setup:**
 
-👉 See [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md) — Complete guide to functional test organization, environment setup, and known issues (Form C dependency).
+👉 See [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md) — Complete guide to functional test organization, environment setup, test scripts reference, and known issues (Form C dependency).
+
+### Test Scripts Quick Reference
+
+Common test commands from [package.json](package.json):
+
+```bash
+# Functional tests (main command)
+yarn test:functional
+
+# Debug mode with Playwright Inspector (interactive)
+yarn test:functional:headed:slowmo
+
+# UI test runner (visual test exploration)
+yarn test:fullfunctional:allBrowsers:ui
+
+# Accessibility tests (@a11y)
+yarn test:playwright:a11y
+
+# Manual testing with seeded mock data (local only)
+yarn setup:manual-test
+```
+
+For the complete list of all test scripts with descriptions, see **Test Scripts Reference** in [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md#test-scripts-reference).
 
 **Manual Testing (Local Mock Only):**
 
