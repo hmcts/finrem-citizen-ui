@@ -122,7 +122,8 @@ export class OIDCModule {
     app.get(RouteNames.login, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
         if (!this.clientConfig && this.skipDiscoveryForTests) {
-          const trimmedIssuer = this.oidcConfig.issuer.replace(/\/+$/, '');
+          const issuer = this.oidcConfig.issuer;
+          const trimmedIssuer = issuer.endsWith('/') ? issuer.slice(0, -1) : issuer;
           const authorizationEndpoint = `${trimmedIssuer}/oauth2/authorize`;
 
           req.session.codeVerifier = 'test-code-verifier';
