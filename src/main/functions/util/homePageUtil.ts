@@ -1,4 +1,3 @@
-import { CaseRole, CaseType, FinremCaseData } from 'app/case/definition';
 import { Request } from 'express';
 import { SessionData } from 'express-session';
 import { LoggerInstance } from 'winston';
@@ -6,6 +5,7 @@ import { LoggerInstance } from 'winston';
 import { getSystemUser } from '../../app/auth/user';
 import { getCaseApi } from '../../app/case/case-api';
 import { CASE_TYPE } from '../../app/case/case-type';
+import { CaseRole, CaseType, FinremCaseData } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
 import { RouteNames } from '../../common-constants';
 
