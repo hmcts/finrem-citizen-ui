@@ -127,7 +127,32 @@ export function createMockCaseApiApp(options: MockCaseApiOptions = {}): Express 
     });
   });
 
-  app.post('/searchCases', (req: Request, res: Response) => {
+  app.post('/case-users/search', (req: Request, res: Response) => {
+    const caseIds: string[] = req.body?.case_ids ?? [];
+    const userIds: string[] = req.body?.user_ids ?? [];
+
+    const caseUsers = caseIds.flatMap(caseId => {
+      const existingCase = cases.get(caseId);
+      if (!existingCase) {
+        return [];
+      }
+
+      const caseRole =
+        typeof existingCase.data.currentUserCaseRole === 'string'
+          ? existingCase.data.currentUserCaseRole
+          : '[APPLICANT]';
+
+      return userIds.map(userId => ({
+        case_id: caseId,
+        user_id: userId,
+        case_role: caseRole,
+      }));
+    });
+
+    return res.json({ case_users: caseUsers });
+  });
+
+  app.get('/searchCases', (req: Request, res: Response) => {
     const requestedCaseType = typeof req.query.ctid === 'string' ? req.query.ctid : '';
     const matchedCases = [...cases.values()].filter(
       record => !requestedCaseType || record.caseTypeId === requestedCaseType
