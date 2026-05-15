@@ -152,7 +152,7 @@ export function createMockCaseApiApp(options: MockCaseApiOptions = {}): Express 
     return res.json({ case_users: caseUsers });
   });
 
-  app.get('/searchCases', (req: Request, res: Response) => {
+  const searchCasesHandler = (req: Request, res: Response): Response => {
     const requestedCaseType = typeof req.query.ctid === 'string' ? req.query.ctid : '';
     const matchedCases = [...cases.values()].filter(
       record => !requestedCaseType || record.caseTypeId === requestedCaseType
@@ -167,7 +167,10 @@ export function createMockCaseApiApp(options: MockCaseApiOptions = {}): Express 
       })),
       total: matchedCases.length,
     });
-  });
+  };
+
+  app.get('/searchCases', searchCasesHandler);
+  app.post('/searchCases', searchCasesHandler);
 
   app.get('/health', (_req: Request, res: Response) => {
     res.json({ status: 'UP' });
