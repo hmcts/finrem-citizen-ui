@@ -1,5 +1,7 @@
 import express, { Express, Request, Response } from 'express';
 
+import { UrlEndPoints } from '../common-constants';
+
 type YesOrNo = 'Yes' | 'No';
 
 interface MockAccessCode {
@@ -119,7 +121,7 @@ export function createMockCaseApiApp(options: MockCaseApiOptions = {}): Express 
     });
   });
 
-  app.post('/case-users', (req: Request<unknown, unknown, MockCaseUsersRequest>, res: Response) => {
+  app.post(UrlEndPoints.CaseUsers, (req: Request<unknown, unknown, MockCaseUsersRequest>, res: Response) => {
     const assignments = req.body?.case_users ?? [];
 
     return res.status(204).json({
@@ -127,7 +129,7 @@ export function createMockCaseApiApp(options: MockCaseApiOptions = {}): Express 
     });
   });
 
-  app.post('/case-users/search', (req: Request, res: Response) => {
+  app.post(UrlEndPoints.CaseRoles, (req: Request, res: Response) => {
     const caseIds: string[] = req.body?.case_ids ?? [];
     const userIds: string[] = req.body?.user_ids ?? [];
 
@@ -169,8 +171,8 @@ export function createMockCaseApiApp(options: MockCaseApiOptions = {}): Express 
     });
   };
 
-  app.get('/searchCases', searchCasesHandler);
-  app.post('/searchCases', searchCasesHandler);
+  app.get(UrlEndPoints.SearchCasesBase, searchCasesHandler);
+  app.post(UrlEndPoints.SearchCasesBase, searchCasesHandler);
 
   app.get('/health', (_req: Request, res: Response) => {
     res.json({ status: 'UP' });
