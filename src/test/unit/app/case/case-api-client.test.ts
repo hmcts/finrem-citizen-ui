@@ -405,7 +405,7 @@ describe('CaseApiClient.getCaseUserRoles', () => {
 
     expect(mockAxios.post).toHaveBeenCalledTimes(1);
     expect(mockAxios.post).toHaveBeenCalledWith(
-      'case-users/search',
+      '/case-users/search',
       request
     );
     expect(result).toEqual(responseData);

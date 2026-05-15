@@ -47,23 +47,47 @@ Build assets:
 yarn build
 ```
 
-Start app:
+### Local App Startup
+
+Start the app for development:
 
 ```bash
 yarn start:dev
 ```
 
-Run the local mock CCD/Azure case API stub:
+Default local URL: `http://localhost:3100`
+
+### Local Functional Testing (with Mock CCD API)
+
+**Note:** The mock CCD server is only required for local functional testing. Skip this section for preview/AAT testing.
+
+For local functional testing with mock infrastructure, run these commands in order:
+
+1. Start the local mock CCD/Azure case API stub (Terminal 1):
 
 ```bash
 yarn start:mock-case-api
 ```
 
-Point the main app at the stub by overriding `CCD_URL`:
+2. Start the app with test-support routes enabled (Terminal 2):
 
 ```bash
-CCD_URL=http://localhost:4100 yarn start:dev
+ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 ```
+
+3. Run functional tests (Terminal 3):
+
+```bash
+yarn test:functional
+```
+
+Before running tests, ensure `.env` is configured for local:
+- `CCD_URL=http://localhost:4100`
+- `CCD_DATA_STORE_API_URL=http://localhost:4100`
+
+See the `.env` `Target selection` section to switch between local, preview, or aat.
+
+If you need to point to a different CCD URL for one run, override `CCD_URL` when starting the app.
 
 The mock server implements these five endpoints used by the app:
 
@@ -96,10 +120,6 @@ Debug in VS Code:
 Run and Debug -> Finrem Citizen UI
 ```
 
-Default local URL:
-
-- `http://localhost:3100`
-
 ## Environment Profiles
 
 The `.env` file is organised into shared defaults plus a `Target selection` section.
@@ -114,6 +134,8 @@ In practice this means:
 
 - uncomment the four lines for the target you want to use
 - comment out the equivalent lines in the other target blocks
+
+This target selection controls both `CCD_URL` and `CCD_DATA_STORE_API_URL` used by local runs.
 
 The active target lines are:
 
@@ -219,13 +241,51 @@ yarn test:playwright:a11y
 
 `integration-happy-path` tests are skipped by default and require `ACCESS_CODE_REAL_INTEGRATION=true` plus reachable real CCD dependencies.
 
+**Running Functional Tests Locally:**
+
+Functional tests require this startup sequence:
+
+```bash
+# Terminal 1 - Start mock server (must run first)
+yarn start:mock-case-api
+
+# Terminal 2 - Start app with test-support routes (must run second)
+ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
+
+# Terminal 3 - Run functional tests
+yarn test:functional
+```
+
 **For Detailed Test Strategy, Commands, and Setup:**
 
-👉 See [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md) — Complete guide to functional test organization, environment setup, and known issues (Form C dependency).
+👉 See [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md) — Complete guide to functional test organization, environment setup, test scripts reference, and known issues (Form C dependency).
 
-**Manual Testing (Local Mock Only):**
+### Test Scripts Quick Reference
 
-The manual test setup script creates a local citizen user and seeded mock case for local testing only. This script always runs in local mode with mock access codes.
+Common test commands from [package.json](package.json):
+
+```bash
+# Functional tests (main command)
+yarn test:functional
+
+# Debug mode with Playwright Inspector (interactive)
+yarn test:functional:headed:slowmo
+
+# UI test runner (visual test exploration)
+yarn test:fullfunctional:allBrowsers:ui
+
+# Accessibility tests (@a11y)
+yarn test:playwright:a11y
+
+# Manual testing with seeded mock data (local only)
+yarn setup:manual-test
+```
+
+For the complete list of all test scripts with descriptions, see **Test Scripts Reference** in [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md#test-scripts-reference).
+
+### Local Functional Testing (Local Mock Only)
+
+Use these steps for standard local functional test runs:
 
 1. Start the local mock case API:
 
@@ -239,13 +299,23 @@ yarn start:mock-case-api
 ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 ```
 
-3. Generate manual-test credentials and case details:
+3. Run functional tests:
+
+```bash
+yarn test:functional
+```
+
+### Manual Testing (Optional, Local Mock Only)
+
+Only run this section if you want manual browser testing with seeded local data.
+
+1. Generate manual-test credentials and case details:
 
 ```bash
 yarn setup:manual-test
 ```
 
-4. Log in with the printed credentials, then open the printed mock injection URL in the same browser session.
+2. Log in with the printed credentials, then open the printed mock injection URL in the same browser session.
 
 **Note:** This script is designed for local testing only. It will not work on preview/AAT environments.
 

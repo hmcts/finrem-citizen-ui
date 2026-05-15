@@ -43,9 +43,11 @@ specFiles/
 **Environment:** Local only
 
 **Requirements:**
-- Mock CCD API running on `http://localhost:4100` by running 'yarn start:mock-case-api'
-- Test-support routes enabled (`ENABLE_TEST_SUPPORT_ROUTES=true`)
+- Mock CCD API running on `http://localhost:4100`
+- App started with test-support routes enabled (`ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev`)
 - `injectCaseSession()` endpoint available for deterministic session setup
+
+For exact startup commands, see **Running Tests by Environment** below.
 
 **Behavior:**
 - Use static hardcoded access codes (e.g., `APPCODE1`, `RSPCODE1`)
@@ -56,7 +58,7 @@ specFiles/
 **Runs on:**
 - Local environment (with mock infrastructure)
 
-**Doesnt run on:**
+**Doesn't run on:**
 - Preview (test-support routes disabled)
 - AAT (test-support routes disabled)
 
@@ -206,18 +208,6 @@ Controls whether integration tests run.
 - `false` (default) — Integration tests skipped; mock tests run
 - `true` — Integration tests enabled; both mock and integration tests run
 
-**Example:**
-```bash
-# Local: Run everything (mocks + integration)
-ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional
-
-# Preview: Run integration tests only
-ACCESS_CODE_REAL_INTEGRATION=true yarn test:integration
-
-# Local: Run mocks only (default)
-yarn test:functional
-```
-
 ### `ENABLE_TEST_SUPPORT_ROUTES`
 Controls whether test-support injection endpoints are available.
 
@@ -225,9 +215,76 @@ Controls whether test-support injection endpoints are available.
 - `true` — Mock server test routes enabled
 - `false` (default on preview/AAT) — Mock server test routes disabled
 
+### `.env` Target Selection (`CCD_URL`, `CCD_DATA_STORE_API_URL`)
+The app reads CCD endpoints from the root `.env` file.
+
+Before running tests, select one active target block in `.env`:
+- local
+- preview
+- aat
+
+The active target sets:
+- `CCD_URL`
+- `CCD_DATA_STORE_API_URL`
+
+For local mock runs, these should point to `http://localhost:4100`.
+
 ---
 
-## Running Tests by Category
+## Running Tests by Environment
+
+Use this as the single source of truth for how to run tests in each environment.
+
+### Local
+
+Local runs require the mock API and test-support routes.
+
+```bash
+# Terminal 1 - Start mock API (must run first)
+yarn start:mock-case-api
+
+# Terminal 2 - Start app with test-support routes (must run second)
+ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
+
+# Terminal 3 - Run functional tests
+yarn test:functional
+```
+
+Optional: enable integration-lane tests locally.
+
+```bash
+ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional
+```
+
+### Preview
+
+Preview runs do not use the local mock server.
+
+```bash
+# Ensure .env target is preview (for example, RUNNING_ENV=pr-xxx)
+# Terminal 1 - Start app
+yarn start:dev
+
+# Terminal 2 - Run integration-enabled functional tests
+ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional
+```
+
+### AAT
+
+AAT runs do not use the local mock server.
+
+```bash
+# Ensure .env target is aat
+# Terminal 1 - Start app
+yarn start:dev
+
+# Terminal 2 - Run integration-enabled functional tests
+ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional
+```
+
+---
+
+## Targeted Test Runs
 
 ### Run All Mock Tests (Local Only)
 ```bash
@@ -259,31 +316,6 @@ yarn test:functional -- --grep "\[mock\]"
 
 # All [integration] tests (requires ACCESS_CODE_REAL_INTEGRATION=true)
 ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional -- --grep "\[integration\]"
-```
-
----
-
-## CI/CD Pipeline Integration
-
-### Local CI (Docker Compose)
-```bash
-# Mock tests only (test-support routes enabled)
-ENABLE_TEST_SUPPORT_ROUTES=true yarn test:functional:mock
-
-# Integration tests with real mock CCD
-ACCESS_CODE_REAL_INTEGRATION=true ENABLE_TEST_SUPPORT_ROUTES=true yarn test:functional:integration
-```
-
-### Preview Pipeline
-```bash
-# Integration tests only (test-support routes disabled, real CCD)
-ACCESS_CODE_REAL_INTEGRATION=true yarn test:integration
-```
-
-### AAT Pipeline
-```bash
-# Real integration tests (stability required)
-ACCESS_CODE_REAL_INTEGRATION=true yarn test:integration
 ```
 
 ---
@@ -361,6 +393,94 @@ Reason: this currently reports violations in standard GOV.UK Frontend components
 
 ---
 
+## Test Scripts Reference
+
+All test commands are defined in [package.json](../../package.json). Here's a complete reference:
+
+### Functional Test Commands
+
+**`yarn test:functional`**
+- **Purpose:** Main command for running functional tests 
+- **What it does:** Installs Playwright browsers + dependencies, runs all functional tests in Chromium with 2 automatic retries on failure
+- **Use case:** Default local testing with mock server running
+- **Command:** `yarn playwright install --with-deps && playwright test --config playwright.config.mts --project chromium --retries=2`
+
+**`yarn test:functional:pr`**
+- **Purpose:** Runs only tests tagged with `@PR` label
+- **What it does:** Runs PR-specific tests (tests that are new or PR-focused)
+- **Use case:** Quick validation during pull requests
+- **Command:** `yarn playwright install --with-deps && playwright test --config playwright.config.mts --project chromium --grep @PR`
+
+**`yarn test:full-functional`**
+- **Purpose:** Faster functional test run (skips browser install if already cached)
+- **What it does:** Runs all functional tests without reinstalling Playwright browsers
+- **Use case:** When running tests repeatedly in CI or after initial setup
+- **Command:** `playwright test --config playwright.config.mts --project chromium --retries=2`
+
+### Debug & Development Commands
+
+**`yarn test:functional:headed:slowmo`**
+- **Purpose:** Interactive debug mode for troubleshooting failing tests
+- **What it does:**
+  - `PWDEBUG=1` — Opens Playwright Inspector
+  - `--headed` — Shows browser UI (not headless)
+  - `--workers=1` — Runs tests sequentially (one at a time)
+  - `--slowmo` — Slows down actions for visibility
+- **Use case:** Debugging a specific failing test locally
+- **Command:** `PWDEBUG=1 playwright test --config playwright.config.mts --project chromium --headed --workers=1`
+
+**`yarn test:fullfunctional:allBrowsers:ui`**
+- **Purpose:** Playwright's visual test runner (UI mode)
+- **What it does:** Opens Playwright UI where you can:
+  - Watch tests run in real-time
+  - Pick which tests to run
+  - Debug individual tests
+  - See test traces/screenshots
+- **Use case:** Interactive test exploration and debugging
+- **Command:** `playwright test --ui`
+
+### Accessibility Test Commands
+
+**`yarn test:playwright:a11y`**
+- **Purpose:** Runs all tests tagged with `@a11y` (accessibility tests)
+- **What it does:**
+  - Sets output directory to `a11y-output/`
+  - Generates HTML report in `a11y-output/axe-report/`
+  - Runs Axe accessibility audit on tagged tests
+- **Use case:** Validating WCAG 2.1 AA compliance across user journeys
+- **Command:** `TEST_RESULTS_DIR=a11y-output PLAYWRIGHT_HTML_OUTPUT_DIR=a11y-output/axe-report PLAYWRIGHT_HTML_OPEN=never playwright test --config playwright.config.mts --project chromium --grep @a11y --reporter=html`
+
+**`yarn test:playwright:a11y:report`**
+- **Purpose:** Runs accessibility tests and opens HTML report
+- **What it does:** Runs `test:playwright:a11y` then automatically opens the report
+- **Use case:** Quick review of accessibility issues after test run
+- **Command:** `sh -c 'yarn test:playwright:a11y; code=$?; yarn playwright show-report a11y-output/axe-report; exit $code'`
+
+### Manual Testing Commands
+
+**`yarn setup:manual-test` / `yarn setup:manual-test:mock`**
+- **Purpose:** Creates a local test citizen user and seeds mock case data
+- **What it does:**
+  - Generates IDAM credentials
+  - Seeds a mock case with case ID and access codes
+  - Prints credentials for manual browser testing
+- **Use case:** Quick local manual testing (only works with `RUNNING_ENV=local`)
+- **Command:** `RUNNING_ENV=local MOCK_ACCESS_CODES=true jest -c jest.manual.config.js --runTestsByPath src/test/unit/scripts/setupManualTest.manual.test.ts --runInBand --detectOpenHandles`
+
+### Quick Command Reference
+
+| Command | Purpose | Environment |
+|---------|---------|-------------|
+| `yarn test:functional` | Default - all functional tests with retries | Local with mock |
+| `yarn test:functional:pr` | PR-tagged tests only | Local/CI |
+| `yarn test:full-functional` | All tests (no browser install) | Local/CI (cached) |
+| `yarn test:functional:headed:slowmo` | Debug mode with Playwright Inspector | Local |
+| `yarn test:fullfunctional:allBrowsers:ui` | Playwright UI test runner | Local |
+| `yarn test:playwright:a11y` | Accessibility tests with HTML report | Local/CI |
+| `yarn setup:manual-test` | Generate local test user & case | Local only |
+
+---
+
 ## Troubleshooting
 
 ### Mock Tests Fail with "Cannot find module '/__test/inject-case-session'"
@@ -368,11 +488,13 @@ Reason: this currently reports violations in standard GOV.UK Frontend components
 
 **Fix:**
 ```bash
-# Ensure mock server is running
-docker-compose up -d
+# Terminal 1
+yarn start:mock-case-api
 
-# Enable test-support routes
-export ENABLE_TEST_SUPPORT_ROUTES=true
+# Terminal 2
+ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
+
+# Terminal 3
 yarn test:functional -- src/test/functional/specFiles/mock/
 ```
 

@@ -56,7 +56,8 @@ export const UrlEndPoints = {
   CaseEventTrigger: (caseId: string, eventId: string) => `/cases/${caseId}/event-triggers/${eventId}`,
   CaseUsers: '/case-users',
   CaseId: (caseId: string) => `/cases/${caseId}`,
+  SearchCasesBase: '/searchCases',
   SearchCases: (caseType: string) => `/searchCases?ctid=${caseType}`,
   UploadDocument: '/cases/documents',
-  CaseRoles: 'case-users/search',
+  CaseRoles: '/case-users/search',
 } as const;

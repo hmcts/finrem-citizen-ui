@@ -1,5 +1,7 @@
 import express, { Express, Request, Response } from 'express';
 
+import { UrlEndPoints } from '../common-constants';
+
 type YesOrNo = 'Yes' | 'No';
 
 interface MockAccessCode {
@@ -119,7 +121,7 @@ export function createMockCaseApiApp(options: MockCaseApiOptions = {}): Express 
     });
   });
 
-  app.post('/case-users', (req: Request<unknown, unknown, MockCaseUsersRequest>, res: Response) => {
+  app.post(UrlEndPoints.CaseUsers, (req: Request<unknown, unknown, MockCaseUsersRequest>, res: Response) => {
     const assignments = req.body?.case_users ?? [];
 
     return res.status(204).json({
@@ -127,7 +129,32 @@ export function createMockCaseApiApp(options: MockCaseApiOptions = {}): Express 
     });
   });
 
-  app.post('/searchCases', (req: Request, res: Response) => {
+  app.post(UrlEndPoints.CaseRoles, (req: Request, res: Response) => {
+    const caseIds: string[] = req.body?.case_ids ?? [];
+    const userIds: string[] = req.body?.user_ids ?? [];
+
+    const caseUsers = caseIds.flatMap(caseId => {
+      const existingCase = cases.get(caseId);
+      if (!existingCase) {
+        return [];
+      }
+
+      const caseRole =
+        typeof existingCase.data.currentUserCaseRole === 'string'
+          ? existingCase.data.currentUserCaseRole
+          : '[APPLICANT]';
+
+      return userIds.map(userId => ({
+        case_id: caseId,
+        user_id: userId,
+        case_role: caseRole,
+      }));
+    });
+
+    return res.json({ case_users: caseUsers });
+  });
+
+  const searchCasesHandler = (req: Request, res: Response): Response => {
     const requestedCaseType = typeof req.query.ctid === 'string' ? req.query.ctid : '';
     const matchedCases = [...cases.values()].filter(
       record => !requestedCaseType || record.caseTypeId === requestedCaseType
@@ -142,7 +169,10 @@ export function createMockCaseApiApp(options: MockCaseApiOptions = {}): Express 
       })),
       total: matchedCases.length,
     });
-  });
+  };
+
+  app.get(UrlEndPoints.SearchCasesBase, searchCasesHandler);
+  app.post(UrlEndPoints.SearchCasesBase, searchCasesHandler);
 
   app.get('/health', (_req: Request, res: Response) => {
     res.json({ status: 'UP' });

@@ -9,12 +9,7 @@ import { EnterAccessCodePage } from '../../pom/enterAccessCode.page';
  * These tests verify that authenticated sessions persist across re-login,
  * multiple tabs, and navigation within the same session.
  * 
- * ⚠️ KNOWN DEFECTS: Tests are currently skipped due to backend issue where session data
- * (username, case role) is not populated on second login when invalidateAccessCode 
- * step is skipped. Backend fix is in progress.
- * 
- * Runs on: Local environment (when ACCESS_CODE_REAL_INTEGRATION=true and backend is fixed)
- * Skipped by default: Known defect prevents passing; set ACCESS_CODE_REAL_INTEGRATION=true to enable
+ * Runs on: Local environment (when ACCESS_CODE_REAL_INTEGRATION=true)
  * Does NOT run on: Preview, AAT as mock tests
  */
 
@@ -48,10 +43,8 @@ const runRealIntegrationAccessCodeTests = process.env.ACCESS_CODE_REAL_INTEGRATI
 
 test.describe('[mock] Persistent Session After Re-login', () => {
   test.use({ useMockTestSupport: true });
-  test.skip(
-    !runRealIntegrationAccessCodeTests,
-    'KNOWN DEFECT: On second login, session data (username, case role) not populated because invalidateAccessCode step is skipped. Backend fix in progress.'
-  );
+  // Only run if ACCESS_CODE_REAL_INTEGRATION=true
+  test.skip(!runRealIntegrationAccessCodeTests, 'Set ACCESS_CODE_REAL_INTEGRATION=true to enable.');
 
   /**
    * Verify that after logging in, entering case number and access code,
@@ -60,10 +53,8 @@ test.describe('[mock] Persistent Session After Re-login', () => {
    * IDAM SSO re-authenticates and the linked case session is restored.
    * [mock] Uses hardcoded access codes injected via test session endpoint.
    * 
-  * This test depends on mock CCD endpoints for invalidate-access-code events.
-  * It is skipped unless ACCESS_CODE_REAL_INTEGRATION=true.
-   * 
-   * ⚠️ KNOWN DEFECT: Session data not populated on second login.
+   * This test depends on mock CCD endpoints for invalidate-access-code events.
+   * It is skipped unless ACCESS_CODE_REAL_INTEGRATION=true.
    */
   test('[mock] User lands on dashboard after re-login without re-entering case details @a11y', async ({
     loggedInPage,
@@ -100,10 +91,8 @@ test.describe('[mock] Persistent Session After Re-login', () => {
    * within the same authenticated session.
    * [mock] Uses hardcoded access codes injected via test session endpoint.
    * 
-  * This test depends on mock CCD endpoints for invalidate-access-code events.
-  * It is skipped unless ACCESS_CODE_REAL_INTEGRATION=true.
-   * 
-   * ⚠️ KNOWN DEFECT: Session data not populated on second login.
+   * This test depends on mock CCD endpoints for invalidate-access-code events.
+   * It is skipped unless ACCESS_CODE_REAL_INTEGRATION=true.
    */
   test('[mock] Case session persists across multiple tabs in same browser context @a11y', async ({
     loggedInPage: _loggedInPage,
@@ -135,10 +124,8 @@ test.describe('[mock] Persistent Session After Re-login', () => {
    * (page.reload() is not used because a hard reload clears in-memory mock session state)
    * [mock] Uses hardcoded access codes injected via test session endpoint.
    * 
-  * This test depends on mock CCD endpoints for invalidate-access-code events.
-  * It is skipped unless ACCESS_CODE_REAL_INTEGRATION=true.
-   * 
-   * ⚠️ KNOWN DEFECT: Session data not populated on second login.
+   * This test depends on mock CCD endpoints for invalidate-access-code events.
+   * It is skipped unless ACCESS_CODE_REAL_INTEGRATION=true.
    */
   test('[mock] Case session persists when navigating away and back to dashboard @a11y', async ({
     loggedInPage: _loggedInPage,
