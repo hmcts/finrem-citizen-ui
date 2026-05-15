@@ -43,9 +43,11 @@ specFiles/
 **Environment:** Local only
 
 **Requirements:**
-- Mock CCD API running on `http://localhost:4100` (`yarn start:mock-case-api`)
+- Mock CCD API running on `http://localhost:4100`
 - App started with test-support routes enabled (`ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev`)
 - `injectCaseSession()` endpoint available for deterministic session setup
+
+For exact startup commands, see **Running Tests by Environment** below.
 
 **Behavior:**
 - Use static hardcoded access codes (e.g., `APPCODE1`, `RSPCODE1`)
@@ -56,7 +58,7 @@ specFiles/
 **Runs on:**
 - Local environment (with mock infrastructure)
 
-**Doesnt run on:**
+**Doesn't run on:**
 - Preview (test-support routes disabled)
 - AAT (test-support routes disabled)
 
@@ -206,18 +208,6 @@ Controls whether integration tests run.
 - `false` (default) — Integration tests skipped; mock tests run
 - `true` — Integration tests enabled; both mock and integration tests run
 
-**Example:**
-```bash
-# Local: Run everything (mocks + integration)
-ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional
-
-# Preview: Run integration tests only
-ACCESS_CODE_REAL_INTEGRATION=true yarn test:integration
-
-# Local: Run mocks only (default)
-yarn test:functional
-```
-
 ### `ENABLE_TEST_SUPPORT_ROUTES`
 Controls whether test-support injection endpoints are available.
 
@@ -241,11 +231,13 @@ For local mock runs, these should point to `http://localhost:4100`.
 
 ---
 
-## Running Tests by Category
+## Running Tests by Environment
 
-### Local Mock Startup (Required for Local Testing Only)
+Use this as the single source of truth for how to run tests in each environment.
 
-**Only needed when running tests locally. Skip for preview/AAT.**
+### Local
+
+Local runs require the mock API and test-support routes.
 
 ```bash
 # Terminal 1 - Start mock API (must run first)
@@ -258,21 +250,41 @@ ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 yarn test:functional
 ```
 
-### Running Tests on Preview/AAT (No Mock Server Needed)
-
-For preview or AAT environments, you only need to start the app and run tests — **no mock server required**.
+Optional: enable integration-lane tests locally.
 
 ```bash
-# Terminal 1 - Start the app (mock server disabled in these environments)
-yarn start:dev
-
-# Terminal 2 - Run functional tests
-yarn test:functional
+ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional
 ```
 
-The `.env` file controls which environment you target. Ensure the active target block is set to:
-- `preview` (for PR environments)
-- `aat` (for AAT)
+### Preview
+
+Preview runs do not use the local mock server.
+
+```bash
+# Ensure .env target is preview (for example, RUNNING_ENV=pr-xxx)
+# Terminal 1 - Start app
+yarn start:dev
+
+# Terminal 2 - Run integration-enabled functional tests
+ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional
+```
+
+### AAT
+
+AAT runs do not use the local mock server.
+
+```bash
+# Ensure .env target is aat
+# Terminal 1 - Start app
+yarn start:dev
+
+# Terminal 2 - Run integration-enabled functional tests
+ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional
+```
+
+---
+
+## Targeted Test Runs
 
 ### Run All Mock Tests (Local Only)
 ```bash
@@ -304,31 +316,6 @@ yarn test:functional -- --grep "\[mock\]"
 
 # All [integration] tests (requires ACCESS_CODE_REAL_INTEGRATION=true)
 ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional -- --grep "\[integration\]"
-```
-
----
-
-## CI/CD Pipeline Integration
-
-### Local CI (Docker Compose)
-```bash
-# Mock tests only (test-support routes enabled)
-ENABLE_TEST_SUPPORT_ROUTES=true yarn test:functional:mock
-
-# Integration tests with real mock CCD
-ACCESS_CODE_REAL_INTEGRATION=true ENABLE_TEST_SUPPORT_ROUTES=true yarn test:functional:integration
-```
-
-### Preview Pipeline
-```bash
-# Integration tests only (test-support routes disabled, real CCD)
-ACCESS_CODE_REAL_INTEGRATION=true yarn test:integration
-```
-
-### AAT Pipeline
-```bash
-# Real integration tests (stability required)
-ACCESS_CODE_REAL_INTEGRATION=true yarn test:integration
 ```
 
 ---

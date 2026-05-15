@@ -283,9 +283,9 @@ yarn setup:manual-test
 
 For the complete list of all test scripts with descriptions, see **Test Scripts Reference** in [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md#test-scripts-reference).
 
-**Manual Testing (Local Mock Only):**
+### Local Functional Testing (Local Mock Only)
 
-The manual test setup script creates a local citizen user and seeded mock case for local testing only. This script always runs in local mode with mock access codes.
+Use these steps for standard local functional test runs:
 
 1. Start the local mock case API:
 
@@ -299,13 +299,23 @@ yarn start:mock-case-api
 ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 ```
 
-3. Generate manual-test credentials and case details:
+3. Run functional tests:
+
+```bash
+yarn test:functional
+```
+
+### Manual Testing (Optional, Local Mock Only)
+
+Only run this section if you want manual browser testing with seeded local data.
+
+1. Generate manual-test credentials and case details:
 
 ```bash
 yarn setup:manual-test
 ```
 
-4. Log in with the printed credentials, then open the printed mock injection URL in the same browser session.
+2. Log in with the printed credentials, then open the printed mock injection URL in the same browser session.
 
 **Note:** This script is designed for local testing only. It will not work on preview/AAT environments.
 
