@@ -10,14 +10,16 @@ import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
 
 
 const getOidcClient = async (): Promise<typeof OidcClientType> => {
-  return import('openid-client');
+  if (process.env.JEST_WORKER_ID !== undefined || process.env.NODE_ENV === 'test') {
+    return import('openid-client');
+  }
+  return new Function("return import('openid-client')")();
 };
 
 export class OIDCModule {
   private clientConfig: OidcClientType.Configuration | undefined;
   private readonly oidcConfig: OIDCConfig = config.get<OIDCConfig>('oidc');
   private readonly logger = Logger.getLogger('oidc');
-  private readonly skipDiscoveryForTests = process.env.OIDC_SKIP_DISCOVERY_FOR_TESTS === 'true';
 
   constructor() {
     this.logger.info('OIDCModule instance created');
@@ -47,11 +49,17 @@ export class OIDCModule {
     if (!clientSecret || clientSecret === 'PLACEHOLDER_IDAM_SECRET' || clientSecret === 'AAAAAAAAAAAA') {
       this.logger.error('CRITICAL: IDAM Client Secret is missing or still set to placeholder!');
     }
+    this.logger.error('!!!!! !!!!! clientSecret !!!!! !!!!!!', clientSecret);
     try {
       this.logger.info('Setting up OIDC client via discovery');
       const issuer = new URL(this.oidcConfig.issuer);
 
       this.clientConfig = await oidcClient.discovery(issuer, this.oidcConfig.clientId, clientSecret);
+      this.logger.error('!!!!! !!!!! this.oidcConfig.clientId !!!!! !!!!!!', this.oidcConfig.clientId);
+      let redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
+      this.logger.error('!!!!! !!!!!! redisConnectionString !!!!! !!!!!!', redisConnectionString);
+      let sessionSecret = config.get<string>('secrets.finrem.session-secret');
+      this.logger.error('!!!!! !!!!!! sessionSecret !!!!! !!!!!!', sessionSecret);
       this.logger.info('OIDC client configured successfully');
     } catch (err: unknown) {
       this.logger.error('Failed to setup OIDC client:', err);
@@ -85,11 +93,6 @@ export class OIDCModule {
     app.use(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
         if (!this.clientConfig) {
-          if (this.skipDiscoveryForTests) {
-            next();
-            return;
-          }
-
           await this.setupClient();
         }
         next();
@@ -121,25 +124,6 @@ export class OIDCModule {
 
     app.get(RouteNames.login, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
-        if (!this.clientConfig && this.skipDiscoveryForTests) {
-          const issuer = this.oidcConfig.issuer;
-          const trimmedIssuer = issuer.endsWith('/') ? issuer.slice(0, -1) : issuer;
-          const authorizationEndpoint = `${trimmedIssuer}/oauth2/authorize`;
-
-          req.session.codeVerifier = 'test-code-verifier';
-          req.session.nonce = 'test-nonce';
-
-          req.session.save(err => {
-            if (err) {
-              this.logger.error('Session save error before test login redirect:', err);
-              return next(new OIDCAuthenticationError('Failed to save session before login redirect'));
-            }
-
-            res.redirect(authorizationEndpoint);
-          });
-          return;
-        }
-
         const oidcClient = await getOidcClient();
         this.logger.info(
           `[oidc] Session saved successfully before redirect. sessionID=${req.sessionID}
