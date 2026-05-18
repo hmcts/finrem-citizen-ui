@@ -8,7 +8,7 @@ import { getCaseApi } from '../../../../main/app/case/case-api';
 import { CASE_TYPE } from '../../../../main/app/case/case-type';
 import { CaseType } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
-import { RouteNames } from '../../../../main/common-constants';
+import { CaseUserNames, RouteNames } from '../../../../main/common-constants';
 import * as homePageUtil from '../../../../main/functions/util/homePageUtil';
 import {
   getHomePageForUser,
@@ -344,5 +344,163 @@ describe('setCaseUserRole', () => {
     await homePageUtil.setCaseUserRole(session);
 
     expect(getCaseApi).not.toHaveBeenCalled();
+  });
+});
+
+describe('setCaseUserName', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('sets caseUserName for APPLICANT when caseRole and caseData exist', () => {
+    const session = {
+      caseNumber: 'CASE123',
+      user: {
+        id: 'user-1',
+        caseRole: '[APPLICANT]',
+      },
+      caseData: {
+        applicantFlags: {
+          partyName: 'John Smith',
+        },
+      },
+    } as unknown as SessionData;
+
+    homePageUtil.setCaseUserName(session);
+
+    const typedSession = session as unknown as {
+      caseUserName?: string;
+    };
+
+    expect(typedSession.caseUserName).toBe('John Smith');
+  });
+
+  test('sets caseUserName for RESPONDENT when caseRole and caseData exist', () => {
+    const session = {
+      caseNumber: 'CASE123',
+      user: {
+        id: 'user-1',
+        caseRole: '[RESPONDENT]',
+      },
+      caseData: {
+        respondentFlags: {
+          partyName: 'Jane Doe',
+        },
+      },
+    } as unknown as SessionData;
+
+    homePageUtil.setCaseUserName(session);
+
+    const typedSession = session as unknown as {
+      caseUserName?: string;
+    };
+
+    expect(typedSession.caseUserName).toBe('Jane Doe');
+  });
+
+  test('sets default caseUserName for APPLICANT when partyName is missing', () => {
+    const session = {
+      caseNumber: 'CASE123',
+      user: {
+        id: 'user-1',
+        caseRole: '[APPLICANT]',
+      },
+      caseData: {
+        applicantFlags: {},
+      },
+    } as unknown as SessionData;
+
+    homePageUtil.setCaseUserName(session);
+
+    const typedSession = session as unknown as {
+      caseUserName?: string;
+    };
+
+    expect(typedSession.caseUserName).toBe(CaseUserNames.APPLICANT);
+  });
+
+  test('sets default caseUserName for RESPONDENT when partyName is missing', () => {
+    const session = {
+      caseNumber: 'CASE123',
+      user: {
+        id: 'user-1',
+        caseRole: '[RESPONDENT]',
+      },
+      caseData: {
+        respondentFlags: {},
+      },
+    } as unknown as SessionData;
+
+    homePageUtil.setCaseUserName(session);
+
+    const typedSession = session as unknown as {
+      caseUserName?: string;
+    };
+
+    expect(typedSession.caseUserName).toBe(CaseUserNames.RESPONDENT);
+  });
+
+  test('does not set caseUserName when caseUserName is already set', () => {
+    const session = {
+      caseNumber: 'CASE123',
+      user: {
+        id: 'user-1',
+        caseRole: '[APPLICANT]',
+      },
+      caseData: {
+        applicantFlags: {
+          partyName: 'John Smith',
+        },
+      },
+      caseUserName: 'Existing Name',
+    } as unknown as SessionData;
+
+    homePageUtil.setCaseUserName(session);
+
+    const typedSession = session as unknown as {
+      caseUserName?: string;
+    };
+
+    expect(typedSession.caseUserName).toBe('Existing Name');
+  });
+
+  test('does not set caseUserName when caseData is missing', () => {
+    const session = {
+      caseNumber: 'CASE123',
+      user: {
+        id: 'user-1',
+        caseRole: '[APPLICANT]',
+      },
+    } as unknown as SessionData;
+
+    homePageUtil.setCaseUserName(session);
+
+    const typedSession = session as unknown as {
+      caseUserName?: string;
+    };
+
+    expect(typedSession.caseUserName).toBeUndefined();
+  });
+
+  test('does not set caseUserName when caseRole is missing', () => {
+    const session = {
+      caseNumber: 'CASE123',
+      user: {
+        id: 'user-1',
+      },
+      caseData: {
+        applicantFlags: {
+          partyName: 'John Smith',
+        },
+      },
+    } as unknown as SessionData;
+
+    homePageUtil.setCaseUserName(session);
+
+    const typedSession = session as unknown as {
+      caseUserName?: string;
+    };
+
+    expect(typedSession.caseUserName).toBeUndefined();
   });
 });

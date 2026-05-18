@@ -1,4 +1,3 @@
-import { CaseType, FinremCaseData } from 'app/case/definition';
 import { Request } from 'express';
 import { SessionData } from 'express-session';
 import { LoggerInstance } from 'winston';
@@ -6,8 +5,9 @@ import { LoggerInstance } from 'winston';
 import { getSystemUser } from '../../app/auth/user';
 import { getCaseApi } from '../../app/case/case-api';
 import { CASE_TYPE } from '../../app/case/case-type';
+import { CaseRole, CaseType, FinremCaseData } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
-import { RouteNames } from '../../common-constants';
+import { CaseUserNames, RouteNames } from '../../common-constants';
 
 export interface UserDefaultPageDetails {
   url: string;
@@ -100,4 +100,18 @@ export async function setCaseUserRole(session: SessionData): Promise<void> {
     user.caseRole = caseRole;
   }
   logger.info('case role is ', user.caseRole);
+}
+
+export function setCaseUserName(session: SessionData): void {
+  const logger: LoggerInstance = console as unknown as LoggerInstance;
+  const user = session.user as UserDetails;
+
+  if (user.caseRole && session.caseData && !session.caseUserName) {
+    if (user.caseRole === CaseRole.APPLICANT) {
+      session.caseUserName = session.caseData.applicantFlags?.partyName || CaseUserNames.APPLICANT;
+    } else if (user.caseRole === CaseRole.RESPONDENT) {
+      session.caseUserName = session.caseData.respondentFlags?.partyName || CaseUserNames.RESPONDENT;
+    }
+    logger.info('case user name set to ', session.caseUserName);
+  }
 }

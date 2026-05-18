@@ -50,6 +50,11 @@ export const UploadStepNames = {
   DocumentSelection: 'document-selection',
 };
 
+export const CaseUserNames = {
+  APPLICANT: 'Applicant',
+  RESPONDENT: 'Respondent',
+} as const;
+
 
 export const UrlEndPoints = {
   CaseEvents: (caseId: string): string => `/cases/${caseId}/events`,

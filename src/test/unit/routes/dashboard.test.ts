@@ -8,6 +8,7 @@ import setupDashboardRoute from '../../../main/routes/dashboard';
 
 jest.mock('../../../main/functions/util/homePageUtil', () => ({
   setCaseUserRole: jest.fn().mockImplementation(async () => {}),
+  setCaseUserName: jest.fn().mockImplementation(() => {}),
 }));
 
 jest.mock('../../../main/middleware', () => ({
