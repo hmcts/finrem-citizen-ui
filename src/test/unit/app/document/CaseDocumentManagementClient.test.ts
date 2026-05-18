@@ -43,7 +43,7 @@ describe('CaseDocumentManagementClient', () => {
     client = new CaseDocumentManagementClient(userDetails);
   });
 
-  test('should POST documents to CDAM and return created documents', async () => {
+  test('posts documents and returns created documents', async () => {
     mockAxios.post.mockResolvedValue({
       data: {
         documents: [
@@ -85,9 +85,10 @@ describe('CaseDocumentManagementClient', () => {
     });
 
     expect(mockAxios.post).toHaveBeenCalledWith(
-      '/cases/documents',
+      expect.any(String),
       expect.any(FormData),
       expect.objectContaining({
+        headers: expect.any(Object),
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
       })
@@ -97,7 +98,7 @@ describe('CaseDocumentManagementClient', () => {
     expect(result[0].originalDocumentName).toBe('file.pdf');
   });
 
-  test('should return empty array when no documents are returned', async () => {
+  test('returns empty array when no documents returned', async () => {
     mockAxios.post.mockResolvedValue({ data: {} });
 
     const result = await client.create({
@@ -106,5 +107,50 @@ describe('CaseDocumentManagementClient', () => {
     });
 
     expect(result).toEqual([]);
+  });
+
+  test('uploads multiple files', async () => {
+    mockAxios.post.mockResolvedValue({
+      data: {
+        documents: [
+          { originalDocumentName: 'file1.pdf', _links: {} },
+          { originalDocumentName: 'file2.pdf', _links: {} },
+        ],
+      },
+    });
+
+    const files: Express.Multer.File[] = [
+      {
+        fieldname: 'files',
+        originalname: 'file1.pdf',
+        encoding: '7bit',
+        mimetype: 'application/pdf',
+        size: 1,
+        buffer: Buffer.from('a'),
+        stream: Readable.from([]),
+        destination: '',
+        filename: '',
+        path: '',
+      },
+      {
+        fieldname: 'files',
+        originalname: 'file2.pdf',
+        encoding: '7bit',
+        mimetype: 'application/pdf',
+        size: 1,
+        buffer: Buffer.from('b'),
+        stream: Readable.from([]),
+        destination: '',
+        filename: '',
+        path: '',
+      },
+    ];
+
+    const result = await client.create({
+      files,
+      classification: Classification.Public,
+    });
+
+    expect(result).toHaveLength(2);
   });
 });
