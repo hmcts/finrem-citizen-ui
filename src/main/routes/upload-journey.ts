@@ -29,7 +29,6 @@ export default function setupUploadJourneyRoute(app: Application): void {
       errors: {},
       values: data,
       previousStep,
-      cancelUrl: RouteNames.dashboard,
       email: 'FRCexample@justice.gov.uk',
     });
   });
@@ -50,7 +49,6 @@ export default function setupUploadJourneyRoute(app: Application): void {
         errors,
         values: { ...data, ...req.body },
         previousStep,
-        cancelUrl: RouteNames.dashboard,
         email: 'FRCexample@justice.gov.uk',
       });
     }
