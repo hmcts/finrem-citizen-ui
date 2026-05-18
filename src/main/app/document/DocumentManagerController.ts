@@ -11,7 +11,7 @@ import { CaseDocumentManagementClient, Classification } from './CaseDocumentMana
 export class DocumentManagerController {
     constructor(private readonly logger: LoggerInstance) { }
 
-    public async uploadToSession(
+    public async uploadDocumentToEvidenceStore(
         req: AppRequest,
         documentType: CitizenUploadDocumentType
     ): Promise<void> {
@@ -58,7 +58,7 @@ export class DocumentManagerController {
         });
     }
 
-    public async sendCollection(req: AppRequest): Promise<void> {
+    public async LinkDocumentsToCase(req: AppRequest): Promise<void> {
         const caseRole = req.session.user.caseRole;
 
         if (!req.session.caseNumber) {
