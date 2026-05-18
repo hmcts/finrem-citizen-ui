@@ -65,7 +65,6 @@ describe('Upload Journey Routes', () => {
         errors: {},
         values: {},
         previousStep: null,
-        cancelUrl: RouteNames.dashboard,
         email: 'FRCexample@justice.gov.uk',
       });
     });
@@ -91,7 +90,6 @@ describe('Upload Journey Routes', () => {
         errors: {},
         values: { fdrHearing: 'yes' },
         previousStep: UploadStepNames.Confidentiality,
-        cancelUrl: RouteNames.dashboard,
         email: 'FRCexample@justice.gov.uk',
       });
     });
