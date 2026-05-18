@@ -280,6 +280,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
         const invalidCaseData = await invalidateAccessCode(caseData, trimmedAccessCode, role, caseId);
         req.session.caseData = invalidCaseData;
         req.session.caseRole = role;
+        user.caseRole = role;
 
         // Set case user name based on role
         if (role === CaseRole.APPLICANT) {
