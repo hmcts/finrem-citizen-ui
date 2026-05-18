@@ -4,7 +4,7 @@ import type { LoggerInstance } from 'winston';
 
 import { Case, CaseWithId } from '../case/case';
 import { CaseApi } from '../case/case-api';
-import { CaseRole } from '../case/definition';
+import { CaseRole, UserDocumentSelection } from '../case/definition';
 
 export interface AppRequest<T = Partial<Case>> extends Request {
   session: AppSession;
@@ -22,6 +22,7 @@ export interface AppSession extends Session, SessionData {
   existingCaseId?: string;
   errors?: FormError[];
   caseUserName?: string;
+  documents?: UserDocumentSelection;
 }
 export interface UserDetails {
   accessToken: string;

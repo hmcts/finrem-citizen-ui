@@ -6,7 +6,7 @@ import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { CASE_TYPE } from '../app/case/case-type';
-import { CaseRole } from '../app/case/definition';
+import { CaseRole, CitizenUploadDocumentType } from '../app/case/definition';
 import { AppRequest, UserDetails } from '../app/controller/AppRequest';
 import { DocumentManagerController } from '../app/document/DocumentManagerController';
 import { RouteNames } from '../common-constants';
@@ -82,15 +82,26 @@ export default function (app: Application): void {
   const documentController = new DocumentManagerController(logger);
 
   app.get('/documents', oidcMiddleware, (req, res) => {
+    const appReq = req as AppRequest;
 
-    const uploadedDocuments = req.session.uploadedDocuments ?? [];
+    const documentCount =
+      appReq.session.documents?.documentDetails?.length ?? 0;
 
-    delete req.session.uploadedDocuments;
+    const isFDR =
+      appReq.session.documents?.isFinacialDisputeResolution ?? false;
+
+    const documentTypes = Object.entries(CitizenUploadDocumentType).map(
+      ([key, value]) => ({
+        value: key,
+        label: value,
+      })
+    );
 
     res.render('document', {
-      uploadedDocuments,
+      documentTypes,
+      documentCount,
+      isFDR,
     });
-
   });
 
   app.post(
@@ -99,7 +110,39 @@ export default function (app: Application): void {
     upload.any(),
     async (req, res, next) => {
       try {
-        await documentController.post(req as unknown as AppRequest, res);
+        const selectedType =
+          CitizenUploadDocumentType[
+          req.body.documentType as keyof typeof CitizenUploadDocumentType
+          ];
+
+        await documentController.uploadToSession(
+          req as unknown as AppRequest,
+          selectedType
+        );
+
+        res.redirect('/documents');
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.post(
+    '/documents/send',
+    oidcMiddleware,
+    async (req, res, next) => {
+      try {
+        const appReq = req as AppRequest;
+
+        if (!appReq.session.documents) {
+          appReq.session.documents = {};
+        }
+
+        appReq.session.documents.isFinacialDisputeResolution =
+          req.body.isFinacialDisputeResolution === 'on';
+
+        await documentController.sendCollection(appReq);
+
         res.redirect('/documents');
       } catch (error) {
         next(error);
