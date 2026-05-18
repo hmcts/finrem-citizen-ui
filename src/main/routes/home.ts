@@ -9,7 +9,7 @@ import { CASE_TYPE } from '../app/case/case-type';
 import { CaseRole, CitizenUploadDocumentType } from '../app/case/definition';
 import { AppRequest, UserDetails } from '../app/controller/AppRequest';
 import { DocumentManagerController } from '../app/document/DocumentManagerController';
-import { RouteNames } from '../common-constants';
+import { RouteNames, ViewNames } from '../common-constants';
 import { orchestrateHome } from '../functions/util/homePageUtil';
 import { oidcMiddleware } from '../middleware';
 
@@ -81,7 +81,7 @@ export default function (app: Application): void {
 
   const documentController = new DocumentManagerController(logger);
 
-  app.get('/documents', oidcMiddleware, (req, res) => {
+  app.get(RouteNames.documents, oidcMiddleware, (req, res) => {
     const appReq = req as AppRequest;
 
     const documentCount =
@@ -97,7 +97,7 @@ export default function (app: Application): void {
       })
     );
 
-    res.render('document', {
+    res.render(ViewNames.Document, {
       documentTypes,
       documentCount,
       isFDR,
@@ -105,7 +105,7 @@ export default function (app: Application): void {
   });
 
   app.post(
-    '/documents/upload',
+    RouteNames.documentUpload,
     oidcMiddleware,
     upload.any(),
     async (req, res, next) => {
@@ -115,12 +115,12 @@ export default function (app: Application): void {
           req.body.documentType as keyof typeof CitizenUploadDocumentType
           ];
 
-        await documentController.uploadToSession(
+        await documentController.uploadDocumentToEvidenceStore(
           req as unknown as AppRequest,
           selectedType
         );
 
-        res.redirect('/documents');
+        res.redirect(ViewNames.Document);
       } catch (error) {
         next(error);
       }
@@ -128,7 +128,7 @@ export default function (app: Application): void {
   );
 
   app.post(
-    '/documents/send',
+    RouteNames.documentSend,
     oidcMiddleware,
     async (req, res, next) => {
       try {
@@ -141,9 +141,9 @@ export default function (app: Application): void {
         appReq.session.documents.isFinacialDisputeResolution =
           req.body.isFinacialDisputeResolution === 'on';
 
-        await documentController.sendCollection(appReq);
+        await documentController.LinkDocumentsToCase(appReq);
 
-        res.redirect('/documents');
+        res.redirect(ViewNames.Document);
       } catch (error) {
         next(error);
       }

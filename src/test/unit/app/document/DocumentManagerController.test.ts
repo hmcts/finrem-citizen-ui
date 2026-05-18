@@ -57,7 +57,7 @@ describe('DocumentManagerController', () => {
   test('throws when no files uploaded', async () => {
     const req = buildRequest({ files: [] });
     await expect(
-      controller.uploadToSession(req, 'BANK_STATEMENTS' as never)
+      controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never)
     ).rejects.toThrow('No files were uploaded');
   });
 
@@ -88,7 +88,7 @@ describe('DocumentManagerController', () => {
       ],
     });
 
-    await controller.uploadToSession(req, 'BANK_STATEMENTS' as never);
+    await controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never);
 
   test('should throw error when user is missing from session', async () => {
     const req = buildRequest({
@@ -138,7 +138,7 @@ describe('DocumentManagerController', () => {
       } as unknown as AppRequest['session'],
     });
 
-    await controller.uploadToSession(req, 'BANK_STATEMENTS' as never);
+    await controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never);
 
     expect(req.session.documents?.documentDetails).toHaveLength(2);
   });
@@ -151,7 +151,7 @@ describe('DocumentManagerController', () => {
       } as unknown as AppRequest['session'],
     });
 
-    await expect(controller.sendCollection(req)).rejects.toThrow(
+    await expect(controller.LinkDocumentsToCase(req)).rejects.toThrow(
       'No caseNumber in session'
     );
   });
@@ -169,7 +169,7 @@ describe('DocumentManagerController', () => {
       'https://doc-store/documents/2/binary',
     ]);
 
-    await expect(controller.sendCollection(req)).rejects.toThrow(
+    await expect(controller.LinkDocumentsToCase(req)).rejects.toThrow(
       'No documents in session to send'
     );
   });
@@ -192,7 +192,7 @@ describe('DocumentManagerController', () => {
       } as unknown as AppRequest['session'],
     });
 
-    await controller.sendCollection(req);
+    await controller.LinkDocumentsToCase(req);
 
     expect(triggerEventMock).toHaveBeenCalled();
     expect(req.session.documents).toBeUndefined();
