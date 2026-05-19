@@ -91,12 +91,28 @@ export class OIDCModule {
     app.set('trust proxy', true);
 
     app.use(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const requestPath = typeof req.path === 'string' ? req.path : undefined;
+      const requestMethod = req.method ?? 'GET';
+      const needsOidcClient =
+        requestMethod === 'GET' && (
+          requestPath === undefined ||
+          requestPath === RouteNames.login ||
+          requestPath === RouteNames.callbackUrl ||
+          requestPath === RouteNames.logout
+        );
+
+      if (!needsOidcClient || this.clientConfig) {
+        return next();
+      }
+
       try {
-        if (!this.clientConfig) {
-          await this.setupClient();
-        }
+        await this.setupClient();
         next();
       } catch (err: unknown) {
+        if (requestPath === RouteNames.login || requestPath === RouteNames.logout) {
+          res.locals.oidcSetupError = err;
+          return next();
+        }
         next(err);
       }
     });
@@ -124,6 +140,23 @@ export class OIDCModule {
 
     app.get(RouteNames.login, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
+        if (!this.clientConfig) {
+          req.session.returnTo = req.session.returnTo ?? RouteNames.basePath;
+          req.session.save(() => {
+            res.status(200).type('html').send(`
+              <!doctype html>
+              <html lang="en">
+                <head><title>Login unavailable</title></head>
+                <body>
+                  <h1>Login unavailable</h1>
+                  <p>Authentication is temporarily unavailable.</p>
+                </body>
+              </html>
+            `);
+          });
+          return;
+        }
+
         const oidcClient = await getOidcClient();
         this.logger.info(
           `[oidc] Session saved successfully before redirect. sessionID=${req.sessionID}

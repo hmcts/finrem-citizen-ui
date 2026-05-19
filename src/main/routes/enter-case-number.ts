@@ -2,7 +2,6 @@ import 'express-session';
 
 import { Application, Request, Response } from 'express';
 
-import { FinremCaseData } from '../app/case/definition';
 import { RouteNames, ViewNames } from '../common-constants';
 import { loadCaseAndReloadSession } from '../functions/util/homePageUtil';
 import { oidcMiddleware } from '../middleware';
@@ -10,17 +9,6 @@ import { oidcMiddleware } from '../middleware';
 const { Logger } = require('@hmcts/nodejs-logging');
 
 const logger = Logger.getLogger('enter-case-number');
-
-declare module 'express-session' {
-  interface SessionData {
-    caseNumber?: string;
-    caseNumberErrors?: CaseNumberError;
-    tempCaseNumber?: string;
-    caseData?: FinremCaseData;
-    //remove after testing
-    uploadedDocuments?: string[];
-  }
-}
 
 interface CaseNumberError {
   caseNumber?: string;

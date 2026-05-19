@@ -360,7 +360,14 @@ describe('OIDCModule', () => {
     const middleware = app.__middleware[0];
     const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
-    await middleware(makeReq(), makeRes(), next);
+    await middleware(
+      makeReq({
+        path: RouteNames.login,
+        originalUrl: RouteNames.login,
+      } as unknown as Partial<RequestLike>),
+      makeRes(),
+      next
+    );
 
     expect(setupSpy).toHaveBeenCalled();
     expect(next).toHaveBeenCalledWith();
@@ -379,7 +386,14 @@ describe('OIDCModule', () => {
     const middleware = app.__middleware[0];
     const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
 
-    await middleware(makeReq(), makeRes(), next);
+    await middleware(
+      makeReq({
+        path: RouteNames.login,
+        originalUrl: RouteNames.login,
+      } as unknown as Partial<RequestLike>),
+      makeRes(),
+      next
+    );
 
     expect(setupSpy).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalledWith();
