@@ -1,5 +1,6 @@
 import { LoggerInstance } from 'winston';
 
+import { EVENT_TYPE } from '../../../../main/app/case/case-type';
 import { CaseRole } from '../../../../main/app/case/definition';
 import { AppRequest, UserDetails } from '../../../../main/app/controller/AppRequest';
 import { DocumentManagerController } from '../../../../main/app/document/DocumentManagerController';
@@ -160,7 +161,7 @@ describe('DocumentManagerController', () => {
     );
   });
 
-  test('triggers event and clears session', async () => {
+  test('triggers applicant upload event with citizenApplicantDocument and clears session', async () => {
     const triggerEventMock = jest.fn().mockResolvedValue({});
 
     const { getCaseApi } = require('../../../../main/app/case/case-api');
@@ -180,7 +181,47 @@ describe('DocumentManagerController', () => {
 
     await controller.LinkDocumentsToCase(req);
 
-    expect(triggerEventMock).toHaveBeenCalled();
+    expect(triggerEventMock).toHaveBeenCalledWith(
+      '123',
+      {
+        citizenApplicantDocument: [{ id: '1', value: {} }],
+      },
+      EVENT_TYPE.APPLICANT_UPLOAD_DOCUMENT
+    );
     expect(req.session.documents).toBeUndefined();
+  });
+
+  test('triggers respondent upload event with citizenRespondentDocument', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({
+      triggerEvent: triggerEventMock,
+    });
+
+    const respondentUser = {
+      ...userDetails,
+      caseRole: CaseRole.RESPONDENT,
+    };
+
+    const req = buildRequest({
+      session: {
+        user: respondentUser,
+        caseNumber: '456',
+        documents: {
+          documentDetails: [{ id: '2', value: {} }],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(triggerEventMock).toHaveBeenCalledWith(
+      '456',
+      {
+        citizenRespondentDocument: [{ id: '2', value: {} }],
+      },
+      EVENT_TYPE.RESPONDENT_UPLOAD_DOCUMENT
+    );
   });
 });
