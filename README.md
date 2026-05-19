@@ -1,4 +1,4 @@
-# Finrem Citizen UI2
+# Finrem Citizen UI
 
 ## Purpose
 
