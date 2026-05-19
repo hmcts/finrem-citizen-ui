@@ -19,7 +19,6 @@ export class FdrPage extends BasePage {
   readonly yesOption: Locator;
   readonly noOption: Locator;
   readonly continueButton: Locator;
-  readonly cancelLink: Locator;
   readonly inlineErrorMessage: Locator;
   readonly gettingHelp: GettingHelpPanel;
 
@@ -36,7 +35,6 @@ export class FdrPage extends BasePage {
     this.yesOption = this.page.getByLabel('Yes');
     this.noOption = this.page.getByLabel('No, they are for a different hearing');
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
-    this.cancelLink = this.page.getByRole('link', { name: 'Cancel' });
     this.inlineErrorMessage = this.page.getByText(
       /Error:\s*Select yes if you are uploading these documents for a Financial Dispute Resolution hearing/i
     );
@@ -57,14 +55,12 @@ export class FdrPage extends BasePage {
       this.yesOption,
       this.noOption,
       this.continueButton,
-      this.cancelLink,
       this.gettingHelp.heading,
       this.gettingHelp.summary,
     ]);
 
     await this.expectAttributes([
       { locator: this.backLink, name: 'href', value: '/upload/confidentiality' },
-      { locator: this.cancelLink, name: 'href', value: '/dashboard' },
     ]);
   }
 
@@ -83,11 +79,6 @@ export class FdrPage extends BasePage {
     await this.noOption.check();
     await this.continueButton.click();
     await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_SELECTION);
-  }
-
-  async clickCancelAndExpectDashboard(): Promise<void> {
-    await this.cancelLink.click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
   }
 
   async verifyGettingHelpSection(): Promise<void> {

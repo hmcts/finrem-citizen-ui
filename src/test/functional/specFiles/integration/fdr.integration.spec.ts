@@ -72,16 +72,6 @@ test.describe('[integration] FDR page', () => {
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
 
-  test('[integration] FDR cancel returns to dashboard @a11y', async ({
-    fdrPage,
-    dashboardPage,
-    axeUtils,
-  }) => {
-    await fdrPage.clickCancelAndExpectDashboard();
-    await dashboardPage.verifyDashboardPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
-  });
-
   test('[integration] Document selection supports back and continue behavior @a11y', async ({
     fdrPage,
     documentSelectionPage,

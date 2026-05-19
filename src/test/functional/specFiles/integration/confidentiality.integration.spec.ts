@@ -80,20 +80,8 @@ test.describe('[integration] Confidentiality page', () => {
     await fdrPage.verifyFdrPageContent();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
-
-  // AC8: Cancel link is visible and returns user to the dashboard
-  test('[integration] Cancel button returns to dashboard @a11y', async ({
-    dashboardPage,
-    confidentialityPage,
-    axeUtils,
-  }) => {
-    await confidentialityPage.verifyCancelLink();
-    await confidentialityPage.clickCancelAndExpectDashboard();
-    await dashboardPage.verifyDashboardPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
-  });
  
-  // AC9: Getting help panel is collapsed by default and expands with correct contact details
+  // AC8: Getting help panel is collapsed by default and expands with correct contact details
   test('[integration] Getting help panel is closed by default and shows contact details when expanded @a11y', async ({
     confidentialityPage,
     axeUtils,
