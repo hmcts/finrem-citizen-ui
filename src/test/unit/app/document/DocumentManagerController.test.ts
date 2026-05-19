@@ -1,5 +1,6 @@
 import { LoggerInstance } from 'winston';
 
+import { getCaseApi } from '../../../../main/app/case/case-api';
 import { EVENT_TYPE } from '../../../../main/app/case/case-type';
 import { CaseRole } from '../../../../main/app/case/definition';
 import { AppRequest, UserDetails } from '../../../../main/app/controller/AppRequest';
@@ -10,9 +11,7 @@ jest.mock('../../../../main/app/auth/user', () => ({
 }));
 
 jest.mock('../../../../main/app/case/case-api', () => ({
-  getCaseApi: jest.fn().mockReturnValue({
-    triggerEvent: jest.fn().mockResolvedValue({}),
-  }),
+  getCaseApi: jest.fn(),
 }));
 
 jest.mock('uuid', () => ({
@@ -22,6 +21,9 @@ jest.mock('uuid', () => ({
 describe('DocumentManagerController', () => {
   let mockLogger: LoggerInstance;
   let controller: DocumentManagerController;
+  let triggerEventMock: jest.Mock;
+
+  const mockGetCaseApi = getCaseApi as jest.MockedFunction<typeof getCaseApi>;
 
   const userDetails: UserDetails = {
     accessToken: 'token',
@@ -37,10 +39,17 @@ describe('DocumentManagerController', () => {
   };
 
   beforeEach(() => {
+    jest.clearAllMocks();
+
     mockLogger = {
       info: jest.fn(),
       error: jest.fn(),
     } as unknown as LoggerInstance;
+
+    triggerEventMock = jest.fn().mockResolvedValue({});
+    mockGetCaseApi.mockReturnValue({
+      triggerEvent: triggerEventMock,
+    } as never);
 
     controller = new DocumentManagerController(mockLogger);
   });
@@ -162,13 +171,6 @@ describe('DocumentManagerController', () => {
   });
 
   test('triggers applicant upload event with citizenApplicantDocument and clears session', async () => {
-    const triggerEventMock = jest.fn().mockResolvedValue({});
-
-    const { getCaseApi } = require('../../../../main/app/case/case-api');
-    getCaseApi.mockReturnValue({
-      triggerEvent: triggerEventMock,
-    });
-
     const req = buildRequest({
       session: {
         user: userDetails,
@@ -192,13 +194,6 @@ describe('DocumentManagerController', () => {
   });
 
   test('triggers respondent upload event with citizenRespondentDocument', async () => {
-    const triggerEventMock = jest.fn().mockResolvedValue({});
-
-    const { getCaseApi } = require('../../../../main/app/case/case-api');
-    getCaseApi.mockReturnValue({
-      triggerEvent: triggerEventMock,
-    });
-
     const respondentUser = {
       ...userDetails,
       caseRole: CaseRole.RESPONDENT,
