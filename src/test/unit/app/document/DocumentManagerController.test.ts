@@ -23,7 +23,7 @@ describe('DocumentManagerController', () => {
   let controller: DocumentManagerController;
   let triggerEventMock: jest.Mock;
 
-  const mockGetCaseApi = getCaseApi as jest.MockedFunction<typeof getCaseApi>;
+  const mockGetCaseApi = getCaseApi as jest.Mock;
 
   const userDetails: UserDetails = {
     accessToken: 'token',
@@ -49,7 +49,7 @@ describe('DocumentManagerController', () => {
     triggerEventMock = jest.fn().mockResolvedValue({});
     mockGetCaseApi.mockReturnValue({
       triggerEvent: triggerEventMock,
-    } as never);
+    });
 
     controller = new DocumentManagerController(mockLogger);
   });
@@ -59,15 +59,25 @@ describe('DocumentManagerController', () => {
       user: userDetails,
     } as unknown as AppRequest['session'];
 
+    const session = overrides.session
+      ? {
+          ...baseSession,
+          ...overrides.session,
+        }
+      : baseSession;
+
     return {
-      session: {
-        ...baseSession,
-        ...(overrides.session ?? {}),
-      },
+      session,
       headers: {},
       files: [],
       ...overrides,
     } as AppRequest;
+  };
+
+  const stubApiClient = (createMock: jest.Mock): void => {
+    Object.defineProperty(controller, 'getApiClient', {
+      value: jest.fn().mockReturnValue({ create: createMock }),
+    });
   };
 
   test('throws when no files uploaded', async () => {
@@ -88,12 +98,7 @@ describe('DocumentManagerController', () => {
       },
     ]);
 
-    jest
-      .spyOn(
-        controller as unknown as { getApiClient: (user: UserDetails) => { create: typeof createMock } },
-        'getApiClient'
-      )
-      .mockReturnValue({ create: createMock });
+    stubApiClient(createMock);
 
     const req = buildRequest({
       files: [
@@ -121,12 +126,7 @@ describe('DocumentManagerController', () => {
       },
     ]);
 
-    jest
-      .spyOn(
-        controller as unknown as { getApiClient: (user: UserDetails) => { create: typeof createMock } },
-        'getApiClient'
-      )
-      .mockReturnValue({ create: createMock });
+    stubApiClient(createMock);
 
     const req = buildRequest({
       files: [{} as Express.Multer.File],
