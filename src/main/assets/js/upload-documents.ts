@@ -100,7 +100,7 @@ class UploadDocumentsManager {
     
     const listHtml = this.documents.map((doc, index) => `
       <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">
+        <dt class="govuk-summary-list__value">
           ${this.escapeHtml(doc.label)}
         </dt>
         <dd class="govuk-summary-list__actions">
