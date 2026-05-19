@@ -94,7 +94,7 @@ test.describe('[integration] FDR page', () => {
     await fdrPage.verifyFdrPageContent();
 
     await fdrPage.selectNoAndContinue();
-    await documentSelectionPage.clickContinueAndStayOnDocumentSelection();
+    await documentSelectionPage.clickContinue();
     await documentSelectionPage.verifyDocumentSelectionPageContent();
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   });
