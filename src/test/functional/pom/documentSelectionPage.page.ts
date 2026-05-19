@@ -52,6 +52,7 @@ export class DocumentSelectionPage extends BasePage {
   async clickContinueAndStayOnDocumentSelection(): Promise<void> {
     await this.continueButton.click();
     await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_SELECTION);
+    await expect(this.pageHeader).toBeVisible();
   }
 
   async clickCancelAndExpectDashboard(): Promise<void> {
