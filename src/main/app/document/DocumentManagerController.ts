@@ -14,7 +14,12 @@ export class DocumentManagerController {
             throw new Error('No files were uploaded');
         }
 
-        const filesCreated = await this.getApiClient(req.session.user).create({
+        const user = req.session.user;
+        if (!user) {
+            throw new Error('No user in session');
+        }
+
+        const filesCreated = await this.getApiClient(user).create({
             files: req.files,
             classification: Classification.Public,
         });

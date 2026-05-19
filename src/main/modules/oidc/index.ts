@@ -90,11 +90,20 @@ export class OIDCModule {
   public enableFor(app: Express): void {
     app.set('trust proxy', true);
 
-    app.use(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    app.use(async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
+      const requestPath = typeof req.path === 'string' ? req.path : undefined;
+      const needsOidcClient =
+        requestPath === undefined ||
+        requestPath === RouteNames.login ||
+        requestPath === RouteNames.callbackUrl ||
+        requestPath === RouteNames.logout;
+
+      if (!needsOidcClient || this.clientConfig) {
+        return next();
+      }
+
       try {
-        if (!this.clientConfig) {
-          await this.setupClient();
-        }
+        await this.setupClient();
         next();
       } catch (err: unknown) {
         next(err);

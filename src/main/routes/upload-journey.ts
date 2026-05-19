@@ -4,12 +4,6 @@ import { RouteNames } from '../common-constants';
 import { oidcMiddleware } from '../middleware';
 import { UploadJourneyData, UploadStepId, uploadSteps } from '../upload-journey/config';
 
-declare module 'express-session' {
-  interface SessionData {
-    uploadJourneyData?: UploadJourneyData;
-  }
-}
-
 function getData(req: Request): UploadJourneyData {
   return req.session?.uploadJourneyData ?? {};
 }
