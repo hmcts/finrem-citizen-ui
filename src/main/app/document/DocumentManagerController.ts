@@ -21,7 +21,12 @@ export class DocumentManagerController {
             throw new Error('No files were uploaded');
         }
 
-        const filesCreated = await this.getApiClient(req.session.user).create({
+        const user = req.session.user;
+        if (!user) {
+            throw new Error('No user in session');
+        }
+
+        const filesCreated = await this.getApiClient(user).create({
             files: req.files,
             classification: Classification.Public,
         });
@@ -59,7 +64,12 @@ export class DocumentManagerController {
     }
 
     public async LinkDocumentsToCase(req: AppRequest): Promise<void> {
-        const caseRole = req.session.user.caseRole;
+        const user = req.session.user;
+        if (!user) {
+            throw new Error('No user in session');
+        }
+
+        const caseRole = user.caseRole;
 
         if (!req.session.caseNumber) {
             throw new Error('No caseNumber in session');

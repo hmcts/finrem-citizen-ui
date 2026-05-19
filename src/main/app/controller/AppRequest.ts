@@ -1,13 +1,11 @@
 import { Request } from 'express';
-import { Session, SessionData } from 'express-session';
 import type { LoggerInstance } from 'winston';
 
-import { Case, CaseWithId } from '../case/case';
+import { Case } from '../case/case';
 import { CaseApi } from '../case/case-api';
-import { CaseRole, UserDocumentSelection } from '../case/definition';
+import { CaseRole } from '../case/definition';
 
 export interface AppRequest<T = Partial<Case>> extends Request {
-  session: AppSession;
   locals: {
     env: string;
     lang: string;
@@ -15,14 +13,6 @@ export interface AppRequest<T = Partial<Case>> extends Request {
     api: CaseApi;
   };
   body: T;
-}
-export interface AppSession extends Session, SessionData {
-  user: UserDetails;
-  userCase?: CaseWithId;
-  existingCaseId?: string;
-  errors?: FormError[];
-  caseUserName?: string;
-  documents?: UserDocumentSelection;
 }
 export interface UserDetails {
   accessToken: string;
@@ -38,8 +28,3 @@ export interface UserDetails {
   hasNFDCase?: boolean;
   caseRole?: CaseRole;
 }
-
-export type FormError = {
-  propertyName: string;
-  errorType: string;
-};
