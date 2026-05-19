@@ -2,8 +2,15 @@ import { UploadStepNames } from '../common-constants';
 
 export type UploadStepId = typeof UploadStepNames[keyof typeof UploadStepNames];
 
+export type SelectedDocument = {
+  id: number;
+  label: string;
+  value: string;
+};
+
 export type UploadJourneyData = {
   fdrHearing?: 'yes' | 'no';
+  selectedDocuments?: SelectedDocument[];
 };
 
 export type UploadStep = {
@@ -49,6 +56,31 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
   [UploadStepNames.UploadDocuments]: {
     template: 'upload-journey/upload-documents',
+    validate: (body: Record<string, unknown>) => {
+      const errors: Record<string, string> = {};
+      const documentsJson = body.documentsJson as string;
+      
+      if (!documentsJson || documentsJson === '[]') {
+        errors.documents = 'Select at least one document type to upload';
+      }
+      
+      return errors;
+    },
+    persist: (body: Record<string, unknown>, data: UploadJourneyData) => {
+      const documentsJson = body.documentsJson as string;
+      let selectedDocuments: SelectedDocument[] = [];
+      
+      try {
+        selectedDocuments = JSON.parse(documentsJson || '[]');
+      } catch {
+        selectedDocuments = [];
+      }
+      
+      return {
+        ...data,
+        selectedDocuments,
+      };
+    },
     next: () => null,
     previous: () => UploadStepNames.FDR,
   },

@@ -91,8 +91,78 @@ describe('Upload Journey Configuration', () => {
       expect(step.template).toBe('upload-journey/upload-documents');
       expect(step.next!({})).toBeNull();
       expect(step.previous!({})).toBe(UploadStepNames.FDR);
-      expect(step.validate).toBeUndefined();
-      expect(step.persist).toBeUndefined();
+      expect(step.validate).toBeDefined();
+      expect(step.persist).toBeDefined();
+    });
+
+    it('should return error when no documents are selected', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const body = { documentsJson: '[]' };
+      
+      const errors = step.validate!(body);
+      
+      expect(errors.documents).toBe('Select at least one document type to upload');
+    });
+
+    it('should return error when documentsJson is missing', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const body = {};
+      
+      const errors = step.validate!(body);
+      
+      expect(errors.documents).toBe('Select at least one document type to upload');
+    });
+
+    it('should return no errors when documents are selected', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const body = { 
+        documentsJson: '[{"id":1,"label":"Position statement","value":"position-statement"}]' 
+      };
+      
+      const errors = step.validate!(body);
+      
+      expect(errors).toEqual({});
+    });
+
+    it('should persist selected documents', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const existingData = { fdrHearing: 'yes' as const };
+      const body = { 
+        documentsJson: '[{"id":1,"label":"Position statement","value":"position-statement"}]' 
+      };
+      
+      const result = step.persist!(body, existingData);
+      
+      expect(result).toEqual({
+        fdrHearing: 'yes',
+        selectedDocuments: [
+          { id: 1, label: 'Position statement', value: 'position-statement' }
+        ]
+      });
+    });
+
+    it('should handle invalid JSON gracefully', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const existingData = {};
+      const body = { documentsJson: 'invalid json' };
+      
+      const result = step.persist!(body, existingData);
+      
+      expect(result).toEqual({
+        selectedDocuments: []
+      });
+    });
+
+    it('should handle empty documentsJson', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const existingData = {};
+      const body = { documentsJson: '' };
+      
+      const result = step.persist!(body, existingData);
+      
+      expect(result).toEqual({
+        selectedDocuments: []
+      });
     });
   });
 });
