@@ -70,6 +70,21 @@ describe('DocumentManagerController', () => {
       .rejects.toThrow('No files were uploaded');
   });
 
+  test('should throw error when user is missing from session', async () => {
+    const req = buildRequest({
+      session: { user: undefined } as AppRequest['session'],
+      files: [
+        {
+          buffer: Buffer.from('file'),
+          originalname: 'file1.pdf',
+        } as Express.Multer.File,
+      ],
+    });
+
+    await expect(controller.post(req, mockResponse()))
+      .rejects.toThrow('No user in session');
+  });
+
   test('should upload files and log success', async () => {
 
     const createMock = jest.fn().mockResolvedValue([
@@ -114,6 +129,10 @@ describe('DocumentManagerController', () => {
       files: req.files,
       classification: Classification.Public,
     });
+    expect(req.session.uploadedDocuments).toEqual([
+      'https://doc-store/documents/1/binary',
+      'https://doc-store/documents/2/binary',
+    ]);
 
     expect(mockLogger.info).toHaveBeenCalledWith(
       'Document upload successful',
