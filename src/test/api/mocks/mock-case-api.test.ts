@@ -118,6 +118,135 @@ describe('[MOCK] Case API endpoints', () => {
     });
   });
 
+  test('POST /cases/:caseId/events merges uploadGeneralDocuments payload for link-document event template', async () => {
+    const res = await request(app)
+      .post(`/cases/${seededCaseId}/events`)
+      .send({
+        event: {
+          id: 'CUI_linkDocumentToCase',
+          summary: 'Adding uploaded document',
+          description: 'Document added via API',
+        },
+        case_reference: seededCaseId,
+        event_token: 'mock-token',
+        data: {
+          uploadGeneralDocuments: [
+            {
+              id: '4c8c1f1f-0f6f-4e7f-9d4d-8a4a2e8f2c01',
+              value: {
+                DocumentType: 'Other',
+                DocumentFileName: 'test doc 3.docx',
+                DocumentLink: {
+                  document_url: 'http://dm-store/documents/doc-123',
+                  document_binary_url: 'http://dm-store/documents/doc-123/binary',
+                },
+              },
+            },
+          ],
+        },
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      id: seededCaseId,
+      data: {
+        uploadGeneralDocuments: [
+          {
+            id: '4c8c1f1f-0f6f-4e7f-9d4d-8a4a2e8f2c01',
+            value: {
+              DocumentType: 'Other',
+              DocumentFileName: 'test doc 3.docx',
+              DocumentLink: {
+                document_url: 'http://dm-store/documents/doc-123',
+                document_binary_url: 'http://dm-store/documents/doc-123/binary',
+              },
+            },
+          },
+        ],
+      },
+    });
+  });
+
+  test('POST /cases/:caseId/events merges citizen applicant document collection for applicant upload event', async () => {
+    const res = await request(app)
+      .post(`/cases/${seededCaseId}/events`)
+      .send({
+        event: { id: 'CUI_applicantUploadDocuments' },
+        event_token: 'mock-token',
+        data: {
+          citizenApplicantDocument: [
+            {
+              id: 'doc-1',
+              value: {
+                DocumentType: 'P60',
+                DocumentFileName: 'applicant-doc.pdf',
+                DocumentLink: {
+                  document_url: 'http://dm-store/documents/a',
+                  document_binary_url: 'http://dm-store/documents/a/binary',
+                },
+              },
+            },
+          ],
+        },
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      id: seededCaseId,
+      data: {
+        citizenApplicantDocument: [
+          {
+            id: 'doc-1',
+            value: {
+              DocumentType: 'P60',
+              DocumentFileName: 'applicant-doc.pdf',
+            },
+          },
+        ],
+      },
+    });
+  });
+
+  test('POST /cases/:caseId/events merges citizen respondent document collection for respondent upload event', async () => {
+    const res = await request(app)
+      .post(`/cases/${seededCaseId}/events`)
+      .send({
+        event: { id: 'CUI_respondentUploadDocuments' },
+        event_token: 'mock-token',
+        data: {
+          citizenRespondentDocument: [
+            {
+              id: 'doc-2',
+              value: {
+                DocumentType: 'Bank statements',
+                DocumentFileName: 'respondent-doc.pdf',
+                DocumentLink: {
+                  document_url: 'http://dm-store/documents/r',
+                  document_binary_url: 'http://dm-store/documents/r/binary',
+                },
+              },
+            },
+          ],
+        },
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      id: seededCaseId,
+      data: {
+        citizenRespondentDocument: [
+          {
+            id: 'doc-2',
+            value: {
+              DocumentType: 'Bank statements',
+              DocumentFileName: 'respondent-doc.pdf',
+            },
+          },
+        ],
+      },
+    });
+  });
+
   test('POST /case-users accepts assignments (204)', async () => {
     const res = await request(app)
       .post('/case-users')
