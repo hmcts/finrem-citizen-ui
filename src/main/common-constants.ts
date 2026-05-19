@@ -3,7 +3,6 @@ export const PublicRoutes = {
   autocomplete: '/autocomplete',
   basePath: '/',
   callbackUrl: '/oauth2/callback',
-  demoAutocomplete: '/demo/autocomplete',
   health: '/health',
   info: '/info',
   login: '/login',
@@ -35,7 +34,6 @@ export const RouteNames = {
 } as const;
 
 export const ViewNames = {
-  AutocompleteDemo: 'autocomplete-demo',
   Dashboard: 'dashboard',
   EnterCaseNumber: 'enter-case-number',
   EnterAccessCode: 'enter-access-code',
