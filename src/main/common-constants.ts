@@ -49,7 +49,7 @@ export const UploadStepNames = {
   BeforeYouStart: 'before-you-start',
   Confidentiality: 'confidentiality',
   FDR: 'fdr',
-  UploadDocuments: 'upload-documents',
+  DocumentSelection: 'document-selection',
 };
 
 export const CaseUserNames = {

@@ -28,7 +28,7 @@ describe('Upload Journey Configuration', () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.FDR];
       expect(step.template).toBe('upload-journey/fdr');
-      expect(step.next!({})).toBe(UploadStepNames.UploadDocuments);
+      expect(step.next!({})).toBe(UploadStepNames.DocumentSelection);
       expect(step.previous!({})).toBe(UploadStepNames.Confidentiality);
       expect(step.validate).toBeDefined();
       expect(step.persist).toBeDefined();
@@ -85,10 +85,10 @@ describe('Upload Journey Configuration', () => {
     });
   });
 
-  describe(UploadStepNames.UploadDocuments, () => {
+  describe(UploadStepNames.DocumentSelection, () => {
     it('should have correct configuration', () => {
-      const step = uploadSteps[UploadStepNames.UploadDocuments];
-      expect(step.template).toBe('upload-journey/upload-documents');
+      const step = uploadSteps[UploadStepNames.DocumentSelection];
+      expect(step.template).toBe('upload-journey/document-selection');
       expect(step.next!({})).toBeNull();
       expect(step.previous!({})).toBe(UploadStepNames.FDR);
       expect(step.validate).toBeDefined();
@@ -96,7 +96,7 @@ describe('Upload Journey Configuration', () => {
     });
 
     it('should return error when no documents are selected', () => {
-      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const step = uploadSteps[UploadStepNames.DocumentSelection];
       const body = { documentsJson: '[]' };
       
       const errors = step.validate!(body);
@@ -105,7 +105,7 @@ describe('Upload Journey Configuration', () => {
     });
 
     it('should return error when documentsJson is missing', () => {
-      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const step = uploadSteps[UploadStepNames.DocumentSelection];
       const body = {};
       
       const errors = step.validate!(body);
@@ -114,7 +114,7 @@ describe('Upload Journey Configuration', () => {
     });
 
     it('should return no errors when documents are selected', () => {
-      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const step = uploadSteps[UploadStepNames.DocumentSelection];
       const body = { 
         documentsJson: '[{"id":1,"label":"Position statement","value":"position-statement"}]' 
       };
@@ -125,7 +125,7 @@ describe('Upload Journey Configuration', () => {
     });
 
     it('should persist selected documents', () => {
-      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const step = uploadSteps[UploadStepNames.DocumentSelection];
       const existingData = { fdrHearing: 'yes' as const };
       const body = { 
         documentsJson: '[{"id":1,"label":"Position statement","value":"position-statement"}]' 
@@ -142,7 +142,7 @@ describe('Upload Journey Configuration', () => {
     });
 
     it('should handle invalid JSON gracefully', () => {
-      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const step = uploadSteps[UploadStepNames.DocumentSelection];
       const existingData = {};
       const body = { documentsJson: 'invalid json' };
       
@@ -154,7 +154,7 @@ describe('Upload Journey Configuration', () => {
     });
 
     it('should handle empty documentsJson', () => {
-      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const step = uploadSteps[UploadStepNames.DocumentSelection];
       const existingData = {};
       const body = { documentsJson: '' };
       

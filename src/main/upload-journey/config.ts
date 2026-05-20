@@ -50,12 +50,12 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
         fdrHearing: body.fdrHearing as 'yes' | 'no',
       };
     },
-    next: () => UploadStepNames.UploadDocuments,
+    next: () => UploadStepNames.DocumentSelection,
     previous: () => UploadStepNames.Confidentiality,
   },
 
-  [UploadStepNames.UploadDocuments]: {
-    template: 'upload-journey/upload-documents',
+  [UploadStepNames.DocumentSelection]: {
+    template: 'upload-journey/document-selection',
     validate: (body: Record<string, unknown>) => {
       const errors: Record<string, string> = {};
       const documentsJson = body.documentsJson as string;

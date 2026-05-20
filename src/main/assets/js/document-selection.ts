@@ -4,7 +4,7 @@ interface SelectedDocument {
   value: string;
 }
 
-class UploadDocumentsManager {
+class DocumentSelectionManager {
   private documents: SelectedDocument[] = [];
   private selectedDocument: SelectedDocument | null = null;
   private container: HTMLElement | null = null;
@@ -14,7 +14,7 @@ class UploadDocumentsManager {
   private noDocumentsMessage: HTMLElement | null = null;
 
   constructor() {
-    this.container = document.querySelector('[data-upload-documents]');
+    this.container = document.querySelector('[data-document-selection]');
     if (!this.container) {
       return;
     }
@@ -133,10 +133,10 @@ class UploadDocumentsManager {
   }
 }
 
-function initUploadDocuments(): void {
-  if (document.querySelector('[data-upload-documents]')) {
-    new UploadDocumentsManager();
+function initDocumentSelection(): void {
+  if (document.querySelector('[data-document-selection]')) {
+    new DocumentSelectionManager();
   }
 }
 
-export { initUploadDocuments };
+export { initDocumentSelection };
