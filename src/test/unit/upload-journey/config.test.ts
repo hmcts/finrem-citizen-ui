@@ -92,77 +92,75 @@ describe('Upload Journey Configuration', () => {
       expect(step.next!({})).toBeNull();
       expect(step.previous!({})).toBe(UploadStepNames.FDR);
       expect(step.validate).toBeDefined();
-      expect(step.persist).toBeDefined();
+      expect(step.persist).toBeUndefined();
     });
 
-    it('should return error when no documents are selected', () => {
-      const step = uploadSteps[UploadStepNames.DocumentSelection];
-      const body = { documentsJson: '[]' };
-      
-      const errors = step.validate!(body);
-      
-      expect(errors.documents).toBe('Select at least one document type to upload');
-    });
-
-    it('should return error when documentsJson is missing', () => {
+    it('should return error when no documents in session', () => {
       const step = uploadSteps[UploadStepNames.DocumentSelection];
       const body = {};
+      const data = { selectedDocuments: [] };
       
-      const errors = step.validate!(body);
+      const errors = step.validate!(body, data);
       
       expect(errors.documents).toBe('Select at least one document type to upload');
     });
 
-    it('should return no errors when documents are selected', () => {
+    it('should return error when session data is missing', () => {
       const step = uploadSteps[UploadStepNames.DocumentSelection];
-      const body = { 
-        documentsJson: '[{"id":1,"label":"Position statement","value":"position-statement"}]' 
+      const body = {};
+      const data = {};
+      
+      const errors = step.validate!(body, data);
+      
+      expect(errors.documents).toBe('Select at least one document type to upload');
+    });
+
+    it('should return no errors when documents exist in session', () => {
+      const step = uploadSteps[UploadStepNames.DocumentSelection];
+      const body = {};
+      const data = {
+        selectedDocuments: [
+          { id: 1, label: 'Position statement', value: 'position-statement' }
+        ]
       };
       
-      const errors = step.validate!(body);
+      const errors = step.validate!(body, data);
       
       expect(errors).toEqual({});
     });
 
-    it('should persist selected documents', () => {
+    it('should validate with undefined data', () => {
       const step = uploadSteps[UploadStepNames.DocumentSelection];
-      const existingData = { fdrHearing: 'yes' as const };
-      const body = { 
-        documentsJson: '[{"id":1,"label":"Position statement","value":"position-statement"}]' 
+      const body = {};
+      
+      const errors = step.validate!(body, undefined);
+      
+      expect(errors.documents).toBe('Select at least one document type to upload');
+    });
+
+    it('should return error when selectedDocuments is undefined', () => {
+      const step = uploadSteps[UploadStepNames.DocumentSelection];
+      const body = {};
+      const data = { fdrHearing: 'yes' as const };
+      
+      const errors = step.validate!(body, data);
+      
+      expect(errors.documents).toBe('Select at least one document type to upload');
+    });
+
+    it('should return no errors with multiple documents in session', () => {
+      const step = uploadSteps[UploadStepNames.DocumentSelection];
+      const body = {};
+      const data = {
+        selectedDocuments: [
+          { id: 1, label: 'Payslips', value: 'PAYSLIPS' },
+          { id: 2, label: 'Bank statements', value: 'BANK_STATEMENTS' }
+        ]
       };
       
-      const result = step.persist!(body, existingData);
+      const errors = step.validate!(body, data);
       
-      expect(result).toEqual({
-        fdrHearing: 'yes',
-        selectedDocuments: [
-          { id: 1, label: 'Position statement', value: 'position-statement' }
-        ]
-      });
-    });
-
-    it('should handle invalid JSON gracefully', () => {
-      const step = uploadSteps[UploadStepNames.DocumentSelection];
-      const existingData = {};
-      const body = { documentsJson: 'invalid json' };
-      
-      const result = step.persist!(body, existingData);
-      
-      expect(result).toEqual({
-        selectedDocuments: []
-      });
-    });
-
-    it('should handle empty documentsJson', () => {
-      const step = uploadSteps[UploadStepNames.DocumentSelection];
-      const existingData = {};
-      const body = { documentsJson: '' };
-      
-      const result = step.persist!(body, existingData);
-      
-      expect(result).toEqual({
-        selectedDocuments: []
-      });
+      expect(errors).toEqual({});
     });
   });
 });

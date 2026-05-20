@@ -20,13 +20,16 @@ describe('Upload Journey Routes', () => {
   let app: Application;
   let mockGet: jest.Mock;
   let mockPost: jest.Mock;
+  let mockDelete: jest.Mock;
 
   beforeEach(() => {
     mockGet = jest.fn();
     mockPost = jest.fn();
+    mockDelete = jest.fn();
     app = {
       get: mockGet,
       post: mockPost,
+      delete: mockDelete,
     } as unknown as Application;
     setupUploadJourneyRoute(app);
   });
@@ -39,6 +42,16 @@ describe('Upload Journey Routes', () => {
     );
     expect(mockPost).toHaveBeenCalledWith(
       `${RouteNames.uploadJourney}/:stepId`,
+      expect.any(Function),
+      expect.any(Function)
+    );
+    expect(mockPost).toHaveBeenCalledWith(
+      `${RouteNames.uploadJourney}/document-selection/add`,
+      expect.any(Function),
+      expect.any(Function)
+    );
+    expect(mockDelete).toHaveBeenCalledWith(
+      `${RouteNames.uploadJourney}/document-selection/remove/:index`,
       expect.any(Function),
       expect.any(Function)
     );
@@ -273,6 +286,106 @@ describe('Upload Journey Routes', () => {
       const mockRes = { redirect: jest.fn() } as Partial<Response>;
       handler({} as Request, mockRes as Response);
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/before-you-start`);
+    });
+  });
+
+  describe('POST /upload/document-selection/add', () => {
+    it('should add document to session', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/document-selection/add`);
+      const mockReq = {
+        session: {} as unknown as Request['session'],
+        body: { id: 1, label: 'Payslips', value: 'PAYSLIPS' },
+      } as Partial<Request>;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockReq.session?.uploadJourneyData?.selectedDocuments).toEqual([
+        { id: 1, label: 'Payslips', value: 'PAYSLIPS' },
+      ]);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        documents: [{ id: 1, label: 'Payslips', value: 'PAYSLIPS' }],
+      });
+    });
+
+    it('should append to existing documents', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/document-selection/add`);
+      const mockReq = {
+        session: {
+          uploadJourneyData: {
+            selectedDocuments: [{ id: 1, label: 'Payslips', value: 'PAYSLIPS' }],
+          },
+        } as unknown as Request['session'],
+        body: { id: 2, label: 'Bank statements', value: 'BANK_STATEMENTS' },
+      } as Partial<Request>;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockReq.session?.uploadJourneyData?.selectedDocuments).toHaveLength(2);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        documents: [
+          { id: 1, label: 'Payslips', value: 'PAYSLIPS' },
+          { id: 2, label: 'Bank statements', value: 'BANK_STATEMENTS' },
+        ],
+      });
+    });
+  });
+
+  describe('DELETE /upload/document-selection/remove/:index', () => {
+    it('should remove document from session', () => {
+      const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-selection/remove/:index`);
+      const mockReq = {
+        params: { index: '0' },
+        session: {
+          uploadJourneyData: {
+            selectedDocuments: [
+              { id: 1, label: 'Payslips', value: 'PAYSLIPS' },
+              { id: 2, label: 'Bank statements', value: 'BANK_STATEMENTS' },
+            ],
+          },
+        } as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockReq.session?.uploadJourneyData?.selectedDocuments).toEqual([
+        { id: 2, label: 'Bank statements', value: 'BANK_STATEMENTS' },
+      ]);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        documents: [{ id: 2, label: 'Bank statements', value: 'BANK_STATEMENTS' }],
+      });
+    });
+
+    it('should handle invalid index', () => {
+      const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-selection/remove/:index`);
+      const mockReq = {
+        params: { index: '99' },
+        session: {
+          uploadJourneyData: {
+            selectedDocuments: [{ id: 1, label: 'Payslips', value: 'PAYSLIPS' }],
+          },
+        } as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockReq.session?.uploadJourneyData?.selectedDocuments).toEqual([
+        { id: 1, label: 'Payslips', value: 'PAYSLIPS' },
+      ]);
     });
   });
 });
