@@ -64,7 +64,11 @@ export class DocumentManagerController {
     }
 
     public async LinkDocumentsToCase(req: AppRequest): Promise<void> {
-        const caseRole = req.session.user.caseRole;
+        const user = req.session.user;
+        if (!user) {
+            throw new Error('No user in session');
+        }
+        const caseRole = user.caseRole;
 
         if (!req.session.caseNumber) {
             throw new Error('No caseNumber in session');

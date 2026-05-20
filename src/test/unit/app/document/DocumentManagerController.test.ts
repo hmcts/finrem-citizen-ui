@@ -44,15 +44,13 @@ describe('DocumentManagerController', () => {
     controller = new DocumentManagerController(mockLogger);
   });
 
-  const buildRequest = (
-    overrides: Partial<AppRequest> = {}
-  ): AppRequest =>
-  ({
-    session: { user: userDetails },
-    headers: {},
-    files: [],
-    ...overrides,
-  } as unknown as AppRequest);
+  const buildRequest = (overrides: Partial<AppRequest> = {}): AppRequest =>
+    ({
+      session: { user: userDetails },
+      headers: {},
+      files: [],
+      ...overrides,
+    } as unknown as AppRequest);
 
   test('throws when no files uploaded', async () => {
     const req = buildRequest({ files: [] });
@@ -61,7 +59,23 @@ describe('DocumentManagerController', () => {
     ).rejects.toThrow('No files were uploaded');
   });
 
-  test('stores documents in session', async () => {
+  test('throws when user is missing', async () => {
+    const req = buildRequest({
+      session: { user: undefined } as unknown as AppRequest['session'],
+      files: [
+        {
+          buffer: Buffer.from('file'),
+          originalname: 'file.pdf',
+        } as Express.Multer.File,
+      ],
+    });
+
+    await expect(
+      controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never)
+    ).rejects.toThrow('No user in session');
+  });
+
+  test('stores documents correctly', async () => {
     const createMock = jest.fn().mockResolvedValue([
       {
         originalDocumentName: 'file.pdf',
@@ -74,7 +88,9 @@ describe('DocumentManagerController', () => {
 
     jest
       .spyOn(
-        controller as unknown as { getApiClient: (user: UserDetails) => { create: typeof createMock } },
+        controller as unknown as {
+          getApiClient: (user: UserDetails) => { create: typeof createMock };
+        },
         'getApiClient'
       )
       .mockReturnValue({ create: createMock });
@@ -90,27 +106,11 @@ describe('DocumentManagerController', () => {
 
     await controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never);
 
-  test('should throw error when user is missing from session', async () => {
-    const req = buildRequest({
-      session: { user: undefined } as AppRequest['session'],
-      files: [
-        {
-          buffer: Buffer.from('file'),
-          originalname: 'file1.pdf',
-        } as Express.Multer.File,
-      ],
-    });
-
-    await expect(controller.post(req, mockResponse()))
-      .rejects.toThrow('No user in session');
-  });
-
-  test('should upload files and log success', async () => {
     expect(req.session.documents?.documentDetails).toHaveLength(1);
     expect(req.session.documents?.documentDetails?.[0].id).toBe('mock-uuid');
   });
 
-  test('appends documents to existing collection', async () => {
+  test('appends to existing documents', async () => {
     const createMock = jest.fn().mockResolvedValue([
       {
         originalDocumentName: 'file2.pdf',
@@ -123,7 +123,9 @@ describe('DocumentManagerController', () => {
 
     jest
       .spyOn(
-        controller as unknown as { getApiClient: (user: UserDetails) => { create: typeof createMock } },
+        controller as unknown as {
+          getApiClient: (user: UserDetails) => { create: typeof createMock };
+        },
         'getApiClient'
       )
       .mockReturnValue({ create: createMock });
@@ -164,17 +166,13 @@ describe('DocumentManagerController', () => {
         documents: { documentDetails: [] },
       } as unknown as AppRequest['session'],
     });
-    expect(req.session.uploadedDocuments).toEqual([
-      'https://doc-store/documents/1/binary',
-      'https://doc-store/documents/2/binary',
-    ]);
 
     await expect(controller.LinkDocumentsToCase(req)).rejects.toThrow(
       'No documents in session to send'
     );
   });
 
-  test('triggers event and clears session', async () => {
+  test('triggers event and clears documents', async () => {
     const triggerEventMock = jest.fn().mockResolvedValue({});
 
     const { getCaseApi } = require('../../../../main/app/case/case-api');

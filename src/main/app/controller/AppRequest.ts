@@ -3,7 +3,7 @@ import type { LoggerInstance } from 'winston';
 
 import { Case } from '../case/case';
 import { CaseApi } from '../case/case-api';
-import { CaseRole} from '../case/definition';
+import { CaseRole } from '../case/definition';
 
 export interface AppRequest<T = Partial<Case>> extends Request {
   locals: {
