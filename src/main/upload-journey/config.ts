@@ -15,7 +15,7 @@ export type UploadJourneyData = {
 
 export type UploadStep = {
   template: string;
-  validate?: (body: Record<string, unknown>) => Record<string, string>;
+  validate?: (body: Record<string, unknown>, data?: UploadJourneyData) => Record<string, string>;
   persist?: (body: Record<string, unknown>, data: UploadJourneyData) => UploadJourneyData;
   next?: (data: UploadJourneyData) => UploadStepId | null;
   previous?: (data: UploadJourneyData) => UploadStepId | null;
@@ -56,30 +56,14 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
   [UploadStepNames.DocumentSelection]: {
     template: 'upload-journey/document-selection',
-    validate: (body: Record<string, unknown>) => {
+    validate: (body: Record<string, unknown>, data?: UploadJourneyData) => {
       const errors: Record<string, string> = {};
-      const documentsJson = body.documentsJson as string;
       
-      if (!documentsJson || documentsJson === '[]') {
+      if (!data?.selectedDocuments || data.selectedDocuments.length === 0) {
         errors.documents = 'Select at least one document type to upload';
       }
       
       return errors;
-    },
-    persist: (body: Record<string, unknown>, data: UploadJourneyData) => {
-      const documentsJson = body.documentsJson as string;
-      let selectedDocuments: SelectedDocument[] = [];
-      
-      try {
-        selectedDocuments = JSON.parse(documentsJson || '[]');
-      } catch {
-        selectedDocuments = [];
-      }
-      
-      return {
-        ...data,
-        selectedDocuments,
-      };
     },
     next: () => null,
     previous: () => UploadStepNames.FDR,

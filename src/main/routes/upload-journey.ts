@@ -15,6 +15,44 @@ function setData(req: Request, data: UploadJourneyData): void {
 }
 
 export default function setupUploadJourneyRoute(app: Application): void {
+  app.post(`${RouteNames.uploadJourney}/document-selection/add`, oidcMiddleware, (req: Request, res: Response) => {
+    const data = getData(req);
+    const selectedDocuments = data.selectedDocuments || [];
+    
+    const newDocument = {
+      id: req.body.id,
+      label: req.body.label,
+      value: req.body.value,
+    };
+    
+    selectedDocuments.push(newDocument);
+    
+    setData(req, {
+      ...data,
+      selectedDocuments,
+    });
+    
+    res.json({ success: true, documents: selectedDocuments });
+  });
+
+  app.delete(`${RouteNames.uploadJourney}/document-selection/remove/:index`, oidcMiddleware, (req: Request, res: Response) => {
+    const data = getData(req);
+    const selectedDocuments = data.selectedDocuments || [];
+    const indexParam = Array.isArray(req.params.index) ? req.params.index[0] : req.params.index;
+    const index = parseInt(indexParam, 10);
+    
+    if (index >= 0 && index < selectedDocuments.length) {
+      selectedDocuments.splice(index, 1);
+      
+      setData(req, {
+        ...data,
+        selectedDocuments,
+      });
+    }
+    
+    res.json({ success: true, documents: selectedDocuments });
+  });
+
   app.get(`${RouteNames.uploadJourney}/:stepId`, oidcMiddleware, (req: Request, res: Response) => {
     const step = uploadSteps[req.params.stepId as UploadStepId];
     if (!step) {
@@ -41,7 +79,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
 
     const data = getData(req);
 
-    const errors = step.validate ? step.validate(req.body) : {};
+    const errors = step.validate ? step.validate(req.body, data) : {};
     if (Object.keys(errors).length > 0) {
       const previousStep = step.previous ? step.previous(data) : null;
       return res.render(step.template, {

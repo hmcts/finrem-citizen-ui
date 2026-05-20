@@ -53,17 +53,34 @@ class DocumentSelectionManager {
     }
   }
 
-  private addDocument(): void {
+  private async addDocument(): Promise<void> {
     if (!this.selectedDocument) {
       return;
     }
 
-    this.documents.push({ ...this.selectedDocument });
-    this.selectedDocument = null;
-    
-    this.clearAutocompleteInput();
-    this.updateHiddenInput();
-    this.render();
+    try {
+      const response = await fetch('/upload/document-selection/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(this.selectedDocument),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add document');
+      }
+
+      const data = await response.json();
+      this.documents = data.documents;
+      this.selectedDocument = null;
+      
+      this.clearAutocompleteInput();
+      this.updateHiddenInput();
+      this.render();
+    } catch (error) {
+      console.error('Error adding document:', error);
+    }
   }
 
   private clearAutocompleteInput(): void {
@@ -73,10 +90,23 @@ class DocumentSelectionManager {
     }
   }
 
-  private removeDocument(index: number): void {
-    this.documents.splice(index, 1);
-    this.updateHiddenInput();
-    this.render();
+  private async removeDocument(index: number): Promise<void> {
+    try {
+      const response = await fetch(`/upload/document-selection/remove/${index}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove document');
+      }
+
+      const data = await response.json();
+      this.documents = data.documents;
+      this.updateHiddenInput();
+      this.render();
+    } catch (error) {
+      console.error('Error removing document:', error);
+    }
   }
 
   private updateHiddenInput(): void {
