@@ -49,17 +49,15 @@ export class OIDCModule {
     if (!clientSecret || clientSecret === 'PLACEHOLDER_IDAM_SECRET' || clientSecret === 'AAAAAAAAAAAA') {
       this.logger.error('CRITICAL: IDAM Client Secret is missing or still set to placeholder!');
     }
-    this.logger.error('!!!!! !!!!! clientSecret !!!!! !!!!!!', clientSecret);
     try {
       this.logger.info('Setting up OIDC client via discovery');
       const issuer = new URL(this.oidcConfig.issuer);
 
       this.clientConfig = await oidcClient.discovery(issuer, this.oidcConfig.clientId, clientSecret);
-      this.logger.error('!!!!! !!!!! this.oidcConfig.clientId !!!!! !!!!!!', this.oidcConfig.clientId);
-      let redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
-      this.logger.error('!!!!! !!!!!! redisConnectionString !!!!! !!!!!!', redisConnectionString);
-      let sessionSecret = config.get<string>('secrets.finrem.session-secret');
-      this.logger.error('!!!!! !!!!!! sessionSecret !!!!! !!!!!!', sessionSecret);
+
+      //let redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
+      //let sessionSecret = config.get<string>('secrets.finrem.session-secret');
+
       this.logger.info('OIDC client configured successfully');
     } catch (err: unknown) {
       this.logger.error('Failed to setup OIDC client:', err);
