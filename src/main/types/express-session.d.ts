@@ -19,6 +19,6 @@ declare module 'express-session' {
     caseRole?: CaseRole;
     caseUserName?: string;
     uploadJourneyData?: UploadJourneyData;
-    uploadedDocuments?: string[];
+    documents?: UserDocumentSelection;
   }
 }

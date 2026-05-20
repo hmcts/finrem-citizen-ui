@@ -7,46 +7,39 @@
     <h1 class="govuk-heading-l">Documents</h1>
 
     <p class="govuk-body">
-      Upload a document via the secure Document API.
+      Upload documents and submit them when ready.
     </p>
 
-    {% if uploadedDocuments and uploadedDocuments.length %}
-      <div class="govuk-notification-banner govuk-notification-banner--success" role="alert">
-        <div class="govuk-notification-banner__header">
-          <h2 class="govuk-notification-banner__title">
-            Success
-          </h2>
-        </div>
-        <div class="govuk-notification-banner__content">
-          <h3 class="govuk-notification-banner__heading">
-            Document uploaded successfully
-          </h3>
-
-          <ul class="govuk-list govuk-list--bullet">
-            {% for url in uploadedDocuments %}
-              <li>
-                <a
-                  class="govuk-link"
-                  href="{{ url }}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {{ url }}
-                </a>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
+    {% if documentCount > 0 %}
+      <div class="govuk-inset-text">
+        {{ documentCount }} document(s) ready to submit
       </div>
     {% endif %}
 
     <h2 class="govuk-heading-m">Upload document</h2>
 
-    <form
-      method="post"
-      action="/documents/upload"
-      enctype="multipart/form-data"
-    >
+    <form method="post" action="/documents/upload" enctype="multipart/form-data">
+      <div class="govuk-form-group">
+        <label class="govuk-label" for="documentType">
+          Select document type
+        </label>
+
+        <select
+          class="govuk-select"
+          id="documentType"
+          name="documentType"
+          required
+        >
+          <option value="">-- Select --</option>
+
+          {% for type in documentTypes %}
+            <option value="{{ type.value }}">
+              {{ type.label }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
       <div class="govuk-form-group">
         <label class="govuk-label" for="file">
           Choose a file to upload
@@ -71,6 +64,48 @@
     </form>
 
     <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+
+    <h2 class="govuk-heading-m">Submit documents</h2>
+
+    <form method="post" action="/documents/send">
+
+      <div class="govuk-form-group">
+        <fieldset class="govuk-fieldset">
+          <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
+            Financial Dispute Resolution
+          </legend>
+
+          <div class="govuk-checkboxes">
+            <div class="govuk-checkboxes__item">
+              <input
+                class="govuk-checkboxes__input"
+                id="isFinacialDisputeResolution"
+                name="isFinacialDisputeResolution"
+                type="checkbox"
+                {% if isFDR %}checked{% endif %}
+              >
+              <label
+                class="govuk-label govuk-checkboxes__label"
+                for="isFinacialDisputeResolution"
+              >
+                This is a Financial Dispute Resolution (FDR) submission
+              </label>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+
+      <button
+        type="submit"
+        class="govuk-button govuk-button--secondary"
+        data-module="govuk-button"
+        {% if documentCount == 0 %}
+          disabled
+        {% endif %}
+      >
+        Submit all uploaded documents
+      </button>
+    </form>
 
   </div>
 </div>
