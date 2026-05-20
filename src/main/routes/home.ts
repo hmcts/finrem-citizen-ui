@@ -120,7 +120,7 @@ export default function (app: Application): void {
           selectedType
         );
 
-        res.redirect(ViewNames.Document);
+        res.redirect(RouteNames.documents);
       } catch (error) {
         next(error);
       }
@@ -143,7 +143,7 @@ export default function (app: Application): void {
 
         await documentController.LinkDocumentsToCase(appReq);
 
-        res.redirect(ViewNames.Document);
+        res.redirect(RouteNames.documents);
       } catch (error) {
         next(error);
       }
