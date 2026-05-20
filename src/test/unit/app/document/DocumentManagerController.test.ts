@@ -170,13 +170,19 @@ describe('DocumentManagerController', () => {
     );
   });
 
+
   test('triggers applicant upload event with citizenApplicantDocument and clears session', async () => {
+    const documentLink = {
+      document_url: '/doc/1',
+      document_filename: 'file.pdf',
+      document_binary_url: '/doc/1/bin',
+    };
     const req = buildRequest({
       session: {
         user: userDetails,
         caseNumber: '123',
         documents: {
-          documentDetails: [{ id: '1', value: {} }],
+          documentDetails: [{ id: '1', value: { DocumentLink: documentLink } }],
         },
       } as unknown as AppRequest['session'],
     });
@@ -186,14 +192,31 @@ describe('DocumentManagerController', () => {
     expect(triggerEventMock).toHaveBeenCalledWith(
       '123',
       {
-        citizenApplicantDocument: [{ id: '1', value: {} }],
+        citizenApplicantDocument: [
+          {
+            id: '1',
+            value: expect.objectContaining({
+              DocumentLink: expect.objectContaining({
+                document_url: '/doc/1',
+                document_filename: 'file.pdf',
+                document_binary_url: '/doc/1/bin',
+              }),
+            }),
+          },
+        ],
       },
       EVENT_TYPE.APPLICANT_UPLOAD_DOCUMENT
     );
     expect(req.session.documents).toBeUndefined();
   });
 
+
   test('triggers respondent upload event with citizenRespondentDocument', async () => {
+    const documentLink = {
+      document_url: '/doc/2',
+      document_filename: 'file2.pdf',
+      document_binary_url: '/doc/2/bin',
+    };
     const respondentUser = {
       ...userDetails,
       caseRole: CaseRole.RESPONDENT,
@@ -204,7 +227,7 @@ describe('DocumentManagerController', () => {
         user: respondentUser,
         caseNumber: '456',
         documents: {
-          documentDetails: [{ id: '2', value: {} }],
+          documentDetails: [{ id: '2', value: { DocumentLink: documentLink } }],
         },
       } as unknown as AppRequest['session'],
     });
@@ -214,7 +237,18 @@ describe('DocumentManagerController', () => {
     expect(triggerEventMock).toHaveBeenCalledWith(
       '456',
       {
-        citizenRespondentDocument: [{ id: '2', value: {} }],
+        citizenRespondentDocument: [
+          {
+            id: '2',
+            value: expect.objectContaining({
+              DocumentLink: expect.objectContaining({
+                document_url: '/doc/2',
+                document_filename: 'file2.pdf',
+                document_binary_url: '/doc/2/bin',
+              }),
+            }),
+          },
+        ],
       },
       EVENT_TYPE.RESPONDENT_UPLOAD_DOCUMENT
     );
