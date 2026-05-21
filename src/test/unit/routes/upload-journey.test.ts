@@ -76,7 +76,7 @@ describe('Upload Journey Routes', () => {
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/before-you-start', {
         data: { selectedDocuments: [] },
         errors: {},
-        values: { selectedDocuments: [], fdrHearing: false },
+        values: { selectedDocuments: [], fdrHearing: undefined },
         previousStep: null,
         email: 'FRCexample@justice.gov.uk',
       });
@@ -313,6 +313,30 @@ describe('Upload Journey Routes', () => {
 
       expect(mockReq.session?.DocumentSelection).toBeUndefined();
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confidentiality`);
+    });
+
+    it('should render validation error with fdrHearing value from body', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.DocumentSelection },
+        session: {} as unknown as Request['session'],
+        body: { fdrHearing: 'false' },
+      } as Partial<Request>;
+      const mockRes = {
+        render: jest.fn(),
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        'upload-journey/document-selection',
+        expect.objectContaining({
+          values: expect.objectContaining({
+            fdrHearing: false,
+          }),
+        })
+      );
     });
   });
 
