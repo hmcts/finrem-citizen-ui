@@ -1,56 +1,60 @@
 import type { Application, Request, Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 
+import { CitizenUploadDocument, ListValue } from '../app/case/definition';
 import { RouteNames } from '../common-constants';
 import { oidcMiddleware } from '../middleware';
-import { UploadJourneyData, UploadStepId, uploadSteps } from '../upload-journey/config';
-
-function getData(req: Request): UploadJourneyData {
-  return req.session?.uploadJourneyData ?? {};
-}
-
-function setData(req: Request, data: UploadJourneyData): void {
-  if (req.session) {
-    req.session.uploadJourneyData = data;
-  }
-}
+import { UploadStepId, uploadSteps } from '../upload-journey/config';
 
 export default function setupUploadJourneyRoute(app: Application): void {
   app.post(`${RouteNames.uploadJourney}/document-selection/add`, oidcMiddleware, (req: Request, res: Response) => {
-    const data = getData(req);
-    const selectedDocuments = data.selectedDocuments || [];
+    if (!req.session.DocumentSelection) {
+      req.session.DocumentSelection = {};
+    }
     
-    const newDocument = {
-      id: req.body.id,
-      label: req.body.label,
-      value: req.body.value,
+    const documentDetails = req.session.DocumentSelection.documentDetails || [];
+    
+    const newDocument: ListValue<Partial<CitizenUploadDocument>> = {
+      id: uuidv4(),
+      value: {
+        DocumentType: req.body.value,
+      },
     };
     
-    selectedDocuments.push(newDocument);
+    documentDetails.push(newDocument);
+    req.session.DocumentSelection.documentDetails = documentDetails;
     
-    setData(req, {
-      ...data,
-      selectedDocuments,
-    });
+    // Map to display format for frontend
+    const displayDocs = documentDetails.map(doc => ({
+      id: doc.id,
+      label: req.body.label,
+      value: doc.value?.DocumentType || '',
+    }));
     
-    res.json({ success: true, documents: selectedDocuments });
+    res.json({ success: true, documents: displayDocs });
   });
 
   app.delete(`${RouteNames.uploadJourney}/document-selection/remove/:index`, oidcMiddleware, (req: Request, res: Response) => {
-    const data = getData(req);
-    const selectedDocuments = data.selectedDocuments || [];
+    const documentDetails = req.session.DocumentSelection?.documentDetails || [];
     const indexParam = Array.isArray(req.params.index) ? req.params.index[0] : req.params.index;
     const index = parseInt(indexParam, 10);
     
-    if (index >= 0 && index < selectedDocuments.length) {
-      selectedDocuments.splice(index, 1);
+    if (index >= 0 && index < documentDetails.length) {
+      documentDetails.splice(index, 1);
       
-      setData(req, {
-        ...data,
-        selectedDocuments,
-      });
+      if (req.session.DocumentSelection) {
+        req.session.DocumentSelection.documentDetails = documentDetails;
+      }
     }
     
-    res.json({ success: true, documents: selectedDocuments });
+    // Map to display format for frontend
+    const displayDocs = documentDetails.map(doc => ({
+      id: doc.id,
+      label: '', // Will be filled by frontend
+      value: doc.value?.DocumentType || '',
+    }));
+    
+    res.json({ success: true, documents: displayDocs });
   });
 
   app.get(`${RouteNames.uploadJourney}/:stepId`, oidcMiddleware, (req: Request, res: Response) => {
@@ -59,13 +63,23 @@ export default function setupUploadJourneyRoute(app: Application): void {
       return res.status(404).send('Step not found');
     }
 
-    const data = getData(req);
-    const previousStep = step.previous ? step.previous(data) : null;
+    const previousStep = step.previous ? step.previous() : null;
+    
+    // Map DocumentSelection to display format
+    const documentDetails = req.session.DocumentSelection?.documentDetails || [];
+    const selectedDocuments = documentDetails.map(doc => ({
+      id: doc.id,
+      label: '', // Will be populated by frontend
+      value: doc.value?.DocumentType || '',
+    }));
+    
+    // Pass boolean FDR directly to template
+    const fdrHearing = req.session.DocumentSelection?.isFinancialDisputeResolution ?? false;
 
     res.render(step.template, {
-      data,
+      data: { selectedDocuments },
       errors: {},
-      values: { ...data, fdrHearing: req.session.fdrHearing },
+      values: { selectedDocuments, fdrHearing },
       previousStep,
       email: 'FRCexample@justice.gov.uk',
     });
@@ -77,25 +91,39 @@ export default function setupUploadJourneyRoute(app: Application): void {
       return res.status(404).send('Step not found');
     }
 
-    const data = getData(req);
-
-    const errors = step.validate ? step.validate(req.body, data) : {};
+    const errors = step.validate ? step.validate(req.body, req) : {};
     if (Object.keys(errors).length > 0) {
-      const previousStep = step.previous ? step.previous(data) : null;
+      const previousStep = step.previous ? step.previous() : null;
+      
+      // Map DocumentSelection to display format
+      const documentDetails = req.session.DocumentSelection?.documentDetails || [];
+      const selectedDocuments = documentDetails.map(doc => ({
+        id: doc.id,
+        label: '',
+        value: doc.value?.DocumentType || '',
+      }));
+      
+      // Pass boolean FDR directly to template
+      const fdrHearing = req.session.DocumentSelection?.isFinancialDisputeResolution ?? false;
+      
       return res.render(step.template, {
-        data,
+        data: { selectedDocuments },
         errors,
-        values: { ...data, fdrHearing: req.session.fdrHearing, ...req.body },
+        values: { selectedDocuments, fdrHearing, ...req.body },
         previousStep,
         email: 'FRCexample@justice.gov.uk',
       });
     }
 
+    // Save FDR hearing answer to DocumentSelection
     if (req.body.fdrHearing) {
-      req.session.fdrHearing = req.body.fdrHearing as 'yes' | 'no';
+      if (!req.session.DocumentSelection) {
+        req.session.DocumentSelection = {};
+      }
+      req.session.DocumentSelection.isFinancialDisputeResolution = req.body.fdrHearing === 'true';
     }
 
-    const nextStep = step.next ? step.next(data) : null;
+    const nextStep = step.next ? step.next() : null;
     if (nextStep) {
       return res.redirect(`${RouteNames.uploadJourney}/${nextStep}`);
     }

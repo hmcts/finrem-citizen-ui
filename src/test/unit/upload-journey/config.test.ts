@@ -6,8 +6,8 @@ describe('Upload Journey Configuration', () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.BeforeYouStart];
       expect(step.template).toBe('upload-journey/before-you-start');
-      expect(step.next!({})).toBe(UploadStepNames.Confidentiality);
-      expect(step.previous!({})).toBeNull();
+      expect(step.next!()).toBe(UploadStepNames.Confidentiality);
+      expect(step.previous!()).toBeNull();
       expect(step.validate).toBeUndefined();
     });
   });
@@ -16,8 +16,8 @@ describe('Upload Journey Configuration', () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.Confidentiality];
       expect(step.template).toBe('upload-journey/confidentiality');
-      expect(step.next!({})).toBe(UploadStepNames.FDR);
-      expect(step.previous!({})).toBe(UploadStepNames.BeforeYouStart);
+      expect(step.next!()).toBe(UploadStepNames.FDR);
+      expect(step.previous!()).toBe(UploadStepNames.BeforeYouStart);
       expect(step.validate).toBeUndefined();
     });
   });
@@ -26,8 +26,8 @@ describe('Upload Journey Configuration', () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.FDR];
       expect(step.template).toBe('upload-journey/fdr');
-      expect(step.next!({})).toBe(UploadStepNames.DocumentSelection);
-      expect(step.previous!({})).toBe(UploadStepNames.Confidentiality);
+      expect(step.next!()).toBe(UploadStepNames.DocumentSelection);
+      expect(step.previous!()).toBe(UploadStepNames.Confidentiality);
       expect(step.validate).toBeDefined();
     });
 
@@ -54,17 +54,23 @@ describe('Upload Journey Configuration', () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.DocumentSelection];
       expect(step.template).toBe('upload-journey/document-selection');
-      expect(step.next!({})).toBeNull();
-      expect(step.previous!({})).toBe(UploadStepNames.FDR);
+      expect(step.next!()).toBeNull();
+      expect(step.previous!()).toBe(UploadStepNames.FDR);
       expect(step.validate).toBeDefined();
     });
 
     it('should return error when no documents in session', () => {
       const step = uploadSteps[UploadStepNames.DocumentSelection];
       const body = {};
-      const data = { selectedDocuments: [] };
+      const mockReq = {
+        session: {
+          DocumentSelection: {
+            documentDetails: []
+          }
+        }
+      } as any;
       
-      const errors = step.validate!(body, data);
+      const errors = step.validate!(body, mockReq);
       
       expect(errors.documents).toBe('Select at least one document type to upload');
     });
@@ -72,9 +78,11 @@ describe('Upload Journey Configuration', () => {
     it('should return error when session data is missing', () => {
       const step = uploadSteps[UploadStepNames.DocumentSelection];
       const body = {};
-      const data = {};
+      const mockReq = {
+        session: {}
+      } as any;
       
-      const errors = step.validate!(body, data);
+      const errors = step.validate!(body, mockReq);
       
       expect(errors.documents).toBe('Select at least one document type to upload');
     });
@@ -82,18 +90,22 @@ describe('Upload Journey Configuration', () => {
     it('should return no errors when documents exist in session', () => {
       const step = uploadSteps[UploadStepNames.DocumentSelection];
       const body = {};
-      const data = {
-        selectedDocuments: [
-          { id: 1, label: 'Position statement', value: 'position-statement' }
-        ]
-      };
+      const mockReq = {
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'uuid-1', value: { DocumentType: 'position-statement' } }
+            ]
+          }
+        }
+      } as any;
       
-      const errors = step.validate!(body, data);
+      const errors = step.validate!(body, mockReq);
       
       expect(errors).toEqual({});
     });
 
-    it('should validate with undefined data', () => {
+    it('should validate with undefined req', () => {
       const step = uploadSteps[UploadStepNames.DocumentSelection];
       const body = {};
       
@@ -102,12 +114,16 @@ describe('Upload Journey Configuration', () => {
       expect(errors.documents).toBe('Select at least one document type to upload');
     });
 
-    it('should return error when selectedDocuments is undefined', () => {
+    it('should return error when documentDetails is undefined', () => {
       const step = uploadSteps[UploadStepNames.DocumentSelection];
       const body = {};
-      const data = {};
+      const mockReq = {
+        session: {
+          DocumentSelection: {}
+        }
+      } as any;
       
-      const errors = step.validate!(body, data);
+      const errors = step.validate!(body, mockReq);
       
       expect(errors.documents).toBe('Select at least one document type to upload');
     });
@@ -115,14 +131,18 @@ describe('Upload Journey Configuration', () => {
     it('should return no errors with multiple documents in session', () => {
       const step = uploadSteps[UploadStepNames.DocumentSelection];
       const body = {};
-      const data = {
-        selectedDocuments: [
-          { id: 1, label: 'Payslips', value: 'PAYSLIPS' },
-          { id: 2, label: 'Bank statements', value: 'BANK_STATEMENTS' }
-        ]
-      };
+      const mockReq = {
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'uuid-1', value: { DocumentType: 'PAYSLIPS' } },
+              { id: 'uuid-2', value: { DocumentType: 'BANK_STATEMENTS' } }
+            ]
+          }
+        }
+      } as any;
       
-      const errors = step.validate!(body, data);
+      const errors = step.validate!(body, mockReq);
       
       expect(errors).toEqual({});
     });

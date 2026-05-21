@@ -28,14 +28,14 @@
           },
           items: [
             {
-              value: "yes",
+              value: "true",
               text: "Yes",
-              checked: values.fdrHearing === "yes"
+              checked: values.fdrHearing === true
             },
             {
-              value: "no",
+              value: "false",
               text: "No, they are for a different hearing",
-              checked: values.fdrHearing === "no"
+              checked: values.fdrHearing === false
             }
           ],
           errorMessage: errors.fdrHearing and {

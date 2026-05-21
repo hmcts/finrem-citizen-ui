@@ -1,22 +1,14 @@
 import { UploadStepNames } from '../common-constants';
 
+import type { Request } from 'express';
+
 export type UploadStepId = typeof UploadStepNames[keyof typeof UploadStepNames];
-
-export type SelectedDocument = {
-  id: number;
-  label: string;
-  value: string;
-};
-
-export type UploadJourneyData = {
-  selectedDocuments?: SelectedDocument[];
-};
 
 export type UploadStep = {
   template: string;
-  validate?: (body: Record<string, unknown>, data?: UploadJourneyData) => Record<string, string>;
-  next?: (data: UploadJourneyData) => UploadStepId | null;
-  previous?: (data: UploadJourneyData) => UploadStepId | null;
+  validate?: (body: Record<string, unknown>, req?: Request) => Record<string, string>;
+  next?: () => UploadStepId | null;
+  previous?: () => UploadStepId | null;
 };
 
 export const uploadSteps: Record<UploadStepId, UploadStep> = {
@@ -48,10 +40,11 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
   [UploadStepNames.DocumentSelection]: {
     template: 'upload-journey/document-selection',
-    validate: (body: Record<string, unknown>, data?: UploadJourneyData) => {
+    validate: (body: Record<string, unknown>, req?: Request) => {
       const errors: Record<string, string> = {};
       
-      if (!data?.selectedDocuments || data.selectedDocuments.length === 0) {
+      const documentDetails = req?.session?.DocumentSelection?.documentDetails;
+      if (!documentDetails || documentDetails.length === 0) {
         errors.documents = 'Select at least one document type to upload';
       }
       

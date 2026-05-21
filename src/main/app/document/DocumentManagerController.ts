@@ -49,7 +49,7 @@ export class DocumentManagerController {
         if (!req.session.documents) {
             req.session.documents = {
                 documentDetails: [],
-                isFinacialDisputeResolution: false,
+                isFinancialDisputeResolution: false,
             };
         }
 

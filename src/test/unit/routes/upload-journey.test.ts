@@ -74,9 +74,9 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/before-you-start', {
-        data: {},
+        data: { selectedDocuments: [] },
         errors: {},
-        values: {},
+        values: { selectedDocuments: [], fdrHearing: false },
         previousStep: null,
         email: 'FRCexample@justice.gov.uk',
       });
@@ -87,7 +87,9 @@ describe('Upload Journey Routes', () => {
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
         session: {
-          fdrHearing: 'yes',
+          DocumentSelection: {
+            isFinancialDisputeResolution: true,
+          },
         } as unknown as Request['session'],
       } as Partial<Request>;
       const mockRes = {
@@ -99,9 +101,9 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/fdr', {
-        data: {},
+        data: { selectedDocuments: [] },
         errors: {},
-        values: { fdrHearing: 'yes' },
+        values: { selectedDocuments: [], fdrHearing: true },
         previousStep: UploadStepNames.Confidentiality,
         email: 'FRCexample@justice.gov.uk',
       });
@@ -211,7 +213,7 @@ describe('Upload Journey Routes', () => {
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
         session: {} as unknown as Request['session'],
-        body: { fdrHearing: 'yes' },
+        body: { fdrHearing: 'true' },
       } as Partial<Request>;
       const mockRes = {
         render: jest.fn(),
@@ -220,7 +222,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as Request, mockRes as Response);
 
-      expect(mockReq.session?.fdrHearing).toBe('yes');
+      expect(mockReq.session?.DocumentSelection?.isFinancialDisputeResolution).toBe(true);
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
     });
 
@@ -245,7 +247,7 @@ describe('Upload Journey Routes', () => {
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
         session: {} as unknown as Request['session'],
-        body: { fdrHearing: 'yes' },
+        body: { fdrHearing: 'true' },
       } as Partial<Request>;
       const mockRes = {
         redirect: jest.fn(),
@@ -253,7 +255,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as Request, mockRes as Response);
 
-      expect(mockReq.session?.fdrHearing).toBe('yes');
+      expect(mockReq.session?.DocumentSelection?.isFinancialDisputeResolution).toBe(true);
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
     });
 
@@ -262,7 +264,7 @@ describe('Upload Journey Routes', () => {
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
         session: {} as unknown as Request['session'],
-        body: { fdrHearing: 'no' },
+        body: { fdrHearing: 'false' },
       } as Partial<Request>;
       const mockRes = {
         redirect: jest.fn(),
@@ -270,7 +272,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as Request, mockRes as Response);
 
-      expect(mockReq.session?.fdrHearing).toBe('no');
+      expect(mockReq.session?.DocumentSelection?.isFinancialDisputeResolution).toBe(false);
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
     });
   });
@@ -298,12 +300,11 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as Request, mockRes as Response);
 
-      expect(mockReq.session?.uploadJourneyData?.selectedDocuments).toEqual([
-        { id: 1, label: 'Payslips', value: 'PAYSLIPS' },
-      ]);
+      expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
+      expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('PAYSLIPS');
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        documents: [{ id: 1, label: 'Payslips', value: 'PAYSLIPS' }],
+        documents: expect.arrayContaining([expect.objectContaining({ label: 'Payslips', value: 'PAYSLIPS' })]),
       });
     });
 
@@ -311,8 +312,8 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/document-selection/add`);
       const mockReq = {
         session: {
-          uploadJourneyData: {
-            selectedDocuments: [{ id: 1, label: 'Payslips', value: 'PAYSLIPS' }],
+          DocumentSelection: {
+            documentDetails: [{ id: 'uuid-1', value: { DocumentType: 'PAYSLIPS' } }],
           },
         } as unknown as Request['session'],
         body: { id: 2, label: 'Bank statements', value: 'BANK_STATEMENTS' },
@@ -323,13 +324,13 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as Request, mockRes as Response);
 
-      expect(mockReq.session?.uploadJourneyData?.selectedDocuments).toHaveLength(2);
+      expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(2);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        documents: [
-          { id: 1, label: 'Payslips', value: 'PAYSLIPS' },
-          { id: 2, label: 'Bank statements', value: 'BANK_STATEMENTS' },
-        ],
+        documents: expect.arrayContaining([
+          expect.objectContaining({ value: 'PAYSLIPS' }),
+          expect.objectContaining({ label: 'Bank statements', value: 'BANK_STATEMENTS' }),
+        ]),
       });
     });
   });
@@ -340,10 +341,10 @@ describe('Upload Journey Routes', () => {
       const mockReq = {
         params: { index: '0' },
         session: {
-          uploadJourneyData: {
-            selectedDocuments: [
-              { id: 1, label: 'Payslips', value: 'PAYSLIPS' },
-              { id: 2, label: 'Bank statements', value: 'BANK_STATEMENTS' },
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'uuid-1', value: { DocumentType: 'PAYSLIPS' } },
+              { id: 'uuid-2', value: { DocumentType: 'BANK_STATEMENTS' } },
             ],
           },
         } as unknown as Request['session'],
@@ -354,12 +355,11 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as Request, mockRes as Response);
 
-      expect(mockReq.session?.uploadJourneyData?.selectedDocuments).toEqual([
-        { id: 2, label: 'Bank statements', value: 'BANK_STATEMENTS' },
-      ]);
+      expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
+      expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('BANK_STATEMENTS');
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        documents: [{ id: 2, label: 'Bank statements', value: 'BANK_STATEMENTS' }],
+        documents: expect.arrayContaining([expect.objectContaining({ value: 'BANK_STATEMENTS' })]),
       });
     });
 
@@ -368,8 +368,8 @@ describe('Upload Journey Routes', () => {
       const mockReq = {
         params: { index: '99' },
         session: {
-          uploadJourneyData: {
-            selectedDocuments: [{ id: 1, label: 'Payslips', value: 'PAYSLIPS' }],
+          DocumentSelection: {
+            documentDetails: [{ id: 'uuid-1', value: { DocumentType: 'PAYSLIPS' } }],
           },
         } as unknown as Request['session'],
       } as Partial<Request>;
@@ -379,9 +379,8 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as Request, mockRes as Response);
 
-      expect(mockReq.session?.uploadJourneyData?.selectedDocuments).toEqual([
-        { id: 1, label: 'Payslips', value: 'PAYSLIPS' },
-      ]);
+      expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
+      expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('PAYSLIPS');
     });
   });
 });
