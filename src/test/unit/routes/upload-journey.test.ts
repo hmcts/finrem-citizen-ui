@@ -206,15 +206,12 @@ describe('Upload Journey Routes', () => {
       delete uploadSteps[UploadStepNames.Confidentiality].validate;
     });
 
-    it('should persist data', () => {
-      const { uploadSteps } = require('../../../main/upload-journey/config');
-      uploadSteps[UploadStepNames.Confidentiality].persist = (body: Record<string, unknown>) => ({ data: body.test });
-
+    it('should store fdrHearing in session', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
-        params: { stepId: UploadStepNames.Confidentiality },
+        params: { stepId: UploadStepNames.FDR },
         session: {} as unknown as Request['session'],
-        body: { test: 'value' },
+        body: { fdrHearing: 'yes' },
       } as Partial<Request>;
       const mockRes = {
         render: jest.fn(),
@@ -223,9 +220,8 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as Request, mockRes as Response);
 
-      expect(mockReq.session?.uploadJourneyData).toEqual({ data: 'value' });
-
-      delete uploadSteps[UploadStepNames.Confidentiality].persist;
+      expect(mockReq.session?.fdrHearing).toBe('yes');
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
     });
 
     it('should handle missing session', () => {

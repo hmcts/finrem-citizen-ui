@@ -18,6 +18,7 @@ declare module 'express-session' {
     caseData?: FinremCaseData;
     caseRole?: CaseRole;
     caseUserName?: string;
+    fdrHearing?: 'yes' | 'no';
     uploadJourneyData?: UploadJourneyData;
     documents?: UserDocumentSelection;
   }

@@ -65,7 +65,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
     res.render(step.template, {
       data,
       errors: {},
-      values: data,
+      values: { ...data, fdrHearing: req.session.fdrHearing },
       previousStep,
       email: 'FRCexample@justice.gov.uk',
     });
@@ -85,16 +85,17 @@ export default function setupUploadJourneyRoute(app: Application): void {
       return res.render(step.template, {
         data,
         errors,
-        values: { ...data, ...req.body },
+        values: { ...data, fdrHearing: req.session.fdrHearing, ...req.body },
         previousStep,
         email: 'FRCexample@justice.gov.uk',
       });
     }
 
-    const newData = step.persist ? step.persist(req.body, data) : data;
-    setData(req, newData);
+    if (req.body.fdrHearing) {
+      req.session.fdrHearing = req.body.fdrHearing as 'yes' | 'no';
+    }
 
-    const nextStep = step.next ? step.next(newData) : null;
+    const nextStep = step.next ? step.next(data) : null;
     if (nextStep) {
       return res.redirect(`${RouteNames.uploadJourney}/${nextStep}`);
     }
