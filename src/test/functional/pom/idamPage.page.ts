@@ -13,8 +13,8 @@ export class IdamPage {
 
   constructor(readonly page: Page) {
     this.signInLink = this.page.getByRole('button', { name: /sign in/i });
-    this.emailInput = this.page.locator('#email');
-    this.passwordInput = this.page.locator('#password');
+    this.emailInput = this.page.getByRole('textbox', { name: /enter your email/i });
+    this.passwordInput = this.page.getByRole('textbox', { name: /enter your password/i });
     this.continueBtn = this.page.getByRole('button', { name: /continue/i });
   }
 
