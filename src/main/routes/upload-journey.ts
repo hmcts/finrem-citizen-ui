@@ -42,7 +42,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
     // Map to display format for frontend
     const displayDocs = documentDetails.map(doc => ({
       id: doc.id,
-      label: req.body.label,
+      label: getDocumentLabel(doc.value?.DocumentType || ''),
       value: doc.value?.DocumentType || '',
     }));
     

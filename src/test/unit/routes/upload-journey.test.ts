@@ -454,7 +454,7 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/document-selection/add`);
       const mockReq = {
         session: {} as unknown as Request['session'],
-        body: { id: 1, label: 'Payslips', value: 'PAYSLIPS' },
+        body: { id: 1, label: 'Payslips', value: 'payslips' },
       } as Partial<Request>;
       const mockRes = {
         json: jest.fn(),
@@ -463,10 +463,10 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as Request, mockRes as Response);
 
       expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
-      expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('PAYSLIPS');
+      expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('payslips');
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        documents: expect.arrayContaining([expect.objectContaining({ label: 'Payslips', value: 'PAYSLIPS' })]),
+        documents: expect.arrayContaining([expect.objectContaining({ label: 'Payslips', value: 'payslips' })]),
       });
     });
 
@@ -475,10 +475,10 @@ describe('Upload Journey Routes', () => {
       const mockReq = {
         session: {
           DocumentSelection: {
-            documentDetails: [{ id: 'uuid-1', value: { DocumentType: 'PAYSLIPS' } }],
+            documentDetails: [{ id: 'uuid-1', value: { DocumentType: 'payslips' } }],
           },
         } as unknown as Request['session'],
-        body: { id: 2, label: 'Bank statements', value: 'BANK_STATEMENTS' },
+        body: { id: 2, label: 'Bank statements', value: 'bank-statements' },
       } as Partial<Request>;
       const mockRes = {
         json: jest.fn(),
@@ -490,8 +490,8 @@ describe('Upload Journey Routes', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         documents: expect.arrayContaining([
-          expect.objectContaining({ value: 'PAYSLIPS' }),
-          expect.objectContaining({ label: 'Bank statements', value: 'BANK_STATEMENTS' }),
+          expect.objectContaining({ label: 'Payslips', value: 'payslips' }),
+          expect.objectContaining({ label: 'Bank statements', value: 'bank-statements' }),
         ]),
       });
     });
