@@ -24,7 +24,7 @@ export class GettingHelpPanel {
     this.summary = this.details.locator('summary').filter({ hasText: 'Contact us for help' });
     this.toggle = this.summary;
 
-    this.emailLink = this.details.getByRole('link', { name: /@/ });
+    this.emailLink = this.details.locator('a[href^="mailto:"]');
     this.telephoneText = this.page.getByText('0300 123 5577');
     this.callChargesLink = this.page.getByRole('link', {
       name: 'Find out about call charges (opens in new tab)',
