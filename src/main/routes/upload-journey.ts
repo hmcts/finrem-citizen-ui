@@ -4,7 +4,22 @@ import { v4 as uuidv4 } from 'uuid';
 import { CitizenUploadDocument, ListValue } from '../app/case/definition';
 import { RouteNames } from '../common-constants';
 import { oidcMiddleware } from '../middleware';
+import documentTypes from '../models/document-types.json';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
+
+interface DocumentType {
+  id: number;
+  label: string;
+  value: string;
+  aliases: string[];
+}
+
+const typedDocumentTypes: DocumentType[] = documentTypes as DocumentType[];
+
+function getDocumentLabel(value: string): string {
+  const docType = typedDocumentTypes.find(dt => dt.value === value);
+  return docType?.label || '';
+}
 
 export default function setupUploadJourneyRoute(app: Application): void {
   app.post(`${RouteNames.uploadJourney}/document-selection/add`, oidcMiddleware, (req: Request, res: Response) => {
@@ -50,7 +65,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
     // Map to display format for frontend
     const displayDocs = documentDetails.map(doc => ({
       id: doc.id,
-      label: '', // Will be filled by frontend
+      label: getDocumentLabel(doc.value?.DocumentType || ''),
       value: doc.value?.DocumentType || '',
     }));
     
@@ -69,7 +84,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
     const documentDetails = req.session.DocumentSelection?.documentDetails || [];
     const selectedDocuments = documentDetails.map(doc => ({
       id: doc.id,
-      label: '', // Will be populated by frontend
+      label: getDocumentLabel(doc.value?.DocumentType || ''),
       value: doc.value?.DocumentType || '',
     }));
     
@@ -99,7 +114,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
       const documentDetails = req.session.DocumentSelection?.documentDetails || [];
       const selectedDocuments = documentDetails.map(doc => ({
         id: doc.id,
-        label: '',
+        label: getDocumentLabel(doc.value?.DocumentType || ''),
         value: doc.value?.DocumentType || '',
       }));
       

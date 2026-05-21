@@ -109,6 +109,75 @@ describe('Upload Journey Routes', () => {
       });
     });
 
+    it('should populate document labels from document types', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.DocumentSelection },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'uuid-1', value: { DocumentType: 'points-of-claim-defence' } },
+            ],
+          },
+        } as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-selection', {
+        data: { selectedDocuments: expect.arrayContaining([
+          expect.objectContaining({
+            label: 'Points of claim/defence',
+            value: 'points-of-claim-defence',
+          }),
+        ]) },
+        errors: {},
+        values: expect.objectContaining({
+          selectedDocuments: expect.arrayContaining([
+            expect.objectContaining({
+              label: 'Points of claim/defence',
+              value: 'points-of-claim-defence',
+            }),
+          ]),
+        }),
+        previousStep: UploadStepNames.FDR,
+        email: 'FRCexample@justice.gov.uk',
+      });
+    });
+
+    it('should handle unknown document type with empty label', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.DocumentSelection },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'uuid-1', value: { DocumentType: 'unknown-doc-type' } },
+            ],
+          },
+        } as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-selection', 
+        expect.objectContaining({
+          data: { selectedDocuments: expect.arrayContaining([
+            expect.objectContaining({
+              label: '',
+              value: 'unknown-doc-type',
+            }),
+          ]) },
+        })
+      );
+    });
+
     it('should return 404 for invalid step', () => {
       const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
