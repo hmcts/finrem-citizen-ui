@@ -1,7 +1,8 @@
-import { DEFAULT_AXE_OPTIONS, expect, test } from '../../../fixtures/fixtures';
+import { expect, test } from '../../../fixtures/fixtures';
 import { BasePage } from '../../pom/basePage.page';
 import { DashboardPage } from '../../pom/dashboardPage.page';
 import { EnterAccessCodePage } from '../../pom/enterAccessCode.page';
+import { expectAuthenticated, runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 
 /**
  * MOCK-ONLY TESTS: Persistent Session After Re-login
@@ -69,6 +70,7 @@ test.describe('[mock] Persistent Session After Re-login', () => {
     // Two full login cycles: loggedInPage fixture + explicit re-login after sign-out.
     // Longer timeout required for login flow
     test.setTimeout(90_000);
+    expectAuthenticated(loggedInPage);
     await navigateToLinkedDashboard(basePage, enterAccessCodePage, dashboardPage, contestedCaseWithHearing);
 
     // Sign out — IDAM redirects to its sign-in page
@@ -83,7 +85,7 @@ test.describe('[mock] Persistent Session After Re-login', () => {
 
     // Verify user lands directly on dashboard, no case number or access code required
     await dashboardPage.verifyDashboardPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   /**
@@ -113,7 +115,7 @@ test.describe('[mock] Persistent Session After Re-login', () => {
     await expect(newPage).toHaveURL(/\/dashboard$/);
 
     // Audit the stable dashboard state in the original tab.
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
 
     await newPage.close();
   });
@@ -144,6 +146,6 @@ test.describe('[mock] Persistent Session After Re-login', () => {
 
     // Verify user lands back on dashboard without re-entering case/access code
     await dashboardPage.verifyDashboardPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 });
