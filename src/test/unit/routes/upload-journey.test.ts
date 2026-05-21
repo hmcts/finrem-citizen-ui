@@ -178,6 +178,36 @@ describe('Upload Journey Routes', () => {
       );
     });
 
+    it('should handle missing DocumentType with empty label and value', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.DocumentSelection },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'uuid-1', value: {} },
+            ],
+          },
+        } as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-selection', 
+        expect.objectContaining({
+          data: { selectedDocuments: expect.arrayContaining([
+            expect.objectContaining({
+              label: '',
+              value: '',
+            }),
+          ]) },
+        })
+      );
+    });
+
     it('should return 404 for invalid step', () => {
       const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
@@ -556,6 +586,40 @@ describe('Upload Journey Routes', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         documents: [],
+      });
+    });
+
+    it('should update session when removing document with valid DocumentSelection', () => {
+      const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-selection/remove/:index`);
+      const documentDetails = [
+        { id: 'uuid-1', value: { DocumentType: 'points-of-claim-defence' } },
+        { id: 'uuid-2', value: { DocumentType: 'other-document' } },
+      ];
+      const mockReq = {
+        params: { index: '0' },
+        session: {
+          DocumentSelection: {
+            documentDetails: [...documentDetails],
+          },
+        } as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
+      expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].id).toBe('uuid-2');
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        documents: [
+          expect.objectContaining({
+            id: 'uuid-2',
+            label: 'Other document',
+            value: 'other-document',
+          }),
+        ],
       });
     });
   });
