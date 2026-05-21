@@ -6,10 +6,10 @@ import { getSystemUser } from '../app/auth/user';
 import { getCaseApi } from '../app/case/case-api';
 import { CaseAssignedUserRole } from '../app/case/case-roles';
 import { CASE_TYPE } from '../app/case/case-type';
-import { CaseRole } from '../app/case/definition';
+import { CaseRole, CitizenUploadDocumentType } from '../app/case/definition';
 import { AppRequest, UserDetails } from '../app/controller/AppRequest';
 import { DocumentManagerController } from '../app/document/DocumentManagerController';
-import { RouteNames } from '../common-constants';
+import { RouteNames, ViewNames } from '../common-constants';
 import { orchestrateHome } from '../functions/util/homePageUtil';
 import { oidcMiddleware } from '../middleware';
 
@@ -81,26 +81,69 @@ export default function (app: Application): void {
 
   const documentController = new DocumentManagerController(logger);
 
-  app.get('/documents', oidcMiddleware, (req, res) => {
+  app.get(RouteNames.documents, oidcMiddleware, (req, res) => {
+    const appReq = req as AppRequest;
 
-    const uploadedDocuments = req.session.uploadedDocuments ?? [];
+    const documentCount =
+      appReq.session.documents?.documentDetails?.length ?? 0;
 
-    delete req.session.uploadedDocuments;
+    const isFDR =
+      appReq.session.documents?.isFinacialDisputeResolution ?? false;
 
-    res.render('document', {
-      uploadedDocuments,
+    const documentTypes = Object.entries(CitizenUploadDocumentType).map(
+      ([key, value]) => ({
+        value: key,
+        label: value,
+      })
+    );
+
+    res.render(ViewNames.Document, {
+      documentTypes,
+      documentCount,
+      isFDR,
     });
-
   });
 
   app.post(
-    '/documents/upload',
+    RouteNames.documentUpload,
     oidcMiddleware,
     upload.any(),
     async (req, res, next) => {
       try {
-        await documentController.post(req as unknown as AppRequest, res);
-        res.redirect('/documents');
+        const selectedType =
+          CitizenUploadDocumentType[
+          req.body.documentType as keyof typeof CitizenUploadDocumentType
+          ];
+
+        await documentController.uploadDocumentToEvidenceStore(
+          req as unknown as AppRequest,
+          selectedType
+        );
+
+        res.redirect(RouteNames.documents);
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.post(
+    RouteNames.documentSend,
+    oidcMiddleware,
+    async (req, res, next) => {
+      try {
+        const appReq = req as AppRequest;
+
+        if (!appReq.session.documents) {
+          appReq.session.documents = {};
+        }
+
+        appReq.session.documents.isFinacialDisputeResolution =
+          req.body.isFinacialDisputeResolution === 'on';
+
+        await documentController.LinkDocumentsToCase(appReq);
+
+        res.redirect(RouteNames.documents);
       } catch (error) {
         next(error);
       }

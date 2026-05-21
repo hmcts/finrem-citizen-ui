@@ -1,34 +1,106 @@
-import type { Response } from 'express';
+import { v4 as generateUuid } from 'uuid';
 import { LoggerInstance } from 'winston';
 
+import { getSystemUser } from '../auth/user';
+import { getCaseApi } from '../case/case-api';
+import { CITIZEN_APPLICANT_DOCUMENT, CITIZEN_RESPONDENT_DOCUMENT,EVENT_TYPE } from '../case/case-type';
+import { CaseRole,CitizenUploadDocument, CitizenUploadDocumentType, ListValue } from '../case/definition';
 import type { AppRequest, UserDetails } from '../controller/AppRequest';
 import { CaseDocumentManagementClient, Classification } from './CaseDocumentManagementClient';
 
 export class DocumentManagerController {
     constructor(private readonly logger: LoggerInstance) { }
 
-    public async post(req: AppRequest, _res: Response): Promise<void> {
-        this.logger.info('Uploading document via CDAM');
+    public async uploadDocumentToEvidenceStore(
+        req: AppRequest,
+        documentType: CitizenUploadDocumentType
+    ): Promise<void> {
+        this.logger.info('Uploading document via CDAM (session only)');
 
         if (!req.files?.length || req.headers.accept?.includes('application/json')) {
             throw new Error('No files were uploaded');
         }
 
-        const filesCreated = await this.getApiClient(req.session.user).create({
+        const user = req.session.user;
+        if (!user) {
+            throw new Error('No user in session');
+        }
+
+        const filesCreated = await this.getApiClient(user).create({
             files: req.files,
             classification: Classification.Public,
         });
 
+        const newUploads: ListValue<Partial<CitizenUploadDocument> | null>[] =
+            filesCreated.map(file => ({
+                id: generateUuid(),
+                value: {
+                    DocumentComment: 'Uploaded by applicant',
+                    DocumentFileName: file.originalDocumentName,
+                    DocumentType: documentType,
+                    DocumentLink: {
+                        document_url: file._links.self.href,
+                        document_filename: file.originalDocumentName,
+                        document_binary_url: file._links.binary.href,
+                    },
+                },
+            }));
 
-        // remove after testing
-        req.session.uploadedDocuments = filesCreated.map(
-            file => file._links.binary.href
+        if (!req.session.documents) {
+            req.session.documents = {
+                documentDetails: [],
+                isFinacialDisputeResolution: false,
+            };
+        }
+
+        req.session.documents.documentDetails = [
+            ...(req.session.documents.documentDetails ?? []),
+            ...newUploads,
+        ];
+
+        this.logger.info('Documents stored in session', {
+            count: req.session.documents.documentDetails.length,
+        });
+    }
+
+    public async LinkDocumentsToCase(req: AppRequest): Promise<void> {
+        const user = req.session.user;
+        if (!user) {
+            throw new Error('No user in session');
+        }
+        const caseRole = user.caseRole;
+
+        if (!req.session.caseNumber) {
+            throw new Error('No caseNumber in session');
+        }
+
+        const documents = req.session.documents?.documentDetails ?? [];
+
+        if (!documents.length) {
+            throw new Error('No documents in session to send');
+        }
+
+        const documentsKey =
+            caseRole === CaseRole.APPLICANT
+                ? CITIZEN_APPLICANT_DOCUMENT
+                : CITIZEN_RESPONDENT_DOCUMENT;
+
+        const systemUser = await getSystemUser();
+        const caseworkerUserApi = getCaseApi(systemUser, this.logger);
+
+        req.session.caseData = await caseworkerUserApi.triggerEvent(
+            req.session.caseNumber,
+            {
+                [documentsKey]: documents,
+            },
+            caseRole === CaseRole.APPLICANT
+                ? EVENT_TYPE.APPLICANT_UPLOAD_DOCUMENT
+                : EVENT_TYPE.RESPONDENT_UPLOAD_DOCUMENT
         );
 
+        delete req.session.documents;
 
-        this.logger.info('Document upload successful', {
-            filesCreated: filesCreated.length,
-        });
+        this.logger.info('Document collection sent to CCD');
     }
 
     private getApiClient(user: UserDetails): CaseDocumentManagementClient {
