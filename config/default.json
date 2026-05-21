@@ -33,7 +33,7 @@
       "url": "http://ccd-case-document-am-api-aat.service.core-compute-aat.internal"
     },
     "orchestrationService": {
-      "url": "http://finrem-cos-aat.service.core-compute-aat.internal/health"
+      "url": "http://finrem-cos-aat.service.core-compute-aat.internal"
     }
   },
   "oidc": {
