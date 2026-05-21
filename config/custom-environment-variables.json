@@ -41,6 +41,9 @@
     },
     "caseDocumentManagement": {
       "url": "CASE_DOCUMENT_MANAGEMENT_URL"
+    },
+    "orchestrationService": {
+      "url": "ORCHESTRATION_SERVICE_URL"
     }
   }
 }

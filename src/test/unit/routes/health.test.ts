@@ -59,6 +59,10 @@ describe('health route', () => {
         return 'http://ccd.example.test/' as T;
       }
 
+      if (key === 'services.orchestrationService.url') {
+        return 'http://orchestrationService.example.test/' as T;
+      }
+
       throw new Error(`Unexpected config key: ${key}`);
     });
   });
@@ -69,6 +73,7 @@ describe('health route', () => {
     health(app);
 
     expect(web).toHaveBeenCalledWith('http://ccd.example.test/health');
+    expect(web).toHaveBeenCalledWith('http://orchestrationService.example.test/health');
     expect(addTo).toHaveBeenCalledWith(app, expect.objectContaining({
       checks: expect.objectContaining({
         ccd: { type: 'web', url: 'http://ccd.example.test/health' },
