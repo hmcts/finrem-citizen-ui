@@ -68,8 +68,9 @@ describe('Upload Journey Configuration', () => {
             documentDetails: []
           }
         }
-      } as any;
+      } as unknown as Request;
       
+      // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!(body, mockReq);
       
       expect(errors.documents).toBe('Select at least one document type to upload');
@@ -80,8 +81,9 @@ describe('Upload Journey Configuration', () => {
       const body = {};
       const mockReq = {
         session: {}
-      } as any;
+      } as unknown as Request;
       
+      // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!(body, mockReq);
       
       expect(errors.documents).toBe('Select at least one document type to upload');
@@ -98,8 +100,9 @@ describe('Upload Journey Configuration', () => {
             ]
           }
         }
-      } as any;
+      } as unknown as Request;
       
+      // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!(body, mockReq);
       
       expect(errors).toEqual({});
@@ -121,8 +124,9 @@ describe('Upload Journey Configuration', () => {
         session: {
           DocumentSelection: {}
         }
-      } as any;
+      } as unknown as Request;
       
+      // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!(body, mockReq);
       
       expect(errors.documents).toBe('Select at least one document type to upload');
@@ -140,8 +144,9 @@ describe('Upload Journey Configuration', () => {
             ]
           }
         }
-      } as any;
+      } as unknown as Request;
       
+      // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!(body, mockReq);
       
       expect(errors).toEqual({});
