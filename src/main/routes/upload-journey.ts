@@ -103,13 +103,14 @@ export default function setupUploadJourneyRoute(app: Application): void {
         value: doc.value?.DocumentType || '',
       }));
       
-      // Pass boolean FDR directly to template
-      const fdrHearing = req.session.DocumentSelection?.isFinancialDisputeResolution ?? false;
+      const fdrHearing = req.body.fdrHearing 
+        ? req.body.fdrHearing === 'true' 
+        : undefined;
       
       return res.render(step.template, {
         data: { selectedDocuments },
         errors,
-        values: { selectedDocuments, fdrHearing, ...req.body },
+        values: { selectedDocuments, fdrHearing },
         previousStep,
         email: 'FRCexample@justice.gov.uk',
       });

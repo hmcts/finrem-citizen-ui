@@ -30,12 +30,12 @@
             {
               value: "true",
               text: "Yes",
-              checked: values.fdrHearing === true
+              checked: values.fdrHearing === true or values.fdrHearing === "true"
             },
             {
               value: "false",
               text: "No, they are for a different hearing",
-              checked: values.fdrHearing === false
+              checked: values.fdrHearing === false or values.fdrHearing === "false"
             }
           ],
           errorMessage: errors.fdrHearing and {
