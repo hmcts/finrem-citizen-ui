@@ -275,6 +275,45 @@ describe('Upload Journey Routes', () => {
       expect(mockReq.session?.DocumentSelection?.isFinancialDisputeResolution).toBe(false);
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
     });
+
+    it('should redirect to same step when next() returns null', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.DocumentSelection },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'uuid-1', value: { DocumentType: 'PAYSLIPS' } }
+            ]
+          }
+        } as unknown as Request['session'],
+        body: {},
+      } as Partial<Request>;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
+    });
+
+    it('should skip fdrHearing persistence for non-FDR steps', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.BeforeYouStart },
+        session: {} as unknown as Request['session'],
+        body: {},
+      } as Partial<Request>;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockReq.session?.DocumentSelection).toBeUndefined();
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confidentiality`);
+    });
   });
 
   describe('GET /upload', () => {
@@ -333,6 +372,32 @@ describe('Upload Journey Routes', () => {
         ]),
       });
     });
+
+    // Edge case: handles malformed session data where DocumentType is missing
+    it('should handle documents with missing DocumentType', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/document-selection/add`);
+      const mockReq = {
+        session: {
+          DocumentSelection: {
+            documentDetails: [{ id: 'uuid-1', value: {} }],
+          },
+        } as unknown as Request['session'],
+        body: { id: 2, label: 'Test', value: 'TEST' },
+      } as Partial<Request>;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        documents: expect.arrayContaining([
+          expect.objectContaining({ value: '' }),
+          expect.objectContaining({ value: 'TEST' }),
+        ]),
+      });
+    });
   });
 
   describe('DELETE /upload/document-selection/remove/:index', () => {
@@ -381,6 +446,24 @@ describe('Upload Journey Routes', () => {
 
       expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
       expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('PAYSLIPS');
+    });
+
+    it('should handle when DocumentSelection is undefined', () => {
+      const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-selection/remove/:index`);
+      const mockReq = {
+        params: { index: '0' },
+        session: {} as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        documents: [],
+      });
     });
   });
 });
