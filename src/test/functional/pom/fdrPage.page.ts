@@ -36,7 +36,7 @@ export class FdrPage extends BasePage {
     this.noOption = this.page.getByLabel('No, they are for a different hearing');
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
     this.inlineErrorMessage = this.page.getByText(
-      /Error:\s*Select yes if you are uploading these documents for a Financial Dispute Resolution hearing/i
+      'Select yes if you are uploading these documents for a Financial Dispute Resolution hearing'
     );
     this.gettingHelp = new GettingHelpPanel(this.page);
   }
