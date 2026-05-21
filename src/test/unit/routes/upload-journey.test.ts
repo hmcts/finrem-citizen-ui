@@ -87,7 +87,7 @@ describe('Upload Journey Routes', () => {
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
         session: {
-          uploadJourneyData: { fdrHearing: 'yes' },
+          fdrHearing: 'yes',
         } as unknown as Request['session'],
       } as Partial<Request>;
       const mockRes = {
@@ -99,7 +99,7 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/fdr', {
-        data: { fdrHearing: 'yes' },
+        data: {},
         errors: {},
         values: { fdrHearing: 'yes' },
         previousStep: UploadStepNames.Confidentiality,
@@ -253,7 +253,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as Request, mockRes as Response);
 
-      expect(mockReq.session?.uploadJourneyData).toEqual({ fdrHearing: 'yes' });
+      expect(mockReq.session?.fdrHearing).toBe('yes');
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
     });
 
@@ -270,7 +270,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as Request, mockRes as Response);
 
-      expect(mockReq.session?.uploadJourneyData).toEqual({ fdrHearing: 'no' });
+      expect(mockReq.session?.fdrHearing).toBe('no');
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
     });
   });
