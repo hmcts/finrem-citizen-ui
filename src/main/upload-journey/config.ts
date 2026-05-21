@@ -1,6 +1,6 @@
-import { UploadStepNames } from '../common-constants';
-
 import type { Request } from 'express';
+
+import { UploadStepNames } from '../common-constants';
 
 export type UploadStepId = typeof UploadStepNames[keyof typeof UploadStepNames];
 
