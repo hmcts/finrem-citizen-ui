@@ -34,12 +34,12 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
       }
       return errors;
     },
-    next: () => UploadStepNames.DocumentSelection,
+    next: () => UploadStepNames.DocumentTypeSelection,
     previous: () => UploadStepNames.Confidentiality,
   },
 
-  [UploadStepNames.DocumentSelection]: {
-    template: 'upload-journey/document-selection',
+  [UploadStepNames.DocumentTypeSelection]: {
+    template: 'upload-journey/document-type-selection',
     validate: (body: Record<string, unknown>, req?: Request) => {
       const errors: Record<string, string> = {};
       
@@ -57,7 +57,7 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
   [UploadStepNames.UploadDocuments]: {
     template: 'upload-journey/upload-documents',
     next: () => null,
-    previous: () => UploadStepNames.DocumentSelection,
+    previous: () => UploadStepNames.DocumentTypeSelection,
   },
   
 };

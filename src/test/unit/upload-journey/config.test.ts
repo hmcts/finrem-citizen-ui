@@ -26,7 +26,7 @@ describe('Upload Journey Configuration', () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.FDR];
       expect(step.template).toBe('upload-journey/fdr');
-      expect(step.next!()).toBe(UploadStepNames.DocumentSelection);
+      expect(step.next!()).toBe(UploadStepNames.DocumentTypeSelection);
       expect(step.previous!()).toBe(UploadStepNames.Confidentiality);
       expect(step.validate).toBeDefined();
     });
@@ -50,17 +50,17 @@ describe('Upload Journey Configuration', () => {
     });
   });
 
-  describe(UploadStepNames.DocumentSelection, () => {
+  describe(UploadStepNames.DocumentTypeSelection, () => {
     it('should have correct configuration', () => {
-      const step = uploadSteps[UploadStepNames.DocumentSelection];
-      expect(step.template).toBe('upload-journey/document-selection');
+      const step = uploadSteps[UploadStepNames.DocumentTypeSelection];
+      expect(step.template).toBe('upload-journey/document-type-selection');
       expect(step.next!()).toBe(UploadStepNames.UploadDocuments);
       expect(step.previous!()).toBe(UploadStepNames.FDR);
       expect(step.validate).toBeDefined();
     });
 
     it('should return error when no documents in session', () => {
-      const step = uploadSteps[UploadStepNames.DocumentSelection];
+      const step = uploadSteps[UploadStepNames.DocumentTypeSelection];
       const body = {};
       const mockReq = {
         session: {
@@ -77,7 +77,7 @@ describe('Upload Journey Configuration', () => {
     });
 
     it('should return error when session data is missing', () => {
-      const step = uploadSteps[UploadStepNames.DocumentSelection];
+      const step = uploadSteps[UploadStepNames.DocumentTypeSelection];
       const body = {};
       const mockReq = {
         session: {}
@@ -90,7 +90,7 @@ describe('Upload Journey Configuration', () => {
     });
 
     it('should return no errors when documents exist in session', () => {
-      const step = uploadSteps[UploadStepNames.DocumentSelection];
+      const step = uploadSteps[UploadStepNames.DocumentTypeSelection];
       const body = {};
       const mockReq = {
         session: {
@@ -109,7 +109,7 @@ describe('Upload Journey Configuration', () => {
     });
 
     it('should validate with undefined req', () => {
-      const step = uploadSteps[UploadStepNames.DocumentSelection];
+      const step = uploadSteps[UploadStepNames.DocumentTypeSelection];
       const body = {};
       
       const errors = step.validate!(body, undefined);
@@ -118,7 +118,7 @@ describe('Upload Journey Configuration', () => {
     });
 
     it('should return error when documentDetails is undefined', () => {
-      const step = uploadSteps[UploadStepNames.DocumentSelection];
+      const step = uploadSteps[UploadStepNames.DocumentTypeSelection];
       const body = {};
       const mockReq = {
         session: {
@@ -133,7 +133,7 @@ describe('Upload Journey Configuration', () => {
     });
 
     it('should return no errors with multiple documents in session', () => {
-      const step = uploadSteps[UploadStepNames.DocumentSelection];
+      const step = uploadSteps[UploadStepNames.DocumentTypeSelection];
       const body = {};
       const mockReq = {
         session: {

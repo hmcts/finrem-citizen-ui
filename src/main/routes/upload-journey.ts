@@ -22,7 +22,7 @@ function getDocumentLabel(value: string): string {
 }
 
 export default function setupUploadJourneyRoute(app: Application): void {
-  app.post(`${RouteNames.uploadJourney}/document-selection/add`, oidcMiddleware, (req: Request, res: Response) => {
+  app.post(`${RouteNames.uploadJourney}/document-type-selection/add`, oidcMiddleware, (req: Request, res: Response) => {
     if (!req.session.DocumentSelection) {
       req.session.DocumentSelection = {};
     }
@@ -49,7 +49,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
     res.json({ success: true, documents: displayDocs });
   });
 
-  app.delete(`${RouteNames.uploadJourney}/document-selection/remove/:index`, oidcMiddleware, (req: Request, res: Response) => {
+  app.delete(`${RouteNames.uploadJourney}/document-type-selection/remove/:index`, oidcMiddleware, (req: Request, res: Response) => {
     const documentDetails = req.session.DocumentSelection?.documentDetails || [];
     const indexParam = Array.isArray(req.params.index) ? req.params.index[0] : req.params.index;
     const index = parseInt(indexParam, 10);
@@ -82,7 +82,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
     
     // Map DocumentSelection to display format
     const documentDetails = req.session.DocumentSelection?.documentDetails || [];
-    const selectedDocuments = documentDetails.map(doc => ({
+    const selectedDocumentTypes = documentDetails.map(doc => ({
       id: doc.id,
       label: getDocumentLabel(doc.value?.DocumentType || ''),
       value: doc.value?.DocumentType || '',
@@ -92,9 +92,9 @@ export default function setupUploadJourneyRoute(app: Application): void {
     const fdrHearing = req.session.DocumentSelection?.isFinancialDisputeResolution;
 
     res.render(step.template, {
-      data: { selectedDocuments },
+      data: { selectedDocumentTypes },
       errors: {},
-      values: { selectedDocuments, fdrHearing },
+      values: { selectedDocumentTypes, fdrHearing },
       previousStep,
       email: 'FRCexample@justice.gov.uk',
     });
@@ -112,7 +112,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
       
       // Map DocumentSelection to display format
       const documentDetails = req.session.DocumentSelection?.documentDetails || [];
-      const selectedDocuments = documentDetails.map(doc => ({
+      const selectedDocumentTypes = documentDetails.map(doc => ({
         id: doc.id,
         label: getDocumentLabel(doc.value?.DocumentType || ''),
         value: doc.value?.DocumentType || '',
@@ -123,9 +123,9 @@ export default function setupUploadJourneyRoute(app: Application): void {
         : undefined;
       
       return res.render(step.template, {
-        data: { selectedDocuments },
+        data: { selectedDocumentTypes },
         errors,
-        values: { selectedDocuments, fdrHearing },
+        values: { selectedDocumentTypes, fdrHearing },
         previousStep,
         email: 'FRCexample@justice.gov.uk',
       });
