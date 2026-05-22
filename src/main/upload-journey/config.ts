@@ -45,7 +45,7 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
       
       const documentDetails = req?.session?.DocumentSelection?.documentDetails;
       if (!documentDetails || documentDetails.length === 0) {
-        errors.documents = 'Select at least one document type to upload';
+        errors.documents = 'You must select what you want to upload';
       }
       
       return errors;

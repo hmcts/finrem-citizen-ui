@@ -73,7 +73,7 @@ describe('Upload Journey Configuration', () => {
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!(body, mockReq);
       
-      expect(errors.documents).toBe('Select at least one document type to upload');
+      expect(errors.documents).toBe('You must select what you want to upload');
     });
 
     it('should return error when session data is missing', () => {
@@ -86,7 +86,7 @@ describe('Upload Journey Configuration', () => {
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!(body, mockReq);
       
-      expect(errors.documents).toBe('Select at least one document type to upload');
+      expect(errors.documents).toBe('You must select what you want to upload');
     });
 
     it('should return no errors when documents exist in session', () => {
@@ -114,7 +114,7 @@ describe('Upload Journey Configuration', () => {
       
       const errors = step.validate!(body, undefined);
       
-      expect(errors.documents).toBe('Select at least one document type to upload');
+      expect(errors.documents).toBe('You must select what you want to upload');
     });
 
     it('should return error when documentDetails is undefined', () => {
@@ -129,7 +129,7 @@ describe('Upload Journey Configuration', () => {
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!(body, mockReq);
       
-      expect(errors.documents).toBe('Select at least one document type to upload');
+      expect(errors.documents).toBe('You must select what you want to upload');
     });
 
     it('should return no errors with multiple documents in session', () => {

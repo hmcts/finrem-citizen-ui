@@ -1,5 +1,6 @@
 {% from "../macros/getting-help.njk" import gettingHelp %}
 {% from "../macros/autocomplete.njk" import autocomplete %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
 {% extends "template.njk" %}
 
@@ -8,6 +9,18 @@
     <div class="govuk-grid-column-two-thirds">
       {% if previousStep %}
         <a href="/upload/{{ previousStep }}" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
+      {% endif %}
+
+      {% if errors.documents %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: [
+            {
+              text: "You must select what you want to upload",
+              href: "#document-type"
+            }
+          ]
+        }) }}
       {% endif %}
 
       <h1 class="govuk-heading-l">Tell us which documents you want to upload</h1>
