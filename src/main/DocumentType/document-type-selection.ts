@@ -9,6 +9,23 @@ interface SelectedDocumentType {
 const logger = getLogger('document-type-selection');
 
 class DocumentTypeSelectionManager {
+  // Data attribute selectors
+  public static readonly SELECTORS = {
+    CONTAINER: '[data-document-type-selection]',
+    ADD_BUTTON: '[data-add-document-type]',
+    REMOVE_BUTTON: '[data-remove-document-type]',
+    DOCUMENT_TYPES_LIST: '[data-document-types-list]',
+    NO_DOCUMENT_TYPES_MESSAGE: '[data-no-document-types]',
+    HIDDEN_INPUT: '[name="documentsJson"]',
+    AUTOCOMPLETE_INPUT: '#document-type',
+  } as const;
+
+  // API endpoints
+  public static readonly ENDPOINTS = {
+    ADD: '/upload/document-type-selection/add',
+    REMOVE: '/upload/document-type-selection/remove',
+  } as const;
+
   private documentTypes: SelectedDocumentType[] = [];
   private selectedDocumentType: SelectedDocumentType | null = null;
   private container: HTMLElement | null = null;
@@ -18,15 +35,15 @@ class DocumentTypeSelectionManager {
   private noDocumentTypesMessage: HTMLElement | null = null;
 
   constructor() {
-    this.container = document.querySelector('[data-document-type-selection]');
+    this.container = document.querySelector(DocumentTypeSelectionManager.SELECTORS.CONTAINER);
     if (!this.container) {
       return;
     }
 
-    this.addButton = this.container.querySelector('[data-add-document-type]');
-    this.hiddenInput = this.container.querySelector('[name="documentsJson"]');
-    this.documentTypesList = this.container.querySelector('[data-document-types-list]');
-    this.noDocumentTypesMessage = this.container.querySelector('[data-no-document-types]');
+    this.addButton = this.container.querySelector(DocumentTypeSelectionManager.SELECTORS.ADD_BUTTON);
+    this.hiddenInput = this.container.querySelector(DocumentTypeSelectionManager.SELECTORS.HIDDEN_INPUT);
+    this.documentTypesList = this.container.querySelector(DocumentTypeSelectionManager.SELECTORS.DOCUMENT_TYPES_LIST);
+    this.noDocumentTypesMessage = this.container.querySelector(DocumentTypeSelectionManager.SELECTORS.NO_DOCUMENT_TYPES_MESSAGE);
 
     this.initializeFromSession();
     this.setupEventListeners();
@@ -63,7 +80,7 @@ class DocumentTypeSelectionManager {
     }
 
     try {
-      const response = await fetch('/upload/document-type-selection/add', {
+      const response = await fetch(DocumentTypeSelectionManager.ENDPOINTS.ADD, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -88,7 +105,7 @@ class DocumentTypeSelectionManager {
   }
 
   private clearAutocompleteInput(): void {
-    const autocompleteInput = document.querySelector('#document-type') as HTMLInputElement;
+    const autocompleteInput = document.querySelector(DocumentTypeSelectionManager.SELECTORS.AUTOCOMPLETE_INPUT) as HTMLInputElement;
     if (autocompleteInput) {
       autocompleteInput.value = '';
     }
@@ -96,7 +113,7 @@ class DocumentTypeSelectionManager {
 
   private async removeDocumentType(index: number): Promise<void> {
     try {
-      const response = await fetch(`/upload/document-type-selection/remove/${index}`, {
+      const response = await fetch(`${DocumentTypeSelectionManager.ENDPOINTS.REMOVE}/${index}`, {
         method: 'DELETE',
       });
 
@@ -138,7 +155,7 @@ class DocumentTypeSelectionManager {
           ${this.escapeHtml(doc.label)}
         </dt>
         <dd class="govuk-summary-list__actions">
-          <a href="#" class="govuk-link" data-remove-document-type="${index}">
+          <a href="#" class="govuk-link" ${DocumentTypeSelectionManager.SELECTORS.REMOVE_BUTTON.slice(1, -1)}="${index}">
             Remove<span class="govuk-visually-hidden"> ${this.escapeHtml(doc.label)}</span>
           </a>
         </dd>
@@ -151,10 +168,10 @@ class DocumentTypeSelectionManager {
       </dl>
     `;
 
-    this.documentTypesList.querySelectorAll('[data-remove-document-type]').forEach((link) => {
+    this.documentTypesList.querySelectorAll(DocumentTypeSelectionManager.SELECTORS.REMOVE_BUTTON).forEach((link) => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        const index = parseInt((e.currentTarget as HTMLElement).getAttribute('data-remove-document-type') || '0');
+        const index = parseInt((e.currentTarget as HTMLElement).getAttribute(DocumentTypeSelectionManager.SELECTORS.REMOVE_BUTTON.slice(1, -1)) || '0');
         this.removeDocumentType(index);
       });
     });
@@ -168,7 +185,7 @@ class DocumentTypeSelectionManager {
 }
 
 function initDocumentTypeSelection(): void {
-  if (document.querySelector('[data-document-type-selection]')) {
+  if (document.querySelector(DocumentTypeSelectionManager.SELECTORS.CONTAINER)) {
     new DocumentTypeSelectionManager();
   }
 }
