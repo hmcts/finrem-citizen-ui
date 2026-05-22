@@ -50,8 +50,14 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
       
       return errors;
     },
-    next: () => null,
+    next: () => UploadStepNames.UploadDocuments,
     previous: () => UploadStepNames.FDR,
+  },
+
+  [UploadStepNames.UploadDocuments]: {
+    template: 'upload-journey/upload-documents',
+    next: () => null,
+    previous: () => UploadStepNames.DocumentSelection,
   },
   
 };

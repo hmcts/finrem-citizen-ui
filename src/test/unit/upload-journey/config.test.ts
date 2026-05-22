@@ -54,7 +54,7 @@ describe('Upload Journey Configuration', () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.DocumentSelection];
       expect(step.template).toBe('upload-journey/document-selection');
-      expect(step.next!()).toBeNull();
+      expect(step.next!()).toBe(UploadStepNames.UploadDocuments);
       expect(step.previous!()).toBe(UploadStepNames.FDR);
       expect(step.validate).toBeDefined();
     });

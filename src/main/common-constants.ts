@@ -50,6 +50,7 @@ export const UploadStepNames = {
   Confidentiality: 'confidentiality',
   FDR: 'fdr',
   DocumentSelection: 'document-selection',
+  UploadDocuments: 'upload-documents',
 };
 
 export const CaseUserNames = {
