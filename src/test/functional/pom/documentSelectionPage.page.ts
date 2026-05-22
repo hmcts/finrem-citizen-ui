@@ -4,7 +4,7 @@ import { BasePage } from './basePage.page';
 
 const URL_PATTERNS = {
   DASHBOARD: /\/dashboard/,
-  DOCUMENT_SELECTION: /\/upload\/document-selection/,
+  DOCUMENT_SELECTION: /\/upload\/document-type-selection/,
   FDR: /\/upload\/fdr/,
 };
 
