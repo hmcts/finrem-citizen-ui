@@ -1,4 +1,5 @@
-import { DEFAULT_AXE_OPTIONS, test } from '../../../fixtures/fixtures';
+import { test } from '../../../fixtures/fixtures';
+import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToDashboardStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
 /**
@@ -14,7 +15,6 @@ test.describe('[integration] Dashboard upload journey', () => {
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
-    assertionHelpers: _assertionHelpers,
     basePage,
   }) => {
     // Ensure logged-in session and navigate to dashboard for each test
@@ -27,7 +27,7 @@ test.describe('[integration] Dashboard upload journey', () => {
   }) => {
     await dashboardPage.verifyDashboardPageContent();
     await dashboardPage.verifyDivorceAccountHeadingHidden();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration] Before-you-start sections and help details are visible and accessible @a11y', async ({
@@ -41,7 +41,7 @@ test.describe('[integration] Dashboard upload journey', () => {
     await beforeYouStartPage.verifyHelpAndGuidanceClosedByDefault();
     await beforeYouStartPage.verifyUnableToSendGuidance();
     await beforeYouStartPage.verifyGettingHelpSection();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration] Before-you-start supports back navigation and start-now progression @a11y', async ({
@@ -53,12 +53,12 @@ test.describe('[integration] Dashboard upload journey', () => {
     await dashboardPage.clickGoToDocumentUpload();
 
     await beforeYouStartPage.verifyBeforeYouStartPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
 
     await beforeYouStartPage.goBackToDashboard();
     await dashboardPage.verifyDashboardPageContent();
     await dashboardPage.verifyDivorceAccountHeadingHidden();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
 
     await dashboardPage.clickGoToDocumentUpload();
     await beforeYouStartPage.startUploadJourney();

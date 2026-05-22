@@ -1,4 +1,5 @@
-import { DEFAULT_AXE_OPTIONS, expect, test } from '../../../fixtures/fixtures';
+import { expect, test } from '../../../fixtures/fixtures';
+import { expectAuthenticated, runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 
 /**
  * INTEGRATION TESTS: Enter Access Code
@@ -29,7 +30,7 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
     basePage,
     contestedCaseWithHearing,
   }) => {
-    expect(loggedInPage.authStatus).toBe('success');
+    expectAuthenticated(loggedInPage);
     await basePage.injectCaseSession(
       contestedCaseWithHearing.caseId,
       contestedCaseWithHearing.applicantAccessCode,
@@ -49,12 +50,12 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
     contestedCaseWithHearing,
     axeUtils,
   }) => {
-    expect(loggedInPage.authStatus).toBe('success');
+    expectAuthenticated(loggedInPage);
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await enterAccessCodePage.submitAccessCode(accessCode);
     await dashboardPage.verifyDashboardPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   /**
@@ -68,12 +69,12 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
     contestedCaseWithHearing,
     axeUtils,
   }) => {
-    expect(loggedInPage.authStatus).toBe('success');
+    expectAuthenticated(loggedInPage);
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     await enterAccessCodePage.submitAccessCode(`  ${accessCode}  `);
     await dashboardPage.verifyDashboardPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   /**
@@ -87,12 +88,12 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
     contestedCaseWithHearing,
     axeUtils,
   }) => {
-    expect(loggedInPage.authStatus).toBe('success');
+    expectAuthenticated(loggedInPage);
     const accessCode = contestedCaseWithHearing.respondentAccessCode;
 
     await enterAccessCodePage.submitAccessCode(accessCode);
     await dashboardPage.verifyDashboardPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   /**
@@ -106,7 +107,7 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
     contestedCaseWithHearing,
     axeUtils,
   }) => {
-    expect(loggedInPage.authStatus).toBe('success');
+    expectAuthenticated(loggedInPage);
     const accessCode = contestedCaseWithHearing.applicantAccessCode;
 
     // Enter access code in lowercase
@@ -115,7 +116,7 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
     await enterAccessCodePage.submitAccessCode(lowercaseCode);
 
     await dashboardPage.verifyDashboardPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 });
 
@@ -136,12 +137,12 @@ test.describe('[integration-happy-path] Enter Access Code - Full Journey', () =>
     dashboardPage,
     axeUtils,
   }) => {
-    expect(loggedInPage.authStatus).toBe('success');
+    expectAuthenticated(loggedInPage);
     await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
     await expect(enterAccessCodePage.page).toHaveURL(/\/enter-access-code$/);
 
     await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
     await dashboardPage.verifyDashboardPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 });

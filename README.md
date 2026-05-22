@@ -20,7 +20,7 @@ At a high level, the user flow is:
 3. Citizen submits a valid 16-digit Financial Remedy case number.
 4. Citizen is routed to enter access code.
 5. Citizen submits the access code to link/access the case.
-6. Citizen user flows follow. 
+6. Citizen proceeds through case-linked user journeys.
 
 ## Prerequisites
 
@@ -124,7 +124,7 @@ Run and Debug -> Finrem Citizen UI
 
 The `.env` file is organised into shared defaults plus a `Target selection` section.
 
-Only enable one target block at a time for test execution accross different environments:
+Only enable one target block at a time for test execution across different environments:
 
 - local
 - preview
@@ -205,9 +205,9 @@ You should get a very basic home page (no styles, etc.).
 
 ## Testing
 
-This project uses a **multi-layer testing strategy** with unit, API, functional, and smoke tests. All tests use **real integration** (no HTTP mocking) where possible.
+This project uses a multi-layer testing strategy with unit, API, functional, and smoke tests.
 
-**Quick Start:**
+Quick start:
 
 ```bash
 # Run default tests (unit + routes + smoke)
@@ -223,101 +223,28 @@ yarn test:api
 yarn test:playwright:a11y
 ```
 
-**Test Types:**
+Test types:
 
 | Type | Framework | Location | Real Integration | Use Case |
 |------|-----------|----------|------------------|----------|
 | **Unit & Routes** | Jest | `src/test/unit/` | Mocked | Business logic & route structure |
 | **API** | Jest + Supertest | `src/test/api/` | Real ✓ | Endpoint contracts & workflows |
 | **Functional (UI/E2E)** | Playwright | `src/test/functional/specFiles/` | Real ✓ | User journeys & page interactions |
-| **Accessibility** | Playwright + axe | (tagged @a11y) | Real ✓ | WCAG 2.1 AA compliance |
+| **Accessibility** | Playwright + axe | (tagged @a11y) | Real ✓ | WCAG 2.x Level A and AA automated checks |
 | **Smoke** | Jest | Verifies routes healthy | Real ✓ | Basic service readiness |
 
-**Test Organization:**
+Documentation ownership:
 
-- **Functional tests are split into two lanes** by environment:
-  - `mock/` — Local-only tests that depend on mock session/test-support routes.
-  - `integration/` — Integration-lane tests and `integration-happy-path` tests.
+- Root README (this file): project-level setup and command overview
+- Functional testing details: [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md)
 
-`integration-happy-path` tests are skipped by default and require `ACCESS_CODE_REAL_INTEGRATION=true` plus reachable real CCD dependencies.
+Use [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md) as the single source of truth for:
 
-**Running Functional Tests Locally:**
-
-Functional tests require this startup sequence:
-
-```bash
-# Terminal 1 - Start mock server (must run first)
-yarn start:mock-case-api
-
-# Terminal 2 - Start app with test-support routes (must run second)
-ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
-
-# Terminal 3 - Run functional tests
-yarn test:functional
-```
-
-**For Detailed Test Strategy, Commands, and Setup:**
-
-👉 See [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md) — Complete guide to functional test organization, environment setup, test scripts reference, and known issues (Form C dependency).
-
-### Test Scripts Quick Reference
-
-Common test commands from [package.json](package.json):
-
-```bash
-# Functional tests (main command)
-yarn test:functional
-
-# Debug mode with Playwright Inspector (interactive)
-yarn test:functional:headed:slowmo
-
-# UI test runner (visual test exploration)
-yarn test:fullfunctional:allBrowsers:ui
-
-# Accessibility tests (@a11y)
-yarn test:playwright:a11y
-
-# Manual testing with seeded mock data (local only)
-yarn setup:manual-test
-```
-
-For the complete list of all test scripts with descriptions, see **Test Scripts Reference** in [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md#test-scripts-reference).
-
-### Local Functional Testing (Local Mock Only)
-
-Use these steps for standard local functional test runs:
-
-1. Start the local mock case API:
-
-```bash
-yarn start:mock-case-api
-```
-
-2. Start the app with test-support routes enabled:
-
-```bash
-ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
-```
-
-3. Run functional tests:
-
-```bash
-yarn test:functional
-```
-
-### Manual Testing (Optional, Local Mock Only)
-
-Only run this section if you want manual browser testing with seeded local data.
-
-1. Generate manual-test credentials and case details:
-
-```bash
-yarn setup:manual-test
-```
-
-2. Log in with the printed credentials, then open the printed mock injection URL in the same browser session.
-
-**Note:** This script is designed for local testing only. It will not work on preview/AAT environments.
+- mock vs integration lane rules
+- environment gating and required variables
+- targeted Playwright commands
+- accessibility test conventions
+- known functional-test issues and workarounds
 
 ## Linting
 

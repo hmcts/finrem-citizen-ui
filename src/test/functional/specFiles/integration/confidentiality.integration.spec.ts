@@ -1,4 +1,5 @@
-import { DEFAULT_AXE_OPTIONS, test } from '../../../fixtures/fixtures';
+import { test } from '../../../fixtures/fixtures';
+import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToConfidentialityStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
 /**
@@ -21,7 +22,7 @@ test.describe('[integration] Confidentiality page', () => {
     axeUtils,
   }) => {
     await confidentialityPage.verifyConfidentialityPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
  
   // AC2: Form C8 link is present with the correct href and opens in a new tab
@@ -30,7 +31,7 @@ test.describe('[integration] Confidentiality page', () => {
     axeUtils,
   }) => {
     await confidentialityPage.verifyFormC8Link();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
  
   // AC3: Redaction instructions are shown
@@ -39,7 +40,7 @@ test.describe('[integration] Confidentiality page', () => {
     axeUtils,
   }) => {
     await confidentialityPage.verifyRedactionInstructions();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
  
   // AC4: Court staff disclaimer is shown
@@ -48,7 +49,7 @@ test.describe('[integration] Confidentiality page', () => {
     axeUtils,
   }) => {
     await confidentialityPage.verifyCourtStaffDisclaimer();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
  
   // AC5: Confidential information examples and do-not-redact guidance are shown
@@ -57,7 +58,7 @@ test.describe('[integration] Confidentiality page', () => {
     axeUtils,
   }) => {
     await confidentialityPage.verifyConfidentialInformationExamples();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
  
   // AC6: Warning message about documents being placed on the court record is shown
@@ -66,7 +67,7 @@ test.describe('[integration] Confidentiality page', () => {
     axeUtils,
   }) => {
     await confidentialityPage.verifyCourtRecordWarning();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
  
   // AC7: Continue button is visible, enabled, and navigates to the FDR step
@@ -78,7 +79,7 @@ test.describe('[integration] Confidentiality page', () => {
     await confidentialityPage.verifyContinueButton();
     await confidentialityPage.clickContinueAndExpectFdrStep();
     await fdrPage.verifyFdrPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
  
   // AC8: Getting help panel is collapsed by default and expands with correct contact details
@@ -87,6 +88,6 @@ test.describe('[integration] Confidentiality page', () => {
     axeUtils,
   }) => {
     await confidentialityPage.verifyGettingHelpSection();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 });

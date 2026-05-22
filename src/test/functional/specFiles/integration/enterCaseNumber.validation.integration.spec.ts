@@ -1,4 +1,5 @@
-import { DEFAULT_AXE_OPTIONS, test } from '../../../fixtures/fixtures';
+import { test } from '../../../fixtures/fixtures';
+import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 
 /**
  * INTEGRATION FOLDER TESTS: Enter Case Number Validation
@@ -23,7 +24,6 @@ test.describe('[integration] Enter Case Number Page Verification - Validation Er
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
-    assertionHelpers: _assertionHelpers,
     basePage,
   }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
@@ -33,19 +33,19 @@ test.describe('[integration] Enter Case Number Page Verification - Validation Er
   test('[integration] Error: Empty input @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber('');
     await enterCaseNumberPage.expectValidationError('Enter your case number');
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration] Error: Boundary check - 15 characters (Lower Boundary - 1) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(15));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration] Error: Boundary check - 21 characters (Upper Boundary + 1) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(21));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration] Error: Invalid format - Letters @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
@@ -53,7 +53,7 @@ test.describe('[integration] Enter Case Number Page Verification - Validation Er
     await enterCaseNumberPage.expectValidationError(
       'Case number must only include numbers 0 to 9 and special characters such as hyphens'
     );
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration] Error: Case number not found @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
@@ -61,7 +61,7 @@ test.describe('[integration] Enter Case Number Page Verification - Validation Er
     await enterCaseNumberPage.expectValidationError(
       'We cannot find that case number, Enter the case number that you received from the court'
     );
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration] Success Logic: 20 digits (Upper Boundary) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
@@ -72,6 +72,6 @@ test.describe('[integration] Enter Case Number Page Verification - Validation Er
 
     // We expect the "Not Found" error because this random 20-digit ID doesn't exist in DB
     await enterCaseNumberPage.expectValidationError('Case number must be 16 digits');
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 });

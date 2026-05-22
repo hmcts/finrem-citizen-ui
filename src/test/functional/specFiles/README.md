@@ -9,14 +9,17 @@ Functional tests are organized into two folders based on their execution environ
 
 This structure ensures clear visibility into which tests can run where, making it easier to troubleshoot failures and configure CI/CD pipelines appropriately.
 
+This file is the source of truth for functional test conventions, setup, and commands. The root README intentionally keeps only a high-level testing overview and links here for full detail.
+
 ---
 
 ## Folder Structure
 
 ```
 specFiles/
-├── journeyHelpers/                    # Shared journey/navigation helpers for integration specs
-│   └── uploadJourneyNavigation.helper.ts  # Reusable authenticated upload journey setup
+├── journeyHelpers/                    # Shared journey and assertion helpers for specs
+│   ├── uploadJourneyNavigation.helper.ts  # Reusable authenticated upload journey setup
+│   └── specAssertions.helper.ts          # Shared spec-level assertions (@a11y and auth status)
 │
 ├── mock/                              # Local-only tests
 │   ├── persistentSessionLogin.mock.spec.ts  # Session persistence (known defects)
@@ -58,7 +61,7 @@ For exact startup commands, see **Running Tests by Environment** below.
 **Runs on:**
 - Local environment (with mock infrastructure)
 
-**Doesn't run on:**
+**Does not run on:**
 - Preview (test-support routes disabled)
 - AAT (test-support routes disabled)
 
@@ -178,6 +181,13 @@ test.skip(!runIntegration, 'Integration disabled by default...');
 ## Shared Helpers
 
 The `journeyHelpers/uploadJourneyNavigation.helper.ts` module centralizes common authenticated setup/navigation steps used by upload-journey integration specs.
+
+The `journeyHelpers/specAssertions.helper.ts` module centralizes repeated spec assertions:
+
+- `expectAuthenticated(session)`
+- `runA11yAudit(axeUtils)`
+
+Use these helpers in specs instead of repeating the same assertion blocks inline.
 
 ### `navigateToDashboardStep(dashboardPage, basePage)`
 - Navigates to dashboard via authenticated fixture flow
@@ -447,7 +457,7 @@ All test commands are defined in [package.json](../../package.json). Here's a co
   - Sets output directory to `a11y-output/`
   - Generates HTML report in `a11y-output/axe-report/`
   - Runs Axe accessibility audit on tagged tests
-- **Use case:** Validating WCAG 2.1 AA compliance across user journeys
+- **Use case:** Validating WCAG 2.x Level A and AA automated checks across user journeys
 - **Command:** `TEST_RESULTS_DIR=a11y-output PLAYWRIGHT_HTML_OUTPUT_DIR=a11y-output/axe-report PLAYWRIGHT_HTML_OPEN=never playwright test --config playwright.config.mts --project chromium --grep @a11y --reporter=html`
 
 **`yarn test:playwright:a11y:report`**

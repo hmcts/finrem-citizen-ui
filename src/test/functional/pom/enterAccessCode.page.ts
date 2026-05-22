@@ -19,7 +19,10 @@ export class EnterAccessCodePage {
   constructor(readonly page: Page) {
     this.accessCodeHeader = this.page.getByRole('heading', { name: 'Enter access code' });
     this.accessCodeInput = this.page.getByRole('textbox', { name: 'Enter access code' });
-    this.accessCodeHint = this.page.locator('#accessCode-hint');
+    this.accessCodeHint = this.page.getByText(
+      'This is the 8 character code that you received from the court, for example A1BCDE23',
+      { exact: true }
+    );
     this.continueBtn = this.page.getByRole('button', { name: 'Continue' });
     this.errorSummary = this.page.getByRole('alert');
     this.errorSummaryTitle = this.page.getByRole('heading', { name: 'There is a problem' });
