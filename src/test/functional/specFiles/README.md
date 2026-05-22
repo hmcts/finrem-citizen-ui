@@ -258,6 +258,12 @@ ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 
 # Terminal 3 - Run functional tests
 yarn test:functional
+
+# Terminal 3 - Run one specific spec file
+yarn test:functional src/test/functional/specFiles/integration/fdr.integration.spec.ts
+
+# Faster repeat runs (skips Playwright browser install step)
+yarn test:full-functional src/test/functional/specFiles/integration/fdr.integration.spec.ts
 ```
 
 Optional: enable integration-lane tests locally.
