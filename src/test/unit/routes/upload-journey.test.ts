@@ -20,13 +20,16 @@ describe('Upload Journey Routes', () => {
   let app: Application;
   let mockGet: jest.Mock;
   let mockPost: jest.Mock;
+  let mockDelete: jest.Mock;
 
   beforeEach(() => {
     mockGet = jest.fn();
     mockPost = jest.fn();
+    mockDelete = jest.fn();
     app = {
       get: mockGet,
       post: mockPost,
+      delete: mockDelete,
     } as unknown as Application;
     setupUploadJourneyRoute(app);
   });
@@ -39,6 +42,16 @@ describe('Upload Journey Routes', () => {
     );
     expect(mockPost).toHaveBeenCalledWith(
       `${RouteNames.uploadJourney}/:stepId`,
+      expect.any(Function),
+      expect.any(Function)
+    );
+    expect(mockPost).toHaveBeenCalledWith(
+      `${RouteNames.uploadJourney}/document-type-selection/add`,
+      expect.any(Function),
+      expect.any(Function)
+    );
+    expect(mockDelete).toHaveBeenCalledWith(
+      `${RouteNames.uploadJourney}/document-type-selection/remove/:index`,
       expect.any(Function),
       expect.any(Function)
     );
@@ -61,11 +74,10 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/before-you-start', {
-        data: {},
+        data: { selectedDocumentTypes: [] },
         errors: {},
-        values: {},
+        values: { selectedDocumentTypes: [], fdrHearing: undefined },
         previousStep: null,
-        cancelUrl: RouteNames.dashboard,
         email: 'FRCexample@justice.gov.uk',
       });
     });
@@ -75,7 +87,9 @@ describe('Upload Journey Routes', () => {
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
         session: {
-          uploadJourneyData: { fdrHearing: 'yes' },
+          DocumentSelection: {
+            isFinancialDisputeResolution: true,
+          },
         } as unknown as Request['session'],
       } as Partial<Request>;
       const mockRes = {
@@ -87,13 +101,111 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/fdr', {
-        data: { fdrHearing: 'yes' },
+        data: { selectedDocumentTypes: [] },
         errors: {},
-        values: { fdrHearing: 'yes' },
+        values: { selectedDocumentTypes: [], fdrHearing: true },
         previousStep: UploadStepNames.Confidentiality,
-        cancelUrl: RouteNames.dashboard,
         email: 'FRCexample@justice.gov.uk',
       });
+    });
+
+    it('should populate document labels from document types', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.DocumentTypeSelection },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'uuid-1', value: { DocumentType: 'points-of-claim-defence' } },
+            ],
+          },
+        } as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', {
+        data: { selectedDocumentTypes: expect.arrayContaining([
+          expect.objectContaining({
+            label: 'Points of claim/defence',
+            value: 'points-of-claim-defence',
+          }),
+        ]) },
+        errors: {},
+        values: expect.objectContaining({
+          selectedDocumentTypes: expect.arrayContaining([
+            expect.objectContaining({
+              label: 'Points of claim/defence',
+              value: 'points-of-claim-defence',
+            }),
+          ]),
+        }),
+        previousStep: UploadStepNames.FDR,
+        email: 'FRCexample@justice.gov.uk',
+      });
+    });
+
+    it('should handle unknown document type with empty label', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.DocumentTypeSelection },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'uuid-1', value: { DocumentType: 'unknown-doc-type' } },
+            ],
+          },
+        } as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', 
+        expect.objectContaining({
+          data: { selectedDocumentTypes: expect.arrayContaining([
+            expect.objectContaining({
+              label: '',
+              value: 'unknown-doc-type',
+            }),
+          ]) },
+        })
+      );
+    });
+
+    it('should handle missing DocumentType with empty label and value', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.DocumentTypeSelection },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'uuid-1', value: {} },
+            ],
+          },
+        } as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', 
+        expect.objectContaining({
+          data: { selectedDocumentTypes: expect.arrayContaining([
+            expect.objectContaining({
+              label: '',
+              value: '',
+            }),
+          ]) },
+        })
+      );
     });
 
     it('should return 404 for invalid step', () => {
@@ -135,7 +247,7 @@ describe('Upload Journey Routes', () => {
       expect(mockRes.status).toHaveBeenCalledWith(404);
     });
 
-    it('should redirect to next step', () => {
+    it('should redirect to next step from before-you-start', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.BeforeYouStart },
@@ -152,6 +264,25 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as Request, mockRes as Response);
 
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confidentiality`);
+    });
+
+    it('should redirect to next step from FDR', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.FDR },
+        session: {} as unknown as Request['session'],
+        body: { fdrHearing: 'yes' },
+      } as Partial<Request>;
+      const mockRes = {
+        render: jest.fn(),
+        redirect: jest.fn(),
+        status: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
     });
 
     it('should handle validation errors', () => {
@@ -176,15 +307,12 @@ describe('Upload Journey Routes', () => {
       delete uploadSteps[UploadStepNames.Confidentiality].validate;
     });
 
-    it('should persist data', () => {
-      const { uploadSteps } = require('../../../main/upload-journey/config');
-      uploadSteps[UploadStepNames.Confidentiality].persist = (body: Record<string, unknown>) => ({ data: body.test });
-
+    it('should store fdrHearing in session', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
-        params: { stepId: UploadStepNames.Confidentiality },
+        params: { stepId: UploadStepNames.FDR },
         session: {} as unknown as Request['session'],
-        body: { test: 'value' },
+        body: { fdrHearing: 'true' },
       } as Partial<Request>;
       const mockRes = {
         render: jest.fn(),
@@ -193,9 +321,8 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as Request, mockRes as Response);
 
-      expect(mockReq.session?.uploadJourneyData).toEqual({ data: 'value' });
-
-      delete uploadSteps[UploadStepNames.Confidentiality].persist;
+      expect(mockReq.session?.DocumentSelection?.isFinancialDisputeResolution).toBe(true);
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
     });
 
     it('should handle missing session', () => {
@@ -219,7 +346,7 @@ describe('Upload Journey Routes', () => {
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
         session: {} as unknown as Request['session'],
-        body: { fdrHearing: 'yes' },
+        body: { fdrHearing: 'true' },
       } as Partial<Request>;
       const mockRes = {
         redirect: jest.fn(),
@@ -227,8 +354,8 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as Request, mockRes as Response);
 
-      expect(mockReq.session?.uploadJourneyData).toEqual({ fdrHearing: 'yes' });
-      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
+      expect(mockReq.session?.DocumentSelection?.isFinancialDisputeResolution).toBe(true);
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
     });
 
     it('should persist FDR hearing selection as no', () => {
@@ -236,7 +363,7 @@ describe('Upload Journey Routes', () => {
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
         session: {} as unknown as Request['session'],
-        body: { fdrHearing: 'no' },
+        body: { fdrHearing: 'false' },
       } as Partial<Request>;
       const mockRes = {
         redirect: jest.fn(),
@@ -244,8 +371,32 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as Request, mockRes as Response);
 
-      expect(mockReq.session?.uploadJourneyData).toEqual({ fdrHearing: 'no' });
-      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
+      expect(mockReq.session?.DocumentSelection?.isFinancialDisputeResolution).toBe(false);
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
+    });
+
+    it('should render validation error with fdrHearing value from body', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.DocumentTypeSelection },
+        session: {} as unknown as Request['session'],
+        body: { fdrHearing: 'false' },
+      } as Partial<Request>;
+      const mockRes = {
+        render: jest.fn(),
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        'upload-journey/document-type-selection',
+        expect.objectContaining({
+          values: expect.objectContaining({
+            fdrHearing: false,
+          }),
+        })
+      );
     });
   });
 
@@ -256,6 +407,181 @@ describe('Upload Journey Routes', () => {
       const mockRes = { redirect: jest.fn() } as Partial<Response>;
       handler({} as Request, mockRes as Response);
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/before-you-start`);
+    });
+  });
+
+  describe('POST /upload/document-type-selection/add', () => {
+    it('should add document to session', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/document-type-selection/add`);
+      const mockReq = {
+        session: {} as unknown as Request['session'],
+        body: { id: 1, label: 'Payslips', value: 'payslips' },
+      } as Partial<Request>;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
+      expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('payslips');
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        documents: expect.arrayContaining([expect.objectContaining({ label: 'Payslips', value: 'payslips' })]),
+      });
+    });
+
+    it('should append to existing documents', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/document-type-selection/add`);
+      const mockReq = {
+        session: {
+          DocumentSelection: {
+            documentDetails: [{ id: 'uuid-1', value: { DocumentType: 'payslips' } }],
+          },
+        } as unknown as Request['session'],
+        body: { id: 2, label: 'Bank statements', value: 'bank-statements' },
+      } as Partial<Request>;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(2);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        documents: expect.arrayContaining([
+          expect.objectContaining({ label: 'Payslips', value: 'payslips' }),
+          expect.objectContaining({ label: 'Bank statements', value: 'bank-statements' }),
+        ]),
+      });
+    });
+
+    // Edge case: handles malformed session data where DocumentType is missing
+    it('should handle documents with missing DocumentType', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/document-type-selection/add`);
+      const mockReq = {
+        session: {
+          DocumentSelection: {
+            documentDetails: [{ id: 'uuid-1', value: {} }],
+          },
+        } as unknown as Request['session'],
+        body: { id: 2, label: 'Test', value: 'TEST' },
+      } as Partial<Request>;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        documents: expect.arrayContaining([
+          expect.objectContaining({ value: '' }),
+          expect.objectContaining({ value: 'TEST' }),
+        ]),
+      });
+    });
+  });
+
+  describe('DELETE /upload/document-type-selection/remove/:index', () => {
+    it('should remove document from session', () => {
+      const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
+      const mockReq = {
+        params: { index: '0' },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'uuid-1', value: { DocumentType: 'PAYSLIPS' } },
+              { id: 'uuid-2', value: { DocumentType: 'BANK_STATEMENTS' } },
+            ],
+          },
+        } as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
+      expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('BANK_STATEMENTS');
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        documents: expect.arrayContaining([expect.objectContaining({ value: 'BANK_STATEMENTS' })]),
+      });
+    });
+
+    it('should handle invalid index', () => {
+      const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
+      const mockReq = {
+        params: { index: '99' },
+        session: {
+          DocumentSelection: {
+            documentDetails: [{ id: 'uuid-1', value: { DocumentType: 'PAYSLIPS' } }],
+          },
+        } as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
+      expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('PAYSLIPS');
+    });
+
+    it('should handle when DocumentSelection is undefined', () => {
+      const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
+      const mockReq = {
+        params: { index: '0' },
+        session: {} as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        documents: [],
+      });
+    });
+
+    it('should update session when removing document with valid DocumentSelection', () => {
+      const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
+      const documentDetails = [
+        { id: 'uuid-1', value: { DocumentType: 'points-of-claim-defence' } },
+        { id: 'uuid-2', value: { DocumentType: 'other-document' } },
+      ];
+      const mockReq = {
+        params: { index: '0' },
+        session: {
+          DocumentSelection: {
+            documentDetails: [...documentDetails],
+          },
+        } as unknown as Request['session'],
+      } as Partial<Request>;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as Request, mockRes as Response);
+
+      expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
+      expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].id).toBe('uuid-2');
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: true,
+        documents: [
+          expect.objectContaining({
+            id: 'uuid-2',
+            label: 'Other document',
+            value: 'other-document',
+          }),
+        ],
+      });
     });
   });
 });

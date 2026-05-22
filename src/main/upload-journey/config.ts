@@ -1,17 +1,14 @@
+import type { Request } from 'express';
+
 import { UploadStepNames } from '../common-constants';
 
 export type UploadStepId = typeof UploadStepNames[keyof typeof UploadStepNames];
 
-export type UploadJourneyData = {
-  fdrHearing?: 'yes' | 'no';
-};
-
 export type UploadStep = {
   template: string;
-  validate?: (body: Record<string, unknown>) => Record<string, string>;
-  persist?: (body: Record<string, unknown>, data: UploadJourneyData) => UploadJourneyData;
-  next?: (data: UploadJourneyData) => UploadStepId | null;
-  previous?: (data: UploadJourneyData) => UploadStepId | null;
+  validate?: (body: Record<string, unknown>, req?: Request) => Record<string, string>;
+  next?: () => UploadStepId | null;
+  previous?: () => UploadStepId | null;
 };
 
 export const uploadSteps: Record<UploadStepId, UploadStep> = {
@@ -37,20 +34,30 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
       }
       return errors;
     },
-    persist: (body: Record<string, unknown>, data: UploadJourneyData) => {
-      return {
-        ...data,
-        fdrHearing: body.fdrHearing as 'yes' | 'no',
-      };
-    },
-    next: () => UploadStepNames.DocumentSelection,
+    next: () => UploadStepNames.DocumentTypeSelection,
     previous: () => UploadStepNames.Confidentiality,
   },
 
-  [UploadStepNames.DocumentSelection]: {
-    template: 'upload-journey/document-selection',
-    next: () => null,
+  [UploadStepNames.DocumentTypeSelection]: {
+    template: 'upload-journey/document-type-selection',
+    validate: (body: Record<string, unknown>, req?: Request) => {
+      const errors: Record<string, string> = {};
+      
+      const documentDetails = req?.session?.DocumentSelection?.documentDetails;
+      if (!documentDetails || documentDetails.length === 0) {
+        errors.documents = 'You must select what you want to upload';
+      }
+      
+      return errors;
+    },
+    next: () => UploadStepNames.UploadDocuments,
     previous: () => UploadStepNames.FDR,
+  },
+
+  [UploadStepNames.UploadDocuments]: {
+    template: 'upload-journey/upload-documents',
+    next: () => null,
+    previous: () => UploadStepNames.DocumentTypeSelection,
   },
   
 };

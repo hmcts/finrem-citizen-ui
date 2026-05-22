@@ -3053,7 +3053,7 @@ export interface CitizenUploadDocument extends HasCaseDocument {
 }
 
 export interface UserDocumentSelection {
-  isFinacialDisputeResolution?: boolean;
+  isFinancialDisputeResolution?: boolean;
   documentDetails?: ListValue<Partial<CitizenUploadDocument> | null>[];
 }
 

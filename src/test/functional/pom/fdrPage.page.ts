@@ -5,7 +5,7 @@ import { GettingHelpPanel } from './components/gettingHelpPanel.component';
 
 const URL_PATTERNS = {
   DASHBOARD: /\/dashboard/,
-  DOCUMENT_SELECTION: /\/upload\/document-selection/,
+  DOCUMENT_SELECTION: /\/upload\/document-type-selection/,
   FDR: /\/upload\/fdr/,
 };
 
@@ -19,7 +19,6 @@ export class FdrPage extends BasePage {
   readonly yesOption: Locator;
   readonly noOption: Locator;
   readonly continueButton: Locator;
-  readonly cancelLink: Locator;
   readonly inlineErrorMessage: Locator;
   readonly gettingHelp: GettingHelpPanel;
 
@@ -36,10 +35,9 @@ export class FdrPage extends BasePage {
     this.yesOption = this.page.getByLabel('Yes');
     this.noOption = this.page.getByLabel('No, they are for a different hearing');
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
-    this.cancelLink = this.page.getByRole('link', { name: 'Cancel' });
-    this.inlineErrorMessage = this.page.locator('.govuk-error-message').filter({
-      hasText: /Select yes if you are uploading these documents for a Financial Dispute Resolution hearing/i,
-    });
+    this.inlineErrorMessage = this.page.getByText(
+      'Select yes if you are uploading these documents for a Financial Dispute Resolution hearing'
+    );
     this.gettingHelp = new GettingHelpPanel(this.page);
   }
 
@@ -57,14 +55,12 @@ export class FdrPage extends BasePage {
       this.yesOption,
       this.noOption,
       this.continueButton,
-      this.cancelLink,
       this.gettingHelp.heading,
       this.gettingHelp.summary,
     ]);
 
     await this.expectAttributes([
       { locator: this.backLink, name: 'href', value: '/upload/confidentiality' },
-      { locator: this.cancelLink, name: 'href', value: '/dashboard' },
     ]);
   }
 
@@ -83,11 +79,6 @@ export class FdrPage extends BasePage {
     await this.noOption.check();
     await this.continueButton.click();
     await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_SELECTION);
-  }
-
-  async clickCancelAndExpectDashboard(): Promise<void> {
-    await this.cancelLink.click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
   }
 
   async verifyGettingHelpSection(): Promise<void> {

@@ -88,7 +88,7 @@ export default function (app: Application): void {
       appReq.session.documents?.documentDetails?.length ?? 0;
 
     const isFDR =
-      appReq.session.documents?.isFinacialDisputeResolution ?? false;
+      appReq.session.documents?.isFinancialDisputeResolution ?? false;
 
     const documentTypes = Object.entries(CitizenUploadDocumentType).map(
       ([key, value]) => ({
@@ -138,8 +138,8 @@ export default function (app: Application): void {
           appReq.session.documents = {};
         }
 
-        appReq.session.documents.isFinacialDisputeResolution =
-          req.body.isFinacialDisputeResolution === 'on';
+        appReq.session.documents.isFinancialDisputeResolution =
+          req.body.isFinancialDisputeResolution === 'on';
 
         await documentController.LinkDocumentsToCase(appReq);
 

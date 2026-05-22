@@ -27,7 +27,6 @@ const pages: SmokePage[] = [
   { name: 'Before You Start', path: '/upload/before-you-start', expectsLoginRedirect: true },
   { name: 'Confidentiality Guidance', path: '/upload/confidentiality', expectsLoginRedirect: true },
   { name: 'FDR', path: '/upload/fdr', expectsLoginRedirect: true },
-  { name: 'Autocomplete Demo', path: '/demo/autocomplete' },
 ];
 
 function getContentTypeHeader(response: AxiosResponse): string {

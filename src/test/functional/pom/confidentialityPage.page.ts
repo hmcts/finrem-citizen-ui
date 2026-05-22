@@ -29,7 +29,6 @@ export class ConfidentialityPage extends BasePage {
   readonly doNotRedactText: Locator;
   readonly warningMessage: Locator;
   readonly continueButton: Locator;
-  readonly cancelLink: Locator;
   readonly gettingHelp: GettingHelpPanel;
   readonly helpOpeningHours: Locator;
 
@@ -69,7 +68,6 @@ export class ConfidentialityPage extends BasePage {
       { exact: false }
     );
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
-    this.cancelLink = this.page.getByRole('link', { name: 'Cancel' });
     this.gettingHelp = new GettingHelpPanel(this.page);
     this.helpOpeningHours = this.page.getByText('Monday to Friday, 8.30am to 5pm', { exact: false });
   }
@@ -86,7 +84,6 @@ export class ConfidentialityPage extends BasePage {
       this.pageHeader,
       this.backLink,
       this.continueButton,
-      this.cancelLink,
       this.gettingHelp.heading,
       this.gettingHelp.summary,
     ]);
@@ -138,17 +135,6 @@ export class ConfidentialityPage extends BasePage {
   async clickContinueAndExpectFdrStep(): Promise<void> {
     await this.continueButton.click();
     await expect(this.page).toHaveURL(URL_PATTERNS.FDR);
-  }
-
-  // AC8: Assert Cancel link is visible
-  async verifyCancelLink(): Promise<void> {
-    await expect(this.cancelLink).toBeVisible();
-  }
-
-  // AC8: Click Cancel and verify navigation to the dashboard
-  async clickCancelAndExpectDashboard(): Promise<void> {
-    await this.cancelLink.click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
   }
 
   // Keep panel expansion, so tests do not accidentally toggle it closed

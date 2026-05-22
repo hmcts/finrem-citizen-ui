@@ -1,6 +1,5 @@
-import type { CaseRole, FinremCaseData } from '../app/case/definition';
+import type { CaseRole, FinremCaseData, UserDocumentSelection } from '../app/case/definition';
 import { UserDetails } from '../app/controller/AppRequest';
-import type { UploadJourneyData } from '../upload-journey/config';
 
 export {};
 
@@ -18,7 +17,7 @@ declare module 'express-session' {
     caseData?: FinremCaseData;
     caseRole?: CaseRole;
     caseUserName?: string;
-    uploadJourneyData?: UploadJourneyData;
+    DocumentSelection?: UserDocumentSelection;
     documents?: UserDocumentSelection;
   }
 }

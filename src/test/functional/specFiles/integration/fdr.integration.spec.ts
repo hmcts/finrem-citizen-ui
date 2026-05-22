@@ -73,16 +73,6 @@ test.describe('[integration] FDR page', () => {
     await runA11yAudit(axeUtils);
   });
 
-  test('[integration] FDR cancel returns to dashboard @a11y', async ({
-    fdrPage,
-    dashboardPage,
-    axeUtils,
-  }) => {
-    await fdrPage.clickCancelAndExpectDashboard();
-    await dashboardPage.verifyDashboardPageContent();
-    await runA11yAudit(axeUtils);
-  });
-
   test('[integration] Document selection supports back and continue behavior @a11y', async ({
     fdrPage,
     documentSelectionPage,

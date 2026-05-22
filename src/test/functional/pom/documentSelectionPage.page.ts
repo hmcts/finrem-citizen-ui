@@ -4,7 +4,7 @@ import { BasePage } from './basePage.page';
 
 const URL_PATTERNS = {
   DASHBOARD: /\/dashboard/,
-  DOCUMENT_SELECTION: /\/upload\/document-selection/,
+  DOCUMENT_SELECTION: /\/upload\/document-type-selection/,
   FDR: /\/upload\/fdr/,
 };
 
@@ -12,7 +12,6 @@ export class DocumentSelectionPage extends BasePage {
   readonly backLink: Locator;
   readonly pageHeader: Locator;
   readonly continueButton: Locator;
-  readonly cancelLink: Locator;
 
   constructor(readonly page: Page) {
     super(page);
@@ -21,7 +20,6 @@ export class DocumentSelectionPage extends BasePage {
       name: 'Tell us which documents you want to upload',
     });
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
-    this.cancelLink = this.page.getByRole('link', { name: 'Cancel' });
   }
 
   async verifyDocumentSelectionPageContent(): Promise<void> {
@@ -35,12 +33,10 @@ export class DocumentSelectionPage extends BasePage {
       this.backLink,
       this.pageHeader,
       this.continueButton,
-      this.cancelLink,
     ]);
 
     await this.expectAttributes([
       { locator: this.backLink, name: 'href', value: '/upload/fdr' },
-      { locator: this.cancelLink, name: 'href', value: '/dashboard' },
     ]);
   }
 
@@ -52,10 +48,5 @@ export class DocumentSelectionPage extends BasePage {
   async clickContinueAndStayOnDocumentSelection(): Promise<void> {
     await this.continueButton.click();
     await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_SELECTION);
-  }
-
-  async clickCancelAndExpectDashboard(): Promise<void> {
-    await this.cancelLink.click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
   }
 }

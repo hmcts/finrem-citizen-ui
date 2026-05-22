@@ -106,6 +106,7 @@
     "jest": "^30.0.0",
     "jest-allure2-reporter": "*",
     "jest-circus": "*",
+    "jest-environment-jsdom": "^30.4.1",
     "jest-html-reporter": "4.4.0",
     "jest-junit": "17.0.0",
     "lint-staged": "17.0.5",

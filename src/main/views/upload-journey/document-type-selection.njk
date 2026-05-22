@@ -1,0 +1,76 @@
+{% from "../macros/getting-help.njk" import gettingHelp %}
+{% from "../macros/autocomplete.njk" import autocomplete %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% extends "template.njk" %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% if previousStep %}
+        <a href="/upload/{{ previousStep }}" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
+      {% endif %}
+
+      {% if errors.documents %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: [
+            {
+              text: "You must select what you want to upload",
+              href: "#document-type"
+            }
+          ]
+        }) }}
+      {% endif %}
+
+      <h1 class="govuk-heading-l">Tell us which documents you want to upload</h1>
+
+      <p class="govuk-body">
+        Start typing the document you want to upload (for example, 'payslips') in the box below. 
+        You will then be able to choose your document.
+      </p>
+
+      <p class="govuk-body">
+        When you have chosen the document you want to upload, select 'Add document'. 
+        You can add more than one document to upload.
+      </p>
+
+      <form method="post" data-document-type-selection>
+        {{ autocomplete(
+          id="document-type",
+          name="documentType",
+          label="What do you want to upload?",
+          apiUrl="/autocomplete",
+          eventName="document:selected",
+          labelClass="govuk-label--m"
+        ) }}
+
+        {% if errors.documents %}
+          <span class="govuk-error-message">
+            <span class="govuk-visually-hidden">Error:</span> {{ errors.documents }}
+          </span>
+        {% endif %}
+
+        <button type="button" class="govuk-button govuk-button--secondary" data-module="govuk-button" data-add-document-type>
+          Add document
+        </button>
+
+        <h2 class="govuk-heading-m govuk-!-margin-top-6">Documents</h2>
+        
+        <p class="govuk-body" data-no-document-types>No documents added yet.</p>
+        
+        <div data-document-types-list></div>
+
+        <input type="hidden" name="documentsJson" value='{% if values.documentsJson %}{{ values.documentsJson }}{% elif values.selectedDocumentTypes %}{{ values.selectedDocumentTypes | dump | safe }}{% else %}[]{% endif %}'>
+
+        <button type="submit" class="govuk-button govuk-!-margin-top-6" data-module="govuk-button">
+          Continue
+        </button>
+      </form>
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+      {{ gettingHelp(contactEmail) }}
+    </div>
+  </div>
+{% endblock %}

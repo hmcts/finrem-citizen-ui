@@ -28,14 +28,14 @@
           },
           items: [
             {
-              value: "yes",
+              value: "true",
               text: "Yes",
-              checked: data.fdrHearing === "yes"
+              checked: values.fdrHearing === true or values.fdrHearing === "true"
             },
             {
-              value: "no",
+              value: "false",
               text: "No, they are for a different hearing",
-              checked: data.fdrHearing === "no"
+              checked: values.fdrHearing === false or values.fdrHearing === "false"
             }
           ],
           errorMessage: errors.fdrHearing and {
@@ -43,12 +43,9 @@
           }
         }) }}
 
-        <div class="govuk-button-group">
-          {{ govukButton({
-            text: "Continue"
-          }) }}
-          <a class="govuk-link" href="{{ cancelUrl }}">Cancel</a>
-        </div>
+        {{ govukButton({
+          text: "Continue"
+        }) }}
       </form>
     </div>
 
