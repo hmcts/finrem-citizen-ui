@@ -185,8 +185,10 @@ class DocumentTypeSelectionManager {
 }
 
 function initDocumentTypeSelection(): void {
-  if (document.querySelector(DocumentTypeSelectionManager.SELECTORS.CONTAINER)) {
-    new DocumentTypeSelectionManager();
+  const container = document.querySelector(DocumentTypeSelectionManager.SELECTORS.CONTAINER);
+  if (container) {
+    const manager = new DocumentTypeSelectionManager();
+    void manager;
   }
 }
 
