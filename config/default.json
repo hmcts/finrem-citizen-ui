@@ -57,6 +57,7 @@
       "session-secret": "finrem-local-dev-secret",
       "finrem-citizen-ui-redis-connection-string": "redis://localhost:6379"
     }
-  }
+  },
+  "rateLimitWindowMs": 900000
 
 }

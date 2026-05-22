@@ -45,5 +45,6 @@
     "orchestrationService": {
       "url": "ORCHESTRATION_SERVICE_URL"
     }
-  }
+  },
+  "rateLimitWindowMs": "RATE_LIMIT_WINDOW_MS"
 }
