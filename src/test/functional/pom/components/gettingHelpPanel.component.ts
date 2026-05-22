@@ -7,18 +7,24 @@ type VerifyContactContentOptions = {
 };
 
 export class GettingHelpPanel {
+  readonly container: Locator;
   readonly heading: Locator;
   readonly summary: Locator;
   readonly details: Locator;
+  readonly toggle: Locator;
   readonly emailLink: Locator;
   readonly telephoneText: Locator;
   readonly callChargesLink: Locator;
 
   constructor(private readonly page: Page) {
-    this.heading = this.page.getByRole('heading', { name: 'Getting help' });
-    this.summary = this.page.locator('summary', { hasText: 'Contact us for help' });
-    this.details = this.page.locator('details', { has: this.summary });
-    this.emailLink = this.page.locator('a[href^="mailto:"]').first();
+    this.container = this.page.getByRole('complementary');
+    this.heading = this.container.getByRole('heading', { name: 'Getting help' });
+    this.details = this.container.locator('details').filter({ hasText: 'Contact us for help' });
+
+    this.summary = this.details.locator('summary').filter({ hasText: 'Contact us for help' });
+    this.toggle = this.summary;
+
+    this.emailLink = this.details.locator('a[href^="mailto:"]');
     this.telephoneText = this.page.getByText('0300 123 5577');
     this.callChargesLink = this.page.getByRole('link', {
       name: 'Find out about call charges (opens in new tab)',
@@ -32,7 +38,7 @@ export class GettingHelpPanel {
   async expandIfCollapsed(): Promise<void> {
     const isExpanded = await this.details.getAttribute('open');
     if (isExpanded === null) {
-      await this.summary.click();
+      await this.toggle.click();
     }
     await expect(this.details).toHaveAttribute('open', '');
   }
@@ -40,7 +46,7 @@ export class GettingHelpPanel {
   async collapseIfExpanded(): Promise<void> {
     const isExpanded = await this.details.getAttribute('open');
     if (isExpanded !== null) {
-      await this.summary.click();
+      await this.toggle.click();
     }
     await expect(this.details).not.toHaveAttribute('open', '');
   }

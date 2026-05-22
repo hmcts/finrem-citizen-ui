@@ -1,4 +1,5 @@
-import { DEFAULT_AXE_OPTIONS, expect, test } from '../../../fixtures/fixtures';
+import { expect, test } from '../../../fixtures/fixtures';
+import { expectAuthenticated, runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 
 /**
  * INTEGRATION TESTS: Enter Case Number
@@ -32,12 +33,12 @@ test.describe('[integration-happy-path] Enter Case Number - Happy Path', () => {
     page,
     axeUtils,
   }) => {
-    expect(loggedInPage.authStatus).toBe('success');
+    expectAuthenticated(loggedInPage);
     await enterCaseNumberPage.verifyCaseNumberPageContent();
     await basePage.verifyGlobalHeaderAndFooter();
     await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
     await expect(page).toHaveURL(/\/enter-access-code$/);
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration-happy-path] Citizen can enter formatted case number (with hyphens) @a11y', async ({
@@ -48,14 +49,14 @@ test.describe('[integration-happy-path] Enter Case Number - Happy Path', () => {
     page,
     axeUtils,
   }) => {
-    expect(loggedInPage.authStatus).toBe('success');
+    expectAuthenticated(loggedInPage);
     await enterCaseNumberPage.verifyCaseNumberPageContent();
     await basePage.verifyGlobalHeaderAndFooter();
     // Use the formatted case ID (XXXX-XXXX-XXXX-XXXX)
     await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.formattedCaseId);
     // Verify redirection to Access Code page
     await expect(page).toHaveURL(/\/enter-access-code$/);
-    await expect(page.locator('h1')).toContainText('Enter access code');
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await expect(page.getByRole('heading', { level: 1, name: 'Enter access code' })).toBeVisible();
+    await runA11yAudit(axeUtils);
   });
 });

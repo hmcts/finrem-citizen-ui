@@ -20,6 +20,7 @@ export class BeforeYouStartPage extends BasePage {
   readonly afterSubmittedHeader: Locator;
   readonly unableToSendSummary: Locator;
   readonly unableToSendDetails: Locator;
+  readonly unableToSendToggle: Locator;
   readonly unableToSendDetailsText: Locator;
   readonly startNowButton: Locator;
   readonly gettingHelp: GettingHelpPanel;
@@ -34,8 +35,13 @@ export class BeforeYouStartPage extends BasePage {
     this.prepareDocumentsBullet = this.page.getByText('prepare all of the documents you wish to upload', { exact: true });
     this.namingDocumentsHeader = this.page.getByRole('heading', { name: 'Naming your documents' });
     this.afterSubmittedHeader = this.page.getByRole('heading', { name: 'After you have submitted' });
-    this.unableToSendSummary = this.page.locator('summary', { hasText: 'I am not able to send documents to the other party' });
-    this.unableToSendDetails = this.page.locator('details', { has: this.unableToSendSummary });
+    this.unableToSendDetails = this.page.locator('details').filter({
+      hasText: 'I am not able to send documents to the other party',
+    });
+    this.unableToSendSummary = this.unableToSendDetails.locator('summary').filter({
+      hasText: 'I am not able to send documents to the other party',
+    });
+    this.unableToSendToggle = this.unableToSendDetails.locator('summary');
     this.unableToSendDetailsText = this.page.getByText(
       'You must email the court as soon as possible if you are not able to send the documents to the other party.',
       { exact: false }
@@ -71,7 +77,7 @@ export class BeforeYouStartPage extends BasePage {
 
   // Expand unable-to-send details panel and verify content is visible
   async verifyUnableToSendGuidance(): Promise<void> {
-    await this.unableToSendSummary.click();
+    await this.unableToSendToggle.click();
     await expect(this.unableToSendDetails).toHaveAttribute('open', '');
     await expect(this.unableToSendDetailsText).toBeVisible();
   }

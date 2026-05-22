@@ -37,9 +37,9 @@ export class FdrPage extends BasePage {
     this.noOption = this.page.getByLabel('No, they are for a different hearing');
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
     this.cancelLink = this.page.getByRole('link', { name: 'Cancel' });
-    this.inlineErrorMessage = this.page.getByText(
-      /Error:\s*Select yes if you are uploading these documents for a Financial Dispute Resolution hearing/i
-    );
+    this.inlineErrorMessage = this.page.locator('.govuk-error-message').filter({
+      hasText: /Select yes if you are uploading these documents for a Financial Dispute Resolution hearing/i,
+    });
     this.gettingHelp = new GettingHelpPanel(this.page);
   }
 

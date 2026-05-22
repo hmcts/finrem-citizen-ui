@@ -1,4 +1,5 @@
-import { DEFAULT_AXE_OPTIONS, expect, test } from '../../../fixtures/fixtures';
+import { expect, test } from '../../../fixtures/fixtures';
+import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 
 /**
  * INTEGRATION TESTS: Authenticated User Journey
@@ -22,8 +23,6 @@ test.describe('[integration] Authenticated Citizen User Journey Verification', (
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
-    assertionHelpers: _assertionHelpers,
-    axeUtils: _axeUtils,
     basePage,
   }) => {
     // The browser is already logged in here
@@ -31,12 +30,12 @@ test.describe('[integration] Authenticated Citizen User Journey Verification', (
     await basePage.verifyGlobalHeaderAndFooter();
   });
 
-  test('[integration] User can see access case number page after successful login @a11y', async ({ axeUtils: _axeUtils }) => {
+  test('[integration] User can see access case number page after successful login @a11y', async ({ axeUtils }) => {
     // No logic assertions here since the beforeEach already confirms we're on the correct page.
-    await _axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
-  test('[integration] User can sign out via the UI and is redirected to IDAM @a11y', async ({ page, basePage, idamPage, axeUtils: _axeUtils }) => {
+  test('[integration] User can sign out via the UI and is redirected to IDAM @a11y', async ({ page, basePage, idamPage, axeUtils }) => {
     // Perform the UI-driven sign out
     await basePage.signOut();
 
@@ -58,10 +57,10 @@ test.describe('[integration] Authenticated Citizen User Journey Verification', (
     // Verify that trying to go back to the app root redirects back to login
     await basePage.goto('/');
     await expect(page).toHaveURL(idamAuthEntryUrl, { timeout: 15_000 });
-    await _axeUtils.audit(DEFAULT_AXE_OPTIONS); 
+    await runA11yAudit(axeUtils);
   });
 
-  test('[integration] Verify Global Layout elements: Header, Footer @a11y', async ({ page, basePage, axeUtils: _axeUtils }) => {
+  test('[integration] Verify Global Layout elements: Header, Footer @a11y', async ({ page, basePage, axeUtils }) => {
     // Verify footer links navigate correctly
     await basePage.licenceLink.click();
     await basePage.verifyUrl(/.*open-government-licence.*/);
@@ -70,6 +69,6 @@ test.describe('[integration] Authenticated Citizen User Journey Verification', (
 
     await basePage.copyRightImgLink.click();
     await basePage.verifyUrl(/.*crown-copyright.*/);
-    await _axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 });

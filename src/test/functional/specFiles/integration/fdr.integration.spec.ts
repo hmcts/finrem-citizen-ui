@@ -1,4 +1,5 @@
-import { DEFAULT_AXE_OPTIONS, test } from '../../../fixtures/fixtures';
+import { test } from '../../../fixtures/fixtures';
+import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
 /**
@@ -31,7 +32,7 @@ test.describe('[integration] FDR page', () => {
     axeUtils,
   }) => {
     await fdrPage.verifyFdrPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration] FDR requires hearing selection before continuing @a11y', async ({
@@ -39,7 +40,7 @@ test.describe('[integration] FDR page', () => {
     axeUtils,
   }) => {
     await fdrPage.submitWithoutSelectionAndExpectValidationError();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration] FDR yes selection navigates to document selection @a11y', async ({
@@ -49,17 +50,17 @@ test.describe('[integration] FDR page', () => {
   }) => {
     await fdrPage.selectYesAndContinue();
     await documentSelectionPage.verifyDocumentSelectionPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
-  test('[integration] Document selection page is visible and accessible @a11y', async ({
+  test('[integration] Document selection continue keeps user on the same step @a11y', async ({
     fdrPage,
     documentSelectionPage,
     axeUtils,
   }) => {
     await fdrPage.selectYesAndContinue();
-    await documentSelectionPage.verifyDocumentSelectionPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await documentSelectionPage.clickContinueAndStayOnDocumentSelection();
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration] FDR no selection navigates to document selection @a11y', async ({
@@ -69,7 +70,7 @@ test.describe('[integration] FDR page', () => {
   }) => {
     await fdrPage.selectNoAndContinue();
     await documentSelectionPage.verifyDocumentSelectionPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration] FDR cancel returns to dashboard @a11y', async ({
@@ -79,7 +80,7 @@ test.describe('[integration] FDR page', () => {
   }) => {
     await fdrPage.clickCancelAndExpectDashboard();
     await dashboardPage.verifyDashboardPageContent();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration] Document selection supports back and continue behavior @a11y', async ({
@@ -95,7 +96,7 @@ test.describe('[integration] FDR page', () => {
 
     await fdrPage.selectNoAndContinue();
     await documentSelectionPage.clickContinueAndStayOnDocumentSelection();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration] FDR getting help panel shows expected contact details @a11y', async ({
@@ -103,6 +104,6 @@ test.describe('[integration] FDR page', () => {
     axeUtils,
   }) => {
     await fdrPage.verifyGettingHelpSection();
-    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+    await runA11yAudit(axeUtils);
   });
 });

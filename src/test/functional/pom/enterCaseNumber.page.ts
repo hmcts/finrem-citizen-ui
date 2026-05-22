@@ -18,7 +18,7 @@ export class EnterCaseNumberPage {
   constructor(readonly page: Page) {
     this.caseNumberHeader = this.page.getByRole('heading', { name: 'Case number' });
     this.caseNumberInput = this.page.getByRole('textbox', { name: 'Enter your case number' });
-    this.caseNumberHint = this.page.locator('#caseNumber-hint');
+    this.caseNumberHint = this.page.getByText('For example, 1234-5678-0123-4567', { exact: true });
     this.continueBtn = this.page.getByRole('button', { name: 'Continue' });
     this.errorSummary = this.page.getByRole('alert');
     this.errorSummaryTitle = this.page.getByRole('heading', { name: 'There is a problem' });

@@ -29,7 +29,7 @@ export class DashboardPage extends BasePage {
   constructor(readonly page: Page) {
     super(page);
     this.userNameHeader = this.page.getByRole('heading', { name: 'Your financial remedy case' });
-    this.caseNumberText = this.page.getByText(/Case number/);
+    this.caseNumberText = this.page.getByText(/Case number\s+/i);
     this.divorceAccountHeading = this.page.getByRole('heading', { name: 'This is your financial remedy account' });
     this.divorceAccountLink = this.page.getByRole('link', { name: 'go to your divorce account (opens in new tab)' });
     this.latestInformationHeading = this.page.getByRole('heading', { name: 'Latest information' });
@@ -41,7 +41,7 @@ export class DashboardPage extends BasePage {
       'Do not use this service to submit applications or anything else that needs a court response.',
       { exact: false }
     );
-    this.goToDocumentUploadButton = this.page.getByRole('button', { name: /Go to document upload/ }).first();
+    this.goToDocumentUploadButton = this.page.getByRole('button', { name: 'Go to document upload' });
     this.viewPreviouslyUploadedLink = this.page.getByRole('link', { name: 'View previously uploaded documents' });
     this.iWantToHeading = this.page.getByRole('heading', { name: 'I want to...' });
     this.templatesLink = this.page.getByRole('link', {

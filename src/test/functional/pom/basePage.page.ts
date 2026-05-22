@@ -20,12 +20,12 @@ export class BasePage {
 
   constructor(readonly page: Page) {
     this.headerLogo = this.page.getByRole('img', { name: 'GOV.UK' });
-    this.footer = this.page.locator('footer');
+    this.footer = this.page.getByRole('contentinfo');
     this.licenceDescription = this.footer.getByText(/All content is available under the/i);
     this.licenceLink = this.footer.getByRole('link', { name: 'Open Government Licence' });
     this.copyRightImgLink = this.footer.getByRole('link', { name: /© Crown copyright/i });
-    this.navigationLink = this.page.getByRole('link', { name: 'Dividing your money and property' });
-    this.serviceNav = page.locator('.govuk-service-navigation');
+    this.serviceNav = this.page.getByRole('region', { name: 'Service information' });
+    this.navigationLink = this.serviceNav.getByRole('link', { name: 'Dividing your money and property' });
     this.signOutBtn = page.getByRole('link', { name: 'Sign out' });
   }
 
