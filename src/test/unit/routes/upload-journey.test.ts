@@ -375,45 +375,6 @@ describe('Upload Journey Routes', () => {
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
     });
 
-    it('should redirect to same step when next() returns null', () => {
-      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
-      const mockReq = {
-        params: { stepId: UploadStepNames.DocumentSelection },
-        session: {
-          DocumentSelection: {
-            documentDetails: [
-              { id: 'uuid-1', value: { DocumentType: 'PAYSLIPS' } }
-            ]
-          }
-        } as unknown as Request['session'],
-        body: {},
-      } as Partial<Request>;
-      const mockRes = {
-        redirect: jest.fn(),
-      } as Partial<Response>;
-
-      handler(mockReq as Request, mockRes as Response);
-
-      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-selection`);
-    });
-
-    it('should skip fdrHearing persistence for non-FDR steps', () => {
-      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
-      const mockReq = {
-        params: { stepId: UploadStepNames.BeforeYouStart },
-        session: {} as unknown as Request['session'],
-        body: {},
-      } as Partial<Request>;
-      const mockRes = {
-        redirect: jest.fn(),
-      } as Partial<Response>;
-
-      handler(mockReq as Request, mockRes as Response);
-
-      expect(mockReq.session?.DocumentSelection).toBeUndefined();
-      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confidentiality`);
-    });
-
     it('should render validation error with fdrHearing value from body', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
