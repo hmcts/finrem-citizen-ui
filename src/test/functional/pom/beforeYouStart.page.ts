@@ -10,31 +10,65 @@ const URL_PATTERNS = {
   CONFIDENTIALITY: /\/upload\/confidentiality/,
 };
 
+const CALL_CHARGES_LINK = 'https://www.gov.uk/call-charges';
+
 export class BeforeYouStartPage extends BasePage {
+  readonly govUkHeader: Locator;
+  readonly serviceNavigation: Locator;
+  readonly serviceNameLink: Locator;
   readonly beforeYouStartHeader: Locator;
   readonly backLink: Locator;
   readonly youShouldIntro: Locator;
   readonly courtOrderBullet: Locator;
   readonly prepareDocumentsBullet: Locator;
   readonly namingDocumentsHeader: Locator;
+  readonly namingGuidanceText: Locator;
+  readonly namingRenameText: Locator;
   readonly afterSubmittedHeader: Locator;
+  readonly afterSubmittedCaseFileText: Locator;
+  readonly afterSubmittedOnlineAccountText: Locator;
+  readonly transparencyResponsibilitiesText: Locator;
   readonly unableToSendSummary: Locator;
   readonly unableToSendDetails: Locator;
   readonly unableToSendToggle: Locator;
   readonly unableToSendDetailsText: Locator;
   readonly startNowButton: Locator;
+  readonly helpOpeningHours: Locator;
   readonly gettingHelp: GettingHelpPanel;
   
 
   constructor(readonly page: Page) {
     super(page);
+    this.govUkHeader = this.page.locator('.govuk-header');
+    this.serviceNavigation = this.page.locator('.govuk-service-navigation');
+    this.serviceNameLink = this.page.getByRole('link', { name: 'Dividing your money and property' });
     this.beforeYouStartHeader = this.page.getByRole('heading', { name: 'Before you start' });
     this.backLink = this.page.getByRole('link', { name: 'Back' });
     this.youShouldIntro = this.page.getByText('You should:', { exact: true });
     this.courtOrderBullet = this.page.getByText('check the court order you have received', { exact: true });
     this.prepareDocumentsBullet = this.page.getByText('prepare all of the documents you wish to upload', { exact: true });
     this.namingDocumentsHeader = this.page.getByRole('heading', { name: 'Naming your documents' });
+    this.namingGuidanceText = this.page.getByText(
+      'To help the court identify and assess your documents, make sure you name them appropriately, for example, [name]-bankstatement-[month][year].',
+      { exact: false }
+    );
+    this.namingRenameText = this.page.getByText(
+      'Some of your documents may be automatically renamed when you upload them. We will tell you if your document will be renamed as you upload them.',
+      { exact: false }
+    );
     this.afterSubmittedHeader = this.page.getByRole('heading', { name: 'After you have submitted' });
+    this.afterSubmittedCaseFileText = this.page.getByText(
+      'Once you have uploaded your documents, they will be added to your case file and the court will be able to view them. You will receive an email confirmation that they have been added to your case.',
+      { exact: false }
+    );
+    this.afterSubmittedOnlineAccountText = this.page.getByText(
+      'You will be able to view any documents you have uploaded on your online account.',
+      { exact: false }
+    );
+    this.transparencyResponsibilitiesText = this.page.getByText(
+      'For full transparency between you and the other party, you will need to send any documents you upload here to them, or to their solicitor if they have one.',
+      { exact: false }
+    );
     this.unableToSendDetails = this.page.locator('details').filter({
       hasText: 'I am not able to send documents to the other party',
     });
@@ -48,6 +82,9 @@ export class BeforeYouStartPage extends BasePage {
     );
     this.startNowButton = this.page.getByRole('button', { name: 'Start now' });
     this.gettingHelp = new GettingHelpPanel(this.page);
+    this.helpOpeningHours = this.gettingHelp.details.getByText('Monday to Friday, 8.30am to 5pm', {
+      exact: false,
+    });
   }
 
   // Verify page URL and content
@@ -90,7 +127,33 @@ export class BeforeYouStartPage extends BasePage {
 
   // Verify getting help section end-to-end (collapsed state + expanded content)
   async verifyGettingHelpSection(): Promise<void> {
-    await this.gettingHelp.verifySection();
+    await this.gettingHelp.verifySection({
+      openingHoursLocator: this.helpOpeningHours,
+      callChargesHref: CALL_CHARGES_LINK,
+    });
+  }
+
+  async verifyBeforeYouStartAcceptanceCriteriaContent(): Promise<void> {
+    await this.verifyBeforeYouStartPageContent();
+
+    await this.expectVisible([
+      this.govUkHeader,
+      this.serviceNavigation,
+      this.serviceNameLink,
+      this.signOutBtn,
+      this.namingGuidanceText,
+      this.namingRenameText,
+      this.afterSubmittedCaseFileText,
+      this.afterSubmittedOnlineAccountText,
+      this.transparencyResponsibilitiesText,
+    ]);
+
+    await this.expectAttributes([
+      { locator: this.serviceNameLink, name: 'href', value: '/' },
+      { locator: this.signOutBtn, name: 'href', value: '/logout' },
+    ]);
+
+    await this.verifyGettingHelpSection();
   }
 
   // Click back link and verify navigation to dashboard
