@@ -7,7 +7,7 @@ import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.hel
  *
  * FDR = Financial Dispute Resolution. This suite verifies the real upload
  * journey behavior for the FDR question page, including content, validation,
- * navigation, and progression to document selection.
+ * navigation, and getting-help support.
  *
  * Setup:
  * - Uses authenticated `loggedInPage` fixture (real IDAM login flow)
@@ -50,42 +50,6 @@ test.describe('[integration] FDR page', () => {
   }) => {
     await fdrPage.selectYesAndContinue();
     await documentSelectionPage.verifyDocumentSelectionPageContent();
-    await runA11yAudit(axeUtils);
-  });
-
-  test('[integration] Document selection continue keeps user on the same step @a11y', async ({
-    fdrPage,
-    documentSelectionPage,
-    axeUtils,
-  }) => {
-    await fdrPage.selectYesAndContinue();
-    await documentSelectionPage.clickContinueAndStayOnDocumentSelection();
-    await runA11yAudit(axeUtils);
-  });
-
-  test('[integration] FDR no selection navigates to document selection @a11y', async ({
-    fdrPage,
-    documentSelectionPage,
-    axeUtils,
-  }) => {
-    await fdrPage.selectNoAndContinue();
-    await documentSelectionPage.verifyDocumentSelectionPageContent();
-    await runA11yAudit(axeUtils);
-  });
-
-  test('[integration] Document selection supports back and continue behavior @a11y', async ({
-    fdrPage,
-    documentSelectionPage,
-    axeUtils,
-  }) => {
-    await fdrPage.selectYesAndContinue();
-    await documentSelectionPage.verifyDocumentSelectionPageContent();
-
-    await documentSelectionPage.clickBackAndExpectFdr();
-    await fdrPage.verifyFdrPageContent();
-
-    await fdrPage.selectNoAndContinue();
-    await documentSelectionPage.clickContinueAndStayOnDocumentSelection();
     await runA11yAudit(axeUtils);
   });
 

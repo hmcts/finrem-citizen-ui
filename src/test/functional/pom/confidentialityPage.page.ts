@@ -53,12 +53,18 @@ export class ConfidentialityPage extends BasePage {
       'Confidential information could be, for example:',
       { exact: true }
     );
-    const confidentialExamplesList = this.page.locator('ul.govuk-list--bullet').nth(1);
-    this.exampleAddresses = confidentialExamplesList.locator('li', { hasText: 'addresses' });
-    this.exampleLocationDetails = confidentialExamplesList.locator('li', {
-      hasText: 'any specific location details shown on bank statements or other documents',
-    });
-    this.examplePhoneNumbers = confidentialExamplesList.locator('li', { hasText: 'phone numbers' });
+
+    const confidentialExamplesList = this.page
+      .getByRole('main')
+      .getByRole('list')
+      .filter({ hasText: 'addresses' })
+      .first();
+
+    this.exampleAddresses = confidentialExamplesList.getByRole('listitem').filter({ hasText: 'addresses' });
+    this.exampleLocationDetails = confidentialExamplesList
+      .getByRole('listitem')
+      .filter({ hasText: 'any specific location details shown on bank statements or other documents' });
+    this.examplePhoneNumbers = confidentialExamplesList.getByRole('listitem').filter({ hasText: 'phone numbers' });
     this.doNotRedactText = this.page.getByText(
       'Do not redact any financial amounts or payee details.',
       { exact: true }

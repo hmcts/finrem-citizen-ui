@@ -26,7 +26,7 @@ export class EnterAccessCodePage {
     this.continueBtn = this.page.getByRole('button', { name: 'Continue' });
     this.errorSummary = this.page.getByRole('alert');
     this.errorSummaryTitle = this.page.getByRole('heading', { name: 'There is a problem' });
-    this.fieldError = this.page.locator('#accessCode-error');
+    this.fieldError = this.page.getByRole('alert');
     this.validationMessageAliases = {
       'We cannot find that access code, Enter the access code sent to you':
         /Access code does not match case number|We cannot find that access code, Enter the access code sent to you/i,

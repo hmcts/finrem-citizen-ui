@@ -26,10 +26,17 @@ export async function expectValidationError(
   fieldError: Locator,
   message: string | RegExp
 ): Promise<void> {
-  await expectVisible([
-    errorSummaryTitle,
-    errorSummary.getByRole('link', { name: message }),
-  ]);
+  const errorSummaryLink = errorSummary.getByRole('link', { name: message });
+
+  await expectVisible([errorSummaryTitle, errorSummaryLink]);
+
+  const targetId = (await errorSummaryLink.getAttribute('href'))?.replace(/^#/, '');
+  if (targetId) {
+    const inlineFieldError = errorSummary.page().locator(`#${targetId}-error`);
+    await expect(inlineFieldError).toContainText(message);
+    return;
+  }
+
   await expect(fieldError).toContainText(message);
 }
 

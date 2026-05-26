@@ -26,7 +26,7 @@ test.describe('[integration] Confidentiality page', () => {
   });
  
   // AC2: Form C8 link is present with the correct href and opens in a new tab
-  test('[integration] Form C8 link is present and correctly configured', async ({
+  test('[integration] Form C8 link is present and correctly configured @a11y', async ({
     confidentialityPage,
     axeUtils,
   }) => {

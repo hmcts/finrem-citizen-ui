@@ -22,7 +22,7 @@ export class EnterCaseNumberPage {
     this.continueBtn = this.page.getByRole('button', { name: 'Continue' });
     this.errorSummary = this.page.getByRole('alert');
     this.errorSummaryTitle = this.page.getByRole('heading', { name: 'There is a problem' });
-    this.fieldError = this.page.locator('#caseNumber-error');
+    this.fieldError = this.page.getByRole('alert');
   }
 
   async verifyCaseNumberPageContent(): Promise<void> {

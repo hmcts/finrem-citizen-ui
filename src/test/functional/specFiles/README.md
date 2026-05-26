@@ -28,7 +28,8 @@ specFiles/
 ├── integration/                       # All-environment tests
 │   ├── dashboard.integration.spec.ts   # Dashboard upload journey
 │   ├── confidentiality.integration.spec.ts  # Confidentiality page verification
-│   ├── fdr.integration.spec.ts         # FDR + document-selection journey and validation
+│   ├── fdr.integration.spec.ts         # FDR page verification + navigation
+│   ├── documentSelection.integration.spec.ts  # Document-selection page and validation
 │   ├── login.integration.spec.ts       # Authentication & IDAM integration
 │   ├── enterAccessCode.integration.spec.ts  # Access code happy-path (requires CCD)
 │   ├── enterCaseNumber.integration.spec.ts  # Case number entry (mixed: validation + integration happy-path)
@@ -156,9 +157,16 @@ test.skip(!runIntegration, 'Integration disabled by default...');
 - **Duration:** ~10-15 seconds
 
 ### `integration/fdr.integration.spec.ts`
-- **Tests:** Financial Dispute Resolution (FDR) page, required selection validation, document-selection step navigation
+- **Tests:** Financial Dispute Resolution (FDR) page, required selection validation, and navigation to document selection
 - **Label:** `[integration]`
 - **Setup:** Uses `navigateToFdrStep(...)` helper (composed confidentiality navigation + continue to FDR)
+- **Environment:** All environments with working authentication
+- **Duration:** ~10-20 seconds
+
+### `integration/documentSelection.integration.spec.ts`
+- **Tests:** Document selection page content, add/remove behavior, validation errors, getting-help panel, and progression to upload-documents
+- **Label:** `[integration]`
+- **Setup:** Uses `navigateToFdrStep(...)` helper, then selects Yes on FDR to reach document selection
 - **Environment:** All environments with working authentication
 - **Duration:** ~10-20 seconds
 
@@ -258,6 +266,12 @@ ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 
 # Terminal 3 - Run functional tests
 yarn test:functional
+
+# Terminal 3 - Run one specific spec file
+yarn test:functional src/test/functional/specFiles/integration/fdr.integration.spec.ts
+
+# Faster repeat runs (skips Playwright browser install step)
+yarn test:full-functional src/test/functional/specFiles/integration/fdr.integration.spec.ts
 ```
 
 Optional: enable integration-lane tests locally.
