@@ -5,6 +5,7 @@ import { initDocumentTypeSelection } from '../../../main/DocumentType/document-t
 
 describe('document-type-selection', () => {
   beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     document.body.innerHTML = `
       <div data-document-type-selection>
         <button type="button" data-add-document-type>Add</button>
