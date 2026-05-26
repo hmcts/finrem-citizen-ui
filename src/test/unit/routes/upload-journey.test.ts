@@ -4,7 +4,21 @@ import { Application, Request, Response } from 'express';
 import { RouteNames, UploadStepNames } from '../../../main/common-constants';
 import setupUploadJourneyRoute from '../../../main/routes/upload-journey';
 
+type MockSession = {
+  DocumentSelection?: {
+    isFinancialDisputeResolution?: boolean;
+    documentDetails?: { id?: string; value?: { DocumentType?: string } }[];
+  };
+  [key: string]: unknown;
+};
+
 type UploadJourneyHandler = (req: Request, res: Response) => void;
+type PartialRequestWithSession = {
+  params?: Record<string, string>;
+  body?: unknown;
+  session?: MockSession;
+  [key: string]: unknown;
+};
 
 function getRegisteredHandler(mockFn: jest.Mock, route: string): UploadJourneyHandler {
   const call = mockFn.mock.calls.find((entry: unknown[]) => entry[0] === route);
@@ -63,15 +77,15 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.BeforeYouStart },
-        session: {} as unknown as Request['session'],
-      } as Partial<Request>;
+        session: {},
+      } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
         status: jest.fn().mockReturnThis(),
         send: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/before-you-start', {
         data: { selectedDocumentTypes: [] },
@@ -90,15 +104,15 @@ describe('Upload Journey Routes', () => {
           DocumentSelection: {
             isFinancialDisputeResolution: true,
           },
-        } as unknown as Request['session'],
-      } as Partial<Request>;
+        },
+      } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
         status: jest.fn().mockReturnThis(),
         send: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/fdr', {
         data: { selectedDocumentTypes: [] },
@@ -119,13 +133,13 @@ describe('Upload Journey Routes', () => {
               { id: 'uuid-1', value: { DocumentType: 'points-of-claim-defence' } },
             ],
           },
-        } as unknown as Request['session'],
-      } as Partial<Request>;
+        },
+      } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', {
         data: { selectedDocumentTypes: expect.arrayContaining([
@@ -158,13 +172,13 @@ describe('Upload Journey Routes', () => {
               { id: 'uuid-1', value: { DocumentType: 'unknown-doc-type' } },
             ],
           },
-        } as unknown as Request['session'],
-      } as Partial<Request>;
+        },
+      } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', 
         expect.objectContaining({
@@ -188,13 +202,13 @@ describe('Upload Journey Routes', () => {
               { id: 'uuid-1', value: {} },
             ],
           },
-        } as unknown as Request['session'],
-      } as Partial<Request>;
+        },
+      } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', 
         expect.objectContaining({
@@ -212,15 +226,15 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: 'invalid-step' },
-        session: {} as unknown as Request['session'],
-      } as Partial<Request>;
+        session: {},
+      } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
         status: jest.fn().mockReturnThis(),
         send: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.status).toHaveBeenCalledWith(404);
       expect(mockRes.send).toHaveBeenCalledWith('Step not found');
@@ -232,9 +246,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: 'invalid-step' },
-        session: {} as unknown as Request['session'],
+        session: {},
         body: {},
-      } as Partial<Request>;
+      } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
         redirect: jest.fn(),
@@ -242,7 +256,7 @@ describe('Upload Journey Routes', () => {
         send: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.status).toHaveBeenCalledWith(404);
     });
@@ -251,9 +265,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.BeforeYouStart },
-        session: {} as unknown as Request['session'],
+        session: {},
         body: {},
-      } as Partial<Request>;
+      } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
         redirect: jest.fn(),
@@ -261,7 +275,7 @@ describe('Upload Journey Routes', () => {
         send: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confidentiality`);
     });
@@ -270,9 +284,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
-        session: {} as unknown as Request['session'],
+        session: {},
         body: { fdrHearing: 'yes' },
-      } as Partial<Request>;
+      } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
         redirect: jest.fn(),
@@ -280,7 +294,7 @@ describe('Upload Journey Routes', () => {
         send: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
     });
@@ -292,15 +306,15 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.Confidentiality },
-        session: {} as unknown as Request['session'],
+        session: {},
         body: {},
-      } as Partial<Request>;
+      } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalled();
 
@@ -311,15 +325,15 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
-        session: {} as unknown as Request['session'],
+        session: {},
         body: { fdrHearing: 'true' },
-      } as Partial<Request>;
+      } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockReq.session?.DocumentSelection?.isFinancialDisputeResolution).toBe(true);
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
@@ -331,12 +345,12 @@ describe('Upload Journey Routes', () => {
         params: { stepId: UploadStepNames.BeforeYouStart },
         session: undefined,
         body: {},
-      } as Partial<Request>;
+      } as PartialRequestWithSession;
       const mockRes = {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.redirect).toHaveBeenCalled();
     });
@@ -345,14 +359,14 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
-        session: {} as unknown as Request['session'],
+        session: {},
         body: { fdrHearing: 'true' },
-      } as Partial<Request>;
+      } as PartialRequestWithSession;
       const mockRes = {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockReq.session?.DocumentSelection?.isFinancialDisputeResolution).toBe(true);
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
@@ -362,14 +376,14 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
-        session: {} as unknown as Request['session'],
+        session: {},
         body: { fdrHearing: 'false' },
-      } as Partial<Request>;
+      } as PartialRequestWithSession;
       const mockRes = {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockReq.session?.DocumentSelection?.isFinancialDisputeResolution).toBe(false);
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
@@ -379,15 +393,15 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.DocumentTypeSelection },
-        session: {} as unknown as Request['session'],
+        session: {},
         body: { fdrHearing: 'false' },
-      } as Partial<Request>;
+      } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith(
         'upload-journey/document-type-selection',
@@ -414,14 +428,14 @@ describe('Upload Journey Routes', () => {
     it('should add document to session', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/document-type-selection/add`);
       const mockReq = {
-        session: {} as unknown as Request['session'],
+        session: {},
         body: { id: 1, label: 'Payslips', value: 'payslips' },
-      } as Partial<Request>;
+      } as PartialRequestWithSession;
       const mockRes = {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
       expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('payslips');
@@ -438,14 +452,14 @@ describe('Upload Journey Routes', () => {
           DocumentSelection: {
             documentDetails: [{ id: 'uuid-1', value: { DocumentType: 'payslips' } }],
           },
-        } as unknown as Request['session'],
+        },
         body: { id: 2, label: 'Bank statements', value: 'bank-statements' },
-      } as Partial<Request>;
+      } as PartialRequestWithSession;
       const mockRes = {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(2);
       expect(mockRes.json).toHaveBeenCalledWith({
@@ -465,14 +479,14 @@ describe('Upload Journey Routes', () => {
           DocumentSelection: {
             documentDetails: [{ id: 'uuid-1', value: {} }],
           },
-        } as unknown as Request['session'],
+        },
         body: { id: 2, label: 'Test', value: 'TEST' },
-      } as Partial<Request>;
+      } as PartialRequestWithSession;
       const mockRes = {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
@@ -496,13 +510,13 @@ describe('Upload Journey Routes', () => {
               { id: 'uuid-2', value: { DocumentType: 'BANK_STATEMENTS' } },
             ],
           },
-        } as unknown as Request['session'],
-      } as Partial<Request>;
+        },
+      } as PartialRequestWithSession;
       const mockRes = {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
       expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('BANK_STATEMENTS');
@@ -520,13 +534,13 @@ describe('Upload Journey Routes', () => {
           DocumentSelection: {
             documentDetails: [{ id: 'uuid-1', value: { DocumentType: 'PAYSLIPS' } }],
           },
-        } as unknown as Request['session'],
-      } as Partial<Request>;
+        },
+      } as PartialRequestWithSession;
       const mockRes = {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
       expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('PAYSLIPS');
@@ -536,13 +550,13 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
       const mockReq = {
         params: { index: '0' },
-        session: {} as unknown as Request['session'],
-      } as Partial<Request>;
+        session: {},
+      } as PartialRequestWithSession;
       const mockRes = {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
@@ -562,13 +576,13 @@ describe('Upload Journey Routes', () => {
           DocumentSelection: {
             documentDetails: [...documentDetails],
           },
-        } as unknown as Request['session'],
-      } as Partial<Request>;
+        },
+      } as PartialRequestWithSession;
       const mockRes = {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as Request, mockRes as Response);
+      handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
       expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].id).toBe('uuid-2');
