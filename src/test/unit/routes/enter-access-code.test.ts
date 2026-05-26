@@ -213,7 +213,7 @@ describe('addUserToCaseForRole', () => {
       givenName: 'System',
       familyName: 'User',
       roles: ['admin'],
-    } as unknown as Awaited<ReturnType<typeof getSystemUser>>);
+    });
   });
 
   it('successfully adds user to case and logs info', async () => {
