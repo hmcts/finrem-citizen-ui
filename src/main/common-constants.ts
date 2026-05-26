@@ -52,6 +52,7 @@ export const UploadStepNames = {
   FDR: 'fdr',
   DocumentTypeSelection: 'document-type-selection',
   UploadDocuments: 'upload-documents',
+  CheckUpload: 'check-upload',
 };
 
 export const CaseUserNames = {
