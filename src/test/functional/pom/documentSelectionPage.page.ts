@@ -56,7 +56,9 @@ export class DocumentSelectionPage extends BasePage {
     this.errorSummaryLink = this.page
       .getByRole('alert')
       .getByRole('link', { name: 'You must select what you want to upload' });
-    this.inlineErrorMessage = this.page.locator('.govuk-error-message');
+    this.inlineErrorMessage = this.page.getByText('Error: You must select what you want to upload', {
+      exact: true,
+    });
     this.uploadDocumentsHeading = this.page.getByRole('heading', { name: 'Upload your documents' });
     this.helpOpeningHours = this.gettingHelp.details.getByText('Monday to Friday, 8.30am to 5pm', {
       exact: false,
@@ -112,8 +114,8 @@ export class DocumentSelectionPage extends BasePage {
   }
 
   async removeDocumentByLabel(label: string): Promise<void> {
-    await this.termByLabel(label)
-      .locator('..')
+    await this.page
+      .locator('[data-document-types-list]')
       .getByRole('link', { name: `Remove ${label}` })
       .click();
   }

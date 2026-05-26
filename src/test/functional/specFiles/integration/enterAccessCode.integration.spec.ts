@@ -1,5 +1,6 @@
-import { expect, test } from '../../../fixtures/fixtures';
+import { test } from '../../../fixtures/fixtures';
 import { expectAuthenticated, runA11yAudit } from '../journeyHelpers/specAssertions.helper';
+import { navigateToAccessCodeStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
 /**
  * INTEGRATION TESTS: Enter Access Code
@@ -28,15 +29,12 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
   test.beforeEach(async ({
     loggedInPage,
     basePage,
+    enterCaseNumberPage,
     contestedCaseWithHearing,
   }) => {
     expectAuthenticated(loggedInPage);
-    await basePage.injectCaseSession(
-      contestedCaseWithHearing.caseId,
-      contestedCaseWithHearing.applicantAccessCode,
-      contestedCaseWithHearing.respondentAccessCode
-    );
     await basePage.verifyGlobalHeaderAndFooter();
+    await navigateToAccessCodeStep(enterCaseNumberPage, contestedCaseWithHearing.caseId);
   });
 
   /**
@@ -138,8 +136,7 @@ test.describe('[integration-happy-path] Enter Access Code - Full Journey', () =>
     axeUtils,
   }) => {
     expectAuthenticated(loggedInPage);
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-    await expect(enterAccessCodePage.page).toHaveURL(/\/enter-access-code$/);
+    await navigateToAccessCodeStep(enterCaseNumberPage, contestedCaseWithHearing.caseId);
 
     await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
     await dashboardPage.verifyDashboardPageContent();

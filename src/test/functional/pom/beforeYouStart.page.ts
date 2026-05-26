@@ -39,8 +39,8 @@ export class BeforeYouStartPage extends BasePage {
 
   constructor(readonly page: Page) {
     super(page);
-    this.govUkHeader = this.page.locator('.govuk-header');
-    this.serviceNavigation = this.page.locator('.govuk-service-navigation');
+    this.govUkHeader = this.page.getByRole('banner');
+    this.serviceNavigation = this.page.getByRole('region', { name: 'Service information' });
     this.serviceNameLink = this.page.getByRole('link', { name: 'Dividing your money and property' });
     this.beforeYouStartHeader = this.page.getByRole('heading', { name: 'Before you start' });
     this.backLink = this.page.getByRole('link', { name: 'Back' });
