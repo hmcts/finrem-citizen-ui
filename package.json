@@ -119,7 +119,7 @@
     "supertest": "^7.1.0",
     "ts-jest": "^29.4.6",
     "ts-loader": "9.5.7",
-    "webpack": "5.107.1",
+    "webpack": "5.107.2",
     "webpack-cli": "7.0.2",
     "webpack-dev-middleware": "8.0.3"
   },
