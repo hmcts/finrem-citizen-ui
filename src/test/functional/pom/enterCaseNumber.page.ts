@@ -5,8 +5,9 @@ import {
   expectValidationError,
   expectVisible,
 } from '../utils/helpers/pomAssertions';
+import { BasePage } from './basePage.page';
 
-export class EnterCaseNumberPage {
+export class EnterCaseNumberPage extends BasePage {
   readonly caseNumberHeader: Locator;
   readonly caseNumberInput: Locator;
   readonly caseNumberHint: Locator;
@@ -16,6 +17,7 @@ export class EnterCaseNumberPage {
   readonly fieldError: Locator;
 
   constructor(readonly page: Page) {
+    super(page);
     this.caseNumberHeader = this.page.getByRole('heading', { name: 'Case number' });
     this.caseNumberInput = this.page.getByRole('textbox', { name: 'Enter your case number' });
     this.caseNumberHint = this.page.getByText('For example, 1234-5678-0123-4567', { exact: true });
@@ -27,6 +29,7 @@ export class EnterCaseNumberPage {
 
   async verifyCaseNumberPageContent(): Promise<void> {
     await expect(this.page).toHaveURL(/\/enter-case-number$/);
+    await this.verifyGlobalHeaderAndFooter();
     await expectVisible([this.caseNumberHeader, this.caseNumberInput, this.caseNumberHint, this.continueBtn]);
   }
 

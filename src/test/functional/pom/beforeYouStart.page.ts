@@ -90,6 +90,7 @@ export class BeforeYouStartPage extends BasePage {
   // Verify page URL and content
   async verifyBeforeYouStartPageContent(): Promise<void> {
     await expect(this.page).toHaveURL(URL_PATTERNS.BEFORE_YOU_START);
+    await this.verifyGlobalHeaderAndFooter();
 
     await this.expectVisible([
       this.beforeYouStartHeader,

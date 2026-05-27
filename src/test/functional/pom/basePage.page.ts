@@ -11,6 +11,9 @@ const ROUTES = {
 export class BasePage {
   readonly headerLogo: Locator;
   readonly footer: Locator;
+  readonly betaBannerTag: Locator;
+  readonly betaBannerText: Locator;
+  readonly betaBannerFeedbackLink: Locator;
   readonly licenceDescription: Locator;
   readonly licenceLink: Locator;
   readonly copyRightImgLink: Locator;
@@ -21,6 +24,9 @@ export class BasePage {
   constructor(readonly page: Page) {
     this.headerLogo = this.page.getByRole('img', { name: 'GOV.UK' });
     this.footer = this.page.getByRole('contentinfo');
+    this.betaBannerTag = this.page.getByText('Beta', { exact: true });
+    this.betaBannerText = this.page.getByText('This is a new service', { exact: false });
+    this.betaBannerFeedbackLink = this.page.getByRole('link', { name: 'provide feedback on this service' });
     this.licenceDescription = this.footer.getByText(/All content is available under the/i);
     this.licenceLink = this.footer.getByRole('link', { name: 'Open Government Licence' });
     this.copyRightImgLink = this.footer.getByRole('link', { name: /© Crown copyright/i });
@@ -55,7 +61,17 @@ export class BasePage {
 
   // Assert shared header and footer is visible
   async verifyGlobalHeaderAndFooter(): Promise<void> {
-    await this.expectVisible([this.headerLogo, this.footer, this.licenceLink, this.copyRightImgLink]);
+    await this.expectVisible([
+      this.headerLogo,
+      this.betaBannerTag,
+      this.betaBannerText,
+      this.betaBannerFeedbackLink,
+      this.footer,
+      this.licenceLink,
+      this.copyRightImgLink,
+    ]);
+
+    await expect(this.betaBannerFeedbackLink).toHaveAttribute('href', '#');
   }
 
   /**
