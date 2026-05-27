@@ -1,7 +1,6 @@
 {% from "../macros/getting-help.njk" import gettingHelp %}
 {% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
-{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
 {% extends "template.njk" %}
 
@@ -10,13 +9,6 @@
     <div class="govuk-grid-column-two-thirds">
       {% if previousStep %}
         <a href="/upload/{{ previousStep }}" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
-      {% endif %}
-
-      {% if errors %}
-        {{ govukErrorSummary({
-          titleText: "There is a problem",
-          errorList: []
-        }) }}
       {% endif %}
 
       <h1 class="govuk-heading-l">Upload your documents</h1>
