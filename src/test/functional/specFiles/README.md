@@ -19,7 +19,7 @@ This file is the source of truth for functional test conventions, setup, and com
 specFiles/
 ├── journeyHelpers/                    # Shared journey and assertion helpers for specs
 │   ├── uploadJourneyNavigation.helper.ts  # Reusable authenticated upload journey setup
-│   └── specAssertions.helper.ts          # Shared spec-level assertions (@a11y and auth status)
+│   └── specAssertions.helper.ts          # Shared spec-level assertions
 │
 ├── mock/                              # Local-only tests
 │   ├── persistentSessionLogin.mock.spec.ts  # Session persistence (known defects)
@@ -193,7 +193,8 @@ The `journeyHelpers/uploadJourneyNavigation.helper.ts` module centralizes common
 The `journeyHelpers/specAssertions.helper.ts` module centralizes repeated spec assertions:
 
 - `expectAuthenticated(session)`
-- `runA11yAudit(axeUtils)`
+
+Accessibility behavior and helper usage are documented in the **Accessibility** section below.
 
 Use these helpers in specs instead of repeating the same assertion blocks inline.
 
@@ -332,9 +333,6 @@ ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional -- src/test/functional/sp
 
 ### Run Tests by Tag
 ```bash
-# All @a11y tests (accessibility)
-yarn test:functional -- --grep @a11y
-
 # All [mock] tests
 yarn test:functional -- --grep "\[mock\]"
 
@@ -356,21 +354,57 @@ All tests are labeled in their `describe()` or `test()` blocks for easy filterin
 - Prefix: `[integration-happy-path]`
 - Example: `test('[integration-happy-path] Access code happy-path', async () => { ... })`
 
-**Accessibility Tests:**
-- Suffix: `@a11y`
-- Example: `test('[mock] Page content accessible @a11y', async () => { ... })`
-
 ---
 
-## Accessibility (axe) Coverage
+## Accessibility
 
-All `@a11y` tests call:
+This section is the single source of truth for functional-test accessibility coverage.
+
+Accessibility tooling used in this repository:
+
+- `@hmcts/playwright-common` (`AxeUtils`) for automated axe checks
+- `@guidepup/playwright` for screen-reader-oriented automation support
+
+### What runs by default
+
+Accessibility audits run automatically after every functional test via the `autoA11yAudit` auto fixture in [src/test/fixtures/fixtures.ts](../fixtures/fixtures.ts).
+
+- Default: enabled for all suites
+- Opt-out (use only for exceptional cases):
 
 ```typescript
-await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+test.use({ useAutoA11yAudit: false });
 ```
 
-This is wired in [src/test/fixtures/fixtures.ts](../fixtures/fixtures.ts) and uses `AxeUtils` from `@hmcts/playwright-common`.
+The shared helper `runA11yAudit(axeUtils, page?)` in [src/test/functional/specFiles/journeyHelpers/specAssertions.helper.ts](journeyHelpers/specAssertions.helper.ts) performs:
+
+- Axe rules audit using `DEFAULT_AXE_OPTIONS`
+- ARIA snapshot assertion as a screen-reader proxy check
+
+The auto fixture avoids duplicate audits when a spec already calls the helper directly.
+
+### Accessibility labels and filtering
+
+- Accessibility-focused tests should include `@a11y` in the test name
+- Run tagged tests only:
+
+```bash
+yarn test:functional -- --grep @a11y
+```
+
+### Accessibility scripts
+
+**`yarn test:playwright:a11y:all-browsers`**
+- Purpose: runs tests tagged with `@a11y` across all configured Playwright browser projects
+- Output: writes results to `a11y-output/` and HTML report to `a11y-output/axe-report/`
+- Command: `sh -c 'TEST_RESULTS_DIR=a11y-output PLAYWRIGHT_HTML_OUTPUT_DIR=a11y-output/axe-report PLAYWRIGHT_HTML_OPEN=never playwright test --config playwright.config.mts --grep @a11y --reporter=html; code=$?; yarn playwright show-report a11y-output/axe-report; exit $code'`
+- Browser coverage: Chromium, Firefox, WebKit
+
+**`yarn test:playwright:a11y:chrome`**
+- Purpose: runs tests tagged with `@a11y` on Chromium only
+- Output: writes results to `a11y-output/` and HTML report to `a11y-output/axe-report/`
+- Command: `TEST_RESULTS_DIR=a11y-output PLAYWRIGHT_HTML_OUTPUT_DIR=a11y-output/axe-report PLAYWRIGHT_HTML_OPEN=never playwright test --config playwright.config.mts --project chromium --grep @a11y --reporter=html`
+- Browser coverage: Chromium only
 
 ### WCAG scope currently enforced
 
@@ -428,18 +462,28 @@ All test commands are defined in [package.json](../../package.json). Here's a co
 - **What it does:** Installs Playwright browsers + dependencies, runs all functional tests in Chromium with 2 automatic retries on failure
 - **Use case:** Default local testing with mock server running
 - **Command:** `yarn playwright install --with-deps && playwright test --config playwright.config.mts --project chromium --retries=2`
+- **Browser coverage:** Chromium only
+
+**`yarn test:functional:all-browsers`**
+- **Purpose:** Run functional tests across all configured browser projects
+- **What it does:** Installs Playwright browsers + dependencies, then runs functional tests with 2 automatic retries on Chromium, Firefox, and WebKit
+- **Use case:** Cross-browser regression validation before merge/release
+- **Command:** `yarn playwright install --with-deps && playwright test --config playwright.config.mts --retries=2`
+- **Browser coverage:** Chromium, Firefox, WebKit
 
 **`yarn test:functional:pr`**
 - **Purpose:** Runs only tests tagged with `@PR` label
 - **What it does:** Runs PR-specific tests (tests that are new or PR-focused)
 - **Use case:** Quick validation during pull requests
 - **Command:** `yarn playwright install --with-deps && playwright test --config playwright.config.mts --project chromium --grep @PR`
+- **Browser coverage:** Chromium only
 
 **`yarn test:full-functional`**
 - **Purpose:** Faster functional test run (skips browser install if already cached)
 - **What it does:** Runs all functional tests without reinstalling Playwright browsers
 - **Use case:** When running tests repeatedly in CI or after initial setup
 - **Command:** `playwright test --config playwright.config.mts --project chromium --retries=2`
+- **Browser coverage:** Chromium only
 
 ### Debug & Development Commands
 
@@ -463,23 +507,6 @@ All test commands are defined in [package.json](../../package.json). Here's a co
 - **Use case:** Interactive test exploration and debugging
 - **Command:** `playwright test --ui`
 
-### Accessibility Test Commands
-
-**`yarn test:playwright:a11y`**
-- **Purpose:** Runs all tests tagged with `@a11y` (accessibility tests)
-- **What it does:**
-  - Sets output directory to `a11y-output/`
-  - Generates HTML report in `a11y-output/axe-report/`
-  - Runs Axe accessibility audit on tagged tests
-- **Use case:** Validating WCAG 2.x Level A and AA automated checks across user journeys
-- **Command:** `TEST_RESULTS_DIR=a11y-output PLAYWRIGHT_HTML_OUTPUT_DIR=a11y-output/axe-report PLAYWRIGHT_HTML_OPEN=never playwright test --config playwright.config.mts --project chromium --grep @a11y --reporter=html`
-
-**`yarn test:playwright:a11y:report`**
-- **Purpose:** Runs accessibility tests and opens HTML report
-- **What it does:** Runs `test:playwright:a11y` then automatically opens the report
-- **Use case:** Quick review of accessibility issues after test run
-- **Command:** `sh -c 'yarn test:playwright:a11y; code=$?; yarn playwright show-report a11y-output/axe-report; exit $code'`
-
 ### Manual Testing Commands
 
 **`yarn setup:manual-test` / `yarn setup:manual-test:mock`**
@@ -496,11 +523,13 @@ All test commands are defined in [package.json](../../package.json). Here's a co
 | Command | Purpose | Environment |
 |---------|---------|-------------|
 | `yarn test:functional` | Default - all functional tests with retries | Local with mock |
+| `yarn test:functional:all-browsers` | Functional tests across all Playwright browsers | Local/CI |
 | `yarn test:functional:pr` | PR-tagged tests only | Local/CI |
 | `yarn test:full-functional` | All tests (no browser install) | Local/CI (cached) |
 | `yarn test:functional:headed:slowmo` | Debug mode with Playwright Inspector | Local |
 | `yarn test:fullfunctional:allBrowsers:ui` | Playwright UI test runner | Local |
-| `yarn test:playwright:a11y` | Accessibility tests with HTML report | Local/CI |
+| `yarn test:playwright:a11y:chrome` | Accessibility tests with HTML report (Chromium only) | Local/CI |
+| `yarn test:playwright:a11y:all-browsers` | Accessibility tests with HTML report (all browsers, opens report) | Local/CI |
 | `yarn setup:manual-test` | Generate local test user & case | Local only |
 
 ---
