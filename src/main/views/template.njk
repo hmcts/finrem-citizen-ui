@@ -24,12 +24,14 @@
 {% endblock %}
 
 {% block beforeContent %}
-  {{ govukPhaseBanner({
-    tag: {
-      text: "Beta"
-    },
-    html: 'This is a new service – your <a class="govuk-link" href="#" aria-label="provide feedback">feedback</a> will help us to improve it.'
-  }) }}
+  {% block phaseBanner %}
+    {{ govukPhaseBanner({
+      tag: {
+        text: "Beta"
+      },
+      html: 'This is a new service – your <a class="govuk-link" href="#" aria-label="provide feedback on this service">feedback</a> will help us to improve it.'
+    }) }}
+  {% endblock %}
 {% endblock %}
 
 {% block bodyEnd %}

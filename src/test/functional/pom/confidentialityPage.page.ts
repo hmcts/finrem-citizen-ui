@@ -37,7 +37,7 @@ export class ConfidentialityPage extends BasePage {
     this.pageHeader = this.page.getByRole('heading', {
       name: 'Keeping information confidential for safety reasons',
     });
-    this.backLink = this.page.getByRole('link', { name: 'Back' });
+    this.backLink = this.page.getByRole('link', { name: 'Back', exact: true });
     this.formC8Link = this.page.getByRole('link', {
       name: 'applied to the court to keep your contact details confidential using form C8 (opens in new tab)',
     });

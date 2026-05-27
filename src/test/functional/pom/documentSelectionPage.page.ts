@@ -34,7 +34,7 @@ export class DocumentSelectionPage extends BasePage {
   constructor(readonly page: Page) {
     super(page);
     this.gettingHelp = new GettingHelpPanel(this.page);
-    this.backLink = this.page.getByRole('link', { name: 'Back' });
+    this.backLink = this.page.getByRole('link', { name: 'Back', exact: true });
     this.pageHeader = this.page.getByRole('heading', {
       name: 'Tell us which documents you want to upload',
     });
