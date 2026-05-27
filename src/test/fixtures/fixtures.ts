@@ -11,6 +11,10 @@ import { EnterAccessCodePage } from '../functional/pom/enterAccessCode.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 import { FdrPage } from '../functional/pom/fdrPage.page';
 import { IdamPage, UserCredentials } from '../functional/pom/idamPage.page';
+import {
+  hasRunA11yAudit,
+  runA11yAudit,
+} from '../functional/specFiles/journeyHelpers/specAssertions.helper';
 import { ContestedCaseFactory } from '../functional/utils/factories/contested/ContestedCaseFactory';
 import {
   AssertionHelpers,
@@ -120,15 +124,22 @@ type MyFixtures = {
  */
 type MockOptions = {
   useMockTestSupport: boolean;
+  useAutoA11yAudit: boolean;
   /**
    * Auto fixture that guards /__test/inject-case-session-dependent tests.
    * Activated when `useMockTestSupport` is set to `true` via `test.use()`.
    */
   mockTestSupport: void;
+  /**
+   * Auto fixture that runs the shared accessibility audit after each test.
+   * Enabled by default; can be disabled for specific suites with `test.use({ useAutoA11yAudit: false })`.
+   */
+  autoA11yAudit: void;
 };
 
 export const test = base.extend<MyFixtures & MockOptions>({
   useMockTestSupport: [false, { option: true }],
+  useAutoA11yAudit: [true, { option: true }],
 
   // Guards mock tests that depend on /__test/inject-case-session.
   // Skip locally when targeting AAT; skip anywhere the route is absent (404).
@@ -151,6 +162,20 @@ export const test = base.extend<MyFixtures & MockOptions>({
     );
 
     await use();
+  }, { auto: true }],
+
+  autoA11yAudit: [async ({ axeUtils, page, useAutoA11yAudit }, use) => {
+    await use();
+
+    if (!useAutoA11yAudit) {
+      return;
+    }
+
+    if (hasRunA11yAudit(page)) {
+      return;
+    }
+
+    await runA11yAudit(axeUtils, page);
   }, { auto: true }],
 
   axeUtils: async ({ page }, use) => {
