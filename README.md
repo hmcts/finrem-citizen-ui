@@ -31,10 +31,6 @@ At a high level, the user flow is:
 
 ## Run the App Locally
 
-- [Node.js](https://nodejs.org/) v22.22.0 or later (Updated for Node 22 migration)
-- [yarn](https://yarnpkg.com/) v4.x
-- [Docker](https://www.docker.com)
-
 Install dependencies:
 
 ```bash
@@ -59,60 +55,25 @@ Default local URL: `http://localhost:3100`
 
 ### Local Functional Testing (with Mock CCD API)
 
-**Note:** The mock CCD server is only required for local functional testing. Skip this section for preview/AAT testing.
-
-For local functional testing with mock infrastructure, run these commands in order:
-
-1. Start the local mock CCD/Azure case API stub (Terminal 1):
+For local functional testing with mock infrastructure, run:
 
 ```bash
+# Terminal 1
 yarn start:mock-case-api
-```
 
-2. Start the app with test-support routes enabled (Terminal 2):
-
-```bash
+# Terminal 2
 ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
-```
 
-3. Run functional tests (Terminal 3):
-
-```bash
+# Terminal 3
 yarn test:functional
 ```
 
-Before running tests, ensure `.env` is configured for local:
+Before running local functional tests, ensure `.env` uses local target values:
 - `CCD_URL=http://localhost:4100`
 - `CCD_DATA_STORE_API_URL=http://localhost:4100`
 
-See the `.env` `Target selection` section to switch between local, preview, or aat.
-
-If you need to point to a different CCD URL for one run, override `CCD_URL` when starting the app.
-
-The mock server implements these five endpoints used by the app:
-
-- `GET /cases/:caseId`
-- `GET /cases/:caseId/event-triggers/:eventId`
-- `POST /cases/:caseId/events`
-- `POST /case-users`
-- `POST /searchCases?ctid=:caseType`
-
-Default seeded local case data:
-
-- case ID: `1616591401473378`
-- case type: `FinancialRemedyContested`
-- applicant access code: `APPCODE1`
-- respondent access code: `RSPCODE1`
-
-Optional environment variables for the mock server:
-
-- `MOCK_CASE_API_PORT`
-- `MOCK_CASE_ID`
-- `MOCK_CASE_TYPE`
-- `MOCK_APPLICANT_ACCESS_CODE`
-- `MOCK_RESPONDENT_ACCESS_CODE`
-
-Local dev startup now loads `.env` automatically before the app config is initialised, so the same file is used by `yarn start:dev` and the checked-in VS Code debug profile.
+For full functional testing setup, environment gating, and mock data conventions, use:
+`src/test/functional/specFiles/README.md`
 
 Debug in VS Code:
 
@@ -122,18 +83,22 @@ Run and Debug -> Finrem Citizen UI
 
 ## Environment Profiles
 
+Important: `.env` file is not stored in this GitHub repository because it contains sensitive configuration/secrets.
+
+- Get a valid `.env` from a Finrem developer or tester.
+- Keep it local and never commit it.
+
+The `.env` file is required for normal app startup and test execution. Without a valid `.env`, local runs and functional/API tests will fail because environment-specific URLs and credentials cannot be resolved.
+
 The `.env` file is organised into shared defaults plus a `Target selection` section.
 
-Only enable one target block at a time for test execution across different environments:
+Enable only one target block at a time:
 
 - local
 - preview
 - aat
 
-In practice this means:
-
-- uncomment the four lines for the target you want to use
-- comment out the equivalent lines in the other target blocks
+Uncomment the four lines for the target you want and comment out the other target blocks.
 
 This target selection controls both `CCD_URL` and `CCD_DATA_STORE_API_URL` used by local runs.
 
@@ -144,11 +109,47 @@ The active target lines are:
 - `CCD_URL`
 - `CCD_DATA_STORE_API_URL`
 
-Playwright resolves the target in this order:
+Playwright target resolution order:
 
 1. `TEST_URL` if set
 2. `RUNNING_ENV` if `TEST_URL` is empty
 3. fallback to `aat`
+
+### How `.env` Is Used
+
+The app and Playwright config both load the root `.env` automatically using `dotenv`.
+
+- App runtime (`yarn start:dev`): reads API/service settings from `.env`
+- Playwright runtime (`yarn test:functional*`): reads target selection from `.env`
+
+For most runs, keep one active target block in `.env` and leave `TEST_URL` unset.
+
+Use one-off shell overrides only when needed, for example:
+
+```bash
+RUNNING_ENV=aat ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional
+```
+
+### Required vs Optional `.env` Variables
+
+Required for normal app startup and functional test targeting:
+
+- `RUNNING_ENV` (`local`, `pr-xxx`, `aat`)
+- `CCD_URL`
+- `CCD_DATA_STORE_API_URL`
+
+Optional (highest precedence for Playwright target URL):
+
+- `TEST_URL` (if set, overrides `RUNNING_ENV` URL resolution)
+
+Optional for real access-code happy-path integration lane:
+
+- `ACCESS_CODE_REAL_INTEGRATION=true`
+
+IDAM values:
+
+- If `IDAM_WEB_URL` and `IDAM_TESTING_SUPPORT_API_URL` are not set, defaults are derived from `IDAM_ENV` (defaults to `aat`).
+- Set `IDAM_ENV` to match your target when needed (`aat`, `demo`, etc.).
 
 ### Local Block
 
@@ -197,15 +198,12 @@ Run containers:
 docker-compose up
 ```
 
-This will start the frontend container exposing the application's port
-(set to `3100` in this template app).
-
-In order to test if the application is up, you can visit https://localhost:3100 in your browser.
-You should get a very basic home page (no styles, etc.).
+This starts the frontend container on port `3100`.
+Check health at `https://localhost:3100`.
 
 ## Testing
 
-This project uses a multi-layer testing strategy with unit, API, functional, and smoke tests.
+This project uses unit, API, functional, accessibility, and smoke tests.
 
 Quick start:
 
@@ -215,6 +213,9 @@ yarn test
 
 # Run functional tests (Playwright UI + e2e)
 yarn test:functional
+
+# Run functional tests across Chromium, Firefox, and WebKit
+yarn test:functional:all-browsers
 
 # Run API tests (Jest + Supertest)
 yarn test:api

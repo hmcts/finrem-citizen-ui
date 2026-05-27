@@ -5,8 +5,9 @@ import {
   expectValidationError,
   expectVisible,
 } from '../utils/helpers/pomAssertions';
+import { BasePage } from './basePage.page';
 
-export class EnterAccessCodePage {
+export class EnterAccessCodePage extends BasePage {
   readonly accessCodeHeader: Locator;
   readonly accessCodeInput: Locator;
   readonly accessCodeHint: Locator;
@@ -17,6 +18,7 @@ export class EnterAccessCodePage {
   private readonly validationMessageAliases: Record<string, string | RegExp>;
 
   constructor(readonly page: Page) {
+    super(page);
     this.accessCodeHeader = this.page.getByRole('heading', { name: 'Enter access code' });
     this.accessCodeInput = this.page.getByRole('textbox', { name: 'Enter access code' });
     this.accessCodeHint = this.page.getByText(
@@ -34,6 +36,7 @@ export class EnterAccessCodePage {
   }
 
   async verifyAccessCodePageContent(): Promise<void> {
+    await this.verifyGlobalHeaderAndFooter();
     await expectVisible([this.accessCodeHeader, this.accessCodeInput, this.accessCodeHint, this.continueBtn]);
   }
 

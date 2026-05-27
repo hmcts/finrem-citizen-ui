@@ -67,6 +67,7 @@ export class DashboardPage extends BasePage {
   // Verify page URL, content visibility, and button navigation target
   async verifyDashboardPageContent(): Promise<void> {
     await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
+    await this.verifyGlobalHeaderAndFooter();
 
     await this.expectVisible([
       this.userNameHeader,

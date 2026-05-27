@@ -24,7 +24,7 @@ export class FdrPage extends BasePage {
 
   constructor(readonly page: Page) {
     super(page);
-    this.backLink = this.page.getByRole('link', { name: 'Back' });
+    this.backLink = this.page.getByRole('link', { name: 'Back', exact: true });
     this.questionHeading = this.page.getByRole('heading', {
       name: 'Are you uploading these documents for a Financial Dispute Resolution hearing?',
     });

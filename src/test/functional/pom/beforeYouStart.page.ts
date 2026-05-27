@@ -43,7 +43,7 @@ export class BeforeYouStartPage extends BasePage {
     this.serviceNavigation = this.page.getByRole('region', { name: 'Service information' });
     this.serviceNameLink = this.page.getByRole('link', { name: 'Dividing your money and property' });
     this.beforeYouStartHeader = this.page.getByRole('heading', { name: 'Before you start' });
-    this.backLink = this.page.getByRole('link', { name: 'Back' });
+    this.backLink = this.page.getByRole('link', { name: 'Back', exact: true });
     this.youShouldIntro = this.page.getByText('You should:', { exact: true });
     this.courtOrderBullet = this.page.getByText('check the court order you have received', { exact: true });
     this.prepareDocumentsBullet = this.page.getByText('prepare all of the documents you wish to upload', { exact: true });
@@ -90,6 +90,7 @@ export class BeforeYouStartPage extends BasePage {
   // Verify page URL and content
   async verifyBeforeYouStartPageContent(): Promise<void> {
     await expect(this.page).toHaveURL(URL_PATTERNS.BEFORE_YOU_START);
+    await this.verifyGlobalHeaderAndFooter();
 
     await this.expectVisible([
       this.beforeYouStartHeader,

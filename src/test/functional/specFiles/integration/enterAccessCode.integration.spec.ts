@@ -30,11 +30,13 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
     loggedInPage,
     basePage,
     enterCaseNumberPage,
+    enterAccessCodePage,
     contestedCaseWithHearing,
   }) => {
     expectAuthenticated(loggedInPage);
     await basePage.verifyGlobalHeaderAndFooter();
     await navigateToAccessCodeStep(enterCaseNumberPage, contestedCaseWithHearing.caseId);
+    await enterAccessCodePage.verifyAccessCodePageContent();
   });
 
   /**

@@ -485,6 +485,12 @@ All test commands are defined in [package.json](../../package.json). Here's a co
 - **Command:** `playwright test --config playwright.config.mts --project chromium --retries=2`
 - **Browser coverage:** Chromium only
 
+**`yarn test:functional:all-browsers`**
+- **Purpose:** Run functional tests across all configured Playwright browser projects
+- **What it does:** Installs Playwright browsers + dependencies, then runs functional tests on Chromium, Firefox, and WebKit with retries
+- **Use case:** Cross-browser confidence checks before merge/release
+- **Command:** `yarn playwright install --with-deps && playwright test --config playwright.config.mts --retries=2`
+
 ### Debug & Development Commands
 
 **`yarn test:functional:headed:slowmo`**
@@ -525,6 +531,7 @@ All test commands are defined in [package.json](../../package.json). Here's a co
 | `yarn test:functional` | Default - all functional tests with retries | Local with mock |
 | `yarn test:functional:all-browsers` | Functional tests across all Playwright browsers | Local/CI |
 | `yarn test:functional:pr` | PR-tagged tests only | Local/CI |
+| `yarn test:functional:all-browsers` | Functional tests on Chromium + Firefox + WebKit | Local/CI |
 | `yarn test:full-functional` | All tests (no browser install) | Local/CI (cached) |
 | `yarn test:functional:headed:slowmo` | Debug mode with Playwright Inspector | Local |
 | `yarn test:fullfunctional:allBrowsers:ui` | Playwright UI test runner | Local |
