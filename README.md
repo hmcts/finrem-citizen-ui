@@ -219,9 +219,21 @@ yarn test:functional
 # Run API tests (Jest + Supertest)
 yarn test:api
 
-# Run accessibility tests (@a11y)
-yarn test:playwright:a11y
+# Run accessibility tests (@a11y across Chromium, Firefox, and WebKit)
+yarn test:playwright:a11y:all-browsers
+
+# Run accessibility tests (@a11y on Chromium only)
+yarn test:playwright:a11y:chrome
 ```
+
+Browser coverage by script:
+
+- `yarn test:functional`: Chromium only (`--project chromium`)
+- `yarn test:functional:all-browsers`: all configured Playwright projects (Chromium, Firefox, WebKit)
+- `yarn test:full-functional`: Chromium only (`--project chromium`)
+- `yarn test:functional:pr`: Chromium only (`--project chromium`)
+- `yarn test:playwright:a11y:chrome`: Chromium only (`--project chromium`)
+- `yarn test:playwright:a11y:all-browsers`: all configured Playwright projects (Chromium, Firefox, WebKit), then opens the HTML report
 
 Test types:
 
@@ -230,7 +242,7 @@ Test types:
 | **Unit & Routes** | Jest | `src/test/unit/` | Mocked | Business logic & route structure |
 | **API** | Jest + Supertest | `src/test/api/` | Real ✓ | Endpoint contracts & workflows |
 | **Functional (UI/E2E)** | Playwright | `src/test/functional/specFiles/` | Real ✓ | User journeys & page interactions |
-| **Accessibility** | Playwright + axe | (tagged @a11y) | Real ✓ | WCAG 2.x Level A and AA automated checks |
+| **Accessibility** | Playwright + axe + @guidepup/playwright | (tagged @a11y) | Real ✓ | WCAG 2.x Level A and AA automated checks plus screen-reader-oriented assertions |
 | **Smoke** | Jest | Verifies routes healthy | Real ✓ | Basic service readiness |
 
 Documentation ownership:
