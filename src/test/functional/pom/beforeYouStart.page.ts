@@ -164,7 +164,9 @@ export class BeforeYouStartPage extends BasePage {
 
   // Click start button and verify navigation to confidentiality page
   async startUploadJourney(): Promise<void> {
-    await this.startNowButton.click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.CONFIDENTIALITY);
+    await Promise.all([
+      this.page.waitForURL(URL_PATTERNS.CONFIDENTIALITY, { timeout: 15_000 }),
+      this.startNowButton.click(),
+    ]);
   }
 }
