@@ -24,6 +24,9 @@ const getBaseUrl = (): string => {
 const finalBaseUrl = getBaseUrl();
 const isLocal = finalBaseUrl.includes('localhost');
 const displayEnv = isLocal ? 'local' : process.env.RUNNING_ENV || 'aat';
+const slowMoMs = Number(process.env.PLAYWRIGHT_SLOWMO_MS || '0');
+const commonUse = (CommonConfig.recommended.use ?? {}) as Record<string, unknown>;
+const commonLaunchOptions = (commonUse.launchOptions ?? {}) as Record<string, unknown>;
 
 // 2. Logging for clarity
 /* eslint-disable no-console */
@@ -62,10 +65,18 @@ export default defineConfig({
   },
 
   use: {
-    ...CommonConfig.recommended.use,
+    ...commonUse,
     baseURL: finalBaseUrl,
     trace: 'on-first-retry',
     ignoreHTTPSErrors: true,
+    ...(slowMoMs > 0
+      ? {
+          launchOptions: {
+            ...commonLaunchOptions,
+            slowMo: slowMoMs,
+          },
+        }
+      : {}),
   },
 
   // 3. Merged WebServer logic (Local development support)

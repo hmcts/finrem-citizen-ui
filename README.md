@@ -252,7 +252,7 @@ Use [src/test/functional/specFiles/README.md](src/test/functional/specFiles/READ
 - script-by-environment guidance and targeted Playwright commands
 - accessibility test conventions
 - best-practice run order before push
-- known functional-test issues and workarounds
+- troubleshooting and maintenance notes for functional tests
 
 ## Linting
 

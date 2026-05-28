@@ -248,6 +248,28 @@ Use this sequence for reliable feedback before pushing:
 
 If you are only running one script before pushing code, use `yarn qacichecks`.
 
+### Debugging In Slowmo (Single File / Single Test)
+
+Use `yarn test:functional:headed:slowmo` when you want interactive debugging with `PWDEBUG=1` and a 250ms slowmo delay (`PLAYWRIGHT_SLOWMO_MS=250`).
+
+Run one spec file:
+
+```bash
+yarn test:functional:headed:slowmo -- src/test/functional/specFiles/integration/fdr.integration.spec.ts
+```
+
+Run one specific test by title (or partial title):
+
+```bash
+yarn test:functional:headed:slowmo -- src/test/functional/specFiles/integration/fdr.integration.spec.ts --grep "[integration] Continue from FDR"
+```
+
+Run one tagged test subset (for example `@a11y`):
+
+```bash
+yarn test:functional:headed:slowmo -- --grep "@a11y"
+```
+
 ## Accessibility Conventions
 
 - Functional UI behavior should include accessibility coverage unless explicitly out of scope.
