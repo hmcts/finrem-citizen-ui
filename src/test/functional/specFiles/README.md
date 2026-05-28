@@ -183,12 +183,13 @@ yarn test:functional
 ### Preview or AAT flow
 
 ```bash
-# Terminal 1
-yarn start:dev
-
-# Terminal 2
+# Select target in .env first (RUNNING_ENV=pr-xxx or RUNNING_ENV=aat),
+# or set TEST_URL directly for an explicit deployed target.
 ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional
 ```
+
+For preview/AAT runs, do not start the app locally with `yarn start:dev`.
+Playwright targets the deployed environment directly when baseURL is non-localhost.
 
 ## Targeted Runs
 
