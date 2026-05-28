@@ -25,7 +25,7 @@
     "test:smoke": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --config jest.smoke.config.js",
     "test:functional": "yarn playwright install --with-deps && playwright test --config playwright.config.mts --project chromium --retries=2",
     "test:functional:pr": "yarn playwright install --with-deps && playwright test --config playwright.config.mts --project chromium --grep @PR",
-    "test:functional:headed:slowmo": "PWDEBUG=1 playwright test --config playwright.config.mts --project chromium --headed --workers=1",
+    "test:functional:headed:slowmo": "PWDEBUG=1 PLAYWRIGHT_SLOWMO_MS=250 playwright test --config playwright.config.mts --project chromium --headed --workers=1",
     "test:full-functional": "playwright test --config playwright.config.mts --project chromium --retries=2",
     "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
     "setup:manual-test": "yarn setup:manual-test:mock",
