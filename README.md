@@ -11,6 +11,18 @@ It provides the citizen-facing web journey for linking and viewing Financial Rem
 - entering a case access code
 - progressing through citizen case-linking and case access workflows
 
+## Test Guide (Single Source Of Truth)
+
+Use [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md) for all test information.
+
+- full test setup and execution guidance
+- environment gating and target selection behavior
+- mock vs integration rules
+- accessibility testing conventions
+- script matrix and best-practice run order
+
+This root README keeps only a brief testing summary. The specFiles guide is authoritative for test logic and test operations.
+
 ## Core Citizen Workflow
 
 At a high level, the user flow is:
@@ -72,8 +84,8 @@ Before running local functional tests, ensure `.env` uses local target values:
 - `CCD_URL=http://localhost:4100`
 - `CCD_DATA_STORE_API_URL=http://localhost:4100`
 
-For full functional testing setup, environment gating, and mock data conventions, use:
-`src/test/functional/specFiles/README.md`
+For full functional testing setup, environment gating, and mock data conventions, use the single source of truth:
+[src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md)
 
 Debug in VS Code:
 

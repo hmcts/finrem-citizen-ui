@@ -1,6 +1,33 @@
-# Functional Test Guide
+# Test Guide (Single Source Of Truth)
 
-This file is the source of truth for functional test structure, environment rules, and run commands.
+This file is the single source of truth for test execution guidance and test logic conventions in this repository.
+It is located under `specFiles/` for historical reasons, but it covers the full test operating model in `src/test` (unit, routes, API, smoke, and functional).
+
+## What Is Tested In This Repo
+
+### Unit tests (`src/test/unit/`)
+- Validate business logic, middleware, modules, scripts, views, and utility functions.
+- Fastest feedback for low-level behavior changes.
+
+### Route tests (`src/test/routes/`)
+- Validate route registration, redirect behavior, health paths, and upload-journey/task-list route behavior.
+- Focus on application routing contracts and guards.
+
+### API tests (`src/test/api/`)
+- Validate endpoint behavior and multi-step API workflows using Jest + Supertest.
+- Includes endpoint-level, workflow-level, and mock API coverage.
+
+### Smoke tests (`src/test/smoke/`)
+- Validate service readiness and core route availability.
+- Minimal confidence checks for environment health.
+
+### Functional tests (`src/test/functional/`)
+- Validate browser-based user journeys with Playwright.
+- Includes mock and integration lanes, POM-based interactions, shared fixtures, and journey helpers.
+
+### Accessibility coverage
+- Validated in functional runs via `@hmcts/playwright-common` (`AxeUtils`) plus accessibility-tree proxy assertions.
+- Focused accessibility-only runs use `test:playwright:a11y:*` scripts.
 
 ## Scope
 
@@ -41,6 +68,50 @@ Use this split in practice:
 - `src/test/unit/`, `src/test/routes/`, and `src/test/api/` for fast Jest-based feedback.
 - `src/test/functional/` for browser journeys, shared fixtures, helpers, factories, and accessibility coverage.
 - `src/test/smoke/` for minimal deployment-confidence checks.
+
+## `src/test/functional/utils` Overview
+
+This area contains reusable functional-test logic for API setup, case creation, assertions, and test payload shaping.
+
+### Folder Structure
+
+| Path | Purpose |
+|---|---|
+| `src/test/functional/utils/api/` | API clients for journey-specific backend operations (for example contested-case event calls). |
+| `src/test/functional/utils/factories/` | Higher-level test-data/case factories that compose API calls into reusable setup flows. |
+| `src/test/functional/utils/helpers/` | Shared helper functions for HTTP calls, token handling, case creation, assertions, and POM assertion helpers. |
+| `src/test/functional/utils/test_data/` | Test-data configuration and payload transformation utilities (including JSON payload templates). |
+
+### Top-Level Utility Files
+
+| File | Purpose |
+|---|---|
+| `src/test/functional/utils/CaseDataBuilder.ts` | Builder-style helper for assembling case data payloads used by functional setup flows. |
+| `src/test/functional/utils/DateHelper.ts` | Centralized date/time helper utilities for stable test date values. |
+| `src/test/functional/utils/PayloadMutator.ts` | Reusable payload replacement rules/functions used to tailor JSON payloads for scenarios. |
+
+### Helpers (File-by-File)
+
+| File | Purpose |
+|---|---|
+| `src/test/functional/utils/helpers/ApiHelper.ts` | Axios wrapper helpers (`apiGet`, `apiPost`) with retry/error handling for test API calls. |
+| `src/test/functional/utils/helpers/CcdApi.ts` | CCD API client wrapper for case/event interactions used in functional setup and workflows. |
+| `src/test/functional/utils/helpers/TokenHelperApi.ts` | Service/user token acquisition and token-cache management helpers. |
+| `src/test/functional/utils/helpers/caseCreation.ts` | Creates/configures cases for tests and contains case-creation orchestration logic. |
+| `src/test/functional/utils/helpers/idamCreateUser.ts` | IDAM test-user creation helpers for functional authentication setup. |
+| `src/test/functional/utils/helpers/assertionHelpers.ts` | Generic assertion helper factory used across functional tests/fixtures. |
+| `src/test/functional/utils/helpers/pomAssertions.ts` | Reusable POM assertion helpers (visibility, attributes, validation errors). |
+| `src/test/functional/utils/helpers/testData.ts` | Shared test-data factories/constants (including common error message values). |
+
+### Factories And Test Data (File-by-File)
+
+| File | Purpose |
+|---|---|
+| `src/test/functional/utils/factories/contested/ContestedCaseFactory.ts` | Factory for creating/preparing contested cases, including hearing setup paths. |
+| `src/test/functional/utils/api/contested/ContestedEventApi.ts` | API helper for contested-case event execution used by contested factory/setup logic. |
+| `src/test/functional/utils/test_data/EnvTestDataConfig.ts` | Environment-aware test-data configuration values used by payload setup. |
+| `src/test/functional/utils/test_data/JsonEnvValReplacer.ts` | Replaces placeholder values in JSON payload templates using environment/test config. |
+| `src/test/functional/utils/test_data/payloads/contested/*.json` | Raw contested-case payload templates used as base inputs for factory/setup flows. |
 
 ## Rules By Test Type
 
@@ -138,7 +209,7 @@ yarn test:functional -- src/test/functional/specFiles/integration/fdr.integratio
 
 ## Script Reference
 
-Commands are defined in [../../package.json](../../package.json).
+Commands are defined in [../../../../package.json](../../../../package.json).
 
 ### Script Matrix By Environment
 

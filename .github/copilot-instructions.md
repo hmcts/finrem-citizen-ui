@@ -3,6 +3,7 @@
 ## Source of truth
 - Read and follow `README.md` first for project-level rules and commands.
 - Read and follow `src/test/functional/specFiles/README.md` for functional test organization, labels, and environment gating.
+- Before creating or modifying any tests under `src/test/**`, read `src/test/functional/specFiles/README.md` first to align with the repository's test logic, environment model, and execution guidance.
 - When there is conflict, prefer the most specific document closest to the code being edited.
 
 ## Ignore and scope rules
@@ -101,10 +102,12 @@ Add context to assertions: `await expect(locator, 'should show success message')
 - Keep assertion wrappers in shared helpers when the same assertion pattern is used across multiple suites.
 
 ## Copilot enforcement rules
+- Before writing new tests, confirm applicable patterns from `src/test/functional/specFiles/README.md` and existing nearby specs/helpers.
 - When editing tests, always search for an existing helper first and reuse it where possible.
 - If 2+ specs repeat the same setup/assertion flow, extract or extend a helper before adding more duplication.
 - Prefer small helper abstractions with clear names over inline multi-step logic.
 - Keep helper functions single-purpose and composable so specs remain readable and DRY.
+- Follow Playwright locator/assertion best practices in this file; avoid CSS/XPath unless there is no viable user-facing locator.
 
 ## Change quality checklist
 - Keep naming consistent with current patterns (`[mock]`, `[integration]`, `[integration-happy-path]`, `@a11y`).
