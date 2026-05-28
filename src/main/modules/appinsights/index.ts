@@ -4,8 +4,8 @@ const appInsights = require('applicationinsights');
 
 export class AppInsights {
   enable(): void {
-    if (config.get('appInsights.instrumentationKey')) {
-      appInsights.setup(config.get('appInsights.instrumentationKey')).setSendLiveMetrics(true).start();
+    if (config.get('appInsights.connectionString')) {
+      appInsights.setup(config.get('appInsights.connectionString')).setSendLiveMetrics(true).start();
 
       appInsights.defaultClient.context.tags[appInsights.defaultClient.context.keys.cloudRole] = 'finrem-citizen-ui';
       appInsights.defaultClient.trackTrace({

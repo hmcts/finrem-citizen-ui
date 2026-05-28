@@ -20,7 +20,7 @@
     }
   },
   "appInsights": {
-    "instrumentationKey": "APPINSIGHTS_KEY"
+    "connectionString": "APPLICATIONINSIGHTS_CONNECTION_STRING"
   },
   "services": {
     "idam": {
