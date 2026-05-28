@@ -1,7 +1,7 @@
 {
   "useCSRFProtection": true,
   "appInsights": {
-    "instrumentationKey": false
+    "connectionString": ""
   },
   "security": {
     "referrerPolicy": "same-origin",
