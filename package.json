@@ -29,7 +29,6 @@
     "test:functional:headed:slowmo": "PWDEBUG=1 playwright test --config playwright.config.mts --project chromium --headed --workers=1",
     "test:full-functional": "playwright test --config playwright.config.mts --project chromium --retries=2",
     "test:fullfunctional:allBrowsers:ui": "playwright test --ui",
-    "test:functional:all-browsers": "yarn playwright install --with-deps && playwright test --config playwright.config.mts --retries=2",
     "setup:manual-test": "yarn setup:manual-test:mock",
     "setup:manual-test:mock": "RUNNING_ENV=local MOCK_ACCESS_CODES=true jest -c jest.manual.config.js --runTestsByPath src/test/unit/scripts/setupManualTest.manual.test.ts --runInBand --detectOpenHandles",
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:api && yarn test:coverage",
@@ -123,7 +122,7 @@
     "ts-jest": "^29.4.6",
     "ts-loader": "9.5.7",
     "webpack": "5.107.2",
-    "webpack-cli": "7.0.3",
+    "webpack-cli": "7.0.2",
     "webpack-dev-middleware": "8.0.3"
   },
   "lint-staged": {
