@@ -15,7 +15,6 @@ import { Nunjucks } from './modules/nunjucks';
 import { OIDCModule } from './modules/oidc';
 import { PropertiesVolume } from './modules/properties-volume';
 import { Session } from './modules/session';
-import redisTestRoute from './routes/redis-test';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -82,5 +81,3 @@ app.use((err: HTTPError, req: express.Request, res: express.Response, _next: exp
   res.status(err.status || 500);
   res.render(ViewNames.Error);
 });
-
-app.use('/internal', redisTestRoute);
