@@ -1,6 +1,8 @@
 {% from "../macros/getting-help.njk" import gettingHelp %}
 {% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/error-message/macro.njk" import govukErrorMessage %}
 
 {% extends "template.njk" %}
 
@@ -9,6 +11,13 @@
     <div class="govuk-grid-column-two-thirds">
       {% if previousStep %}
         <a href="/upload/{{ previousStep }}" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
+      {% endif %}
+
+      {% if errors and (errors | length) %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: errors
+        }) }}
       {% endif %}
 
       <h1 class="govuk-heading-l">Upload your documents</h1>
@@ -28,6 +37,17 @@
 
           <div class="govuk-inset-text govuk-!-margin-top-4">
             <form method="post" action="#" enctype="multipart/form-data" data-upload-form="{{ documentType.value }}">
+              
+              {% if errors and errors[documentType.value] %}
+                {{ govukErrorMessage({
+                  text: errors[documentType.value],
+                  visuallyHiddenText: "Error",
+                  attributes: {
+                    "data-error-message": documentType.value
+                  }
+                }) }}
+              {% endif %}
+
               {{ govukFileUpload({
                 id: "file-upload-" + documentType.value,
                 name: "file",
@@ -37,6 +57,12 @@
                 },
                 hint: {
                   text: "Files must be in jpg, png, pdf, docx or xlsx format."
+                },
+                errorMessage: {
+                  text: errors[documentType.value]
+                } if errors and errors[documentType.value],
+                attributes: {
+                  "aria-describedby": "file-upload-" + documentType.value + "-hint" + (" file-upload-" + documentType.value + "-error" if errors and errors[documentType.value])
                 }
               }) }}
 
@@ -55,8 +81,28 @@
           <h3 class="govuk-heading-s govuk-!-margin-top-6">Uploaded files</h3>
 
           <div data-uploaded-files="{{ documentType.value }}">
-            <!-- Files will be populated here when upload functionality is implemented -->
-            <p class="govuk-body govuk-hint">No files uploaded yet.</p>
+            {% set uploadedFiles = data.uploadedFiles[documentType.value] if data.uploadedFiles %}
+            
+            {% if uploadedFiles and uploadedFiles.length > 0 %}
+              <ul class="govuk-list">
+                {% for file in uploadedFiles %}
+                  <li class="govuk-!-margin-bottom-2">
+                    <a href="{{ file.url }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
+                      {{ file.filename }}
+                    </a>
+                    <a href="#" 
+                       class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-2" 
+                       data-remove-file="{{ file.id }}"
+                       data-document-type="{{ documentType.value }}"
+                       aria-label="Remove {{ file.filename }}">
+                      Remove document
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="govuk-body govuk-hint">No files uploaded yet.</p>
+            {% endif %}
           </div>
 
           {% if loop.index < data.selectedDocumentTypes.length %}
