@@ -98,7 +98,7 @@ Enable only one target block at a time:
 - preview
 - aat
 
-Uncomment the four lines for the target you want and comment out the other target blocks.
+Switch targets by uncommenting the block you want and commenting out the other target blocks.
 
 This target selection controls both `CCD_URL` and `CCD_DATA_STORE_API_URL` used by local runs.
 
@@ -164,13 +164,14 @@ CCD_DATA_STORE_API_URL=http://localhost:4100
 
 ### Preview Block
 
-Use this for preview environments such as `pr-356`:
+Use this pattern for preview environments (for example, `pr-423`), then uncomment it when targeting preview:
 
 ```dotenv
-# TEST_URL=
-RUNNING_ENV=pr-356
-CCD_URL=XXXX
-CCD_DATA_STORE_API_URL=XXXX
+# --- PREVIEW (e.g. PR environment) ---
+#TEST_URL=
+#RUNNING_ENV=pr-423
+#CCD_URL=
+#CCD_DATA_STORE_API_URL=
 ```
 
 ### AAT Block
@@ -205,58 +206,40 @@ Check health at `https://localhost:3100`.
 
 This project uses unit, API, functional, accessibility, and smoke tests.
 
-Quick start:
+Use these commands for the common paths:
 
 ```bash
-# Run default tests (unit + routes + smoke)
+# Run default test script (unit tests locally; no-op in CI)
 yarn test
 
-# Run functional tests (Playwright UI + e2e)
+# Run functional tests on Chromium
+# Includes any @a11y-tagged tests in the selected suites
 yarn test:functional
 
 # Run functional tests across Chromium, Firefox, and WebKit
+# Includes any @a11y-tagged tests in the selected suites
 yarn test:functional:all-browsers
 
 # Run API tests (Jest + Supertest)
 yarn test:api
 
-# Run accessibility tests (@a11y across Chromium, Firefox, and WebKit)
+# Run isolated accessibility tests only (@a11y across Chromium, Firefox, and WebKit)
 yarn test:playwright:a11y:all-browsers
 
-# Run accessibility tests (@a11y on Chromium only)
+# Run isolated accessibility tests only (@a11y on Chromium only)
 yarn test:playwright:a11y:chrome
+
+# Run the broader QA gate before pushing code
+yarn qacichecks
 ```
-
-Browser coverage by script:
-
-- `yarn test:functional`: Chromium only (`--project chromium`)
-- `yarn test:functional:all-browsers`: all configured Playwright projects (Chromium, Firefox, WebKit)
-- `yarn test:full-functional`: Chromium only (`--project chromium`)
-- `yarn test:functional:pr`: Chromium only (`--project chromium`)
-- `yarn test:playwright:a11y:chrome`: Chromium only (`--project chromium`)
-- `yarn test:playwright:a11y:all-browsers`: all configured Playwright projects (Chromium, Firefox, WebKit), then opens the HTML report
-
-Test types:
-
-| Type | Framework | Location | Real Integration | Use Case |
-|------|-----------|----------|------------------|----------|
-| **Unit & Routes** | Jest | `src/test/unit/` | Mocked | Business logic & route structure |
-| **API** | Jest + Supertest | `src/test/api/` | Real ✓ | Endpoint contracts & workflows |
-| **Functional (UI/E2E)** | Playwright | `src/test/functional/specFiles/` | Real ✓ | User journeys & page interactions |
-| **Accessibility** | Playwright + axe + @guidepup/playwright | (tagged @a11y) | Real ✓ | WCAG 2.x Level A and AA automated checks plus screen-reader-oriented assertions |
-| **Smoke** | Jest | Verifies routes healthy | Real ✓ | Basic service readiness |
-
-Documentation ownership:
-
-- Root README (this file): project-level setup and command overview
-- Functional testing details: [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md)
 
 Use [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md) as the single source of truth for:
 
 - mock vs integration lane rules
 - environment gating and required variables
-- targeted Playwright commands
+- script-by-environment guidance and targeted Playwright commands
 - accessibility test conventions
+- best-practice run order before push
 - known functional-test issues and workarounds
 
 ## Linting
