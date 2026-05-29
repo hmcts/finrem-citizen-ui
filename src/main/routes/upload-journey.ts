@@ -3,23 +3,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { CitizenUploadDocument, ListValue } from '../app/case/definition';
 import { RouteNames } from '../common-constants';
+import { getDocumentLabel, getSelectedDocumentTypesForDisplay } from '../functions/util/documentUtil';
 import { oidcMiddleware } from '../middleware';
-import documentTypes from '../models/document-types.json';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
-
-interface DocumentType {
-  id: number;
-  label: string;
-  value: string;
-  aliases: string[];
-}
-
-const typedDocumentTypes: DocumentType[] = documentTypes as DocumentType[];
-
-function getDocumentLabel(value: string): string {
-  const docType = typedDocumentTypes.find(dt => dt.value === value);
-  return docType?.label || '';
-}
 
 export default function setupUploadJourneyRoute(app: Application): void {
   app.post(`${RouteNames.uploadJourney}/document-type-selection/add`, oidcMiddleware, (req: Request, res: Response) => {
@@ -81,12 +67,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
     const previousStep = step.previous ? step.previous() : null;
     
     // Map DocumentSelection to display format
-    const documentDetails = req.session.DocumentSelection?.documentDetails || [];
-    const selectedDocumentTypes = documentDetails.map(doc => ({
-      id: doc.id,
-      label: getDocumentLabel(doc.value?.DocumentType || ''),
-      value: doc.value?.DocumentType || '',
-    }));
+    const selectedDocumentTypes = getSelectedDocumentTypesForDisplay(req);
     
     // Get FDR value from session
     const fdrHearing = req.session.DocumentSelection?.isFinancialDisputeResolution;
@@ -111,12 +92,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
       const previousStep = step.previous ? step.previous() : null;
       
       // Map DocumentSelection to display format
-      const documentDetails = req.session.DocumentSelection?.documentDetails || [];
-      const selectedDocumentTypes = documentDetails.map(doc => ({
-        id: doc.id,
-        label: getDocumentLabel(doc.value?.DocumentType || ''),
-        value: doc.value?.DocumentType || '',
-      }));
+      const selectedDocumentTypes = getSelectedDocumentTypesForDisplay(req);
       
       const fdrHearing = req.body.fdrHearing 
         ? req.body.fdrHearing === 'true' 
