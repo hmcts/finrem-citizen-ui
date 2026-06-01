@@ -1,6 +1,6 @@
 import { Request } from 'express';
 
-import { getDocumentLabel, getSelectedDocumentTypesForDisplay } from '../../../../main/functions/util/documentUtil';
+import { getDocumentLabel, getSelectedDocumentTypesForDisplay, shouldAutoRename, getDocumentRenameFormat } from '../../../../main/functions/util/documentUtil';
 
 describe('documentUtil', () => {
   describe('getDocumentLabel', () => {
@@ -267,6 +267,50 @@ describe('documentUtil', () => {
       expect(result[1].order).toBe(1);
       expect(result[0].id).toBe('uuid-1');
       expect(result[1].id).toBe('uuid-3');
+    });
+  });
+
+  describe('shouldAutoRename', () => {
+    it('should return true for document types that should be auto-renamed', () => {
+      expect(shouldAutoRename('position-statement')).toBe(true);
+      expect(shouldAutoRename('chronology')).toBe(true);
+      expect(shouldAutoRename('estimate-of-costs-incurred-form-h')).toBe(true);
+      expect(shouldAutoRename('hearing-bundle')).toBe(true);
+      expect(shouldAutoRename('witness-statement')).toBe(true);
+    });
+
+    it('should return false for document types that should not be auto-renamed', () => {
+      expect(shouldAutoRename('bank-statements')).toBe(false);
+      expect(shouldAutoRename('payslips')).toBe(false);
+      expect(shouldAutoRename('p60')).toBe(false);
+      expect(shouldAutoRename('other-document')).toBe(false);
+    });
+
+    it('should return false for unknown document types', () => {
+      expect(shouldAutoRename('unknown-type')).toBe(false);
+      expect(shouldAutoRename('')).toBe(false);
+    });
+  });
+
+  describe('getDocumentRenameFormat', () => {
+    it('should return the correct rename format for auto-renamed document types', () => {
+      expect(getDocumentRenameFormat('position-statement')).toBe('PositionStatement');
+      expect(getDocumentRenameFormat('chronology')).toBe('Chronology');
+      expect(getDocumentRenameFormat('estimate-of-costs-incurred-form-h')).toBe('FormH');
+      expect(getDocumentRenameFormat('composite-case-summary-form-es1')).toBe('ES1');
+      expect(getDocumentRenameFormat('hearing-bundle')).toBe('bundle');
+      expect(getDocumentRenameFormat('fdr-bundle')).toBe('bundle');
+    });
+
+    it('should return empty string for document types that are not auto-renamed', () => {
+      expect(getDocumentRenameFormat('bank-statements')).toBe('');
+      expect(getDocumentRenameFormat('payslips')).toBe('');
+      expect(getDocumentRenameFormat('p60')).toBe('');
+    });
+
+    it('should return empty string for unknown document types', () => {
+      expect(getDocumentRenameFormat('unknown-type')).toBe('');
+      expect(getDocumentRenameFormat('')).toBe('');
     });
   });
 });

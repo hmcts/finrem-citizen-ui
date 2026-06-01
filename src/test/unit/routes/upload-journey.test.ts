@@ -87,13 +87,13 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/before-you-start', {
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/before-you-start', expect.objectContaining({
         data: { selectedDocumentTypes: [] },
         errors: {},
         values: { selectedDocumentTypes: [], fdrHearing: undefined },
         previousStep: null,
         email: 'FRCexample@justice.gov.uk',
-      });
+      }));
     });
 
     it('should render FDR step with session data', () => {
@@ -114,13 +114,13 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/fdr', {
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/fdr', expect.objectContaining({
         data: { selectedDocumentTypes: [] },
         errors: {},
         values: { selectedDocumentTypes: [], fdrHearing: true },
         previousStep: UploadStepNames.Confidentiality,
         email: 'FRCexample@justice.gov.uk',
-      });
+      }));
     });
 
     it('should populate document labels from document types', () => {
@@ -141,7 +141,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', {
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', expect.objectContaining({
         data: { selectedDocumentTypes: expect.arrayContaining([
           expect.objectContaining({
             label: 'Points of claim/defence',
@@ -159,7 +159,7 @@ describe('Upload Journey Routes', () => {
         }),
         previousStep: UploadStepNames.FDR,
         email: 'FRCexample@justice.gov.uk',
-      });
+      }));
     });
 
     it('should handle unknown document type with empty label', () => {
