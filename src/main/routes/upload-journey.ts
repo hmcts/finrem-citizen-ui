@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { CitizenUploadDocument, ListValue } from '../app/case/definition';
 import { RouteNames } from '../common-constants';
-import { getSelectedDocumentTypesForDisplay } from '../functions/util/documentUtil';
+import { getSelectedDocumentTypesForDisplay, shouldAutoRename, getDocumentRenameFormat } from '../functions/util/documentUtil';
 import { oidcMiddleware } from '../middleware';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
 
@@ -70,6 +70,8 @@ export default function setupUploadJourneyRoute(app: Application): void {
       values: { selectedDocumentTypes, fdrHearing },
       previousStep,
       email: 'FRCexample@justice.gov.uk',
+      shouldAutoRename,
+      getDocumentRenameFormat,
     });
   });
 
@@ -96,6 +98,8 @@ export default function setupUploadJourneyRoute(app: Application): void {
         values: { selectedDocumentTypes, fdrHearing },
         previousStep,
         email: 'FRCexample@justice.gov.uk',
+        shouldAutoRename,
+        getDocumentRenameFormat,
       });
     }
 
