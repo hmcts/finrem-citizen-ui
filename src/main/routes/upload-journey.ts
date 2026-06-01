@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { CitizenUploadDocument, ListValue } from '../app/case/definition';
 import { RouteNames } from '../common-constants';
-import { getSelectedDocumentTypesForDisplay, shouldAutoRename, getDocumentRenameFormat } from '../functions/util/documentUtil';
+import { getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename } from '../functions/util/documentUtil';
 import { oidcMiddleware } from '../middleware';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
 
