@@ -1,6 +1,6 @@
 import { Request } from 'express';
 
-import { getDocumentLabel, getSelectedDocumentTypesForDisplay, shouldAutoRename, getDocumentRenameFormat } from '../../../../main/functions/util/documentUtil';
+import { getDocumentLabel, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename } from '../../../../main/functions/util/documentUtil';
 
 describe('documentUtil', () => {
   describe('getDocumentLabel', () => {
