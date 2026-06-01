@@ -15,6 +15,15 @@
         Upload the documents you selected in the previous step.
       </p>
 
+      {% if data.selectedDocumentTypes and data.selectedDocumentTypes.length > 0 %}
+        <h2 class="govuk-heading-m">Documents to upload</h2>
+        <ul class="govuk-list govuk-list--number">
+          {% for doc in data.selectedDocumentTypes %}
+            <li>{{ doc.label }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
       <form method="post">
         <button type="submit" class="govuk-button" data-module="govuk-button">
           Continue
