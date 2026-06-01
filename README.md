@@ -23,6 +23,11 @@ Use [src/test/functional/specFiles/README.md](src/test/functional/specFiles/READ
 
 This root README keeps only a brief testing summary. The specFiles guide is authoritative for test logic and test operations.
 
+## Jenkins Builds
+
+- Nightly runs: https://build.hmcts.net/job/HMCTS_d_to_i_Nightly/job/finrem-citizen-ui/job/master/
+- Master build runs: https://build.hmcts.net/job/HMCTS_d_to_i/job/finrem-citizen-ui/job/master/
+
 ## Core Citizen Workflow
 
 At a high level, the user flow is:
