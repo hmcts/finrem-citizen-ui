@@ -56,8 +56,14 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
   [UploadStepNames.UploadDocuments]: {
     template: 'upload-journey/upload-documents',
-    next: () => null,
+    next: () => UploadStepNames.CheckUpload,
     previous: () => UploadStepNames.DocumentTypeSelection,
+  },
+
+  [UploadStepNames.CheckUpload]: {
+    template: 'upload-journey/check-upload',
+    next: () => null,
+    previous: () => UploadStepNames.UploadDocuments,
   },
   
 };

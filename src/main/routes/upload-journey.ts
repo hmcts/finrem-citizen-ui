@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { CitizenUploadDocument, ListValue } from '../app/case/definition';
 import { RouteNames } from '../common-constants';
-import { getDocumentLabel, getSelectedDocumentTypesForDisplay } from '../functions/util/documentUtil';
+import { getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename } from '../functions/util/documentUtil';
 import { oidcMiddleware } from '../middleware';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
 
@@ -26,11 +26,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
     req.session.DocumentSelection.documentDetails = documentDetails;
     
     // Map to display format for frontend
-    const displayDocs = documentDetails.map(doc => ({
-      id: doc.id,
-      label: getDocumentLabel(doc.value?.DocumentType || ''),
-      value: doc.value?.DocumentType || '',
-    }));
+    const displayDocs = getSelectedDocumentTypesForDisplay(req);
     
     res.json({ success: true, documents: displayDocs });
   });
@@ -49,11 +45,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
     }
     
     // Map to display format for frontend
-    const displayDocs = documentDetails.map(doc => ({
-      id: doc.id,
-      label: getDocumentLabel(doc.value?.DocumentType || ''),
-      value: doc.value?.DocumentType || '',
-    }));
+    const displayDocs = getSelectedDocumentTypesForDisplay(req);
     
     res.json({ success: true, documents: displayDocs });
   });
@@ -78,6 +70,8 @@ export default function setupUploadJourneyRoute(app: Application): void {
       values: { selectedDocumentTypes, fdrHearing },
       previousStep,
       email: 'FRCexample@justice.gov.uk',
+      shouldAutoRename,
+      getDocumentRenameFormat,
     });
   });
 
@@ -104,6 +98,8 @@ export default function setupUploadJourneyRoute(app: Application): void {
         values: { selectedDocumentTypes, fdrHearing },
         previousStep,
         email: 'FRCexample@justice.gov.uk',
+        shouldAutoRename,
+        getDocumentRenameFormat,
       });
     }
 

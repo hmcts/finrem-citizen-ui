@@ -1,6 +1,7 @@
 import type { Request } from 'express';
 
 import { CitizenUploadDocument, ListValue } from '../../app/case/definition';
+import { DOCUMENT_RENAME_FORMATS } from '../../common-constants';
 import documentTypes from '../../models/document-types.json';
 
 interface DocumentType {
@@ -22,6 +23,14 @@ const typedDocumentTypes: DocumentType[] = documentTypes as DocumentType[];
 export function getDocumentLabel(value: string): string {
   const docType = typedDocumentTypes.find(dt => dt.value === value);
   return docType?.label || '';
+}
+
+export function shouldAutoRename(documentTypeValue: string): boolean {
+  return documentTypeValue in DOCUMENT_RENAME_FORMATS;
+}
+
+export function getDocumentRenameFormat(documentTypeValue: string): string {
+  return DOCUMENT_RENAME_FORMATS[documentTypeValue] || '';
 }
 
 export function getSelectedDocumentTypesForDisplay(req: Request): SelectedDocumentTypeDisplay[] {
