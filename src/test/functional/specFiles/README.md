@@ -5,8 +5,9 @@ It is located under `specFiles/` for historical reasons, but it covers the full 
 
 ## Jenkins Builds
 
-- Nightly runs: https://build.hmcts.net/job/HMCTS_d_to_i_Nightly/job/finrem-citizen-ui/job/master/
-- Master build runs: https://build.hmcts.net/job/HMCTS_d_to_i/job/finrem-citizen-ui/job/master/
+- **Nightly runs**: https://build.hmcts.net/job/HMCTS_d_to_i_Nightly/job/finrem-citizen-ui/job/master/
+- **Master build runs**: https://build.hmcts.net/job/HMCTS_d_to_i/job/finrem-citizen-ui/job/master/
+- **Preview (PR) build runs**: https://build.hmcts.net/job/HMCTS_d_to_i/job/finrem-citizen-ui/job/PR-437/ (replace 437 with your PR number)
 
 ## What Is Tested In This Repo
 
