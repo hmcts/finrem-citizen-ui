@@ -38,7 +38,7 @@
           {% endif %}
 
           <div class="govuk-inset-text govuk-!-margin-top-4">
-            <form method="post" action="#" enctype="multipart/form-data" data-upload-form="{{ documentType.value }}">
+            <form method="post" action="/documents/upload" enctype="multipart/form-data" data-upload-form="{{ documentType.value }}">
               
               {% if errors and errors[documentType.value] %}
                 {{ govukErrorMessage({
@@ -69,6 +69,7 @@
               }) }}
 
               <input type="hidden" name="documentType" value="{{ documentType.value }}">
+              <input type="hidden" name="returnUrl" value="/upload/upload-documents">
 
               {{ govukButton({
                 text: "Upload file",
