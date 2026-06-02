@@ -7,6 +7,25 @@ import { getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoR
 import { oidcMiddleware } from '../middleware';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
 
+function getUploadedFilesByType(req: Request): Record<string, { id: string; filename: string; url: string }[]> {
+  const uploadedDocuments = req.session.documents?.documentDetails || [];
+  const uploadedFilesByType: Record<string, { id: string; filename: string; url: string }[]> = {};
+  
+  uploadedDocuments.forEach(doc => {
+    const docType = doc.value?.DocumentType || '';
+    if (!uploadedFilesByType[docType]) {
+      uploadedFilesByType[docType] = [];
+    }
+    uploadedFilesByType[docType].push({
+      id: doc.id || '',
+      filename: doc.value?.DocumentFileName || '',
+      url: doc.value?.DocumentLink?.document_url || '',
+    });
+  });
+  
+  return uploadedFilesByType;
+}
+
 export default function setupUploadJourneyRoute(app: Application): void {
   app.post(`${RouteNames.uploadJourney}/document-type-selection/add`, oidcMiddleware, (req: Request, res: Response) => {
     if (!req.session.DocumentSelection) {
@@ -65,20 +84,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
     const fdrHearing = req.session.DocumentSelection?.isFinancialDisputeResolution;
 
     // Get uploaded documents grouped by document type
-    const uploadedDocuments = req.session.documents?.documentDetails || [];
-    const uploadedFilesByType: Record<string, { id: string; filename: string; url: string }[]> = {};
-    
-    uploadedDocuments.forEach(doc => {
-      const docType = doc.value?.DocumentType || '';
-      if (!uploadedFilesByType[docType]) {
-        uploadedFilesByType[docType] = [];
-      }
-      uploadedFilesByType[docType].push({
-        id: doc.id || '',
-        filename: doc.value?.DocumentFileName || '',
-        url: doc.value?.DocumentLink?.document_url || '',
-      });
-    });
+    const uploadedFilesByType = getUploadedFilesByType(req);
 
     res.render(step.template, {
       data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType },
@@ -109,20 +115,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
         : undefined;
       
       // Get uploaded documents grouped by document type
-      const uploadedDocuments = req.session.documents?.documentDetails || [];
-      const uploadedFilesByType: Record<string, { id: string; filename: string; url: string }[]> = {};
-      
-      uploadedDocuments.forEach(doc => {
-        const docType = doc.value?.DocumentType || '';
-        if (!uploadedFilesByType[docType]) {
-          uploadedFilesByType[docType] = [];
-        }
-        uploadedFilesByType[docType].push({
-          id: doc.id || '',
-          filename: doc.value?.DocumentFileName || '',
-          url: doc.value?.DocumentLink?.document_url || '',
-        });
-      });
+      const uploadedFilesByType = getUploadedFilesByType(req);
       
       return res.render(step.template, {
         data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType },
