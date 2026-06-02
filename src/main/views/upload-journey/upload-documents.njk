@@ -75,7 +75,8 @@
                 text: "Upload file",
                 classes: "govuk-button--secondary govuk-!-margin-top-2",
                 attributes: {
-                  "data-upload-button": documentType.value
+                  "data-upload-button": documentType.value,
+                  "aria-label": "Upload file for " + documentType.label
                 }
               }) }}
             </form>

@@ -26,6 +26,7 @@ export const PrivateRoutes = {
   documents: '/documents',
   documentUpload: '/documents/upload',
   documentSend: '/documents/send',
+  documentRemove: '/documents/remove/:fileId',
 } as const;
 
 export const RouteNames = {

@@ -128,6 +128,36 @@ export default function (app: Application): void {
     }
   );
 
+  app.delete(
+    RouteNames.documentRemove,
+    oidcMiddleware,
+    (req, res, next) => {
+      try {
+        const appReq = req as AppRequest;
+        const { fileId } = req.params;
+
+        if (!appReq.session.documents?.documentDetails) {
+          return res.json({ success: true, documents: [] });
+        }
+
+        appReq.session.documents.documentDetails =
+          appReq.session.documents.documentDetails.filter(
+            doc => doc.id !== fileId
+          );
+
+        logger.info('Document removed from session', { fileId });
+
+        res.json({
+          success: true,
+          fileId,
+          remainingCount: appReq.session.documents.documentDetails.length,
+        });
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
   app.post(
     RouteNames.documentSend,
     oidcMiddleware,
