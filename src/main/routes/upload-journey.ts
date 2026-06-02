@@ -64,8 +64,24 @@ export default function setupUploadJourneyRoute(app: Application): void {
     // Get FDR value from session
     const fdrHearing = req.session.DocumentSelection?.isFinancialDisputeResolution;
 
+    // Get uploaded documents grouped by document type
+    const uploadedDocuments = req.session.documents?.documentDetails || [];
+    const uploadedFilesByType: Record<string, { id: string; filename: string; url: string }[]> = {};
+    
+    uploadedDocuments.forEach(doc => {
+      const docType = doc.value?.DocumentType || '';
+      if (!uploadedFilesByType[docType]) {
+        uploadedFilesByType[docType] = [];
+      }
+      uploadedFilesByType[docType].push({
+        id: doc.id || '',
+        filename: doc.value?.DocumentFileName || '',
+        url: doc.value?.DocumentLink?.document_url || '',
+      });
+    });
+
     res.render(step.template, {
-      data: { selectedDocumentTypes },
+      data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType },
       errors: {},
       values: { selectedDocumentTypes, fdrHearing },
       previousStep,
@@ -92,8 +108,24 @@ export default function setupUploadJourneyRoute(app: Application): void {
         ? req.body.fdrHearing === 'true' 
         : undefined;
       
+      // Get uploaded documents grouped by document type
+      const uploadedDocuments = req.session.documents?.documentDetails || [];
+      const uploadedFilesByType: Record<string, { id: string; filename: string; url: string }[]> = {};
+      
+      uploadedDocuments.forEach(doc => {
+        const docType = doc.value?.DocumentType || '';
+        if (!uploadedFilesByType[docType]) {
+          uploadedFilesByType[docType] = [];
+        }
+        uploadedFilesByType[docType].push({
+          id: doc.id || '',
+          filename: doc.value?.DocumentFileName || '',
+          url: doc.value?.DocumentLink?.document_url || '',
+        });
+      });
+      
       return res.render(step.template, {
-        data: { selectedDocumentTypes },
+        data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType },
         errors,
         values: { selectedDocumentTypes, fdrHearing },
         previousStep,
