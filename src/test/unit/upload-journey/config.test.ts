@@ -152,4 +152,24 @@ describe('Upload Journey Configuration', () => {
       expect(errors).toEqual({});
     });
   });
+
+  describe(UploadStepNames.UploadDocuments, () => {
+    it('should have correct configuration', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      expect(step.template).toBe('upload-journey/upload-documents');
+      expect(step.next!()).toBe(UploadStepNames.CheckUpload);
+      expect(step.previous!()).toBe(UploadStepNames.DocumentTypeSelection);
+      expect(step.validate).toBeUndefined();
+    });
+  });
+
+  describe(UploadStepNames.CheckUpload, () => {
+    it('should have correct configuration', () => {
+      const step = uploadSteps[UploadStepNames.CheckUpload];
+      expect(step.template).toBe('upload-journey/check-upload');
+      expect(step.next!()).toBeNull();
+      expect(step.previous!()).toBe(UploadStepNames.UploadDocuments);
+      expect(step.validate).toBeUndefined();
+    });
+  });
 });
