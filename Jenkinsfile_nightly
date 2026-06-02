@@ -44,6 +44,12 @@ def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
 withNightlyPipeline(type, product, component) {
   env.TEST_URL = params.URL_TO_TEST
+  env.RUNNING_ENV = "aat"
+  env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl
+  // Set all known keys used across library versions before stage configuration.
+  env.FULL_FUNCTIONAL_TESTS_COMMAND = "test:functional"
+  env.FULL_FUNCTIONAL_TEST_COMMAND = "test:functional"
+  env.FUNCTIONAL_TESTS_COMMAND = "test:functional"
   loadVaultSecrets(secrets)
 
   // TODO: Enable and implement when these tests are planned and written
