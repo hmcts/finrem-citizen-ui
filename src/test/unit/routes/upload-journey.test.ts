@@ -248,6 +248,60 @@ describe('Upload Journey Routes', () => {
       expect(mockRes.status).toHaveBeenCalledWith(404);
       expect(mockRes.send).toHaveBeenCalledWith('Step not found');
     });
+
+    it('should include uploaded files grouped by document type', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.UploadDocuments },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'doc-1', value: { DocumentType: 'position-statement' } },
+            ],
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'file-1',
+                value: {
+                  DocumentType: 'position-statement',
+                  DocumentFileName: 'statement.pdf',
+                  DocumentLink: {
+                    document_url: 'http://example.com/file1',
+                  },
+                },
+              },
+              {
+                id: 'file-2',
+                value: {
+                  DocumentType: 'position-statement',
+                  DocumentFileName: 'statement2.pdf',
+                  DocumentLink: {
+                    document_url: 'http://example.com/file2',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/upload-documents', expect.objectContaining({
+        data: expect.objectContaining({
+          uploadedFiles: {
+            'position-statement': [
+              { id: 'file-1', filename: 'statement.pdf', url: 'http://example.com/file1' },
+              { id: 'file-2', filename: 'statement2.pdf', url: 'http://example.com/file2' },
+            ],
+          },
+        }),
+      }));
+    });
   });
 
   describe('POST /upload/:stepId', () => {
@@ -328,6 +382,57 @@ describe('Upload Journey Routes', () => {
       expect(mockRes.render).toHaveBeenCalled();
 
       delete uploadSteps[UploadStepNames.Confidentiality].validate;
+    });
+
+    it('should include uploaded files when rendering validation errors', () => {
+      const { uploadSteps } = require('../../../main/upload-journey/config');
+      uploadSteps[UploadStepNames.UploadDocuments].validate = () => ({ error: 'Test error' });
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.UploadDocuments },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'doc-1', value: { DocumentType: 'chronology' } },
+            ],
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'file-1',
+                value: {
+                  DocumentType: 'chronology',
+                  DocumentFileName: 'chronology.pdf',
+                  DocumentLink: {
+                    document_url: 'http://example.com/chronology',
+                  },
+                },
+              },
+            ],
+          },
+        },
+        body: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/upload-documents', expect.objectContaining({
+        data: expect.objectContaining({
+          uploadedFiles: {
+            'chronology': [
+              { id: 'file-1', filename: 'chronology.pdf', url: 'http://example.com/chronology' },
+            ],
+          },
+        }),
+        errors: { error: 'Test error' },
+      }));
+
+      delete uploadSteps[UploadStepNames.UploadDocuments].validate;
     });
 
     it('should store fdrHearing in session', () => {
@@ -420,6 +525,29 @@ describe('Upload Journey Routes', () => {
           }),
         })
       );
+    });
+
+    it('should redirect to same step when no next step is defined', () => {
+      const { uploadSteps } = require('../../../main/upload-journey/config');
+      const originalNext = uploadSteps[UploadStepNames.CheckUpload].next;
+      uploadSteps[UploadStepNames.CheckUpload].next = null;
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.CheckUpload },
+        session: {},
+        body: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/${UploadStepNames.CheckUpload}`);
+
+      uploadSteps[UploadStepNames.CheckUpload].next = originalNext;
     });
   });
 
