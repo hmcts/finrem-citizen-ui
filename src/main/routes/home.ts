@@ -133,7 +133,8 @@ export default function (app: Application): void {
           selectedType
         );
 
-        res.redirect(RouteNames.documents);
+        const returnUrl = req.body.returnUrl || RouteNames.documents;
+        res.redirect(returnUrl);
       } catch (error) {
         next(error);
       }

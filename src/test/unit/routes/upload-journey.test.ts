@@ -88,7 +88,7 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/before-you-start', expect.objectContaining({
-        data: { selectedDocumentTypes: [] },
+        data: { selectedDocumentTypes: [], uploadedFiles: {} },
         errors: {},
         values: { selectedDocumentTypes: [], fdrHearing: undefined },
         previousStep: null,
@@ -115,7 +115,7 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/fdr', expect.objectContaining({
-        data: { selectedDocumentTypes: [] },
+        data: { selectedDocumentTypes: [], uploadedFiles: {} },
         errors: {},
         values: { selectedDocumentTypes: [], fdrHearing: true },
         previousStep: UploadStepNames.Confidentiality,
@@ -142,12 +142,15 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', expect.objectContaining({
-        data: { selectedDocumentTypes: expect.arrayContaining([
-          expect.objectContaining({
-            label: 'Points of claim/defence',
-            value: 'points-of-claim-defence',
-          }),
-        ]) },
+        data: expect.objectContaining({
+          selectedDocumentTypes: expect.arrayContaining([
+            expect.objectContaining({
+              label: 'Points of claim/defence',
+              value: 'points-of-claim-defence',
+            }),
+          ]),
+          uploadedFiles: {},
+        }),
         errors: {},
         values: expect.objectContaining({
           selectedDocumentTypes: expect.arrayContaining([
@@ -182,12 +185,15 @@ describe('Upload Journey Routes', () => {
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', 
         expect.objectContaining({
-          data: { selectedDocumentTypes: expect.arrayContaining([
-            expect.objectContaining({
-              label: '',
-              value: 'unknown-doc-type',
-            }),
-          ]) },
+          data: expect.objectContaining({
+            selectedDocumentTypes: expect.arrayContaining([
+              expect.objectContaining({
+                label: '',
+                value: 'unknown-doc-type',
+              }),
+            ]),
+            uploadedFiles: {},
+          }),
         })
       );
     });
@@ -212,12 +218,15 @@ describe('Upload Journey Routes', () => {
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', 
         expect.objectContaining({
-          data: { selectedDocumentTypes: expect.arrayContaining([
-            expect.objectContaining({
-              label: '',
-              value: '',
-            }),
-          ]) },
+          data: expect.objectContaining({
+            selectedDocumentTypes: expect.arrayContaining([
+              expect.objectContaining({
+                label: '',
+                value: '',
+              }),
+            ]),
+            uploadedFiles: {},
+          }),
         })
       );
     });
