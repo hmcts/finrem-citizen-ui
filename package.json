@@ -24,6 +24,7 @@
     "test:playwright:a11y:all-browsers": "sh -c 'TEST_RESULTS_DIR=a11y-output PLAYWRIGHT_HTML_OUTPUT_DIR=a11y-output/axe-report PLAYWRIGHT_HTML_OPEN=never playwright test --config playwright.config.mts --grep @a11y --reporter=html; code=$?; yarn playwright show-report a11y-output/axe-report; exit $code'",
     "test:smoke": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --config jest.smoke.config.js",
     "test:functional": "yarn playwright install --with-deps && playwright test --config playwright.config.mts --project chromium --retries=2",
+    "test:fullfunctional": "yarn test:functional",
     "test:functional:pr": "yarn playwright install --with-deps && playwright test --config playwright.config.mts --project chromium --grep @PR",
     "test:functional:headed:slowmo": "PWDEBUG=1 PLAYWRIGHT_SLOWMO_MS=250 playwright test --config playwright.config.mts --project chromium --headed --workers=1",
     "test:functional:allBrowsers:ui": "playwright test --ui",
