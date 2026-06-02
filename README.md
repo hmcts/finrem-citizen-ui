@@ -234,9 +234,8 @@ yarn test
 # Includes any @a11y-tagged tests in the selected suites
 yarn test:functional
 
-# Run functional tests across Chromium, Firefox, and WebKit
-# Includes any @a11y-tagged tests in the selected suites
-yarn test:functional:all-browsers
+# Run functional tests in interactive Playwright UI mode
+yarn test:functional:allBrowsers:ui
 
 # Run API tests (Jest + Supertest)
 yarn test:api

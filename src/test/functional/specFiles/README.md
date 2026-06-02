@@ -223,11 +223,9 @@ Commands are defined in [../../../../package.json](../../../../package.json).
 | Script | Local | Local mock flow | Preview/AAT | Purpose |
 |---|---|---|---|---|
 | yarn test:functional | Yes | Yes | Yes (with ACCESS_CODE_REAL_INTEGRATION=true) | Main functional run on Chromium with retries; installs Playwright deps; includes @a11y-tagged tests |
-| yarn test:full-functional | Yes | Yes | Yes | Faster repeat functional run on Chromium (no Playwright install step) |
-| yarn test:functional:all-browsers | Yes | Yes | Yes | Cross-browser run (Chromium, Firefox, WebKit); includes @a11y-tagged tests |
 | yarn test:functional:pr | Yes | Yes | Yes | PR-tagged functional tests only (@PR) |
 | yarn test:functional:headed:slowmo | Yes | Yes | Yes | Interactive debugging with headed Chromium + Playwright inspector against the selected target |
-| yarn test:fullfunctional:allBrowsers:ui | Yes | Yes | Yes | Playwright UI mode for interactive debugging against the selected target |
+| yarn test:functional:allBrowsers:ui | Yes | Yes | Yes | Playwright UI mode for interactive debugging against the selected target |
 | yarn test:playwright:a11y:chrome | Yes | Yes | Yes | Accessibility-tagged tests on Chromium |
 | yarn test:playwright:a11y:all-browsers | Yes | Yes | Yes | Accessibility-tagged tests on all browsers + report |
 | yarn qacichecks | Yes | Yes | Yes | Broadest single-script QA gate: build, lint, unit, route, API, coverage, and functional tests on Chromium |
@@ -240,16 +238,14 @@ Commands are defined in [../../../../package.json](../../../../package.json).
 Use this sequence for reliable feedback before pushing:
 
 1. Fast local confidence:
-   - yarn test:full-functional - Chromium only
-2. Cross-browser confidence (before merge/release):
-   - yarn test:functional:all-browsers - Chromium, Firefox, and WebKit
-3. Isolated accessibility-only pass (when you only want @a11y coverage):
+   - yarn test:functional - Chromium only
+2. Isolated accessibility-only pass (when you only want @a11y coverage):
    - yarn test:playwright:a11y:chrome - Chromium only
    - optionally yarn test:playwright:a11y:all-browsers - Chromium, Firefox, and WebKit
-4. Debug any failures interactively:
+3. Debug any failures interactively:
    - yarn test:functional:headed:slowmo - Chromium only
-   - optionally yarn test:fullfunctional:allBrowsers:ui - interactive Playwright UI with browser selection in the runner
-5. Final pre-push gate:
+   - optionally yarn test:functional:allBrowsers:ui - interactive Playwright UI with browser selection in the runner
+4. Final pre-push gate:
    - yarn qacichecks - best single script to run before push because it combines build, lint, unit tests, route tests, API tests, coverage, and the Chromium functional run
 
 If you are only running one script before pushing code, use `yarn qacichecks`.
