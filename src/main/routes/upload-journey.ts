@@ -129,6 +129,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
       values: { selectedDocumentTypes, fdrHearing },
       previousStep,
       email: 'FRCexample@justice.gov.uk',
+      caseUserName: req.session.caseUserName,
       shouldAutoRename,
       getDocumentRenameFormat,
     });
@@ -160,6 +161,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
         values: { selectedDocumentTypes, fdrHearing },
         previousStep,
         email: 'FRCexample@justice.gov.uk',
+        caseUserName: req.session.caseUserName,
         shouldAutoRename,
         getDocumentRenameFormat,
       });
