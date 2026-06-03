@@ -60,7 +60,7 @@
     "express-session": "1.19.0",
     "fs-extra": "^11.3.4",
     "glob": "13.0.6",
-    "govuk-frontend": "^6.0.0",
+    "govuk-frontend": "^6.2.0",
     "helmet": "8.2.0",
     "ioredis": "^5.10.0",
     "jwt-decode": "4.0.0",
