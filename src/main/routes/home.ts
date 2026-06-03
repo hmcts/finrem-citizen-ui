@@ -110,9 +110,14 @@ export default function (app: Application): void {
     upload.any(),
     async (req, res, next) => {
       try {
+        // Convert kebab-case to SCREAMING_SNAKE_CASE for enum lookup
+        const documentTypeKey = (req.body.documentType as string)
+          .toUpperCase()
+          .replace(/-/g, '_');
+        
         const selectedType =
           CitizenUploadDocumentType[
-          req.body.documentType as keyof typeof CitizenUploadDocumentType
+          documentTypeKey as keyof typeof CitizenUploadDocumentType
           ];
 
         await documentController.uploadDocumentToEvidenceStore(
