@@ -154,16 +154,9 @@ export default function setupUploadJourneyRoute(app: Application): void {
       // Get uploaded documents grouped by document type
       const uploadedFilesByType = getUploadedFilesByType(req);
       
-      // Format errors for GOV.UK error summary
-      const errorList = Object.entries(errors).map(([key, message]) => ({
-        text: message,
-        href: `#${key}`,
-      }));
-      
       return res.render(step.template, {
         data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType },
-        errors: errorList,
-        fieldErrors: errors,
+        errors,
         values: { selectedDocumentTypes, fdrHearing },
         previousStep,
         email: 'FRCexample@justice.gov.uk',

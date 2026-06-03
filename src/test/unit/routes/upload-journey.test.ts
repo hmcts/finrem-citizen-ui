@@ -429,7 +429,7 @@ describe('Upload Journey Routes', () => {
             ],
           },
         }),
-        errors: expect.any(Array),
+        errors: { error: 'Test error' },
       }));
 
       delete uploadSteps[UploadStepNames.UploadDocuments].validate;
