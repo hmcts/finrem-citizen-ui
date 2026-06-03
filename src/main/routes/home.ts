@@ -121,7 +121,13 @@ export default function (app: Application): void {
         );
 
         const returnUrl = req.body.returnUrl || RouteNames.documents;
-        res.redirect(returnUrl);
+        
+        req.session.save((err) => {
+          if (err) {
+            return next(err);
+          }
+          res.redirect(returnUrl);
+        });
       } catch (error) {
         next(error);
       }
