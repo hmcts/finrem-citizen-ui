@@ -4539,6 +4539,7 @@ export enum CitizenUploadDocumentType {
     UPDATING_DISCLOSURE = "Updating disclosure",
     WITNESS_STATEMENT = "Witness statement",
     WITHOUT_PREJUDICE_OFFERS_FOR_SETTLEMENT = "Without prejudice offers for settlement",
+    OTHER_DOCUMENT = "Other document",
 }
 
 export const enum Yes {

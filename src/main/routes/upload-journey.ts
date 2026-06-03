@@ -12,11 +12,18 @@ function getUploadedFilesByType(req: Request): Record<string, { id: string; file
   const uploadedFilesByType: Record<string, { id: string; filename: string; url: string }[]> = {};
   
   uploadedDocuments.forEach(doc => {
-    const docType = doc.value?.DocumentType || '';
-    if (!uploadedFilesByType[docType]) {
-      uploadedFilesByType[docType] = [];
+    // DocumentType is stored as enum value (e.g., "Chronology")
+    // Convert to kebab-case to match template expectations (e.g., "chronology")
+    const enumValue = doc.value?.DocumentType || '';
+    const kebabCase = enumValue
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[()/:]/g, '');
+    
+    if (!uploadedFilesByType[kebabCase]) {
+      uploadedFilesByType[kebabCase] = [];
     }
-    uploadedFilesByType[docType].push({
+    uploadedFilesByType[kebabCase].push({
       id: doc.id || '',
       filename: doc.value?.DocumentFileName || '',
       url: doc.value?.DocumentLink?.document_url || '',
