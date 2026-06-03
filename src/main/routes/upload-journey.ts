@@ -18,7 +18,8 @@ function getUploadedFilesByType(req: Request): Record<string, { id: string; file
     const kebabCase = enumValue
       .toLowerCase()
       .replace(/\s+/g, '-')
-      .replace(/[()/:]/g, '');
+      .replace(/\//g, '-')  // Replace slashes with hyphens
+      .replace(/[():]/g, '');  // Remove parentheses and colons
     
     if (!uploadedFilesByType[kebabCase]) {
       uploadedFilesByType[kebabCase] = [];
