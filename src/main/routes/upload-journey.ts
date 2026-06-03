@@ -7,9 +7,9 @@ import { getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoR
 import { oidcMiddleware } from '../middleware';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
 
-function getUploadedFilesByType(req: Request): Record<string, { id: string; filename: string; url: string }[]> {
+function getUploadedFilesByType(req: Request): Record<string, { id: string; filename: string; url: string; displayFilename: string }[]> {
   const uploadedDocuments = req.session.documents?.documentDetails || [];
-  const uploadedFilesByType: Record<string, { id: string; filename: string; url: string }[]> = {};
+  const uploadedFilesByType: Record<string, { id: string; filename: string; url: string; displayFilename: string }[]> = {};
   
   uploadedDocuments.forEach(doc => {
     // DocumentType is stored as enum value (e.g., "Chronology")
@@ -19,19 +19,48 @@ function getUploadedFilesByType(req: Request): Record<string, { id: string; file
       .toLowerCase()
       .replace(/\s+/g, '-')
       .replace(/\//g, '-')  // Replace slashes with hyphens
-      .replace(/[():]/g, '');  // Remove parentheses and colons
+      .replace(/[():,]/g, '')  // Remove parentheses, colons, and commas
+      .replace(/-+/g, '-');  // Collapse multiple hyphens into one
+    
+    const originalFilename = doc.value?.DocumentFileName || '';
+    
+    // Check if this document type should be auto-renamed
+    const displayFilename = shouldAutoRename(kebabCase) 
+      ? generateRenamedFilename(kebabCase, originalFilename)
+      : originalFilename;
     
     if (!uploadedFilesByType[kebabCase]) {
       uploadedFilesByType[kebabCase] = [];
     }
     uploadedFilesByType[kebabCase].push({
       id: doc.id || '',
-      filename: doc.value?.DocumentFileName || '',
+      filename: originalFilename,
       url: doc.value?.DocumentLink?.document_url || '',
+      displayFilename,
     });
   });
   
   return uploadedFilesByType;
+}
+
+function generateRenamedFilename(documentTypeValue: string, originalFilename: string): string {
+  const format = getDocumentRenameFormat(documentTypeValue);
+  if (!format) {
+    return originalFilename;
+  }
+  
+  // Extract file extension
+  const extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+  
+  // Generate date string DD-MM-YYYY
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  const dateStr = `${day}-${month}-${year}`;
+  
+  // Format: UserName-DocumentType-DD-MM-YYYY.ext
+  return `UserName-${format}-${dateStr}${extension}`;
 }
 
 export default function setupUploadJourneyRoute(app: Application): void {
@@ -125,9 +154,16 @@ export default function setupUploadJourneyRoute(app: Application): void {
       // Get uploaded documents grouped by document type
       const uploadedFilesByType = getUploadedFilesByType(req);
       
+      // Format errors for GOV.UK error summary
+      const errorList = Object.entries(errors).map(([key, message]) => ({
+        text: message,
+        href: `#${key}`,
+      }));
+      
       return res.render(step.template, {
         data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType },
-        errors,
+        errors: errorList,
+        fieldErrors: errors,
         values: { selectedDocumentTypes, fdrHearing },
         previousStep,
         email: 'FRCexample@justice.gov.uk',
