@@ -98,13 +98,13 @@
                 {% for file in uploadedFiles %}
                   <li class="govuk-!-margin-bottom-2">
                     <a href="{{ file.url }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
-                      {{ file.filename }}
+                      {{ file.displayFilename }}
                     </a>
                     <a href="#" 
                        class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-2" 
                        data-remove-file="{{ file.id }}"
                        data-document-type="{{ documentType.value }}"
-                       aria-label="Remove {{ file.filename }}">
+                       aria-label="Remove {{ file.displayFilename }}">
                       Remove document
                     </a>
                   </li>
@@ -124,6 +124,14 @@
       {% endif %}
 
       <form method="post" class="govuk-!-margin-top-8">
+        {% if fieldErrors and fieldErrors.upload %}
+          <div id="upload" class="govuk-form-group govuk-form-group--error">
+            <span class="govuk-error-message">
+              <span class="govuk-visually-hidden">Error:</span> {{ fieldErrors.upload }}
+            </span>
+          </div>
+        {% endif %}
+        
         {{ govukButton({
           text: "Continue"
         }) }}

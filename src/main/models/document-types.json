@@ -343,7 +343,7 @@
   },
   {
     "id": 58,
-    "label": "Pension  statement",
+    "label": "Pension statement",
     "value": "pension-statement",
     "aliases": ["Statement", "compensation", "valuation", "PPF  CEV benefits statement"]
   },
@@ -370,6 +370,12 @@
     "label": "Management accounts",
     "value": "management-accounts",
     "aliases": ["self employment", "self-employment", "partnership", "income"]
+  },
+  {
+    "id": 63,
+    "label": "Potential borrowing capacity / mortgage capacities",
+    "value": "potential-borrowing-capacity-mortgage-capacities",
+    "aliases": ["mortgage", "loan", "borrowing"]
   },
   {
     "id": 99,
