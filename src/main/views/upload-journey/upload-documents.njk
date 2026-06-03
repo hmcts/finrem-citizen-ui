@@ -39,7 +39,7 @@
 
           {% if shouldAutoRename(documentType.value) %}
             <p class="govuk-body">
-              When you upload this document, it will automatically be renamed to <strong>UserName-{{ getDocumentRenameFormat(documentType.value) }}-DD-MM-YY</strong>.
+              When you upload this document, it will automatically be renamed to <strong>{{ caseUserName or 'UserName' }}-{{ getDocumentRenameFormat(documentType.value) }}-DD-MM-YY</strong>.
             </p>
           {% endif %}
 
