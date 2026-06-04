@@ -26,7 +26,7 @@ function getUploadedFilesByType(req: Request): Record<string, { id: string; file
     
     // Check if this document type should be auto-renamed
     const displayFilename = shouldAutoRename(kebabCase) 
-      ? generateRenamedFilename(kebabCase, originalFilename)
+      ? generateRenamedFilename(kebabCase, originalFilename, req.session.caseUserName)
       : originalFilename;
     
     if (!uploadedFilesByType[kebabCase]) {
@@ -43,7 +43,7 @@ function getUploadedFilesByType(req: Request): Record<string, { id: string; file
   return uploadedFilesByType;
 }
 
-function generateRenamedFilename(documentTypeValue: string, originalFilename: string): string {
+function generateRenamedFilename(documentTypeValue: string, originalFilename: string, caseUserName?: string): string {
   const format = getDocumentRenameFormat(documentTypeValue);
   if (!format) {
     return originalFilename;
@@ -60,7 +60,8 @@ function generateRenamedFilename(documentTypeValue: string, originalFilename: st
   const dateStr = `${day}-${month}-${year}`;
   
   // Format: UserName-DocumentType-DD-MM-YYYY.ext
-  return `UserName-${format}-${dateStr}${extension}`;
+  const userName = caseUserName || 'UserName';
+  return `${userName}-${format}-${dateStr}${extension}`;
 }
 
 export default function setupUploadJourneyRoute(app: Application): void {
