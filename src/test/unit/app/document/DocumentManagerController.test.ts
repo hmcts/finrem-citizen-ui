@@ -197,7 +197,7 @@ describe('DocumentManagerController', () => {
       const res = {} as Response;
 
       await expect(
-        controller.downloadDocument(req, res, 'doc-123')
+        controller.downloadDocument(req, res, 'doc-123', '123')
       ).rejects.toThrow('No user in session');
     });
 
@@ -213,12 +213,15 @@ describe('DocumentManagerController', () => {
       });
 
       const req = {
-        session: { user: userDetails },
+        session: {
+          user: userDetails,
+          caseNumber: '123',
+        },
       } as unknown as AppRequest;
 
       const res = {} as Response;
 
-      await controller.downloadDocument(req, res, 'doc-123');
+      await controller.downloadDocument(req, res, 'doc-123', '123');
 
       expect(getDocumentMock).toHaveBeenCalledWith(res, 'doc-123');
     });
@@ -235,15 +238,37 @@ describe('DocumentManagerController', () => {
       }).getApiClient = getApiClientMock;
 
       const req = {
-        session: { user: userDetails },
+        session: {
+          user: userDetails,
+          caseNumber: '456',
+        },
       } as unknown as AppRequest;
 
       const res = {} as Response;
 
-      await controller.downloadDocument(req, res, 'doc-456');
+      await controller.downloadDocument(req, res, 'doc-456', '456');
 
       expect(getApiClientMock).toHaveBeenCalledWith(userDetails);
       expect(getDocumentMock).toHaveBeenCalledWith(res, 'doc-456');
+    });
+
+    test('returns 403 when caseId does not match session', async () => {
+      const req = {
+        session: {
+          user: userDetails,
+          caseNumber: '123',
+        },
+      } as unknown as AppRequest;
+
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+      } as unknown as Response;
+
+      await controller.downloadDocument(req, res, 'doc-123', '999');
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.send).toHaveBeenCalledWith('Forbidden');
     });
   });
 });

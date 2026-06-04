@@ -181,11 +181,16 @@ export default function (app: Application): void {
           ? documentId[0]
           : documentId;
 
+        const caseId = req.session.caseNumber;
+        if (!caseId) {
+          return res.status(400).send('Missing case ID in session');
+        }
 
         await documentController.downloadDocument(
           appReq,
           res,
-          normalizedDocumentId
+          normalizedDocumentId,
+          caseId
         );
       } catch (error) {
         next(error);

@@ -107,12 +107,18 @@ export class DocumentManagerController {
     public async downloadDocument(
         req: AppRequest,
         res: Response,
-        documentId: string
+        documentId: string,
+        caseId: string
     ): Promise<void> {
         const user = req.session.user;
 
         if (!user) {
             throw new Error('No user in session');
+        }
+
+        if (!req.session.caseNumber || req.session.caseNumber !== caseId) {
+            res.status(403).send('Forbidden');
+            return;
         }
 
         await this.getApiClient(user).getDocument(res, documentId);
