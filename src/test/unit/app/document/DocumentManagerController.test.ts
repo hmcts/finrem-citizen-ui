@@ -77,6 +77,64 @@ describe('DocumentManagerController', () => {
     ).rejects.toThrow('No user in session');
   });
 
+  test('rejects password protected PDF uploads with 400', async () => {
+    const createMock = jest.fn();
+
+    (controller as unknown as {
+      getApiClient: () => { create: typeof createMock };
+    }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
+
+    const req = buildRequest({
+      files: [
+        {
+          buffer: Buffer.from('%PDF-1.7\n1 0 obj\n<< /Encrypt 2 0 R >>\nendobj'),
+          originalname: 'protected.pdf',
+        } as Express.Multer.File,
+      ],
+    });
+
+    await expect(
+      controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never)
+    ).rejects.toMatchObject({
+      message: 'Password protected documents cannot be uploaded',
+      status: 400,
+    });
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
+  test('rejects password protected Office uploads with 400', async () => {
+    const createMock = jest.fn();
+
+    (controller as unknown as {
+      getApiClient: () => { create: typeof createMock };
+    }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
+
+    const encryptedOfficeBuffer = Buffer.concat([
+      Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]),
+      Buffer.alloc(64),
+      Buffer.from('EncryptionInfo', 'utf16le'),
+      Buffer.alloc(64),
+      Buffer.from('EncryptedPackage', 'utf16le'),
+    ]);
+
+    const req = buildRequest({
+      files: [
+        {
+          buffer: encryptedOfficeBuffer,
+          originalname: 'protected.docx',
+        } as Express.Multer.File,
+      ],
+    });
+
+    await expect(
+      controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never)
+    ).rejects.toMatchObject({
+      message: 'Password protected documents cannot be uploaded',
+      status: 400,
+    });
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
   test('stores documents correctly', async () => {
     const createMock = jest.fn().mockResolvedValue([
       {
