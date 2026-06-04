@@ -27,12 +27,6 @@
         You will be able to check what you have uploaded before you submit them to the court.
       </p>
 
-      {# DEBUG: Remove this after testing #}
-      <details class="govuk-details" style="background: #f3f2f1; padding: 15px; margin-bottom: 20px;">
-        <summary style="cursor: pointer; font-weight: bold;">🔍 DEBUG: Session Data</summary>
-        <pre style="background: white; padding: 10px; overflow: auto; font-size: 12px;">{{ data.uploadedFiles | dump | safe }}</pre>
-      </details>
-
       {% if data.selectedDocumentTypes and data.selectedDocumentTypes.length > 0 %}
         {% for documentType in data.selectedDocumentTypes %}
           <h2 class="govuk-heading-m govuk-!-margin-top-8">{{ documentType.label }}</h2>
