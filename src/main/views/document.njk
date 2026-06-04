@@ -63,6 +63,33 @@
       </button>
     </form>
 
+    {% if documents and documents.length > 0 %}
+      <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+
+      <h2 class="govuk-heading-m">Uploaded documents</h2>
+
+      <ul class="govuk-list govuk-list--bullet">
+        {% for doc in documents %}
+          <li>
+
+            {% if doc.extractedDocumentId %}
+              <a
+                class="govuk-link"
+                href="/documents/{{ doc.extractedDocumentId }}/download"
+                target="_blank"
+              >
+                {{ doc.value.DocumentFileName }}
+              </a>
+            {% else %}
+              <span>{{ doc.value.DocumentFileName }}</span>
+              <span class="govuk-hint"> (unavailable)</span>
+            {% endif %}
+
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
     <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
 
     <h2 class="govuk-heading-m">Submit documents</h2>

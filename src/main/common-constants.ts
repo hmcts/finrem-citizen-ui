@@ -26,6 +26,7 @@ export const PrivateRoutes = {
   documents: '/documents',
   documentUpload: '/documents/upload',
   documentSend: '/documents/send',
+  documentDownload: '/documents/:documentId/download',
 } as const;
 
 export const RouteNames = {
@@ -67,5 +68,6 @@ export const UrlEndPoints = {
   SearchCasesBase: '/searchCases',
   SearchCases: (caseType: string) => `/searchCases?ctid=${caseType}`,
   UploadDocument: '/cases/documents',
+  GetDocument: (documentId: string) => `/cases/documents/${documentId}/binary`,
   CaseRoles: '/case-users/search',
 } as const;

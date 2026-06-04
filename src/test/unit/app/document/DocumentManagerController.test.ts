@@ -1,3 +1,4 @@
+import { Response } from 'express';
 import { LoggerInstance } from 'winston';
 
 import { CaseRole } from '../../../../main/app/case/definition';
@@ -54,6 +55,7 @@ describe('DocumentManagerController', () => {
 
   test('throws when no files uploaded', async () => {
     const req = buildRequest({ files: [] });
+
     await expect(
       controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never)
     ).rejects.toThrow('No files were uploaded');
@@ -86,14 +88,9 @@ describe('DocumentManagerController', () => {
       },
     ]);
 
-    jest
-      .spyOn(
-        controller as unknown as {
-          getApiClient: (user: UserDetails) => { create: typeof createMock };
-        },
-        'getApiClient'
-      )
-      .mockReturnValue({ create: createMock });
+    (controller as unknown as {
+      getApiClient: () => { create: typeof createMock };
+    }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
 
     const req = buildRequest({
       files: [
@@ -121,14 +118,9 @@ describe('DocumentManagerController', () => {
       },
     ]);
 
-    jest
-      .spyOn(
-        controller as unknown as {
-          getApiClient: (user: UserDetails) => { create: typeof createMock };
-        },
-        'getApiClient'
-      )
-      .mockReturnValue({ create: createMock });
+    (controller as unknown as {
+      getApiClient: () => { create: typeof createMock };
+    }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
 
     const req = buildRequest({
       files: [{} as Express.Multer.File],
@@ -194,5 +186,89 @@ describe('DocumentManagerController', () => {
 
     expect(triggerEventMock).toHaveBeenCalled();
     expect(req.session.documents).toBeUndefined();
+  });
+
+  describe('downloadDocument', () => {
+    test('throws when user is missing from session', async () => {
+      const req = {
+        session: { user: undefined },
+      } as unknown as AppRequest;
+
+      const res = {} as Response;
+
+      await expect(
+        controller.downloadDocument(req, res, 'doc-123', '123')
+      ).rejects.toThrow('No user in session');
+    });
+
+    test('calls getDocument on API client with correct params', async () => {
+      const getDocumentMock = jest.fn().mockResolvedValue(undefined);
+
+      (controller as unknown as {
+        getApiClient: (user: UserDetails) => {
+          getDocument: typeof getDocumentMock;
+        };
+      }).getApiClient = jest.fn().mockReturnValue({
+        getDocument: getDocumentMock,
+      });
+
+      const req = {
+        session: {
+          user: userDetails,
+          caseNumber: '123',
+        },
+      } as unknown as AppRequest;
+
+      const res = {} as Response;
+
+      await controller.downloadDocument(req, res, 'doc-123', '123');
+
+      expect(getDocumentMock).toHaveBeenCalledWith(res, 'doc-123');
+    });
+
+    test('passes correct user into getApiClient', async () => {
+      const getDocumentMock = jest.fn().mockResolvedValue(undefined);
+
+      const getApiClientMock = jest.fn().mockReturnValue({
+        getDocument: getDocumentMock,
+      });
+
+      (controller as unknown as {
+        getApiClient: typeof getApiClientMock;
+      }).getApiClient = getApiClientMock;
+
+      const req = {
+        session: {
+          user: userDetails,
+          caseNumber: '456',
+        },
+      } as unknown as AppRequest;
+
+      const res = {} as Response;
+
+      await controller.downloadDocument(req, res, 'doc-456', '456');
+
+      expect(getApiClientMock).toHaveBeenCalledWith(userDetails);
+      expect(getDocumentMock).toHaveBeenCalledWith(res, 'doc-456');
+    });
+
+    test('returns 403 when caseId does not match session', async () => {
+      const req = {
+        session: {
+          user: userDetails,
+          caseNumber: '123',
+        },
+      } as unknown as AppRequest;
+
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+      } as unknown as Response;
+
+      await controller.downloadDocument(req, res, 'doc-123', '999');
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.send).toHaveBeenCalledWith('Forbidden');
+    });
   });
 });

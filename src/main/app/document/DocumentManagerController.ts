@@ -1,10 +1,11 @@
+import { Response } from 'express';
 import { v4 as generateUuid } from 'uuid';
 import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../auth/user';
 import { getCaseApi } from '../case/case-api';
-import { CITIZEN_APPLICANT_DOCUMENT, CITIZEN_RESPONDENT_DOCUMENT,EVENT_TYPE } from '../case/case-type';
-import { CaseRole,CitizenUploadDocument, CitizenUploadDocumentType, ListValue } from '../case/definition';
+import { CITIZEN_APPLICANT_DOCUMENT, CITIZEN_RESPONDENT_DOCUMENT, EVENT_TYPE } from '../case/case-type';
+import { CaseRole, CitizenUploadDocument, CitizenUploadDocumentType, ListValue } from '../case/definition';
 import type { AppRequest, UserDetails } from '../controller/AppRequest';
 import { CaseDocumentManagementClient, Classification } from './CaseDocumentManagementClient';
 
@@ -101,6 +102,26 @@ export class DocumentManagerController {
         delete req.session.documents;
 
         this.logger.info('Document collection sent to CCD');
+    }
+
+    public async downloadDocument(
+        req: AppRequest,
+        res: Response,
+        documentId: string,
+        caseId: string
+    ): Promise<void> {
+        const user = req.session.user;
+
+        if (!user) {
+            throw new Error('No user in session');
+        }
+
+        if (!req.session.caseNumber || req.session.caseNumber !== caseId) {
+            res.status(403).send('Forbidden');
+            return;
+        }
+
+        await this.getApiClient(user).getDocument(res, documentId);
     }
 
     private getApiClient(user: UserDetails): CaseDocumentManagementClient {
