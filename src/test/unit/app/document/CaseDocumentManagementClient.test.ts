@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import { Response } from 'express';
 import FormData from 'form-data';
 import { Readable } from 'stream';
 
@@ -17,7 +18,9 @@ jest.mock('../../../../main/app/auth/service/get-service-auth-token', () => ({
 }));
 
 describe('CaseDocumentManagementClient', () => {
-  let mockAxios: jest.Mocked<Pick<AxiosInstance, 'post' | 'delete'>>;
+  let mockAxios: jest.Mocked<
+    Pick<AxiosInstance, 'post' | 'delete' | 'get'>
+  >;
   let client: CaseDocumentManagementClient;
 
   const userDetails: UserDetails = {
@@ -36,6 +39,7 @@ describe('CaseDocumentManagementClient', () => {
     mockAxios = {
       post: jest.fn(),
       delete: jest.fn(),
+      get: jest.fn(),
     };
 
     (axios.create as jest.Mock).mockReturnValue(mockAxios);
@@ -152,5 +156,98 @@ describe('CaseDocumentManagementClient', () => {
     });
 
     expect(result).toHaveLength(2);
+  });
+
+  test('gets document, sets headers and pipes response', async () => {
+    const mockPipe = jest.fn();
+
+    mockAxios.get.mockResolvedValue({
+      headers: {
+        'content-type': 'application/pdf',
+        'content-disposition': 'attachment; filename="file.pdf"',
+      },
+      data: {
+        pipe: mockPipe,
+      },
+    });
+
+    const res = {
+      setHeader: jest.fn(),
+    } as unknown as Response;
+
+    await client.getDocument(res, '123');
+
+    expect(mockAxios.get).toHaveBeenCalledWith(
+      expect.any(String),
+      { responseType: 'stream' }
+    );
+
+    expect(res.setHeader).toHaveBeenCalledWith(
+      'Content-Type',
+      'application/pdf'
+    );
+
+    expect(res.setHeader).toHaveBeenCalledWith(
+      'Content-Disposition',
+      'attachment; filename="file.pdf"'
+    );
+
+    expect(mockPipe).toHaveBeenCalledWith(res);
+  });
+
+  test('uses default content-type if missing', async () => {
+    const mockPipe = jest.fn();
+
+    mockAxios.get.mockResolvedValue({
+      headers: {
+        'content-type': undefined,
+        'content-disposition': 'attachment; filename="file.pdf"',
+      },
+      data: {
+        pipe: mockPipe,
+      },
+    });
+
+    const res = {
+      setHeader: jest.fn(),
+    } as unknown as Response;
+
+    await client.getDocument(res, '123');
+
+    expect(res.setHeader).toHaveBeenCalledWith(
+      'Content-Type',
+      'application/octet-stream'
+    );
+  });
+
+  test('does not set Content-Disposition if missing', async () => {
+    const mockPipe = jest.fn();
+
+    mockAxios.get.mockResolvedValue({
+      headers: {
+        'content-type': 'application/pdf',
+      },
+      data: {
+        pipe: mockPipe,
+      },
+    });
+
+    const res = {
+      setHeader: jest.fn(),
+    } as unknown as Response;
+
+    await client.getDocument(res, '123');
+
+    expect(res.setHeader).toHaveBeenCalledWith(
+      'Content-Type',
+      'application/pdf'
+    );
+
+    expect(res.setHeader).not.toHaveBeenCalledWith(
+      'Content-Disposition',
+      expect.anything()
+    );
+
+    expect(mockPipe).toHaveBeenCalledWith(res);
   });
 });

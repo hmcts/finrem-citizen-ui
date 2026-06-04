@@ -1,10 +1,11 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import config from 'config';
+import { Response } from 'express';
 import FormData from 'form-data';
 
 import { UrlEndPoints } from '../../common-constants';
 import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
-import { CASE_DOCUMENT_MANAGEMENT_SERVICE_URL,CASE_TYPE, JURISDICTION } from '../case/case-type';
+import { CASE_DOCUMENT_MANAGEMENT_SERVICE_URL, CASE_TYPE, JURISDICTION } from '../case/case-type';
 import type { UserDetails } from '../controller/AppRequest';
 
 export class CaseDocumentManagementClient {
@@ -17,6 +18,7 @@ export class CaseDocumentManagementClient {
       headers: {
         Authorization: `Bearer ${this.user.accessToken}`,
         ServiceAuthorization: getServiceAuthToken(),
+        experimental: 'true',
       },
     });
   }
@@ -51,6 +53,28 @@ export class CaseDocumentManagementClient {
 
     return response.data?.documents || [];
   }
+
+  async getDocument(res: Response, documentId: string): Promise<void> {
+    const response = await this.client.get(
+      UrlEndPoints.GetDocument(documentId),
+      { responseType: 'stream' }
+    );
+
+    const contentType =
+      typeof response.headers['content-type'] === 'string'
+        ? response.headers['content-type']
+        : 'application/octet-stream';
+
+    const disposition = response.headers['content-disposition'];
+
+    res.setHeader('Content-Type', contentType);
+
+    if (disposition) {
+      res.setHeader('Content-Disposition', disposition);
+    }
+
+    response.data.pipe(res);
+  }
 }
 
 interface CaseDocumentManagementResponse {
@@ -73,8 +97,8 @@ export interface DocumentManagementFile {
 
 export type UploadedFiles =
   | {
-      [fieldname: string]: Express.Multer.File[];
-    }
+    [fieldname: string]: Express.Multer.File[];
+  }
   | Express.Multer.File[];
 
 

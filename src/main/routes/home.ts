@@ -97,10 +97,23 @@ export default function (app: Application): void {
       })
     );
 
+    const documents =
+      (appReq.session.documents?.documentDetails ?? []).map(doc => {
+        const url = doc.value?.DocumentLink?.document_url || '';
+
+        const documentId = url.split('/').pop();
+
+        return {
+          ...doc,
+          extractedDocumentId: documentId,
+        };
+      });
+
     res.render(ViewNames.Document, {
       documentTypes,
       documentCount,
       isFDR,
+      documents,
     });
   });
 
@@ -154,4 +167,29 @@ export default function (app: Application): void {
     const user = req.session.user as UserDetails;
     res.json({ caseRole: user.caseRole });
   });
+
+  app.get(
+    RouteNames.documentDownload,
+    oidcMiddleware,
+    async (req, res, next) => {
+      try {
+        const { documentId } = req.params;
+
+        const appReq = req as AppRequest;
+
+        const normalizedDocumentId = Array.isArray(documentId)
+          ? documentId[0]
+          : documentId;
+
+
+        await documentController.downloadDocument(
+          appReq,
+          res,
+          normalizedDocumentId
+        );
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
 }
