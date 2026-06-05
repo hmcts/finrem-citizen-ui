@@ -1,4 +1,4 @@
-import { Application } from 'express';
+import { Application, Request, Response } from 'express';
 import multer from 'multer';
 import { LoggerInstance } from 'winston';
 
@@ -11,6 +11,7 @@ import { AppRequest, UserDetails } from '../app/controller/AppRequest';
 import { DocumentManagerController } from '../app/document/DocumentManagerController';
 import { RouteNames, ViewNames } from '../common-constants';
 import { orchestrateHome } from '../functions/util/homePageUtil';
+import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../functions/util/uploadValidation';
 import { oidcMiddleware } from '../middleware';
 
 export default function (app: Application): void {
@@ -123,8 +124,17 @@ export default function (app: Application): void {
     upload.any(),
     async (req, res, next) => {
       try {
+        const documentType = req.body.documentType as string;
+        const returnUrl = req.body.returnUrl || RouteNames.documents;
+        
+        // Validate uploaded file
+        const validationError = validateUploadedFile(req.files as Express.Multer.File[]);
+        if (validationError) {
+          return redirectWithError(req, res, documentType, returnUrl, validationError);
+        }
+
         // Convert kebab-case to SCREAMING_SNAKE_CASE for enum lookup
-        const documentTypeKey = (req.body.documentType as string)
+        const documentTypeKey = documentType
           .toUpperCase()
           .replace(/-/g, '_');
         
@@ -133,12 +143,24 @@ export default function (app: Application): void {
           documentTypeKey as keyof typeof CitizenUploadDocumentType
           ];
 
-        await documentController.uploadDocumentToEvidenceStore(
-          req as unknown as AppRequest,
-          selectedType
-        );
+        try {
+          await documentController.uploadDocumentToEvidenceStore(
+            req as unknown as AppRequest,
+            selectedType
+          );
+        } catch (error) {
+          // Handle upload processing errors
+          logger.error('Error uploading document', { error });
+          return redirectWithError(req, res, documentType, returnUrl, FILE_VALIDATION_ERRORS.UPLOAD_FAILED);
+        }
 
-        const returnUrl = req.body.returnUrl || RouteNames.documents;
+        // Clear errors on successful upload
+        if (req.session.uploadErrors) {
+          delete req.session.uploadErrors[documentType];
+          if (Object.keys(req.session.uploadErrors).length === 0) {
+            delete req.session.uploadErrors;
+          }
+        }
         
         req.session.save((err) => {
           if (err) {
@@ -151,6 +173,27 @@ export default function (app: Application): void {
       }
     }
   );
+
+  function redirectWithError(
+    req: Request,
+    res: Response,
+    documentType: string,
+    returnUrl: string,
+    errorMessage: string
+  ): void {
+    // Store error in session
+    if (!req.session.uploadErrors) {
+      req.session.uploadErrors = {};
+    }
+    req.session.uploadErrors[documentType] = errorMessage;
+    
+    req.session.save((err) => {
+      if (err) {
+        throw err;
+      }
+      res.redirect(returnUrl);
+    });
+  }
 
   app.delete(
     RouteNames.documentRemove,

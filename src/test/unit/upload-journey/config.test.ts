@@ -159,7 +159,48 @@ describe('Upload Journey Configuration', () => {
       expect(step.template).toBe('upload-journey/upload-documents');
       expect(step.next!()).toBe(UploadStepNames.CheckUpload);
       expect(step.previous!()).toBe(UploadStepNames.DocumentTypeSelection);
-      expect(step.validate).toBeUndefined();
+      expect(step.validate).toBeDefined();
+    });
+
+    it('should return error when no documents uploaded', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const mockReq = {
+        session: {
+          documents: {
+            documentDetails: [],
+          },
+        },
+      } as unknown as Request;
+
+      // @ts-expect-error - Mocking partial Request for testing
+      const errors = step.validate!({}, mockReq);
+      expect(errors.upload).toBe('You must upload at least one file before continuing');
+    });
+
+    it('should return no errors when documents uploaded', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const mockReq = {
+        session: {
+          documents: {
+            documentDetails: [{ id: '1', value: {} }],
+          },
+        },
+      } as unknown as Request;
+
+      // @ts-expect-error - Mocking partial Request for testing
+      const errors = step.validate!({}, mockReq);
+      expect(errors).toEqual({});
+    });
+
+    it('should return error when session.documents is undefined', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const mockReq = {
+        session: {},
+      } as unknown as Request;
+
+      // @ts-expect-error - Mocking partial Request for testing
+      const errors = step.validate!({}, mockReq);
+      expect(errors.upload).toBe('You must upload at least one file before continuing');
     });
   });
 
