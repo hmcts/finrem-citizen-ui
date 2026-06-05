@@ -125,7 +125,7 @@ export default function (app: Application): void {
     RouteNames.documentUpload,
     oidcMiddleware,
     upload.any(),
-    async (req, res, next) => {
+    async (req: Request, res: Response, next: (error?: Error) => void) => {
       try {
         const documentType = req.body.documentType as string;
         const returnUrl = req.body.returnUrl || RouteNames.documents;
