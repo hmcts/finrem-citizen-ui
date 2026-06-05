@@ -78,6 +78,9 @@ export default function (app: Application): void {
 
   const upload = multer({
     storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 100 * 1024 * 1024, // 100MB max file size
+    },
   });
 
   const documentController = new DocumentManagerController(logger);
@@ -121,7 +124,24 @@ export default function (app: Application): void {
   app.post(
     RouteNames.documentUpload,
     oidcMiddleware,
-    upload.any(),
+    (req, res, next) => {
+      upload.any()(req, res, (err) => {
+        if (err) {
+          // Handle multer errors
+          const documentType = req.body.documentType as string;
+          const returnUrl = req.body.returnUrl || RouteNames.documents;
+          
+          if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+            return redirectWithError(req, res, documentType, returnUrl, FILE_VALIDATION_ERRORS.TOO_LARGE);
+          }
+          
+          // Other multer errors
+          logger.error('Multer error during file upload', { error: err });
+          return redirectWithError(req, res, documentType, returnUrl, FILE_VALIDATION_ERRORS.UPLOAD_FAILED);
+        }
+        next();
+      });
+    },
     async (req, res, next) => {
       try {
         const documentType = req.body.documentType as string;
