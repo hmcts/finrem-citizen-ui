@@ -124,9 +124,13 @@ export default function setupUploadJourneyRoute(app: Application): void {
     // Get uploaded documents grouped by document type
     const uploadedFilesByType = getUploadedFilesByType(req);
 
+    // Get upload errors from session
+    const uploadErrors = req.session.uploadErrors || {};
+    delete req.session.uploadErrors;
+
     res.render(step.template, {
       data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType },
-      errors: {},
+      errors: uploadErrors,
       values: { selectedDocumentTypes, fdrHearing },
       previousStep,
       email: 'FRCexample@justice.gov.uk',

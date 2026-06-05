@@ -14,9 +14,16 @@
       {% endif %}
 
       {% if errors and (errors | length) %}
+        {% set errorList = [] %}
+        {% for key, value in errors %}
+          {% set errorList = (errorList.push({
+            text: value,
+            href: "#" + ("file-upload-" + key if key != "upload" else "upload")
+          }), errorList) %}
+        {% endfor %}
         {{ govukErrorSummary({
           titleText: "There is a problem",
-          errorList: errors
+          errorList: errorList
         }) }}
       {% endif %}
 
@@ -118,10 +125,10 @@
       {% endif %}
 
       <form method="post" class="govuk-!-margin-top-8">
-        {% if fieldErrors and fieldErrors.upload %}
+        {% if errors and errors.upload %}
           <div id="upload" class="govuk-form-group govuk-form-group--error">
             <span class="govuk-error-message">
-              <span class="govuk-visually-hidden">Error:</span> {{ fieldErrors.upload }}
+              <span class="govuk-visually-hidden">Error:</span> {{ errors.upload }}
             </span>
           </div>
         {% endif %}
