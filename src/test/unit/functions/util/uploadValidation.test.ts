@@ -1,8 +1,8 @@
 import {
   FILE_VALIDATION_ERRORS,
   getFileExtension,
-  isValidFileType,
   isValidFileSize,
+  isValidFileType,
   validateUploadedFile,
 } from '../../../../main/functions/util/uploadValidation';
 
