@@ -10,7 +10,7 @@ describe('uploadValidation', () => {
   describe('FILE_VALIDATION_ERRORS', () => {
     it('should have all required error messages', () => {
       expect(FILE_VALIDATION_ERRORS.INVALID_TYPE).toBe('Your file must be in jpg, png, pdf, docx, or xlsx format');
-      expect(FILE_VALIDATION_ERRORS.TOO_LARGE).toBe('Your file must be smaller than 100KB');
+      expect(FILE_VALIDATION_ERRORS.TOO_LARGE).toBe('Your file must be smaller than 100MB');
       expect(FILE_VALIDATION_ERRORS.EMPTY).toBe('The selected file is empty');
       expect(FILE_VALIDATION_ERRORS.UPLOAD_FAILED).toBe('The selected file could not be uploaded - try again');
       expect(FILE_VALIDATION_ERRORS.NO_FILE).toBe('You must upload at least one file before continuing');
@@ -68,18 +68,18 @@ describe('uploadValidation', () => {
     it('should return true for valid file sizes', () => {
       expect(isValidFileSize(1)).toBe(true);
       expect(isValidFileSize(1024)).toBe(true);
-      expect(isValidFileSize(50 * 1024)).toBe(true); // 50KB
-      expect(isValidFileSize(100 * 1024)).toBe(true); // 100KB exactly
+      expect(isValidFileSize(50 * 1024 * 1024)).toBe(true); // 50MB
+      expect(isValidFileSize(100 * 1024 * 1024)).toBe(true); // 100MB exactly
     });
 
     it('should return false for empty files', () => {
       expect(isValidFileSize(0)).toBe(false);
     });
 
-    it('should return false for files over 100KB', () => {
-      expect(isValidFileSize(101 * 1024)).toBe(false);
-      expect(isValidFileSize(200 * 1024)).toBe(false);
-      expect(isValidFileSize(500 * 1024)).toBe(false);
+    it('should return false for files over 100MB', () => {
+      expect(isValidFileSize(101 * 1024 * 1024)).toBe(false);
+      expect(isValidFileSize(200 * 1024 * 1024)).toBe(false);
+      expect(isValidFileSize(500 * 1024 * 1024)).toBe(false);
     });
 
     it('should return false for negative sizes', () => {
@@ -114,11 +114,11 @@ describe('uploadValidation', () => {
       expect(validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.INVALID_TYPE);
     });
 
-    it('should return TOO_LARGE error for files over 100KB', () => {
+    it('should return TOO_LARGE error for files over 100MB', () => {
       const files = [
         { 
           originalname: 'test.pdf', 
-          size: 101 * 1024,
+          size: 101 * 1024 * 1024,
           buffer: Buffer.from('test')
         } as Express.Multer.File,
       ];
@@ -141,14 +141,14 @@ describe('uploadValidation', () => {
 
     it('should return null for valid document files', () => {
       const files = [
-        { originalname: 'document.docx', size: 5 * 1024, buffer: Buffer.from('test') } as Express.Multer.File,
+        { originalname: 'document.docx', size: 5 * 1024 * 1024, buffer: Buffer.from('test') } as Express.Multer.File,
       ];
       expect(validateUploadedFile(files)).toBeNull();
     });
 
     it('should return null for valid spreadsheet files', () => {
       const files = [
-        { originalname: 'spreadsheet.xlsx', size: 10 * 1024, buffer: Buffer.from('test') } as Express.Multer.File,
+        { originalname: 'spreadsheet.xlsx', size: 10 * 1024 * 1024, buffer: Buffer.from('test') } as Express.Multer.File,
       ];
       expect(validateUploadedFile(files)).toBeNull();
     });
