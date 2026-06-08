@@ -57,6 +57,9 @@
                 }) }}
               {% endif %}
 
+              <input type="hidden" name="documentType" value="{{ documentType.value }}">
+              <input type="hidden" name="returnUrl" value="/upload/upload-documents">
+
               {{ govukFileUpload({
                 id: "file-upload-" + documentType.value,
                 name: "file",
@@ -75,9 +78,6 @@
                   "aria-describedby": "file-upload-" + documentType.value + "-hint" + (" file-upload-" + documentType.value + "-error" if errors and errors[documentType.value])
                 }
               }) }}
-
-              <input type="hidden" name="documentType" value="{{ documentType.value }}">
-              <input type="hidden" name="returnUrl" value="/upload/upload-documents">
 
               {{ govukButton({
                 text: "Upload file",
