@@ -140,6 +140,7 @@ export default function (app: Application): void {
             return redirectWithError(
               req, 
               res, 
+              next,
               documentType, 
               returnUrl, 
               FILE_VALIDATION_ERRORS.TOO_LARGE
@@ -151,6 +152,7 @@ export default function (app: Application): void {
           return redirectWithError(
             req, 
             res, 
+            next,
             documentType, 
             returnUrl, 
             FILE_VALIDATION_ERRORS.UPLOAD_FAILED
@@ -170,7 +172,7 @@ export default function (app: Application): void {
         // Validate uploaded file
         const validationError = validateUploadedFile(req.files as Express.Multer.File[]);
         if (validationError) {
-          return redirectWithError(req, res, documentType, returnUrl, validationError);
+          return redirectWithError(req, res, next, documentType, returnUrl, validationError);
         }
 
         // Convert kebab-case to SCREAMING_SNAKE_CASE for enum lookup
@@ -191,7 +193,7 @@ export default function (app: Application): void {
         } catch (error) {
           // Handle upload processing errors
           logger.error('Error uploading document', { error });
-          return redirectWithError(req, res, documentType, returnUrl, FILE_VALIDATION_ERRORS.UPLOAD_FAILED);
+          return redirectWithError(req, res, next, documentType, returnUrl, FILE_VALIDATION_ERRORS.UPLOAD_FAILED);
         }
 
         // Clear errors on successful upload
@@ -217,6 +219,7 @@ export default function (app: Application): void {
   function redirectWithError(
     req: Request,
     res: Response,
+    next: (error?: Error) => void,
     documentType: string,
     returnUrl: string,
     errorMessage: string
@@ -229,7 +232,7 @@ export default function (app: Application): void {
     
     req.session.save((err) => {
       if (err) {
-        throw err;
+        return next(err);
       }
       res.redirect(returnUrl);
     });
