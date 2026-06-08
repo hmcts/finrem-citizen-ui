@@ -5,13 +5,54 @@ const logger = getLogger('upload-documents');
 const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
 const ERROR_MESSAGE = 'Your file must be smaller than 100MB';
 
+function showErrorSummary(documentType: string, inputId: string): void {
+  // Remove any existing error summary
+  document.querySelector('[data-client-error-summary]')?.remove();
+  
+  // Create error summary box
+  const errorSummary = document.createElement('div');
+  errorSummary.className = 'govuk-error-summary';
+  errorSummary.setAttribute('data-client-error-summary', 'true');
+  errorSummary.setAttribute('role', 'alert');
+  errorSummary.setAttribute('aria-labelledby', 'error-summary-title');
+  errorSummary.setAttribute('tabindex', '-1');
+  
+  errorSummary.innerHTML = `
+    <h2 class="govuk-error-summary__title" id="error-summary-title">
+      There is a problem
+    </h2>
+    <div class="govuk-error-summary__body">
+      <ul class="govuk-list govuk-error-summary__list">
+        <li>
+          <a href="#${inputId}">${ERROR_MESSAGE}</a>
+        </li>
+      </ul>
+    </div>
+  `;
+  
+  // Insert at the top of the main content area (before the h1)
+  const mainHeading = document.querySelector('h1.govuk-heading-l');
+  if (mainHeading) {
+    mainHeading.before(errorSummary);
+    errorSummary.focus();
+  }
+}
+
+function clearErrorSummary(): void {
+  document.querySelector('[data-client-error-summary]')?.remove();
+}
+
 function showClientError(form: HTMLFormElement, input: HTMLInputElement): void {
   const documentType = form.dataset.uploadForm;
+  const inputId = input.id;
   
   // Remove any existing client-side error
   form.querySelector('[data-client-error]')?.remove();
   
-  // Create GOV.UK-styled error message
+  // Show error summary at top
+  showErrorSummary(documentType || '', inputId);
+  
+  // Create GOV.UK-styled inline error message
   const errorEl = document.createElement('p');
   errorEl.className = 'govuk-error-message';
   errorEl.setAttribute('data-client-error', documentType || '');
@@ -24,13 +65,11 @@ function showClientError(form: HTMLFormElement, input: HTMLInputElement): void {
   const formGroup = input.closest('.govuk-form-group');
   formGroup?.classList.add('govuk-form-group--error');
   input.classList.add('govuk-file-upload--error');
-  
-  // Scroll to error
-  errorEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function clearClientError(form: HTMLFormElement, input: HTMLInputElement): void {
   form.querySelector('[data-client-error]')?.remove();
+  clearErrorSummary();
   
   const formGroup = input.closest('.govuk-form-group');
   formGroup?.classList.remove('govuk-form-group--error');
