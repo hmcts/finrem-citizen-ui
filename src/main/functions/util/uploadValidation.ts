@@ -1,13 +1,13 @@
 export const FILE_VALIDATION_ERRORS = {
   INVALID_TYPE: 'Your file must be in jpg, png, pdf, docx, or xlsx format',
-  TOO_LARGE: 'Your file must be smaller than 100MB',
+  TOO_LARGE: 'Your file must be smaller than 100KB',
   EMPTY: 'The selected file is empty',
   UPLOAD_FAILED: 'The selected file could not be uploaded - try again',
   NO_FILE: 'You must upload at least one file before continuing',
 } as const;
 
 const ALLOWED_FILE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.pdf', '.docx', '.xlsx'];
-const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
+const MAX_FILE_SIZE_BYTES = 100 * 1024; // 100KB
 
 export function getFileExtension(filename: string): string {
   return filename.substring(filename.lastIndexOf('.')).toLowerCase();
