@@ -156,7 +156,7 @@
           const file = form.querySelector('input[type="file"]').files[0];
           if (file && file.size > MAX_FILE_SIZE) {
             e.preventDefault();
-            alert('Your file must be smaller than 100KB. The selected file is ' + Math.round(file.size / 1024 / 1024) + 'MB.');
+            alert('Your file must be smaller than 100KB. The selected file is ' + Math.round(file.size / 1024) + 'KB.');
           }
         });
       });
