@@ -145,21 +145,3 @@
     </div>
   </div>
 {% endblock %}
-
-{% block bodyEnd %}
-  {{ super() }}
-  <script>
-    (function() {
-      const MAX_FILE_SIZE = 100 * 1024 * 1024;
-      document.querySelectorAll('form[action="/documents/upload"]').forEach(function(form) {
-        form.addEventListener('submit', function(e) {
-          const file = form.querySelector('input[type="file"]').files[0];
-          if (file && file.size > MAX_FILE_SIZE) {
-            e.preventDefault();
-            alert('Your file must be smaller than 100MB. The selected file is ' + Math.round(file.size / 1024 / 1024) + 'MB.');
-          }
-        });
-      });
-    })();
-  </script>
-{% endblock %}

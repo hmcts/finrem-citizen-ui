@@ -125,6 +125,43 @@ export default function (app: Application): void {
     RouteNames.documentUpload,
     oidcMiddleware,
     upload.any(),
+    (err: Error, req: Request, res: Response, next: (error?: Error) => void) => {
+      if (err) {
+        const documentType = req.body.documentType as string;
+        const returnUrl = req.body.returnUrl || RouteNames.documents;
+        
+        // Handle Multer-specific errors
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            logger.warn('File size limit exceeded', { 
+              fieldname: err.field,
+              limit: '100MB' 
+            });
+            return redirectWithError(
+              req, 
+              res, 
+              documentType, 
+              returnUrl, 
+              FILE_VALIDATION_ERRORS.TOO_LARGE
+            );
+          }
+          
+          // Handle other Multer errors
+          logger.error('Multer error', { code: err.code, field: err.field });
+          return redirectWithError(
+            req, 
+            res, 
+            documentType, 
+            returnUrl, 
+            FILE_VALIDATION_ERRORS.UPLOAD_FAILED
+          );
+        }
+        
+        // Pass non-Multer errors to next error handler
+        return next(err);
+      }
+      next();
+    },
     async (req: Request, res: Response, next: (error?: Error) => void) => {
       try {
         const documentType = req.body.documentType as string;
