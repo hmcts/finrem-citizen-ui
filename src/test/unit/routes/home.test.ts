@@ -433,12 +433,13 @@ describe('Home Routes', () => {
       const homeRoutes = require('../../../main/routes/home').default;
       homeRoutes(app);
 
-      // Get the error handler middleware (second-to-last handler registered)
+      // Find the error-handling middleware by its arity (4 args: err, req, res, next)
       const postCalls = (app.post as jest.Mock).mock.calls.filter(
         (call: unknown[]) => call[0] === RouteNames.documentUpload
       );
-      const handlers = postCalls[0].slice(2); // Skip route and oidcMiddleware
-      const errorHandler = handlers[1] as (err: Error, req: Request, res: Response, next: (error?: Error) => void) => void;
+      const errorHandler = postCalls[0].find(
+        (h: unknown) => typeof h === 'function' && (h as (...args: unknown[]) => void).length === 4
+      ) as (err: Error, req: Request, res: Response, next: (error?: Error) => void) => void;
 
       const multer = require('multer');
       const multerError = new multer.MulterError('LIMIT_FILE_SIZE', 'file');
@@ -471,8 +472,9 @@ describe('Home Routes', () => {
       const postCalls = (app.post as jest.Mock).mock.calls.filter(
         (call: unknown[]) => call[0] === RouteNames.documentUpload
       );
-      const handlers = postCalls[0].slice(2);
-      const errorHandler = handlers[1] as (err: Error, req: Request, res: Response, next: (error?: Error) => void) => void;
+      const errorHandler = postCalls[0].find(
+        (h: unknown) => typeof h === 'function' && (h as (...args: unknown[]) => void).length === 4
+      ) as (err: Error, req: Request, res: Response, next: (error?: Error) => void) => void;
 
       const multer = require('multer');
       const multerError = new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'file');
@@ -504,8 +506,9 @@ describe('Home Routes', () => {
       const postCalls = (app.post as jest.Mock).mock.calls.filter(
         (call: unknown[]) => call[0] === RouteNames.documentUpload
       );
-      const handlers = postCalls[0].slice(2);
-      const errorHandler = handlers[1] as (err: Error, req: Request, res: Response, next: (error?: Error) => void) => void;
+      const errorHandler = postCalls[0].find(
+        (h: unknown) => typeof h === 'function' && (h as (...args: unknown[]) => void).length === 4
+      ) as (err: Error, req: Request, res: Response, next: (error?: Error) => void) => void;
 
       const genericError = new Error('Some other error');
       
@@ -520,6 +523,65 @@ describe('Home Routes', () => {
       errorHandler(genericError, mockReq as unknown as Request, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(genericError);
+    });
+
+    it('should reject oversized uploads via Content-Length pre-check', () => {
+      const homeRoutes = require('../../../main/routes/home').default;
+      homeRoutes(app);
+
+      const postCalls = (app.post as jest.Mock).mock.calls.filter(
+        (call: unknown[]) => call[0] === RouteNames.documentUpload
+      );
+      // checkContentLength is registered after the route path and oidcMiddleware
+      const checkContentLength = postCalls[0][2] as HomeHandler;
+
+      const mockReq = {
+        headers: { 'content-length': String(200 * 1024 * 1024) },
+        query: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: {},
+        session: {
+          save: jest.fn((cb: (err?: Error) => void) => cb()),
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      checkContentLength(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockReq.session?.uploadErrors).toEqual({
+        'form-fm1': 'Your file must be smaller than 100MB',
+      });
+      expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should pass through Content-Length pre-check when within limit', () => {
+      const homeRoutes = require('../../../main/routes/home').default;
+      homeRoutes(app);
+
+      const postCalls = (app.post as jest.Mock).mock.calls.filter(
+        (call: unknown[]) => call[0] === RouteNames.documentUpload
+      );
+      const checkContentLength = postCalls[0][2] as HomeHandler;
+
+      const mockReq = {
+        headers: { 'content-length': String(50 * 1024 * 1024) },
+        query: {},
+        body: {},
+        session: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      checkContentLength(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith();
+      expect(mockRes.redirect).not.toHaveBeenCalled();
+      expect(mockReq.session?.uploadErrors).toBeUndefined();
     });
   });
 });
