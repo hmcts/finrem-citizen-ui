@@ -79,7 +79,7 @@ export default function (app: Application): void {
   const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-      fileSize: 100 * 1024, // 100KB max file size
+      fileSize: 100 * 1024 * 1024, // 100MB max file size
     },
   });
 
