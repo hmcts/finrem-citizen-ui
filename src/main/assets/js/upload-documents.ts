@@ -2,6 +2,40 @@ import { getLogger } from './logger';
 
 const logger = getLogger('upload-documents');
 
+const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
+
+export function initUploadValidation(): void {
+  document.querySelectorAll<HTMLFormElement>('[data-upload-form]').forEach(form => {
+    const input = form.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!input) {
+      return;
+    }
+
+    // Validate on file selection
+    input.addEventListener('change', () => {
+      const file = input.files?.[0];
+      if (file && file.size > MAX_FILE_SIZE_BYTES) {
+        const fileSizeMB = Math.round(file.size / 1024 / 1024);
+        logger.warn(`File too large: ${fileSizeMB}MB (max 100MB)`);
+        alert(`Your file must be smaller than 100MB. The selected file is ${fileSizeMB}MB.`);
+        // Clear the input so the oversized file is never sent
+        input.value = '';
+      }
+    });
+
+    // Validate on form submission as a fallback
+    form.addEventListener('submit', (e: Event) => {
+      const file = input.files?.[0];
+      if (file && file.size > MAX_FILE_SIZE_BYTES) {
+        e.preventDefault();
+        const fileSizeMB = Math.round(file.size / 1024 / 1024);
+        alert(`Your file must be smaller than 100MB. The selected file is ${fileSizeMB}MB.`);
+        input.value = '';
+      }
+    });
+  });
+}
+
 export function initUploadedDocuments(): void {
   document.querySelectorAll('[data-remove-file]').forEach(button => {
     button.addEventListener('click', async (e) => {
