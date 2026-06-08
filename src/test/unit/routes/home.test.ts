@@ -428,5 +428,98 @@ describe('Home Routes', () => {
       expect(mockReq.session?.uploadErrors).toBeUndefined();
       expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
     });
+
+    it('should handle Multer LIMIT_FILE_SIZE error in error handler middleware', () => {
+      const homeRoutes = require('../../../main/routes/home').default;
+      homeRoutes(app);
+
+      // Get the error handler middleware (second-to-last handler registered)
+      const postCalls = (app.post as jest.Mock).mock.calls.filter(
+        (call: unknown[]) => call[0] === RouteNames.documentUpload
+      );
+      const handlers = postCalls[0].slice(2); // Skip route and oidcMiddleware
+      const errorHandler = handlers[1] as (err: Error, req: Request, res: Response, next: (error?: Error) => void) => void;
+
+      const multer = require('multer');
+      const multerError = new multer.MulterError('LIMIT_FILE_SIZE', 'file');
+      
+      const mockReq = {
+        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        session: {
+          save: jest.fn((cb: (err?: Error) => void) => cb()),
+        },
+      } as PartialRequestWithSession;
+      
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      
+      const mockNext = jest.fn();
+
+      errorHandler(multerError, mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockReq.session?.uploadErrors).toEqual({
+        'form-fm1': 'Your file must be smaller than 100MB',
+      });
+      expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
+    });
+
+    it('should handle other Multer errors in error handler middleware', () => {
+      const homeRoutes = require('../../../main/routes/home').default;
+      homeRoutes(app);
+
+      const postCalls = (app.post as jest.Mock).mock.calls.filter(
+        (call: unknown[]) => call[0] === RouteNames.documentUpload
+      );
+      const handlers = postCalls[0].slice(2);
+      const errorHandler = handlers[1] as (err: Error, req: Request, res: Response, next: (error?: Error) => void) => void;
+
+      const multer = require('multer');
+      const multerError = new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'file');
+      
+      const mockReq = {
+        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        session: {
+          save: jest.fn((cb: (err?: Error) => void) => cb()),
+        },
+      } as PartialRequestWithSession;
+      
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      
+      const mockNext = jest.fn();
+
+      errorHandler(multerError, mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockReq.session?.uploadErrors).toEqual({
+        'form-fm1': 'The selected file could not be uploaded - try again',
+      });
+    });
+
+    it('should pass non-Multer errors to next handler', () => {
+      const homeRoutes = require('../../../main/routes/home').default;
+      homeRoutes(app);
+
+      const postCalls = (app.post as jest.Mock).mock.calls.filter(
+        (call: unknown[]) => call[0] === RouteNames.documentUpload
+      );
+      const handlers = postCalls[0].slice(2);
+      const errorHandler = handlers[1] as (err: Error, req: Request, res: Response, next: (error?: Error) => void) => void;
+
+      const genericError = new Error('Some other error');
+      
+      const mockReq = {
+        body: { documentType: 'form-fm1' },
+        session: {},
+      } as PartialRequestWithSession;
+      
+      const mockRes = {} as Partial<Response>;
+      const mockNext = jest.fn();
+
+      errorHandler(genericError, mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(genericError);
+    });
   });
 });
