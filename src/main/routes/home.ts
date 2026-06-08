@@ -83,6 +83,22 @@ export default function (app: Application): void {
     },
   });
 
+  // Allow a small buffer above 100MB to account for multipart encoding overhead
+  // (boundaries, field names, headers) so a file exactly at 100MB is not wrongly rejected.
+  const MAX_UPLOAD_BYTES = 101 * 1024 * 1024;
+
+  // Reject oversized uploads using the Content-Length header BEFORE Multer reads the body.
+  function checkContentLength(req: Request, res: Response, next: (error?: Error) => void): void {
+    const contentLength = Number(req.headers['content-length'] || 0);
+    if (contentLength > MAX_UPLOAD_BYTES) {
+      const documentType = (req.query.documentType as string) || '';
+      const returnUrl = (req.query.returnUrl as string) || RouteNames.documents;
+      logger.warn('Upload rejected by Content-Length pre-check', { contentLength });
+      return redirectWithError(req, res, next, documentType, returnUrl, FILE_VALIDATION_ERRORS.TOO_LARGE);
+    }
+    next();
+  }
+
   const documentController = new DocumentManagerController(logger);
 
   app.get(RouteNames.documents, oidcMiddleware, (req, res) => {
@@ -124,6 +140,7 @@ export default function (app: Application): void {
   app.post(
     RouteNames.documentUpload,
     oidcMiddleware,
+    checkContentLength,
     upload.any(),
     (err: Error, req: Request, res: Response, next: (error?: Error) => void) => {
       if (err) {
