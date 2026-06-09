@@ -45,8 +45,8 @@ app.get('/favicon.ico', limiter, (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));
 });
 
-app.use(bodyParser.json({ limit: '10mb' }));
-app.use(bodyParser.urlencoded({ extended: false, limit: '10mb' }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
@@ -76,7 +76,6 @@ app.use((err: HTTPError, req: express.Request, res: express.Response, _next: exp
   logger.error(`${err.stack || err}`);
   logger.error(err?.message);
   logger.error(err?.stack);
-  
   res.locals.message = err.message;
   res.locals.error = env === 'development' ? err : {};
   res.status(err.status || 500);
