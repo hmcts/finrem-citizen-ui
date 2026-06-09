@@ -164,6 +164,11 @@ Optional for real access-code happy-path integration lane:
 
 - `ACCESS_CODE_REAL_INTEGRATION=true`
 
+Optional app runtime values:
+
+- `SESSION_STORE` (`in-memory` or `redis`; defaults to `in-memory`)
+- `REDIS_CONNECTION_STRING` (required when `SESSION_STORE=redis`)
+
 IDAM values:
 
 - If `IDAM_WEB_URL` and `IDAM_TESTING_SUPPORT_API_URL` are not set, defaults are derived from `IDAM_ENV` (defaults to `aat`).
