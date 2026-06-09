@@ -267,7 +267,7 @@ describe('Upload Journey Routes', () => {
                   DocumentType: 'position-statement',
                   DocumentFileName: 'statement.pdf',
                   DocumentLink: {
-                    document_url: 'http://example.com/file1',
+                    document_url: 'http://example.com/documents/file1',
                   },
                 },
               },
@@ -277,7 +277,7 @@ describe('Upload Journey Routes', () => {
                   DocumentType: 'position-statement',
                   DocumentFileName: 'statement2.pdf',
                   DocumentLink: {
-                    document_url: 'http://example.com/file2',
+                    document_url: 'http://example.com/documents/file2',
                   },
                 },
               },
@@ -295,8 +295,8 @@ describe('Upload Journey Routes', () => {
         data: expect.objectContaining({
           uploadedFiles: {
             'position-statement': [
-              { id: 'file-1', filename: 'statement.pdf', url: 'http://example.com/file1', displayFilename: expect.any(String) },
-              { id: 'file-2', filename: 'statement2.pdf', url: 'http://example.com/file2', displayFilename: expect.any(String) },
+              { id: 'file-1', filename: 'statement.pdf', url: '/documents/file1/download', displayFilename: expect.any(String) },
+              { id: 'file-2', filename: 'statement2.pdf', url: '/documents/file2/download', displayFilename: expect.any(String) },
             ],
           },
         }),
@@ -405,7 +405,7 @@ describe('Upload Journey Routes', () => {
                   DocumentType: 'chronology',
                   DocumentFileName: 'chronology.pdf',
                   DocumentLink: {
-                    document_url: 'http://example.com/chronology',
+                    document_url: 'http://example.com/documents/chronology',
                   },
                 },
               },
@@ -425,7 +425,7 @@ describe('Upload Journey Routes', () => {
         data: expect.objectContaining({
           uploadedFiles: {
             'chronology': [
-              { id: 'file-1', filename: 'chronology.pdf', url: 'http://example.com/chronology', displayFilename: expect.any(String) },
+              { id: 'file-1', filename: 'chronology.pdf', url: '/documents/chronology/download', displayFilename: expect.any(String) },
             ],
           },
         }),
