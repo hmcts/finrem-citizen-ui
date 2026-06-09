@@ -60,10 +60,32 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
     validate: (body: Record<string, unknown>, req?: Request) => {
       const errors: Record<string, string> = {};
       
-      // Check if at least one document has been uploaded
+      // Get selected document types
+      const selectedTypes = req?.session?.DocumentSelection?.documentDetails || [];
       const uploadedDocs = req?.session?.documents?.documentDetails || [];
-      if (uploadedDocs.length === 0) {
-        errors.upload = FILE_VALIDATION_ERRORS.NO_FILE;
+      
+      // Check if at least one file uploaded per selected type
+      for (const selectedType of selectedTypes) {
+        const documentTypeValue = selectedType.value?.DocumentType;
+        
+        if (!documentTypeValue) {
+          continue;
+        }
+        
+        // Check if any uploaded document matches this type
+        const hasFileForType = uploadedDocs.some(doc => 
+          doc.value?.DocumentType === documentTypeValue
+        );
+        
+        if (!hasFileForType) {
+          // Use the document type value as the error key (e.g., 'form-fm1')
+          errors[documentTypeValue] = FILE_VALIDATION_ERRORS.NO_FILE;
+        }
+      }
+      
+      // If no document types selected at all, show general error
+      if (selectedTypes.length === 0) {
+        errors.upload = 'You must select document types before uploading';
       }
       
       return errors;

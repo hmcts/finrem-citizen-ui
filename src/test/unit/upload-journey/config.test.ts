@@ -162,10 +162,16 @@ describe('Upload Journey Configuration', () => {
       expect(step.validate).toBeDefined();
     });
 
-    it('should return error when no documents uploaded', () => {
+    it('should return error when no documents uploaded for selected types', () => {
       const step = uploadSteps[UploadStepNames.UploadDocuments];
       const mockReq = {
         session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: '1', value: { DocumentType: 'form-fm1' } },
+              { id: '2', value: { DocumentType: 'mortgage-statement' } },
+            ],
+          },
           documents: {
             documentDetails: [],
           },
@@ -174,15 +180,25 @@ describe('Upload Journey Configuration', () => {
 
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!({}, mockReq);
-      expect(errors.upload).toBe('You must upload at least one file before continuing');
+      expect(errors['form-fm1']).toBe('You must upload at least one file before continuing');
+      expect(errors['mortgage-statement']).toBe('You must upload at least one file before continuing');
     });
 
-    it('should return no errors when documents uploaded', () => {
+    it('should return no errors when all selected types have files', () => {
       const step = uploadSteps[UploadStepNames.UploadDocuments];
       const mockReq = {
         session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: '1', value: { DocumentType: 'form-fm1' } },
+              { id: '2', value: { DocumentType: 'mortgage-statement' } },
+            ],
+          },
           documents: {
-            documentDetails: [{ id: '1', value: {} }],
+            documentDetails: [
+              { id: '1', value: { DocumentType: 'form-fm1' } },
+              { id: '2', value: { DocumentType: 'mortgage-statement' } },
+            ],
           },
         },
       } as unknown as Request;
@@ -192,15 +208,43 @@ describe('Upload Journey Configuration', () => {
       expect(errors).toEqual({});
     });
 
-    it('should return error when session.documents is undefined', () => {
+    it('should return error when no document types selected', () => {
       const step = uploadSteps[UploadStepNames.UploadDocuments];
       const mockReq = {
-        session: {},
+        session: {
+          DocumentSelection: {
+            documentDetails: [],
+          },
+        },
       } as unknown as Request;
 
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!({}, mockReq);
-      expect(errors.upload).toBe('You must upload at least one file before continuing');
+      expect(errors.upload).toBe('You must select document types before uploading');
+    });
+
+    it('should return error for missing files on specific types', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const mockReq = {
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: '1', value: { DocumentType: 'form-fm1' } },
+              { id: '2', value: { DocumentType: 'mortgage-statement' } },
+            ],
+          },
+          documents: {
+            documentDetails: [
+              { id: '1', value: { DocumentType: 'form-fm1' } },
+            ],
+          },
+        },
+      } as unknown as Request;
+
+      // @ts-expect-error - Mocking partial Request for testing
+      const errors = step.validate!({}, mockReq);
+      expect(errors['form-fm1']).toBeUndefined();
+      expect(errors['mortgage-statement']).toBe('You must upload at least one file before continuing');
     });
   });
 
