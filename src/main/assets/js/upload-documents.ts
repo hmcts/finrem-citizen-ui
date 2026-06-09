@@ -3,9 +3,20 @@ import { getLogger } from './logger';
 const logger = getLogger('upload-documents');
 
 const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
-const ERROR_MESSAGE = 'Your file must be smaller than 100MB';
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.pdf', '.docx', '.xlsx'];
+const ERROR_MESSAGE_SIZE = 'Your file must be smaller than 100MB';
+const ERROR_MESSAGE_TYPE = 'Your file must be in jpg, png, pdf, docx, or xlsx format';
 
-function showErrorSummary(documentType: string, inputId: string): void {
+function getFileExtension(filename: string): string {
+  return filename.substring(filename.lastIndexOf('.')).toLowerCase();
+}
+
+function isValidFileType(filename: string): boolean {
+  const ext = getFileExtension(filename);
+  return ALLOWED_EXTENSIONS.includes(ext);
+}
+
+function showErrorSummary(documentType: string, inputId: string, errorMessage: string): void {
   // Remove any existing error summary
   document.querySelector('[data-client-error-summary]')?.remove();
   
@@ -24,7 +35,7 @@ function showErrorSummary(documentType: string, inputId: string): void {
     <div class="govuk-error-summary__body">
       <ul class="govuk-list govuk-error-summary__list">
         <li>
-          <a href="#${inputId}">${ERROR_MESSAGE}</a>
+          <a href="#${inputId}">${errorMessage}</a>
         </li>
       </ul>
     </div>
@@ -42,7 +53,7 @@ function clearErrorSummary(): void {
   document.querySelector('[data-client-error-summary]')?.remove();
 }
 
-function showClientError(form: HTMLFormElement, input: HTMLInputElement): void {
+function showClientError(form: HTMLFormElement, input: HTMLInputElement, errorMessage: string): void {
   const documentType = form.dataset.uploadForm;
   const inputId = input.id;
   
@@ -50,13 +61,13 @@ function showClientError(form: HTMLFormElement, input: HTMLInputElement): void {
   form.querySelector('[data-client-error]')?.remove();
   
   // Show error summary at top
-  showErrorSummary(documentType || '', inputId);
+  showErrorSummary(documentType || '', inputId, errorMessage);
   
   // Create GOV.UK-styled inline error message
   const errorEl = document.createElement('p');
   errorEl.className = 'govuk-error-message';
   errorEl.setAttribute('data-client-error', documentType || '');
-  errorEl.innerHTML = `<span class="govuk-visually-hidden">Error:</span> ${ERROR_MESSAGE}`;
+  errorEl.innerHTML = `<span class="govuk-visually-hidden">Error:</span> ${errorMessage}`;
   
   // Insert error before the file input
   input.before(errorEl);
@@ -92,26 +103,50 @@ export function initUploadValidation(): void {
         return;
       }
       
+      // Check file type first
+      if (!isValidFileType(file.name)) {
+        logger.warn(`Invalid file type: ${file.name}`);
+        showClientError(form, input, ERROR_MESSAGE_TYPE);
+        input.value = '';
+        return;
+      }
+      
+      // Then check file size
       if (file.size > MAX_FILE_SIZE_BYTES) {
         const fileSizeMB = Math.round(file.size / 1024 / 1024);
         logger.warn(`File too large: ${fileSizeMB}MB (max 100MB)`);
-        showClientError(form, input);
-        // Clear the input so the oversized file is never sent
+        showClientError(form, input, ERROR_MESSAGE_SIZE);
         input.value = '';
-      } else {
-        clearClientError(form, input);
+        return;
       }
+      
+      // File is valid, clear any errors
+      clearClientError(form, input);
     });
 
     // Validate on form submission as a fallback
     form.addEventListener('submit', (e: Event) => {
       const file = input.files?.[0];
       
-      if (file && file.size > MAX_FILE_SIZE_BYTES) {
+      if (!file) {
+        return;
+      }
+      
+      // Check file type
+      if (!isValidFileType(file.name)) {
+        e.preventDefault();
+        logger.warn(`Invalid file type on submit: ${file.name}`);
+        showClientError(form, input, ERROR_MESSAGE_TYPE);
+        input.value = '';
+        return;
+      }
+      
+      // Check file size
+      if (file.size > MAX_FILE_SIZE_BYTES) {
         e.preventDefault();
         const fileSizeMB = Math.round(file.size / 1024 / 1024);
         logger.warn(`File too large on submit: ${fileSizeMB}MB (max 100MB)`);
-        showClientError(form, input);
+        showClientError(form, input, ERROR_MESSAGE_SIZE);
         input.value = '';
       }
     });
