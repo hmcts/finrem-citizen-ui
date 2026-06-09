@@ -29,13 +29,18 @@ function getUploadedFilesByType(req: Request): Record<string, { id: string; file
       ? generateRenamedFilename(kebabCase, originalFilename, req.session.caseUserName)
       : originalFilename;
     
+    // Extract document ID from URL and construct download route
+    const documentUrl = doc.value?.DocumentLink?.document_url || '';
+    const extractedDocumentId = documentUrl.split('/').pop() || '';
+    const downloadUrl = extractedDocumentId ? `/documents/${extractedDocumentId}/download` : '';
+    
     if (!uploadedFilesByType[kebabCase]) {
       uploadedFilesByType[kebabCase] = [];
     }
     uploadedFilesByType[kebabCase].push({
       id: doc.id || '',
       filename: originalFilename,
-      url: doc.value?.DocumentLink?.document_url || '',
+      url: downloadUrl,
       displayFilename,
     });
   });
