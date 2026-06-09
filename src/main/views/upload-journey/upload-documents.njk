@@ -74,7 +74,6 @@
                   text: errors[documentType.value]
                 } if errors and errors[documentType.value],
                 attributes: {
-                  "accept": ".jpg,.jpeg,.png,.pdf,.docx,.xlsx",
                   "aria-describedby": "file-upload-" + documentType.value + "-hint" + (" file-upload-" + documentType.value + "-error" if errors and errors[documentType.value])
                 }
               }) }}
