@@ -1,6 +1,5 @@
-import path from 'path';
-
 import { expect, Locator, Page } from '@playwright/test';
+import path from 'path';
 
 import { BasePage } from './basePage.page';
 import { GettingHelpPanel } from './components/gettingHelpPanel.component';
@@ -52,7 +51,7 @@ export class DocumentUploadPage extends BasePage {
     this.gettingHelp = new GettingHelpPanel(this.page);
     this.backLink = this.page.getByRole('link', { name: 'Back', exact: true });
     this.pageHeader = this.page.getByRole('heading', { name: 'Upload your documents', exact: true });
-    this.introText = this.page.getByText("Upload each of your documents in the corresponding section. You will be able to check what you have uploaded before you submit them to the court.", { exact: true });
+    this.introText = this.page.getByText('Upload each of your documents in the corresponding section. You will be able to check what you have uploaded before you submit them to the court.', { exact: true });
     this.documentTypeLabel = this.page.getByText('Other document', { exact: true });
     this.instructionTitleLabel = this.page.getByText('Upload a file', { exact: true });
     this.instructionText = this.page.getByText('Files must be in jpg, png, pdf, docx or xlsx format.', { exact: true });
