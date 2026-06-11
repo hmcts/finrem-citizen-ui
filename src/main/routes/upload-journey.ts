@@ -186,11 +186,16 @@ export default function setupUploadJourneyRoute(app: Application): void {
     }
 
     const nextStep = step.next ? step.next() : null;
-    if (nextStep) {
-      return res.redirect(`${RouteNames.uploadJourney}/${nextStep}`);
-    }
+    const redirectUrl = nextStep 
+      ? `${RouteNames.uploadJourney}/${nextStep}`
+      : `${RouteNames.uploadJourney}/${req.params.stepId}`;
 
-    res.redirect(`${RouteNames.uploadJourney}/${req.params.stepId}`);
+    req.session.save((err) => {
+      if (err) {
+        throw err;
+      }
+      res.redirect(redirectUrl);
+    });
   });
 
   app.get(RouteNames.uploadJourney, oidcMiddleware, (req: Request, res: Response) => {
