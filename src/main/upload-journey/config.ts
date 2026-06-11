@@ -96,8 +96,20 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
   [UploadStepNames.CheckUpload]: {
     template: 'upload-journey/check-upload',
-    next: () => null,
+    next: () => UploadStepNames.SendToOtherParty,
     previous: () => UploadStepNames.UploadDocuments,
   },
+
+  [UploadStepNames.SendToOtherParty]: {
+    template: 'upload-journey/send-to-other-party',
+    next: () => UploadStepNames.Confirmation,
+    previous: () => UploadStepNames.CheckUpload,
+  },
+
+  [UploadStepNames.Confirmation]: {
+    template: 'upload-journey/confirmation',
+    next: () => null,
+    previous: () => UploadStepNames.SendToOtherParty,
+  }
   
 };
