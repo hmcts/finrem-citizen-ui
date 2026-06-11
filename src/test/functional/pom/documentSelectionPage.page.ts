@@ -4,7 +4,7 @@ import { BasePage } from './basePage.page';
 import { GettingHelpPanel } from './components/gettingHelpPanel.component';
 
 const URL_PATTERNS = {
-  DOCUMENT_SELECTION: /\/upload\/document-type-selection/,
+  DOCUMENT_SELECTION: /\/upload\/document-selection/,
   FDR: /\/upload\/fdr/,
   UPLOAD_DOCUMENTS: /\/upload\/upload-documents/,
 };
@@ -103,6 +103,22 @@ export class DocumentSelectionPage extends BasePage {
 
     await expect(this.termByLabel(expectedDocumentLabel)).toBeVisible();
     await expect(this.noDocumentsMessage).toBeHidden();
+  }
+
+  async addOtherDocumentAndContinue(): Promise<void> {
+    const otherDocumentLabel = 'Other document';
+    await this.documentTypeInput.fill('other document');
+
+    const suggestion = this.page.getByRole('option', { name: otherDocumentLabel });
+    await expect(suggestion).toBeVisible();
+    await suggestion.click();
+
+    await this.addDocumentButton.click();
+
+    await expect(this.termByLabel(otherDocumentLabel)).toBeVisible();
+    await expect(this.noDocumentsMessage).toBeHidden();
+
+    await this.continueButton.click();
   }
 
   async expectDocumentsListContains(labels: string[]): Promise<void> {
