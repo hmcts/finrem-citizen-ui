@@ -252,8 +252,28 @@ describe('Upload Journey Configuration', () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.CheckUpload];
       expect(step.template).toBe('upload-journey/check-upload');
-      expect(step.next!()).toBeNull();
+      expect(step.next!()).toBe(UploadStepNames.SendToOtherParty);
       expect(step.previous!()).toBe(UploadStepNames.UploadDocuments);
+      expect(step.validate).toBeUndefined();
+    });
+  });
+
+  describe(UploadStepNames.SendToOtherParty, () => {
+    it('should have correct configuration', () => {
+      const step = uploadSteps[UploadStepNames.SendToOtherParty];
+      expect(step.template).toBe('upload-journey/send-to-other-party');
+      expect(step.next!()).toBe(UploadStepNames.Confirmation);
+      expect(step.previous!()).toBe(UploadStepNames.CheckUpload);
+      expect(step.validate).toBeUndefined();
+    });
+  });
+
+  describe(UploadStepNames.Confirmation, () => {
+    it('should have correct configuration', () => {
+      const step = uploadSteps[UploadStepNames.Confirmation];
+      expect(step.template).toBe('upload-journey/confirmation');
+      expect(step.next!()).toBeNull();
+      expect(step.previous!()).toBe(UploadStepNames.SendToOtherParty);
       expect(step.validate).toBeUndefined();
     });
   });
