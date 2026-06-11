@@ -54,6 +54,8 @@ export const UploadStepNames = {
   DocumentTypeSelection: 'document-type-selection',
   UploadDocuments: 'upload-documents',
   CheckUpload: 'check-upload',
+  SendToOtherParty: 'send-to-other-party',
+  Confirmation: 'confirmation',
 };
 
 export const CaseUserNames = {
