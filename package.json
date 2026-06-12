@@ -140,7 +140,7 @@
     "tar": "^7.5.11",
     "diff": "9.0.0",
     "qs": "6.15.2",
-    "fast-uri": "3.1.2",
+    "fast-uri": "4.0.0",
     "test-exclude": "8.0.0",
     "minimatch": "10.2.5",
     "flatted": "^3.4.0",
