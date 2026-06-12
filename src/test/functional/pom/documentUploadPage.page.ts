@@ -72,7 +72,7 @@ export class DocumentUploadPage extends BasePage {
   }
 
   async verifyDocumentUploadPageContent(): Promise<void> {
-    await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_SELECTION);
+    await expect(this.page).toHaveURL(URL_PATTERNS.UPLOAD_DOCUMENTS);
     await this.verifyGlobalHeaderAndFooter();
 
     await this.expectVisible([
