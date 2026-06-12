@@ -105,6 +105,22 @@ export class DocumentSelectionPage extends BasePage {
     await expect(this.noDocumentsMessage).toBeHidden();
   }
 
+  async addOtherDocumentAndContinue(): Promise<void> {
+    const otherDocumentLabel = 'Other document';
+    await this.documentTypeInput.fill('other document');
+
+    const suggestion = this.page.getByRole('option', { name: otherDocumentLabel });
+    await expect(suggestion).toBeVisible();
+    await suggestion.click();
+
+    await this.addDocumentButton.click();
+
+    await expect(this.termByLabel(otherDocumentLabel)).toBeVisible();
+    await expect(this.noDocumentsMessage).toBeHidden();
+
+    await this.continueButton.click();
+  }
+
   async expectDocumentsListContains(labels: string[]): Promise<void> {
     await expect(this.documentList).toHaveCount(labels.length);
 

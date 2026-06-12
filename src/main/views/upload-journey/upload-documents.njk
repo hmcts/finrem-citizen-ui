@@ -1,4 +1,8 @@
 {% from "../macros/getting-help.njk" import gettingHelp %}
+{% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/error-message/macro.njk" import govukErrorMessage %}
 
 {% extends "template.njk" %}
 
@@ -9,30 +13,118 @@
         <a href="/upload/{{ previousStep }}" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
       {% endif %}
 
+      {% if errors and errors.upload %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: [
+            {
+              text: errors.upload,
+              href: "#upload"
+            }
+          ]
+        }) }}
+      {% endif %}
+
       <h1 class="govuk-heading-l">Upload your documents</h1>
 
       <p class="govuk-body">
-        Upload the documents you selected in the previous step.
+        Upload each of your documents in the corresponding section. 
+        You will be able to check what you have uploaded before you submit them to the court.
       </p>
 
       {% if data.selectedDocumentTypes and data.selectedDocumentTypes.length > 0 %}
-        <h2 class="govuk-heading-m">Documents to upload</h2>
-        <ul class="govuk-list govuk-list--number">
-          {% for doc in data.selectedDocumentTypes %}
-            <li>{{ doc.label }}</li>
-          {% endfor %}
-        </ul>
+        {% for documentType in data.selectedDocumentTypes %}
+          <h2 class="govuk-heading-m govuk-!-margin-top-8">{{ documentType.label }}</h2>
+
+          {% if shouldAutoRename(documentType.value) %}
+            <p class="govuk-body">
+              When you upload this document, it will automatically be renamed to <strong>{{ caseUserName or 'UserName' }}-{{ getDocumentRenameFormat(documentType.value) }}-DD-MM-YY</strong>.
+            </p>
+          {% endif %}
+
+          <div class="govuk-inset-text govuk-!-margin-top-4">
+            <form method="post" action="/documents/upload?documentType={{ documentType.value }}&returnUrl=/upload/upload-documents" enctype="multipart/form-data" data-upload-form="{{ documentType.value }}">
+              <input type="hidden" name="documentType" value="{{ documentType.value }}">
+              <input type="hidden" name="returnUrl" value="/upload/upload-documents">
+
+              {{ govukFileUpload({
+                id: "file-upload-" + documentType.value,
+                name: "file",
+                label: {
+                  text: "Upload a file",
+                  classes: "govuk-label--s"
+                },
+                hint: {
+                  text: "Files must be in jpg, png, pdf, docx or xlsx format."
+                },
+                attributes: {
+                  "aria-describedby": "file-upload-" + documentType.value + "-hint"
+                }
+              }) }}
+
+              {{ govukButton({
+                text: "Upload file",
+                classes: "govuk-button--secondary govuk-!-margin-top-2",
+                attributes: {
+                  "data-upload-button": documentType.value,
+                  "aria-label": "Upload file for " + documentType.label
+                }
+              }) }}
+            </form>
+          </div>
+
+          <h3 class="govuk-heading-s govuk-!-margin-top-6">Uploaded files</h3>
+
+          <div data-uploaded-files="{{ documentType.value }}">
+            {% set uploadedFiles = data.uploadedFiles[documentType.value] if data.uploadedFiles %}
+            
+            {% if uploadedFiles and uploadedFiles.length > 0 %}
+              <ul class="govuk-list">
+                {% for file in uploadedFiles %}
+                  <li class="govuk-!-margin-bottom-2">
+                    <a href="{{ file.url }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
+                      {{ file.displayFilename }}
+                    </a>
+                    <a href="#" 
+                       class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-2" 
+                       data-remove-file="{{ file.id }}"
+                       data-document-type="{{ documentType.value }}"
+                       aria-label="Remove {{ file.displayFilename }}">
+                      Remove document
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="govuk-body govuk-hint">No files uploaded yet.</p>
+            {% endif %}
+          </div>
+
+          {% if loop.index < data.selectedDocumentTypes.length %}
+            <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        <p class="govuk-body">No document types selected. Please go back and select the documents you want to upload.</p>
       {% endif %}
 
-      <form method="post">
-        <button type="submit" class="govuk-button" data-module="govuk-button">
-          Continue
-        </button>
+      <form method="post" class="govuk-!-margin-top-8">
+        {% if errors and errors.upload %}
+          <div id="upload" class="govuk-form-group govuk-form-group--error">
+            <span class="govuk-error-message">
+              <span class="govuk-visually-hidden">Error:</span> {{ errors.upload }}
+            </span>
+          </div>
+        {% endif %}
+        
+        {{ govukButton({
+          text: "Continue"
+        }) }}
       </form>
     </div>
 
     <div class="govuk-grid-column-one-third">
-      {{ gettingHelp(email) }}
+      {{ gettingHelp(contactEmail) }}
     </div>
   </div>
 {% endblock %}

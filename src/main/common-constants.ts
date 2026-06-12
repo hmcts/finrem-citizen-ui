@@ -27,6 +27,7 @@ export const PrivateRoutes = {
   documentUpload: '/documents/upload',
   documentSend: '/documents/send',
   documentDownload: '/documents/:documentId/download',
+  documentRemove: '/documents/remove/:fileId',
 } as const;
 
 export const RouteNames = {
@@ -52,6 +53,9 @@ export const UploadStepNames = {
   FDR: 'fdr',
   DocumentTypeSelection: 'document-type-selection',
   UploadDocuments: 'upload-documents',
+  CheckUpload: 'check-upload',
+  SendToOtherParty: 'send-to-other-party',
+  Confirmation: 'confirmation',
 };
 
 export const CaseUserNames = {
@@ -71,3 +75,35 @@ export const UrlEndPoints = {
   GetDocument: (documentId: string) => `/cases/documents/${documentId}/binary`,
   CaseRoles: '/case-users/search',
 } as const;
+
+/**
+ * Maps document types that should be auto-renamed to their rename format.
+ * Format: UserName-{RenameFormat}-DD-MM-YY
+ * 
+ * If a document type is in this object, it will be auto-renamed.
+ * If not, it keeps its original filename.
+ */
+export const DOCUMENT_RENAME_FORMATS: Record<string, string> = {
+  'family-mediation-information-and-assessment-meeting-miam-form-form-fm1': 'FormFM1',
+  'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5': 'FormFM5',
+  'estimate-of-costs-incurred-form-h': 'FormH',
+  'statement-of-costs-form-h1': 'FormH1',
+  'statement-of-costs-summary-assessment-form-n260': 'N260',
+  'certificate-of-service-form-fp6': 'FP6',
+  'response-to-the-notice-of-first-appointment-form-g': 'FormG',
+  'position-statement': 'PositionStatement',
+  'chronology': 'Chronology',
+  'statement-of-issues': 'StatementOfIssues',
+  'composite-case-summary-form-es1': 'ES1',
+  'composite-schedule-of-assets-and-income-form-es2': 'ES2',
+  'market-appraisal-or-valuation-of-family-home': 'FamilyHomeValuation',
+  'housing-needs-property-particulars': 'Property-Particulars',
+  'open-offers': 'OpenOffers',
+  'questionnaire-request-for-further-documents': 'Questionnaire',
+  'section-25-statement': 's25statement',
+  'witness-statement': 'WitnessStatements',
+  'without-prejudice-offers-for-settlement': 'WithoutPrejudiceOffers',
+  'pension-report-expert-report': 'ExpertReports',
+  'hearing-bundle': 'bundle',
+  'fdr-bundle': 'bundle',
+};
