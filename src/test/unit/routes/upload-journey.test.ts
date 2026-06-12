@@ -9,6 +9,7 @@ type MockSession = {
     isFinancialDisputeResolution?: boolean;
     documentDetails?: { id?: string; value?: { DocumentType?: string } }[];
   };
+  save?: (callback: (err?: Error) => void) => void;
   [key: string]: unknown;
 };
 
@@ -328,7 +329,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.BeforeYouStart },
-        session: {},
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
         body: {},
       } as PartialRequestWithSession;
       const mockRes = {
@@ -347,7 +350,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
-        session: {},
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
         body: { fdrHearing: 'yes' },
       } as PartialRequestWithSession;
       const mockRes = {
@@ -439,7 +444,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
-        session: {},
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
         body: { fdrHearing: 'true' },
       } as PartialRequestWithSession;
       const mockRes = {
@@ -457,7 +464,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.BeforeYouStart },
-        session: undefined,
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
         body: {},
       } as PartialRequestWithSession;
       const mockRes = {
@@ -473,7 +482,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
-        session: {},
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
         body: { fdrHearing: 'true' },
       } as PartialRequestWithSession;
       const mockRes = {
@@ -490,7 +501,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
-        session: {},
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
         body: { fdrHearing: 'false' },
       } as PartialRequestWithSession;
       const mockRes = {
@@ -535,7 +548,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.CheckUpload },
-        session: {},
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
         body: {},
       } as PartialRequestWithSession;
       const mockRes = {
