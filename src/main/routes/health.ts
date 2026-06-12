@@ -4,6 +4,7 @@ import { Application } from 'express';
 import { Redis } from 'ioredis';
 
 import { app as myApp } from '../app';
+import { getSessionStoreType, SESSION_STORE_REDIS } from '../modules/session';
 
 const healthcheck = require('@hmcts/nodejs-healthcheck');
 
@@ -21,7 +22,7 @@ function shutdownCheck(): boolean {
 export default function health(app: Application): void {
   const logger = Logger.getLogger('health');
   const typedApp = app as AppWithRedis;
-  const isRedisEnabled = config.get<string>('features.redis') === 'true';
+  const isRedisSessionStore = getSessionStoreType() === SESSION_STORE_REDIS;
   const caseServiceHealthUrl = `${config.get<string>('services.case.url').replace(/\/$/, '')}/health`;
   const orchestrationServiceHealthUrl = `${config.get<string>('services.orchestrationService.url').replace(/\/$/, '')}/health`;
 
@@ -30,7 +31,7 @@ export default function health(app: Application): void {
       ccd: healthcheck.web(caseServiceHealthUrl),
       orchestrationService: healthcheck.web(orchestrationServiceHealthUrl),
       redis: healthcheck.raw(async () => {
-        if (!isRedisEnabled) {
+        if (!isRedisSessionStore) {
           return healthcheck.up();
         }
 

@@ -4,11 +4,9 @@
     "clientId": "IDAM_CLIENT_ID",
     "callbackUrl": "OAUTH_CALLBACK_URL"
   },
-  "features": {
-    "redis": "FEATURE_REDIS_ENABLED"
-  },
   "session": {
     "prefix": "SESSION_PREFIX",
+    "store": "SESSION_STORE",
     "ttlInSeconds": "SESSION_TTL"
   },
   "use-ssl": "USE_SSL",

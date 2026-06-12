@@ -45,12 +45,10 @@
   "session": {
     "cookieName": "finrem_session",
     "prefix": "finrem-session",
+    "store": "in-memory",
     "ttlInSeconds": 5400
   },
   "use-ssl": false,
-  "features": {
-    "redis": "false"
-  },
   "secrets": {
     "finrem": {
       "finrem-citizen-ui-idam-client-secret": "AAAAAAAAAAAA",
