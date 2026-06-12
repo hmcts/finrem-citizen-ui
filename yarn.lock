@@ -2266,13 +2266,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@guidepup/playwright@npm:^0.15.0":
-  version: 0.15.0
-  resolution: "@guidepup/playwright@npm:0.15.0"
+"@guidepup/playwright@npm:^0.16.0":
+  version: 0.16.0
+  resolution: "@guidepup/playwright@npm:0.16.0"
   peerDependencies:
-    "@guidepup/guidepup": ">=0.22.1"
+    "@guidepup/guidepup": ">=0.25.0"
     "@playwright/test": ^1.57.0
-  checksum: 10/f2123e8a4ff8413e422d712902595eefc365631697f099a39599cd4477f3629384650a35df17f3d13a1b90deabaeaf6d0e78929a49a72803f5cc0476992f676c
+  checksum: 10/d1cfae142d8fbd83f6bce396351ebbb864127437eb5428b6ed86d75f65065d155aa2842e3b13a16b42ca5d862fb37dea988739e3a3b738d127024c67439f23d4
   languageName: node
   linkType: hard
 
@@ -8740,7 +8740,7 @@ __metadata:
   resolution: "finrem-citizen-ui@workspace:."
   dependencies:
     "@babel/preset-env": "npm:^7.26.9"
-    "@guidepup/playwright": "npm:^0.15.0"
+    "@guidepup/playwright": "npm:^0.16.0"
     "@hmcts/info-provider": "npm:1.4.0"
     "@hmcts/nodejs-healthcheck": "npm:1.8.6"
     "@hmcts/nodejs-logging": "npm:4.0.4"
@@ -8807,7 +8807,7 @@ __metadata:
     nunjucks: "npm:3.2.4"
     openid-client: "npm:^6.8.2"
     otplib: "npm:13.4.1"
-    prettier: "npm:3.8.3"
+    prettier: "npm:3.8.4"
     proper-lockfile: "npm:^4.1.2"
     sass: "npm:1.100.0"
     sass-loader: "npm:17.0.0"
@@ -11744,9 +11744,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-gyp@npm:12.3.0":
-  version: 12.3.0
-  resolution: "node-gyp@npm:12.3.0"
+"node-gyp@npm:12.4.0":
+  version: 12.4.0
+  resolution: "node-gyp@npm:12.4.0"
   dependencies:
     env-paths: "npm:^2.2.0"
     exponential-backoff: "npm:^3.1.1"
@@ -11760,7 +11760,7 @@ __metadata:
     which: "npm:^6.0.0"
   bin:
     node-gyp: bin/node-gyp.js
-  checksum: 10/cd97bf17f0f3e6288c42cc23a6db8528a98e7530abdb72ab558272906d603362e4558069f99f8a5250bc78f65ff305b1438caca4f1b31c81904a8798c242603e
+  checksum: 10/b1f52282398b08ed485f7d93859d45a7bd54f9a3ba8f1e2626ebc2e7e150834c20d90d7f204e07f67c0a88e85c7400d90e01618d7e6d7dd8056bc493821ef181
   languageName: node
   linkType: hard
 
@@ -12497,12 +12497,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:3.8.3":
-  version: 3.8.3
-  resolution: "prettier@npm:3.8.3"
+"prettier@npm:3.8.4":
+  version: 3.8.4
+  resolution: "prettier@npm:3.8.4"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10/4b3b12cbb29e4c96bed936e5d070167552500c18d37676fb3e0caae6199c42860662608e4dc116230698f6e2bb0267ef2548158224c92d40f188d309d72fdd6f
+  checksum: 10/54684a3cc6689238692b29fab541c01934af7677be94c02293ba49981a1ac121c8bebe2a865f0c3b963e99d208f847c53aed354cc0ce8750e2d45791d64506c5
   languageName: node
   linkType: hard
 
@@ -12571,12 +12571,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"protobufjs@npm:8.5.0":
-  version: 8.5.0
-  resolution: "protobufjs@npm:8.5.0"
+"protobufjs@npm:8.6.3":
+  version: 8.6.3
+  resolution: "protobufjs@npm:8.6.3"
   dependencies:
     long: "npm:^5.3.2"
-  checksum: 10/31fc8237b3d77a22e41f3aba75223dd254ceb85491de74595201830ddf49e14b785bde80fbacb2a01e6c7084906a43d3587759dbcd96b6cc8646b288da9efe19
+  checksum: 10/3a2326c2bf6fa515285dcacd489a35cec68c76427a4d4b327663f2d09fb8b1e1d5717983ba0d9f1c115bcafbaca8316e144bafd663aee112c38d4c396c8cde42
   languageName: node
   linkType: hard
 
