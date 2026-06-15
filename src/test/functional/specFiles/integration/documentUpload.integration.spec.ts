@@ -2,8 +2,8 @@ import { expect, test } from '../../../fixtures/fixtures';
 import type { DocumentUploadPage } from '../../pom/documentUploadPage.page';
 import {
   assertNoFilesValidationError,
-  assertUploadPageCoreContent,
   assertUploadedFileVisible,
+  assertUploadPageCoreContent,
   runA11yAudit,
 } from '../journeyHelpers/specAssertions.helper';
 import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
