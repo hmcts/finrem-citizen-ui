@@ -1,3 +1,5 @@
+import fs from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 
 import { expect, Locator, Page } from '@playwright/test';
@@ -6,6 +8,11 @@ import { BasePage } from './basePage.page';
 import { GettingHelpPanel } from './components/gettingHelpPanel.component';
 
 const TEST_DATA_DIR = path.join(__dirname, '../utils/test_data');
+
+const DOCUMENT_TYPE_FORM_KEY: Record<'Other document' | 'Chronology', string> = {
+  'Other document': 'other-document',
+  Chronology: 'chronology',
+};
 
 const SUPPORTED_UPLOAD_FILES = {
   jpg: path.join(TEST_DATA_DIR, 'testDocument.jpg'),
@@ -33,9 +40,13 @@ export class DocumentUploadPage extends BasePage {
   readonly noUploadedFilesMessage: Locator;
   readonly documentTypeLabel: Locator;
   readonly instructionTitleLabel: Locator;
+  readonly uploadSectionHeadings: Locator;
   readonly errorSummaryTitle: Locator;
   readonly inlineNoFilesError: Locator;
   readonly inlineFormatError: Locator;
+  readonly inlineTooLargeError: Locator;
+  readonly inlineEmptyFileError: Locator;
+  readonly inlineUploadFailedError: Locator;
   readonly continueButton: Locator;
   readonly helpOpeningHours: Locator;
   readonly gettingHelp: GettingHelpPanel;
@@ -49,6 +60,7 @@ export class DocumentUploadPage extends BasePage {
     this.documentTypeLabel = this.page.getByText('Other document', { exact: true });
     this.instructionTitleLabel = this.page.getByText('Upload a file', { exact: true });
     this.instructionText = this.page.getByText('Files must be in jpg, png, pdf, docx or xlsx format.', { exact: true });
+    this.uploadSectionHeadings = this.page.locator('main .govuk-grid-column-two-thirds h2.govuk-heading-m');
     this.chooseFileButton = this.page.getByRole('button', { name: /^(Choose file|Upload a file)$/ });
     this.noFileSelectedMessage = this.page.getByText('No file chosen', { exact: true });
     this.uploadFileButton = this.page.getByRole('button', { name: 'Upload file' });
@@ -57,7 +69,18 @@ export class DocumentUploadPage extends BasePage {
     this.filesListDefaultMessage = this.page.getByText('No files uploaded yet.', { exact: true });
     this.errorSummaryTitle = this.page.getByRole('heading', { name: 'There is a problem' });
     this.inlineNoFilesError = this.page.getByText('You must upload at least one file before continuing', { exact: true });
-    this.inlineFormatError = this.page.getByText('Your file must be in jpg, png, pdf, docx or xlsx format', { exact: true });
+    this.inlineFormatError = this.page.locator('p.govuk-error-message').filter({
+      hasText: /Your file must be in jpg, png, pdf, docx,? or xlsx format/i,
+    });
+    this.inlineTooLargeError = this.page.locator('p.govuk-error-message').filter({
+      hasText: 'Your file must be smaller than 100MB',
+    });
+    this.inlineEmptyFileError = this.page.locator('p.govuk-error-message').filter({
+      hasText: 'The selected file is empty',
+    });
+    this.inlineUploadFailedError = this.page.locator('p.govuk-error-message').filter({
+      hasText: 'The selected file could not be uploaded - try again',
+    });
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
     this.noUploadedFilesMessage = this.page.getByText('You must upload at least one file before continuing', { exact: true });
     this.helpOpeningHours = this.gettingHelp.details.getByText('Monday to Friday, 8.30am to 5pm', {
@@ -80,14 +103,14 @@ export class DocumentUploadPage extends BasePage {
   ): Promise<void> {
     const beforeCount = await this.uploadedFileLinks.count();
 
-    const labelledInput = this.page
-      .getByLabel('Upload a file', { exact: true })
-      .nth(documentType === 'Chronology' ? 1 : 0);
+    const formKey = DOCUMENT_TYPE_FORM_KEY[documentType];
+    const uploadForm = this.page.locator(`[data-upload-form="${formKey}"]`);
+    const fileInput = uploadForm.locator('input[type="file"]');
+    const uploadButton = uploadForm.getByRole('button', { name: `Upload file for ${documentType}`, exact: true });
 
-    await labelledInput.setInputFiles(filePath);
-    await this.page
-      .getByRole('button', { name: `Upload file for ${documentType}`, exact: true })
-      .click();
+    await fileInput.setInputFiles(filePath);
+    await uploadButton.click();
+    await this.page.waitForLoadState('networkidle');
 
     if (expectUploadSuccess) {
       await expect(this.uploadedFileLinks).toHaveCount(beforeCount + 1, { timeout: 15000 });
@@ -134,6 +157,24 @@ export class DocumentUploadPage extends BasePage {
 
   async uploadEmptyFile(): Promise<void> {
     await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.emptyDocx, 'Other document', false);
+  }
+
+  async chooseLargeFileAndUpload(sizeBytes = 101 * 1024 * 1024): Promise<void> {
+    const tempFilePath = path.join(
+      os.tmpdir(),
+      `finrem-large-upload-${Date.now()}-${Math.random().toString(16).slice(2)}.pdf`
+    );
+
+    await fs.writeFile(tempFilePath, Buffer.from('%PDF-1.7\n'));
+    await fs.truncate(tempFilePath, sizeBytes);
+
+    try {
+      await this.chooseFileAndUploadDocument(tempFilePath, 'Other document', false);
+    } finally {
+      await fs.unlink(tempFilePath).catch(() => {
+        // Ignore cleanup errors for temp files.
+      });
+    }
   }
 
   async clickContinue(): Promise<void> {
