@@ -1,17 +1,10 @@
-import { expect, Locator, Page } from '@playwright/test';
-import path from 'path';
+import path from 'node:path';
+
+import { Locator, Page } from '@playwright/test';
 
 import { BasePage } from './basePage.page';
 import { GettingHelpPanel } from './components/gettingHelpPanel.component';
 
-const URL_PATTERNS = {
-  DOCUMENT_SELECTION: /\/upload\/document-type-selection/,
-  FDR: /\/upload\/fdr/,
-  UPLOAD_DOCUMENTS: /\/upload\/upload-documents/,
-};
-
-const DOCUMENT_SELECTION_EMAIL = 'FRCexample@justice.gov.uk';
-const CALL_CHARGES_LINK = 'https://www.gov.uk/call-charges';
 const TEST_DATA_DIR = path.join(__dirname, '../utils/test_data');
 
 const SUPPORTED_UPLOAD_FILES = {
@@ -21,6 +14,7 @@ const SUPPORTED_UPLOAD_FILES = {
   docx: path.join(TEST_DATA_DIR, 'testDocument.docx'),
   xlsx: path.join(TEST_DATA_DIR, 'testDocument.xlsx'),
   txt: path.join(TEST_DATA_DIR, 'testDocument.txt'),
+  emptyDocx: path.join(TEST_DATA_DIR, 'testDocument-empty.docx'),
 } as const;
 
 export type SupportedUploadFileType = keyof typeof SUPPORTED_UPLOAD_FILES;
@@ -40,8 +34,8 @@ export class DocumentUploadPage extends BasePage {
   readonly documentTypeLabel: Locator;
   readonly instructionTitleLabel: Locator;
   readonly errorSummaryTitle: Locator;
-  readonly errorSummaryLink: Locator;
-  readonly inlineErrorMessage: Locator;
+  readonly inlineNoFilesError: Locator;
+  readonly inlineFormatError: Locator;
   readonly continueButton: Locator;
   readonly helpOpeningHours: Locator;
   readonly gettingHelp: GettingHelpPanel;
@@ -55,15 +49,15 @@ export class DocumentUploadPage extends BasePage {
     this.documentTypeLabel = this.page.getByText('Other document', { exact: true });
     this.instructionTitleLabel = this.page.getByText('Upload a file', { exact: true });
     this.instructionText = this.page.getByText('Files must be in jpg, png, pdf, docx or xlsx format.', { exact: true });
-    this.chooseFileButton = this.page.getByRole('button', { name: 'Choose file' });
+    this.chooseFileButton = this.page.getByRole('button', { name: /^(Choose file|Upload a file)$/ });
     this.noFileSelectedMessage = this.page.getByText('No file chosen', { exact: true });
     this.uploadFileButton = this.page.getByRole('button', { name: 'Upload file' });
-    this.uploadedFileLinks = this.page.locator('[data-uploaded-files] a.govuk-link:not([data-remove-file])');
+    this.uploadedFileLinks = this.page.getByRole('list').locator('a.govuk-link:not([data-remove-file])');
     this.filesListHeader = this.page.getByRole('heading', { name: 'Uploaded files', exact: true });
     this.filesListDefaultMessage = this.page.getByText('No files uploaded yet.', { exact: true });
     this.errorSummaryTitle = this.page.getByRole('heading', { name: 'There is a problem' });
-    this.errorSummaryLink = this.page.getByRole('alert').getByRole('link', { name: 'Your file must be in jpg, png, pdf, docx, or xlsx format' });
-    this.inlineErrorMessage = this.page.getByText('Your file must be in jpg, png, pdf, docx, or xlsx format', { exact: true });
+    this.inlineNoFilesError = this.page.getByText('You must upload at least one file before continuing', { exact: true });
+    this.inlineFormatError = this.page.getByText('Your file must be in jpg, png, pdf, docx or xlsx format', { exact: true });
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
     this.noUploadedFilesMessage = this.page.getByText('You must upload at least one file before continuing', { exact: true });
     this.helpOpeningHours = this.gettingHelp.details.getByText('Monday to Friday, 8.30am to 5pm', {
@@ -71,51 +65,24 @@ export class DocumentUploadPage extends BasePage {
     });
   }
 
-  async verifyDocumentUploadPageContent(): Promise<void> {
-    await expect(this.page).toHaveURL(URL_PATTERNS.UPLOAD_DOCUMENTS);
-    await this.verifyGlobalHeaderAndFooter();
-
-    await this.expectVisible([
-      this.serviceNav,
-      this.navigationLink,
-      this.signOutBtn,
-      this.backLink,
-      this.pageHeader,
-      this.introText,
-      this.instructionTitleLabel,
-      this.instructionText,
-      this.chooseFileButton,
-      this.noFileSelectedMessage,
-      this.uploadFileButton,
-      this.filesListHeader,
-      this.filesListDefaultMessage,
-      this.instructionText,
-      this.documentTypeLabel,
-      this.continueButton,
-      this.gettingHelp.heading,
-      this.gettingHelp.summary,
-    ]);
-
-    await this.expectAttributes([
-      { locator: this.backLink, name: 'href', value: '/upload/fdr' },
-    ]);
+  private termByLabel(label: string): Locator {
+    return this.uploadedFileLinks.filter({ hasText: label }).first();
   }
 
-  private termByLabel(label: string): Locator {
-    return this.page.locator('[govuk-list]').getByRole('link').filter({ hasText: label });
+  getErrorSummaryLink(message: string | RegExp): Locator {
+    return this.page.getByRole('alert').getByRole('link', { name: message });
   }
 
   async chooseFileAndUploadDocument(filePath: string = SUPPORTED_UPLOAD_FILES.docx): Promise<void> {
-    const filename = path.basename(filePath);
-    const fileChooserPromise = this.page.waitForEvent('filechooser');
-    await this.chooseFileButton.click();
-    const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles(filePath);
+    const labelledInput = this.page.getByLabel('Upload a file', { exact: true });
+
+    if (await labelledInput.count()) {
+      await labelledInput.setInputFiles(filePath);
+    } else {
+      await this.page.locator('input[type="file"]').first().setInputFiles(filePath);
+    }
 
     await this.uploadFileButton.click();
-
-    await expect(this.termByLabel(filename)).toBeVisible();
-    await expect(this.filesListDefaultMessage).toBeHidden();
   }
 
   async chooseFileAndUploadJpg(): Promise<void> {
@@ -138,60 +105,27 @@ export class DocumentUploadPage extends BasePage {
     await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.xlsx);
   }
 
-  async expectUploadedFilesListContains(labels: string[]): Promise<void> {
-    await expect(this.uploadedFileLinks).toHaveCount(labels.length);
-
-    for (const label of labels) {
-      await expect(this.termByLabel(label)).toBeVisible();
-    }
+  getUploadedFileByName(filename: string): Locator {
+    return this.termByLabel(filename);
   }
 
   async removeUploadedFile(): Promise<void> {
-    await this.page.getByText('Remove document').click();
+    await this.page.getByText('Remove document').first().click();
   }
 
-  async submitWithoutUploadsAndExpectValidationError(): Promise<void> {
-    await this.continueButton.click();
-
-    await this.expectVisible([this.errorSummaryTitle, this.errorSummaryLink, this.inlineErrorMessage]);
-    await expect(this.uploadedFileLinks).toHaveCount(0);
-    await expect(this.noUploadedFilesMessage).toBeVisible();
-  }
-
-  async submitWithWrongFormatAndExpectValidationError(): Promise<void> {
+  async uploadInvalidFileFormat(): Promise<void> {
     await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.txt);
+  }
+
+  async uploadEmptyFile(): Promise<void> {
+    await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.emptyDocx);
+  }
+
+  async clickContinue(): Promise<void> {
     await this.continueButton.click();
-
-    await this.expectVisible([this.errorSummaryTitle, this.errorSummaryLink, this.inlineErrorMessage]);
-    await expect(this.uploadedFileLinks).toHaveCount(0);
-    await expect(this.noUploadedFilesMessage).toBeVisible();
   }
 
-
-
-  // TODO: Add this method when next step is implemented
-  // async clickContinueAndExpectNextStep(): Promise<void> {
-  //   await this.continueButton.click();
-  //   await expect(this.page).toHaveURL(URL_PATTERNS.UPLOAD_DOCUMENTS);
-  //   await expect().toBeVisible();
-  // }
-
-  async verifyGettingHelpSection(): Promise<void> {
-    await this.gettingHelp.verifySection({
-      expectedEmail: DOCUMENT_SELECTION_EMAIL,
-      openingHoursLocator: this.helpOpeningHours,
-      callChargesHref: CALL_CHARGES_LINK,
-    });
-  }
-
-  async clickBackAndExpectDocumentTypeSelection(): Promise<void> {
+  async clickBack(): Promise<void> {
     await this.backLink.click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_SELECTION);
-  }
-
-  async clickBackToDocumentTypeSelectionAndReturnWithContinueSelection(): Promise<void> {
-    await this.clickBackAndExpectDocumentTypeSelection();
-    await this.page.getByRole('button', { name: 'Continue' }).click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.UPLOAD_DOCUMENTS);
   }
 }
