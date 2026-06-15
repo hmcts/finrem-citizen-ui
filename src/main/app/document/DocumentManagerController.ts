@@ -2,12 +2,23 @@ import { Response } from 'express';
 import { v4 as generateUuid } from 'uuid';
 import { LoggerInstance } from 'winston';
 
+import { HTTPError } from '../../HttpError';
 import { getSystemUser } from '../auth/user';
 import { getCaseApi } from '../case/case-api';
 import { CITIZEN_APPLICANT_DOCUMENT, CITIZEN_RESPONDENT_DOCUMENT, EVENT_TYPE } from '../case/case-type';
 import { CaseRole, CitizenUploadDocument, CitizenUploadDocumentType, ListValue } from '../case/definition';
 import type { AppRequest, UserDetails } from '../controller/AppRequest';
-import { CaseDocumentManagementClient, Classification } from './CaseDocumentManagementClient';
+import { CaseDocumentManagementClient, Classification, type UploadedFiles } from './CaseDocumentManagementClient';
+
+const PASSWORD_PROTECTED_DOCUMENT_ERROR = 'Password protected documents cannot be uploaded';
+const PDF_SIGNATURE = Buffer.from('%PDF');
+const PDF_ENCRYPTION_MARKER = Buffer.from('/Encrypt');
+const OLE_COMPOUND_FILE_SIGNATURE = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
+const ENCRYPTION_INFO_STREAM = Buffer.from('EncryptionInfo', 'utf16le');
+const ENCRYPTED_PACKAGE_STREAM = Buffer.from('EncryptedPackage', 'utf16le');
+const ZIP_LOCAL_FILE_HEADER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
+const ZIP_CENTRAL_DIRECTORY_FILE_HEADER = Buffer.from([0x50, 0x4b, 0x01, 0x02]);
+const ZIP_ENCRYPTED_FLAG = 0x0001;
 
 export class DocumentManagerController {
     constructor(private readonly logger: LoggerInstance) { }
@@ -18,8 +29,14 @@ export class DocumentManagerController {
     ): Promise<void> {
         this.logger.info('Uploading document via CDAM (session only)');
 
-        if (!req.files?.length || req.headers.accept?.includes('application/json')) {
+        const uploadedFiles = this.getUploadedFiles(req.files);
+
+        if (!uploadedFiles.length || req.headers.accept?.includes('application/json')) {
             throw new Error('No files were uploaded');
+        }
+
+        if (uploadedFiles.some(file => this.isPasswordProtected(file))) {
+            throw new HTTPError(PASSWORD_PROTECTED_DOCUMENT_ERROR, 400);
         }
 
         const user = req.session.user;
@@ -28,7 +45,7 @@ export class DocumentManagerController {
         }
 
         const filesCreated = await this.getApiClient(user).create({
-            files: req.files,
+            files: uploadedFiles,
             classification: Classification.Public,
         });
 
@@ -126,5 +143,85 @@ export class DocumentManagerController {
 
     private getApiClient(user: UserDetails): CaseDocumentManagementClient {
         return new CaseDocumentManagementClient(user);
+    }
+
+    private getUploadedFiles(files: UploadedFiles | undefined): Express.Multer.File[] {
+        if (!files) {
+            return [];
+        }
+
+        if (Array.isArray(files)) {
+            return files;
+        }
+
+        return Object.values(files).flat();
+    }
+
+    private isPasswordProtected(file: Express.Multer.File): boolean {
+        if (!file.buffer?.length) {
+            return false;
+        }
+
+        return (
+            this.isEncryptedPdf(file.buffer) ||
+            this.isEncryptedOfficePackage(file.buffer) ||
+            this.isEncryptedZipArchive(file.buffer)
+        );
+    }
+
+    private isEncryptedPdf(buffer: Buffer): boolean {
+        return this.startsWith(buffer, PDF_SIGNATURE) && buffer.includes(PDF_ENCRYPTION_MARKER);
+    }
+
+    private isEncryptedOfficePackage(buffer: Buffer): boolean {
+        return (
+            this.startsWith(buffer, OLE_COMPOUND_FILE_SIGNATURE) &&
+            buffer.includes(ENCRYPTION_INFO_STREAM) &&
+            buffer.includes(ENCRYPTED_PACKAGE_STREAM)
+        );
+    }
+
+    private isEncryptedZipArchive(buffer: Buffer): boolean {
+        if (!this.startsWith(buffer, ZIP_LOCAL_FILE_HEADER)) {
+            return false;
+        }
+
+        return (
+            this.hasZipHeaderWithEncryptedFlag(buffer, ZIP_LOCAL_FILE_HEADER, 6) ||
+            this.hasZipHeaderWithEncryptedFlag(buffer, ZIP_CENTRAL_DIRECTORY_FILE_HEADER, 8)
+        );
+    }
+
+    private hasZipHeaderWithEncryptedFlag(
+        buffer: Buffer,
+        signature: Buffer,
+        flagOffset: number
+    ): boolean {
+        let offset = 0;
+
+        while (offset <= buffer.length - signature.length) {
+            const headerIndex = buffer.indexOf(signature, offset);
+
+            if (headerIndex === -1) {
+                return false;
+            }
+
+            const flagIndex = headerIndex + flagOffset;
+            if (flagIndex + 2 <= buffer.length) {
+                const flags = buffer.readUInt16LE(flagIndex);
+
+                if ((flags & ZIP_ENCRYPTED_FLAG) === ZIP_ENCRYPTED_FLAG) {
+                    return true;
+                }
+            }
+
+            offset = headerIndex + signature.length;
+        }
+
+        return false;
+    }
+
+    private startsWith(buffer: Buffer, signature: Buffer): boolean {
+        return buffer.length >= signature.length && buffer.subarray(0, signature.length).equals(signature);
     }
 }
