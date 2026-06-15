@@ -57,6 +57,9 @@
                 hint: {
                   text: "Files must be in jpg, png, pdf, docx or xlsx format."
                 },
+                errorMessage: {
+                  text: errors.upload
+                } if errors and errors.upload,
                 attributes: {
                   "aria-describedby": "file-upload-" + documentType.value + "-hint"
                 }
@@ -109,14 +112,6 @@
       {% endif %}
 
       <form method="post" class="govuk-!-margin-top-8">
-        {% if errors and errors.upload %}
-          <div id="upload" class="govuk-form-group govuk-form-group--error">
-            <span class="govuk-error-message">
-              <span class="govuk-visually-hidden">Error:</span> {{ errors.upload }}
-            </span>
-          </div>
-        {% endif %}
-        
         {{ govukButton({
           text: "Continue"
         }) }}
