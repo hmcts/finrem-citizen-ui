@@ -48,3 +48,17 @@ export async function assertUploadPageCoreContent(documentUploadPage: DocumentUp
   await expect(documentUploadPage.gettingHelp.heading).toBeVisible();
   await expect(documentUploadPage.gettingHelp.summary).toBeVisible();
 }
+
+export async function assertUploadedFileVisible(
+  documentUploadPage: DocumentUploadPage,
+  filename: string
+): Promise<void> {
+  await expect(documentUploadPage.getUploadedFileByName(filename)).toBeVisible();
+  await expect(documentUploadPage.filesListDefaultMessage).toBeHidden();
+}
+
+export async function assertNoFilesValidationError(documentUploadPage: DocumentUploadPage): Promise<void> {
+  const noFileError = documentUploadPage.getErrorSummaryLink('You must upload at least one file before continuing');
+  await expect(noFileError).toBeVisible();
+  await expect(documentUploadPage.uploadedFileLinks).toHaveCount(0);
+}
