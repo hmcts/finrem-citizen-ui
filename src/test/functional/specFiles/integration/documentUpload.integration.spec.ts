@@ -1,4 +1,4 @@
-import { test } from '../../../fixtures/fixtures';
+import { expect, test } from '../../../fixtures/fixtures';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
@@ -6,18 +6,18 @@ import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.hel
  * INTEGRATION TESTS: Document Upload step
  *
  * This suite verifies document upload behavior within the upload
- * journey, including content, add/remove flows, validation, navigation,
- * and progression to check upload.
+ * journey, including adding/removing files by type, validation,
+ * accessibility, getting help, and back navigation.
  *
  * Setup:
  * - Uses authenticated `loggedInPage` fixture (real IDAM login flow)
  * - Navigates via shared helper: dashboard -> before-you-start -> confidentiality -> FDR -> document selection
- * - Moves from FDR to document selection by selecting Yes
+ * - Selects "Other document" on document selection page and continues to upload page
  *
  * Runs on:
  * - Environments with working authentication/session support
  */
-test.describe('[integration] Document selection page', () => {
+test.describe('[integration] Document upload page', () => {
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
@@ -31,7 +31,9 @@ test.describe('[integration] Document selection page', () => {
     await navigateToFdrStep(dashboardPage, beforeYouStartPage, confidentialityPage, basePage);
     await fdrPage.selectYesAndContinue();
     await documentSelectionPage.addOtherDocumentAndContinue();
-    await documentUploadPage.verifyDocumentUploadPageContent();
+    // Verify page content
+    await expect(documentUploadPage.page).toHaveURL(/\/upload\/upload-documents/);
+    await expect(documentUploadPage.pageHeader).toBeVisible();
   });
 
   test('[integration] Document upload supports adding an uploaded docx file @a11y', async ({
@@ -39,6 +41,8 @@ test.describe('[integration] Document selection page', () => {
     axeUtils,
   }) => {
     await documentUploadPage.chooseFileAndUploadDocx();
+    await expect(documentUploadPage.getUploadedFileByName('testDocument.docx')).toBeVisible();
+    await expect(documentUploadPage.filesListDefaultMessage).toBeHidden();
     await runA11yAudit(axeUtils);
   });
 
@@ -47,6 +51,8 @@ test.describe('[integration] Document selection page', () => {
     axeUtils,
   }) => {
     await documentUploadPage.chooseFileAndUploadJpg();
+    await expect(documentUploadPage.getUploadedFileByName('testDocument.jpg')).toBeVisible();
+    await expect(documentUploadPage.filesListDefaultMessage).toBeHidden();
     await runA11yAudit(axeUtils);
   });
 
@@ -55,6 +61,8 @@ test.describe('[integration] Document selection page', () => {
     axeUtils,
   }) => {
     await documentUploadPage.chooseFileAndUploadPng();
+    await expect(documentUploadPage.getUploadedFileByName('testDocument.png')).toBeVisible();
+    await expect(documentUploadPage.filesListDefaultMessage).toBeHidden();
     await runA11yAudit(axeUtils);
   });
 
@@ -63,6 +71,8 @@ test.describe('[integration] Document selection page', () => {
     axeUtils,
   }) => {
     await documentUploadPage.chooseFileAndUploadPdf();
+    await expect(documentUploadPage.getUploadedFileByName('testDocument.pdf')).toBeVisible();
+    await expect(documentUploadPage.filesListDefaultMessage).toBeHidden();
     await runA11yAudit(axeUtils);
   });
 
@@ -71,6 +81,8 @@ test.describe('[integration] Document selection page', () => {
     axeUtils,
   }) => {
     await documentUploadPage.chooseFileAndUploadXlsx();
+    await expect(documentUploadPage.getUploadedFileByName('testDocument.xlsx')).toBeVisible();
+    await expect(documentUploadPage.filesListDefaultMessage).toBeHidden();
     await runA11yAudit(axeUtils);
   });
 
@@ -80,7 +92,8 @@ test.describe('[integration] Document selection page', () => {
   }) => {
     await documentUploadPage.chooseFileAndUploadDocx();
     await documentUploadPage.chooseFileAndUploadDocx();
-    await documentUploadPage.expectUploadedFilesListContains(['testDocument.docx', 'testDocument.docx']);
+    await expect(documentUploadPage.uploadedFileLinks).toHaveCount(2);
+    await expect(documentUploadPage.getUploadedFileByName('testDocument.docx')).toBeVisible();
     await runA11yAudit(axeUtils);
   });
 
@@ -90,9 +103,10 @@ test.describe('[integration] Document selection page', () => {
   }) => {
     await documentUploadPage.chooseFileAndUploadDocx();
     await documentUploadPage.chooseFileAndUploadDocx();
-    await documentUploadPage.expectUploadedFilesListContains(['testDocument.docx', 'testDocument.docx']);
+    await expect(documentUploadPage.uploadedFileLinks).toHaveCount(2);
     await documentUploadPage.removeUploadedFile();
-    await documentUploadPage.expectUploadedFilesListContains(['testDocument.docx']);
+    await expect(documentUploadPage.uploadedFileLinks).toHaveCount(1);
+    await expect(documentUploadPage.getUploadedFileByName('testDocument.docx')).toBeVisible();
     await runA11yAudit(axeUtils);
   });
 
@@ -100,7 +114,12 @@ test.describe('[integration] Document selection page', () => {
     documentUploadPage,
     axeUtils,
   }) => {
-    await documentUploadPage.submitWithoutUploadsAndExpectValidationError();
+    await documentUploadPage.clickContinue();
+    await expect(documentUploadPage.errorSummaryTitle).toBeVisible();
+    const errorLink = documentUploadPage.getErrorSummaryLink('You must upload at least one file before continuing');
+    await expect(errorLink).toBeVisible();
+    await expect(documentUploadPage.inlineNoFilesError).toBeVisible();
+    await expect(documentUploadPage.uploadedFileLinks).toHaveCount(0);
     await runA11yAudit(axeUtils);
   });
 
@@ -108,7 +127,24 @@ test.describe('[integration] Document selection page', () => {
     documentUploadPage,
     axeUtils,
   }) => {
-    await documentUploadPage.submitWithWrongFormatAndExpectValidationError();
+    await documentUploadPage.uploadInvalidFileFormat();
+    await documentUploadPage.clickContinue();
+    await expect(documentUploadPage.errorSummaryTitle).toBeVisible();
+    // Invalid file is rejected on upload, so no files in list triggers "must upload file" error
+    const errorLink = documentUploadPage.getErrorSummaryLink('You must upload at least one file before continuing');
+    await expect(errorLink).toBeVisible();
+    await expect(documentUploadPage.uploadedFileLinks).toHaveCount(0);
+    await runA11yAudit(axeUtils);
+  });
+
+  test('[integration] Document upload rejects empty files @a11y', async ({
+    documentUploadPage,
+    axeUtils,
+  }) => {
+    await documentUploadPage.uploadEmptyFile();
+    await documentUploadPage.clickContinue();
+    await expect(documentUploadPage.errorSummaryTitle).toBeVisible();
+    await expect(documentUploadPage.uploadedFileLinks).toHaveCount(0);
     await runA11yAudit(axeUtils);
   });
 
@@ -118,7 +154,8 @@ test.describe('[integration] Document selection page', () => {
   //   axeUtils,
   // }) => {
   //   await documentUploadPage.chooseFileAndUploadDocument();
-  //   await documentUploadPage.clickContinueAndExpectNextStep();
+  //   await documentUploadPage.clickContinue();
+  //   await expect(documentUploadPage.page).toHaveURL(/.../);
   //   await runA11yAudit(axeUtils);
   // });
 
@@ -126,7 +163,11 @@ test.describe('[integration] Document selection page', () => {
     documentUploadPage,
     axeUtils,
   }) => {
-    await documentUploadPage.verifyGettingHelpSection();
+    await documentUploadPage.gettingHelp.verifySection({
+      expectedEmail: 'FRCexample@justice.gov.uk',
+      openingHoursLocator: documentUploadPage.helpOpeningHours,
+      callChargesHref: 'https://www.gov.uk/call-charges',
+    });
     await runA11yAudit(axeUtils);
   });
 
@@ -135,8 +176,11 @@ test.describe('[integration] Document selection page', () => {
     axeUtils,
   }) => {
     await documentUploadPage.chooseFileAndUploadDocx();
-    await documentUploadPage.clickBackToDocumentTypeSelectionAndReturnWithContinueSelection();
-    await documentUploadPage.expectUploadedFilesListContains(['testDocument.docx']);
+    await documentUploadPage.clickBack();
+    await expect(documentUploadPage.page).toHaveURL(/\/upload\/document-type-selection/);
+    await documentUploadPage.page.getByRole('button', { name: 'Continue' }).click();
+    await expect(documentUploadPage.page).toHaveURL(/\/upload\/upload-documents/);
+    await expect(documentUploadPage.getUploadedFileByName('testDocument.docx')).toBeVisible();
     await runA11yAudit(axeUtils);
   });
 });
