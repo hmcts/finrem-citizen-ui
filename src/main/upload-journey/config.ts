@@ -60,7 +60,6 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
     validate: (body: Record<string, unknown>, req?: Request) => {
       const errors: Record<string, string> = {};
       
-      // Check if at least one document has been uploaded
       const uploadedDocs = req?.session?.documents?.documentDetails || [];
       if (uploadedDocs.length === 0) {
         errors.upload = FILE_VALIDATION_ERRORS.NO_FILE;
