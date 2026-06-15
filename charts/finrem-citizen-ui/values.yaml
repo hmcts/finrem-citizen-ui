@@ -36,6 +36,7 @@ nodejs:
     IDAM_CLIENT_ID: 'finrem-citizen-ui'
     IDAM_END_SESSION_URL: 'https://hmcts-access.{{ .Values.global.environment }}.platform.hmcts.net/o/endSession'
     REDIS_EXPIRE_IN_DAYS: 180
+    SESSION_STORE: 'redis'
     SECURE_COOKIE: 'true'
     RATE_LIMIT_WINDOW_MS: 900000
 

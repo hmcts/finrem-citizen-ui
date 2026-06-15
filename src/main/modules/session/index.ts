@@ -7,6 +7,11 @@ import { Redis } from 'ioredis';
 
 const logger = Logger.getLogger('session');
 
+export const SESSION_STORE_IN_MEMORY = 'in-memory';
+export const SESSION_STORE_REDIS = 'redis';
+
+export type SessionStoreType = typeof SESSION_STORE_IN_MEMORY | typeof SESSION_STORE_REDIS;
+
 export function parseSessionSecret(raw: string): string | string[] {
   const trimmed = raw.trim();
 
@@ -27,6 +32,24 @@ export function parseSessionSecret(raw: string): string | string[] {
   }
 }
 
+export function parseSessionStore(raw: string): SessionStoreType {
+  const normalized = raw.trim().toLowerCase().replace(/[\s_]+/g, '-');
+
+  if (normalized === SESSION_STORE_REDIS) {
+    return SESSION_STORE_REDIS;
+  }
+
+  if (normalized === SESSION_STORE_IN_MEMORY || normalized === 'memory' || normalized === 'inmemory') {
+    return SESSION_STORE_IN_MEMORY;
+  }
+
+  throw new Error(`Unsupported session.store "${raw}". Expected "in-memory" or "redis".`);
+}
+
+export function getSessionStoreType(): SessionStoreType {
+  return parseSessionStore(config.get<string>('session.store'));
+}
+
 type AppWithRedis = Express & {
   locals: Express['locals'] & {
     redisClient?: Redis;
@@ -38,6 +61,8 @@ export class Session {
     const typedApp = app as AppWithRedis;
     const secure = process.env.NODE_ENV === 'production';
     const isTest = process.env.NODE_ENV === 'test';
+    const configuredStore = getSessionStoreType();
+    const storeType = isTest ? SESSION_STORE_IN_MEMORY : configuredStore;
     const ttlInSeconds = config.get<number>('session.ttlInSeconds');
     const rawSecret = config.get<string>('secrets.finrem.session-secret');
     const secret = parseSessionSecret(rawSecret);
@@ -61,9 +86,16 @@ export class Session {
       `Session cookie settings: sameSite=${cookieOptions.sameSite} secure=${cookieOptions.secure}`
     );
 
-    if (isTest) {
-      logger.info('Session configured with in-memory store for test environment');
-      app.set('trust proxy', true);
+    app.set('trust proxy', true);
+
+    if (storeType === SESSION_STORE_IN_MEMORY) {
+      delete typedApp.locals.redisClient;
+      logger.info(`Session configured with ${SESSION_STORE_IN_MEMORY} store`);
+
+      if (secure) {
+        logger.warn('Session configured with in-memory store in production');
+      }
+
       app.use(session(sessionOptions));
       return;
     }
@@ -109,7 +141,6 @@ export class Session {
 
     logger.info('Session configured with Redis store');
 
-    app.set('trust proxy', true);
     app.use(
       session({
         ...sessionOptions,

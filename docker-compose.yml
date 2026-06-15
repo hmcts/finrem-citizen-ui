@@ -16,6 +16,7 @@ services:
         condition: service_healthy
     environment:
       - REDIS_CONNECTION_STRING=redis://cache:6379
+      - SESSION_STORE=redis
     env_file:
       - .env
     volumes:

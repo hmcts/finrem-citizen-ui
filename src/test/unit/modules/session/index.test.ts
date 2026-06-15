@@ -41,7 +41,31 @@ const mockSessionMiddleware = jest.requireMock('express-session') as jest.Mock;
 const configGetMock = (jest.requireMock('config') as { get: jest.MockedFunction<(key: string) => unknown> }).get;
 const redisModule = jest.requireMock('ioredis') as { Redis: jest.Mock };
 
-import { parseSessionSecret,Session } from '../../../../main/modules/session/index';
+import {
+  parseSessionSecret,
+  parseSessionStore,
+  Session,
+  SESSION_STORE_IN_MEMORY,
+  SESSION_STORE_REDIS,
+} from '../../../../main/modules/session/index';
+
+const defaultConfig: Record<string, unknown> = {
+  'session.ttlInSeconds': 3600,
+  'secrets.finrem.session-secret': 'test-secret',
+  'session.cookieName': 'finrem_session',
+  'session.prefix': 'finrem-session',
+  'session.store': SESSION_STORE_IN_MEMORY,
+  'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
+};
+
+function mockConfig(overrides: Record<string, unknown> = {}): void {
+  const values = {
+    ...defaultConfig,
+    ...overrides,
+  };
+
+  configGetMock.mockImplementation((key: string) => values[key]);
+}
 
 describe('parseSessionSecret', () => {
   it('returns plain string unchanged', () => {
@@ -78,26 +102,35 @@ describe('parseSessionSecret', () => {
   });
 });
 
+describe('parseSessionStore', () => {
+  it('returns redis when configured as redis', () => {
+    expect(parseSessionStore('redis')).toBe(SESSION_STORE_REDIS);
+  });
+
+  it('returns in-memory for supported in-memory aliases', () => {
+    expect(parseSessionStore('in-memory')).toBe(SESSION_STORE_IN_MEMORY);
+    expect(parseSessionStore('In Memory')).toBe(SESSION_STORE_IN_MEMORY);
+    expect(parseSessionStore('in_memory')).toBe(SESSION_STORE_IN_MEMORY);
+    expect(parseSessionStore('memory')).toBe(SESSION_STORE_IN_MEMORY);
+  });
+
+  it('throws for unsupported session store values', () => {
+    expect(() => parseSessionStore('database')).toThrow(
+      'Unsupported session.store "database". Expected "in-memory" or "redis".'
+    );
+  });
+});
+
 describe('Session.enableFor', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-
-    configGetMock.mockImplementation((key: string) => {
-      const map: Record<string, unknown> = {
-        'session.ttlInSeconds': 3600,
-        'secrets.finrem.session-secret': 'test-secret',
-        'session.cookieName': 'finrem_session',
-        'session.prefix': 'finrem-session',
-        'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
-      };
-
-      return map[key];
-    });
+    mockConfig();
   });
 
-  it('configures session with in-memory store in test environment', () => {
+  it('configures session with in-memory store in test environment even when redis is configured', () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'test';
+    mockConfig({ 'session.store': SESSION_STORE_REDIS });
 
     const session = new Session();
     const app = express();
@@ -122,9 +155,45 @@ describe('Session.enableFor', () => {
     process.env.NODE_ENV = originalEnv;
   });
 
-  it('configures session with Redis store outside test environment', () => {
+  it('configures session with in-memory store when selected outside test environment', () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'development';
+
+    const session = new Session();
+    const app = express();
+
+    session.enableFor(app);
+
+    expect(redisModule.Redis).not.toHaveBeenCalled();
+
+    expect(mockSessionMiddleware).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resave: false,
+        saveUninitialized: false,
+        rolling: true,
+        name: 'finrem_session',
+        secret: 'test-secret',
+      })
+    );
+
+    const callArg = mockSessionMiddleware.mock.calls[0][0] as {
+      cookie: {
+        maxAge: number;
+      };
+      store?: unknown;
+    };
+
+    expect(callArg.store).toBeUndefined();
+    expect(callArg.cookie.maxAge).toBe(3600 * 1000);
+    expect(app.locals.redisClient).toBeUndefined();
+
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  it('configures session with Redis store when selected outside test environment', () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+    mockConfig({ 'session.store': SESSION_STORE_REDIS });
 
     const session = new Session();
     const app = express();
@@ -162,6 +231,7 @@ describe('Session.enableFor', () => {
   it('stores redis client on app.locals outside test environment', () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'development';
+    mockConfig({ 'session.store': SESSION_STORE_REDIS });
 
     const session = new Session();
     const app = express();
@@ -176,6 +246,7 @@ describe('Session.enableFor', () => {
   it('registers redis connect and error handlers outside test environment', () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'development';
+    mockConfig({ 'session.store': SESSION_STORE_REDIS });
 
     const session = new Session();
     const app = express();
@@ -192,20 +263,7 @@ describe('Session.enableFor', () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'test';
 
-    configGetMock.mockImplementation((key: string) => {
-      if (key === 'secrets.finrem.session-secret') {
-        return '["s1","s2"]';
-      }
-
-      const map: Record<string, unknown> = {
-        'session.ttlInSeconds': 3600,
-        'session.cookieName': 'finrem_session',
-        'session.prefix': 'finrem-session',
-        'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
-      };
-
-      return map[key];
-    });
+    mockConfig({ 'secrets.finrem.session-secret': '["s1","s2"]' });
 
     const session = new Session();
     const app = express();
