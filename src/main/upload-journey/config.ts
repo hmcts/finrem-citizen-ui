@@ -1,6 +1,7 @@
 import type { Request } from 'express';
 
 import { UploadStepNames } from '../common-constants';
+import { FILE_VALIDATION_ERRORS } from '../functions/util/uploadValidation';
 
 export type UploadStepId = typeof UploadStepNames[keyof typeof UploadStepNames];
 
@@ -56,8 +57,37 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
   [UploadStepNames.UploadDocuments]: {
     template: 'upload-journey/upload-documents',
-    next: () => null,
+    validate: (body: Record<string, unknown>, req?: Request) => {
+      const errors: Record<string, string> = {};
+      
+      // Check if at least one document has been uploaded
+      const uploadedDocs = req?.session?.documents?.documentDetails || [];
+      if (uploadedDocs.length === 0) {
+        errors.upload = FILE_VALIDATION_ERRORS.NO_FILE;
+      }
+      
+      return errors;
+    },
+    next: () => UploadStepNames.CheckUpload,
     previous: () => UploadStepNames.DocumentTypeSelection,
   },
+
+  [UploadStepNames.CheckUpload]: {
+    template: 'upload-journey/check-upload',
+    next: () => UploadStepNames.SendToOtherParty,
+    previous: () => UploadStepNames.UploadDocuments,
+  },
+
+  [UploadStepNames.SendToOtherParty]: {
+    template: 'upload-journey/send-to-other-party',
+    next: () => UploadStepNames.Confirmation,
+    previous: () => UploadStepNames.CheckUpload,
+  },
+
+  [UploadStepNames.Confirmation]: {
+    template: 'upload-journey/confirmation',
+    next: () => null,
+    previous: () => UploadStepNames.SendToOtherParty,
+  }
   
 };

@@ -9,6 +9,7 @@ type MockSession = {
     isFinancialDisputeResolution?: boolean;
     documentDetails?: { id?: string; value?: { DocumentType?: string } }[];
   };
+  save?: (callback: (err?: Error) => void) => void;
   [key: string]: unknown;
 };
 
@@ -87,13 +88,13 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/before-you-start', {
-        data: { selectedDocumentTypes: [] },
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/before-you-start', expect.objectContaining({
+        data: { selectedDocumentTypes: [], uploadedFiles: {} },
         errors: {},
         values: { selectedDocumentTypes: [], fdrHearing: undefined },
         previousStep: null,
         email: 'FRCexample@justice.gov.uk',
-      });
+      }));
     });
 
     it('should render FDR step with session data', () => {
@@ -114,13 +115,13 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/fdr', {
-        data: { selectedDocumentTypes: [] },
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/fdr', expect.objectContaining({
+        data: { selectedDocumentTypes: [], uploadedFiles: {} },
         errors: {},
         values: { selectedDocumentTypes: [], fdrHearing: true },
         previousStep: UploadStepNames.Confidentiality,
         email: 'FRCexample@justice.gov.uk',
-      });
+      }));
     });
 
     it('should populate document labels from document types', () => {
@@ -141,13 +142,16 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', {
-        data: { selectedDocumentTypes: expect.arrayContaining([
-          expect.objectContaining({
-            label: 'Points of claim/defence',
-            value: 'points-of-claim-defence',
-          }),
-        ]) },
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', expect.objectContaining({
+        data: expect.objectContaining({
+          selectedDocumentTypes: expect.arrayContaining([
+            expect.objectContaining({
+              label: 'Points of claim/defence',
+              value: 'points-of-claim-defence',
+            }),
+          ]),
+          uploadedFiles: {},
+        }),
         errors: {},
         values: expect.objectContaining({
           selectedDocumentTypes: expect.arrayContaining([
@@ -159,7 +163,7 @@ describe('Upload Journey Routes', () => {
         }),
         previousStep: UploadStepNames.FDR,
         email: 'FRCexample@justice.gov.uk',
-      });
+      }));
     });
 
     it('should handle unknown document type with empty label', () => {
@@ -182,12 +186,15 @@ describe('Upload Journey Routes', () => {
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', 
         expect.objectContaining({
-          data: { selectedDocumentTypes: expect.arrayContaining([
-            expect.objectContaining({
-              label: '',
-              value: 'unknown-doc-type',
-            }),
-          ]) },
+          data: expect.objectContaining({
+            selectedDocumentTypes: expect.arrayContaining([
+              expect.objectContaining({
+                label: '',
+                value: 'unknown-doc-type',
+              }),
+            ]),
+            uploadedFiles: {},
+          }),
         })
       );
     });
@@ -212,12 +219,15 @@ describe('Upload Journey Routes', () => {
 
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', 
         expect.objectContaining({
-          data: { selectedDocumentTypes: expect.arrayContaining([
-            expect.objectContaining({
-              label: '',
-              value: '',
-            }),
-          ]) },
+          data: expect.objectContaining({
+            selectedDocumentTypes: expect.arrayContaining([
+              expect.objectContaining({
+                label: '',
+                value: '',
+              }),
+            ]),
+            uploadedFiles: {},
+          }),
         })
       );
     });
@@ -238,6 +248,60 @@ describe('Upload Journey Routes', () => {
 
       expect(mockRes.status).toHaveBeenCalledWith(404);
       expect(mockRes.send).toHaveBeenCalledWith('Step not found');
+    });
+
+    it('should include uploaded files grouped by document type', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.UploadDocuments },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'doc-1', value: { DocumentType: 'position-statement' } },
+            ],
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'file-1',
+                value: {
+                  DocumentType: 'position-statement',
+                  DocumentFileName: 'statement.pdf',
+                  DocumentLink: {
+                    document_url: 'http://example.com/documents/file1',
+                  },
+                },
+              },
+              {
+                id: 'file-2',
+                value: {
+                  DocumentType: 'position-statement',
+                  DocumentFileName: 'statement2.pdf',
+                  DocumentLink: {
+                    document_url: 'http://example.com/documents/file2',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/upload-documents', expect.objectContaining({
+        data: expect.objectContaining({
+          uploadedFiles: {
+            'position-statement': [
+              { id: 'file-1', filename: 'statement.pdf', url: '/documents/file1/download', displayFilename: expect.any(String) },
+              { id: 'file-2', filename: 'statement2.pdf', url: '/documents/file2/download', displayFilename: expect.any(String) },
+            ],
+          },
+        }),
+      }));
     });
   });
 
@@ -265,7 +329,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.BeforeYouStart },
-        session: {},
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
         body: {},
       } as PartialRequestWithSession;
       const mockRes = {
@@ -284,7 +350,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
-        session: {},
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
         body: { fdrHearing: 'yes' },
       } as PartialRequestWithSession;
       const mockRes = {
@@ -321,11 +389,64 @@ describe('Upload Journey Routes', () => {
       delete uploadSteps[UploadStepNames.Confidentiality].validate;
     });
 
+    it('should include uploaded files when rendering validation errors', () => {
+      const { uploadSteps } = require('../../../main/upload-journey/config');
+      uploadSteps[UploadStepNames.UploadDocuments].validate = () => ({ error: 'Test error' });
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.UploadDocuments },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'doc-1', value: { DocumentType: 'chronology' } },
+            ],
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'file-1',
+                value: {
+                  DocumentType: 'chronology',
+                  DocumentFileName: 'chronology.pdf',
+                  DocumentLink: {
+                    document_url: 'http://example.com/documents/chronology',
+                  },
+                },
+              },
+            ],
+          },
+        },
+        body: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/upload-documents', expect.objectContaining({
+        data: expect.objectContaining({
+          uploadedFiles: {
+            'chronology': [
+              { id: 'file-1', filename: 'chronology.pdf', url: '/documents/chronology/download', displayFilename: expect.any(String) },
+            ],
+          },
+        }),
+        errors: { error: 'Test error' },
+      }));
+
+      delete uploadSteps[UploadStepNames.UploadDocuments].validate;
+    });
+
     it('should store fdrHearing in session', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
-        session: {},
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
         body: { fdrHearing: 'true' },
       } as PartialRequestWithSession;
       const mockRes = {
@@ -343,7 +464,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.BeforeYouStart },
-        session: undefined,
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
         body: {},
       } as PartialRequestWithSession;
       const mockRes = {
@@ -359,7 +482,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
-        session: {},
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
         body: { fdrHearing: 'true' },
       } as PartialRequestWithSession;
       const mockRes = {
@@ -376,7 +501,9 @@ describe('Upload Journey Routes', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
-        session: {},
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
         body: { fdrHearing: 'false' },
       } as PartialRequestWithSession;
       const mockRes = {
@@ -411,6 +538,31 @@ describe('Upload Journey Routes', () => {
           }),
         })
       );
+    });
+
+    it('should redirect to same step when no next step is defined', () => {
+      const { uploadSteps } = require('../../../main/upload-journey/config');
+      const originalNext = uploadSteps[UploadStepNames.CheckUpload].next;
+      uploadSteps[UploadStepNames.CheckUpload].next = null;
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.CheckUpload },
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/${UploadStepNames.CheckUpload}`);
+
+      uploadSteps[UploadStepNames.CheckUpload].next = originalNext;
     });
   });
 
