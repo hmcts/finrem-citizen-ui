@@ -1,5 +1,5 @@
 import { expect, test } from '../../../fixtures/fixtures';
-import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
+import { assertUploadPageCoreContent, runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
 /**
@@ -34,6 +34,15 @@ test.describe('[integration] Document upload page', () => {
     // Verify page content
     await expect(documentUploadPage.page).toHaveURL(/\/upload\/upload-documents/);
     await expect(documentUploadPage.pageHeader).toBeVisible();
+  });
+
+  test('[integration] Upload your documents page displays expected content and layout @a11y', async ({
+    documentUploadPage,
+    axeUtils,
+  }) => {
+    await assertUploadPageCoreContent(documentUploadPage);
+    await expect(documentUploadPage.uploadSectionHeadings).toHaveCount(1);
+    await runA11yAudit(axeUtils);
   });
 
   test('[integration] Document upload supports adding an uploaded docx file @a11y', async ({
@@ -110,6 +119,17 @@ test.describe('[integration] Document upload page', () => {
     await runA11yAudit(axeUtils);
   });
 
+  test('[integration] Continue after uploading documents navigates to check-upload @a11y', async ({
+    documentUploadPage,
+    axeUtils,
+  }) => {
+    await documentUploadPage.chooseFileAndUploadDocx();
+    await documentUploadPage.clickContinue();
+    await expect(documentUploadPage.page).toHaveURL(/\/upload\/check-upload/);
+    await expect(documentUploadPage.page.getByRole('heading', { name: 'Check your uploaded documents' })).toBeVisible();
+    await runA11yAudit(axeUtils);
+  });
+
   test('[integration] Document upload displays rename instruction and renames file for supported document types (Chronology) @a11y', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
@@ -169,11 +189,12 @@ test.describe('[integration] Document upload page', () => {
     axeUtils,
   }) => {
     await documentUploadPage.uploadInvalidFileFormat();
+
+    // In integration runs, invalid client-side selection may clear the input without
+    // rendering a stable inline error node. Continue produces a deterministic error state.
     await documentUploadPage.clickContinue();
-    await expect(documentUploadPage.errorSummaryTitle).toBeVisible();
-    // Invalid file is rejected on upload, so no files in list triggers "must upload file" error
-    const errorLink = documentUploadPage.getErrorSummaryLink('You must upload at least one file before continuing');
-    await expect(errorLink).toBeVisible();
+    const noFileError = documentUploadPage.getErrorSummaryLink('You must upload at least one file before continuing');
+    await expect(noFileError).toBeVisible();
     await expect(documentUploadPage.uploadedFileLinks).toHaveCount(0);
     await runA11yAudit(axeUtils);
   });
@@ -183,22 +204,35 @@ test.describe('[integration] Document upload page', () => {
     axeUtils,
   }) => {
     await documentUploadPage.uploadEmptyFile();
+
+    // Integration behavior can vary between explicit "empty file" validation and
+    // fallback "at least one file" validation when the empty selection is discarded.
     await documentUploadPage.clickContinue();
-    await expect(documentUploadPage.errorSummaryTitle).toBeVisible();
+    const emptyFileError = documentUploadPage.getErrorSummaryLink('The selected file is empty');
+    const noFileError = documentUploadPage.getErrorSummaryLink('You must upload at least one file before continuing');
+    await expect(emptyFileError.or(documentUploadPage.inlineEmptyFileError).or(noFileError).first()).toBeVisible();
     await expect(documentUploadPage.uploadedFileLinks).toHaveCount(0);
     await runA11yAudit(axeUtils);
   });
 
-  // TODO: Add this test when next step is implemented
-  // test('[integration] Document upload continue navigates to next step @a11y', async ({
-  //   documentUploadPage,
-  //   axeUtils,
-  // }) => {
-  //   await documentUploadPage.chooseFileAndUploadDocument();
-  //   await documentUploadPage.clickContinue();
-  //   await expect(documentUploadPage.page).toHaveURL(/.../);
-  //   await runA11yAudit(axeUtils);
-  // });
+  test('[integration] Retry upload after validation failure succeeds and clears error @a11y', async ({
+    documentUploadPage,
+    axeUtils,
+  }) => {
+    await documentUploadPage.uploadInvalidFileFormat();
+
+    // Keep retry flow deterministic across environments by asserting the stable
+    // post-continue validation state before re-uploading a valid document.
+    await documentUploadPage.clickContinue();
+    const noFileError = documentUploadPage.getErrorSummaryLink('You must upload at least one file before continuing');
+    await expect(noFileError).toBeVisible();
+
+    await documentUploadPage.chooseFileAndUploadDocx();
+    await expect(documentUploadPage.getUploadedFileByName('testDocument.docx')).toBeVisible();
+    await expect(noFileError).toHaveCount(0);
+    await expect(documentUploadPage.inlineFormatError).toBeHidden();
+    await runA11yAudit(axeUtils);
+  });
 
   test('[integration] Upload documents selection getting help panel shows expected contact details @a11y', async ({
     documentUploadPage,
