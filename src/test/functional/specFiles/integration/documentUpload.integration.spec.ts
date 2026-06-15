@@ -1,6 +1,46 @@
 import { expect, test } from '../../../fixtures/fixtures';
-import { assertUploadPageCoreContent, runA11yAudit } from '../journeyHelpers/specAssertions.helper';
+import type { DocumentUploadPage } from '../../pom/documentUploadPage.page';
+import {
+  assertNoFilesValidationError,
+  assertUploadPageCoreContent,
+  assertUploadedFileVisible,
+  runA11yAudit,
+} from '../journeyHelpers/specAssertions.helper';
 import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
+
+type UploadScenario = {
+  label: string;
+  upload: (page: DocumentUploadPage) => Promise<void>;
+  expectedFilename: string;
+};
+
+const uploadScenarios: UploadScenario[] = [
+  {
+    label: 'docx',
+    upload: async page => page.chooseFileAndUploadDocx(),
+    expectedFilename: 'testDocument.docx',
+  },
+  {
+    label: 'jpg',
+    upload: async page => page.chooseFileAndUploadJpg(),
+    expectedFilename: 'testDocument.jpg',
+  },
+  {
+    label: 'png',
+    upload: async page => page.chooseFileAndUploadPng(),
+    expectedFilename: 'testDocument.png',
+  },
+  {
+    label: 'pdf',
+    upload: async page => page.chooseFileAndUploadPdf(),
+    expectedFilename: 'testDocument.pdf',
+  },
+  {
+    label: 'xlsx',
+    upload: async page => page.chooseFileAndUploadXlsx(),
+    expectedFilename: 'testDocument.xlsx',
+  },
+] as const;
 
 /**
  * INTEGRATION TESTS: Document Upload step
@@ -45,55 +85,16 @@ test.describe('[integration] Document upload page', () => {
     await runA11yAudit(axeUtils);
   });
 
-  test('[integration] Document upload supports adding an uploaded docx file @a11y', async ({
-    documentUploadPage,
-    axeUtils,
-  }) => {
-    await documentUploadPage.chooseFileAndUploadDocx();
-    await expect(documentUploadPage.getUploadedFileByName('testDocument.docx')).toBeVisible();
-    await expect(documentUploadPage.filesListDefaultMessage).toBeHidden();
-    await runA11yAudit(axeUtils);
-  });
-
-  test('[integration] Document upload supports adding an uploaded jgp file @a11y', async ({
-    documentUploadPage,
-    axeUtils,
-  }) => {
-    await documentUploadPage.chooseFileAndUploadJpg();
-    await expect(documentUploadPage.getUploadedFileByName('testDocument.jpg')).toBeVisible();
-    await expect(documentUploadPage.filesListDefaultMessage).toBeHidden();
-    await runA11yAudit(axeUtils);
-  });
-
-  test('[integration] Document upload supports adding an uploaded png file @a11y', async ({
-    documentUploadPage,
-    axeUtils,
-  }) => {
-    await documentUploadPage.chooseFileAndUploadPng();
-    await expect(documentUploadPage.getUploadedFileByName('testDocument.png')).toBeVisible();
-    await expect(documentUploadPage.filesListDefaultMessage).toBeHidden();
-    await runA11yAudit(axeUtils);
-  });
-
-  test('[integration] Document upload supports adding an uploaded pdf file @a11y', async ({
-    documentUploadPage,
-    axeUtils,
-  }) => {
-    await documentUploadPage.chooseFileAndUploadPdf();
-    await expect(documentUploadPage.getUploadedFileByName('testDocument.pdf')).toBeVisible();
-    await expect(documentUploadPage.filesListDefaultMessage).toBeHidden();
-    await runA11yAudit(axeUtils);
-  });
-
-  test('[integration] Document upload supports adding an uploaded xlsx file @a11y', async ({
-    documentUploadPage,
-    axeUtils,
-  }) => {
-    await documentUploadPage.chooseFileAndUploadXlsx();
-    await expect(documentUploadPage.getUploadedFileByName('testDocument.xlsx')).toBeVisible();
-    await expect(documentUploadPage.filesListDefaultMessage).toBeHidden();
-    await runA11yAudit(axeUtils);
-  });
+  for (const scenario of uploadScenarios) {
+    test(`[integration] Document upload supports adding an uploaded ${scenario.label} file @a11y`, async ({
+      documentUploadPage,
+      axeUtils,
+    }) => {
+      await scenario.upload(documentUploadPage);
+      await assertUploadedFileVisible(documentUploadPage, scenario.expectedFilename);
+      await runA11yAudit(axeUtils);
+    });
+  }
 
   test('[integration] Document upload supports adding multiple uploaded files @a11y', async ({
     documentUploadPage,
@@ -102,7 +103,7 @@ test.describe('[integration] Document upload page', () => {
     await documentUploadPage.chooseFileAndUploadDocx();
     await documentUploadPage.chooseFileAndUploadDocx();
     await expect(documentUploadPage.uploadedFileLinks).toHaveCount(2);
-    await expect(documentUploadPage.getUploadedFileByName('testDocument.docx')).toBeVisible();
+    await assertUploadedFileVisible(documentUploadPage, 'testDocument.docx');
     await runA11yAudit(axeUtils);
   });
 
@@ -115,7 +116,7 @@ test.describe('[integration] Document upload page', () => {
     await expect(documentUploadPage.uploadedFileLinks).toHaveCount(2);
     await documentUploadPage.removeUploadedFile();
     await expect(documentUploadPage.uploadedFileLinks).toHaveCount(1);
-    await expect(documentUploadPage.getUploadedFileByName('testDocument.docx')).toBeVisible();
+    await assertUploadedFileVisible(documentUploadPage, 'testDocument.docx');
     await runA11yAudit(axeUtils);
   });
 
@@ -162,7 +163,7 @@ test.describe('[integration] Document upload page', () => {
     });
     await expect(renamedFile).toBeVisible();
 
-    // Verify file is in uploaded files list (both renaming and non-renaming docs)
+    // Verify renamed file appears in the uploaded files list.
     await expect(documentUploadPage.uploadedFileLinks).toHaveCount(1);
 
     // Verify remove button is visible
@@ -191,11 +192,9 @@ test.describe('[integration] Document upload page', () => {
     await documentUploadPage.uploadInvalidFileFormat();
 
     // In integration runs, invalid client-side selection may clear the input without
-    // rendering a stable inline error node. Continue produces a deterministic error state.
+    // rendering a stable inline error node. Continuing produces a deterministic validation state.
     await documentUploadPage.clickContinue();
-    const noFileError = documentUploadPage.getErrorSummaryLink('You must upload at least one file before continuing');
-    await expect(noFileError).toBeVisible();
-    await expect(documentUploadPage.uploadedFileLinks).toHaveCount(0);
+    await assertNoFilesValidationError(documentUploadPage);
     await runA11yAudit(axeUtils);
   });
 
@@ -222,13 +221,13 @@ test.describe('[integration] Document upload page', () => {
     await documentUploadPage.uploadInvalidFileFormat();
 
     // Keep retry flow deterministic across environments by asserting the stable
-    // post-continue validation state before re-uploading a valid document.
+    // no-file validation state before re-uploading a valid document.
     await documentUploadPage.clickContinue();
     const noFileError = documentUploadPage.getErrorSummaryLink('You must upload at least one file before continuing');
-    await expect(noFileError).toBeVisible();
+    await assertNoFilesValidationError(documentUploadPage);
 
     await documentUploadPage.chooseFileAndUploadDocx();
-    await expect(documentUploadPage.getUploadedFileByName('testDocument.docx')).toBeVisible();
+    await assertUploadedFileVisible(documentUploadPage, 'testDocument.docx');
     await expect(noFileError).toHaveCount(0);
     await expect(documentUploadPage.inlineFormatError).toBeHidden();
     await runA11yAudit(axeUtils);
@@ -255,7 +254,7 @@ test.describe('[integration] Document upload page', () => {
     await expect(documentUploadPage.page).toHaveURL(/\/upload\/document-type-selection/);
     await documentUploadPage.page.getByRole('button', { name: 'Continue' }).click();
     await expect(documentUploadPage.page).toHaveURL(/\/upload\/upload-documents/);
-    await expect(documentUploadPage.getUploadedFileByName('testDocument.docx')).toBeVisible();
+    await assertUploadedFileVisible(documentUploadPage, 'testDocument.docx');
     await runA11yAudit(axeUtils);
   });
 
