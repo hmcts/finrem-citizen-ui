@@ -1,8 +1,15 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { Application, Request, Response } from 'express';
+import { Application, NextFunction, Request, Response } from 'express';
 
+import { DocumentManagerController } from '../../../main/app/document/DocumentManagerController';
 import { RouteNames, UploadStepNames } from '../../../main/common-constants';
 import setupUploadJourneyRoute from '../../../main/routes/upload-journey';
+
+jest.mock('../../../main/app/document/DocumentManagerController', () => ({
+  DocumentManagerController: jest.fn().mockImplementation(() => ({
+    previouslyUploadedDocuments: jest.fn(),
+  })),
+}));
 
 type MockSession = {
   DocumentSelection?: {
@@ -12,7 +19,11 @@ type MockSession = {
   [key: string]: unknown;
 };
 
-type UploadJourneyHandler = (req: Request, res: Response) => void;
+type UploadJourneyHandler = (
+  req: Request,
+  res: Response,
+  next?: NextFunction
+) => void | Promise<void>;
 type PartialRequestWithSession = {
   params?: Record<string, string>;
   body?: unknown;
@@ -70,6 +81,11 @@ describe('Upload Journey Routes', () => {
       expect.any(Function)
     );
     expect(mockGet).toHaveBeenCalledWith(RouteNames.uploadJourney, expect.any(Function), expect.any(Function));
+    expect(mockGet).toHaveBeenCalledWith(
+      `${RouteNames.uploadJourney}/previously-uploaded-documents`,
+      expect.any(Function),
+      expect.any(Function)
+    );
   });
 
   describe('GET /upload/:stepId', () => {
@@ -180,7 +196,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', 
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection',
         expect.objectContaining({
           data: { selectedDocumentTypes: expect.arrayContaining([
             expect.objectContaining({
@@ -210,7 +226,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', 
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection',
         expect.objectContaining({
           data: { selectedDocumentTypes: expect.arrayContaining([
             expect.objectContaining({
@@ -596,6 +612,93 @@ describe('Upload Journey Routes', () => {
           }),
         ],
       });
+    });
+  });
+
+  describe('GET /upload/previously-uploaded-documents', () => {
+    it('should render previously uploaded documents', async () => {
+      const mockResponse = {
+        case_details: {
+          case_data: {
+            citizenRespondentDocument: [
+              {
+                value: {
+                  DocumentLink: {
+                    document_url:
+                      'http://dm-store/documents/f6b20958-b1d9-4cda-8354-8b8236ef299d',
+                    upload_timestamp: '2026-06-15T08:11:58.314565476',
+                    document_filename: 'Test-Demo.docx',
+                  },
+                  DocumentType: 'Statement of issues',
+                  DocumentFileName: 'Test-Demo.docx',
+                },
+              },
+            ],
+          },
+        },
+      };
+
+      const previouslyUploadedDocumentsMock = jest.fn<
+        (req: unknown, res: Response, caseId: string) => Promise<typeof mockResponse>
+      >();
+
+      previouslyUploadedDocumentsMock.mockResolvedValue(mockResponse);
+
+      (DocumentManagerController as jest.Mock).mockImplementation(() => ({
+        previouslyUploadedDocuments: previouslyUploadedDocumentsMock,
+      }));
+
+      setupUploadJourneyRoute(app);
+
+      const handler = getRegisteredHandler(
+        mockGet,
+        `${RouteNames.uploadJourney}/previously-uploaded-documents`
+      );
+
+      const mockReq = {
+        session: {
+          caseNumber: '123',
+        },
+      } as unknown as Request;
+
+      const mockRes = {
+        render: jest.fn(),
+      } as unknown as Response;
+
+      const next = jest.fn();
+
+      await handler(mockReq, mockRes, next);
+
+      expect(previouslyUploadedDocumentsMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          session: expect.objectContaining({
+            caseNumber: '123',
+          }),
+        }),
+        mockRes,
+        '123'
+      );
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        'upload-journey/previously-uploaded-documents',
+        {
+          documentRows: [
+            [
+              {
+                text: '15 June 2026 at 8:11am',
+              },
+              {
+                text: 'Statement of issues',
+              },
+              {
+                html: expect.stringContaining('Test-Demo.docx'),
+              },
+            ],
+          ],
+        }
+      );
+
+      expect(next).not.toHaveBeenCalled();
     });
   });
 });

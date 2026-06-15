@@ -48,6 +48,7 @@ export const ViewNames = {
 
 export const UploadStepNames = {
   BeforeYouStart: 'before-you-start',
+  PUD: 'previously-uploaded-documents',
   Confidentiality: 'confidentiality',
   FDR: 'fdr',
   DocumentTypeSelection: 'document-type-selection',
@@ -70,4 +71,5 @@ export const UrlEndPoints = {
   UploadDocument: '/cases/documents',
   GetDocument: (documentId: string) => `/cases/documents/${documentId}/binary`,
   CaseRoles: '/case-users/search',
+  PreviouslyUploadedDocuments: (caseId: string, userRole: string) => `/cases/${caseId}/event-triggers/${userRole}`,
 } as const;

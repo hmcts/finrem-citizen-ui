@@ -1,0 +1,59 @@
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "../macros/getting-help.njk" import gettingHelp %}
+
+{% extends "template.njk" %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <a href="/dashboard" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">
+        Back
+      </a>
+
+      <h1 class="govuk-heading-l">Previously uploaded documents</h1>
+
+      <p class="govuk-body">
+        You can download your previously uploaded documents on this page.
+      </p>
+
+      <p class="govuk-body">
+        You cannot delete any documents that have already been uploaded. They have already been saved to your case.
+      </p>
+
+      <p class="govuk-body">
+        You can upload an updated version of a previously uploaded document, or any additional documentation, if you need to.
+      </p>
+
+      {{ govukTable({
+        head: [
+          {
+            text: "Date added"
+          },
+          {
+            text: "Document type"
+          },
+          {
+            text: "Document name"
+          }
+        ],
+        rows: documentRows or []
+      }) }}
+
+      <div class="govuk-button-group">
+        {{ govukButton({
+          text: "Return to account",
+          href: "/dashboard"
+        }) }}
+
+        <a href="/dashboard" class="govuk-link">
+          Cancel
+        </a>
+      </div>
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+      {{ gettingHelp(contactEmail) }}
+    </div>
+  </div>
+{% endblock %}
