@@ -110,6 +110,47 @@ test.describe('[integration] Document upload page', () => {
     await runA11yAudit(axeUtils);
   });
 
+  test('[integration] Document upload displays rename instruction and renames file for supported document types (Chronology) @a11y', async ({
+    loggedInPage: _loggedInPage,
+    dashboardPage,
+    beforeYouStartPage,
+    confidentialityPage,
+    basePage,
+    fdrPage,
+    documentSelectionPage,
+    documentUploadPage,
+    axeUtils,
+  }) => {
+    // Navigate and select a renaming document type (Chronology)
+    await navigateToFdrStep(dashboardPage, beforeYouStartPage, confidentialityPage, basePage);
+    await fdrPage.selectYesAndContinue();
+    await documentSelectionPage.addChronologyAndContinue();
+    await expect(documentUploadPage.page).toHaveURL(/\/upload\/upload-documents/);
+    await expect(documentUploadPage.pageHeader).toBeVisible();
+
+    // Verify rename instruction text appears for renaming document types
+    const renameInstruction = documentUploadPage.page.getByText(/automatically be renamed to.*-DD-MM-YY/);
+    await expect(renameInstruction).toBeVisible();
+
+    // Upload file into Chronology section
+    await documentUploadPage.chooseFileAndUploadChronologyDocx();
+
+    // Verify file appears with renamed format
+    const renamedFilePattern = /.*-Chronology-\d{2}-\d{2}-\d{4}\..+/;
+    const renamedFile = documentUploadPage.page.locator('a.govuk-link:not([data-remove-file])').filter({
+      hasText: renamedFilePattern,
+    });
+    await expect(renamedFile).toBeVisible();
+
+    // Verify file is in uploaded files list (both renaming and non-renaming docs)
+    await expect(documentUploadPage.uploadedFileLinks).toHaveCount(1);
+
+    // Verify remove button is visible
+    await expect(documentUploadPage.page.getByText('Remove document')).toBeVisible();
+
+    await runA11yAudit(axeUtils);
+  });
+
   test('[integration] Document upload requires at least one uploaded file before continuing @a11y', async ({
     documentUploadPage,
     axeUtils,
@@ -183,4 +224,5 @@ test.describe('[integration] Document upload page', () => {
     await expect(documentUploadPage.getUploadedFileByName('testDocument.docx')).toBeVisible();
     await runA11yAudit(axeUtils);
   });
+
 });
