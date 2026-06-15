@@ -1,4 +1,4 @@
-import { Application } from 'express';
+import { Application, Request, Response } from 'express';
 import multer from 'multer';
 import { LoggerInstance } from 'winston';
 
@@ -11,6 +11,7 @@ import { AppRequest, UserDetails } from '../app/controller/AppRequest';
 import { DocumentManagerController } from '../app/document/DocumentManagerController';
 import { RouteNames, ViewNames } from '../common-constants';
 import { orchestrateHome } from '../functions/util/homePageUtil';
+import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../functions/util/uploadValidation';
 import { oidcMiddleware } from '../middleware';
 
 export default function (app: Application): void {
@@ -77,7 +78,26 @@ export default function (app: Application): void {
 
   const upload = multer({
     storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 100 * 1024 * 1024, // 100MB max file size
+    },
   });
+
+  // Allow a small buffer above 100MB to account for multipart encoding overhead
+  // (boundaries, field names, headers) so a file exactly at 100MB is not wrongly rejected.
+  const MAX_UPLOAD_BYTES = 101 * 1024 * 1024;
+
+  // Reject oversized uploads using the Content-Length header BEFORE Multer reads the body.
+  function checkContentLength(req: Request, res: Response, next: (error?: Error) => void): void {
+    const contentLength = Number(req.headers['content-length'] || 0);
+    if (contentLength > MAX_UPLOAD_BYTES) {
+      const documentType = (req.query.documentType as string) || '';
+      const returnUrl = (req.query.returnUrl as string) || RouteNames.documents;
+      logger.warn('Upload rejected by Content-Length pre-check', { contentLength });
+      return redirectWithError(req, res, next, documentType, returnUrl, FILE_VALIDATION_ERRORS.TOO_LARGE);
+    }
+    next();
+  }
 
   const documentController = new DocumentManagerController(logger);
 
@@ -120,20 +140,145 @@ export default function (app: Application): void {
   app.post(
     RouteNames.documentUpload,
     oidcMiddleware,
+    checkContentLength,
     upload.any(),
-    async (req, res, next) => {
+    (err: Error, req: Request, res: Response, next: (error?: Error) => void) => {
+      if (err) {
+        const documentType = req.body.documentType as string;
+        const returnUrl = req.body.returnUrl || RouteNames.documents;
+        
+        // Handle Multer-specific errors
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            logger.warn('File size limit exceeded', { 
+              fieldname: err.field,
+              limit: '100MB' 
+            });
+            return redirectWithError(
+              req, 
+              res, 
+              next,
+              documentType, 
+              returnUrl, 
+              FILE_VALIDATION_ERRORS.TOO_LARGE
+            );
+          }
+          
+          // Handle other Multer errors
+          logger.error('Multer error', { code: err.code, field: err.field });
+          return redirectWithError(
+            req, 
+            res, 
+            next,
+            documentType, 
+            returnUrl, 
+            FILE_VALIDATION_ERRORS.UPLOAD_FAILED
+          );
+        }
+        
+        // Pass non-Multer errors to next error handler
+        return next(err);
+      }
+      next();
+    },
+    async (req: Request, res: Response, next: (error?: Error) => void) => {
       try {
+        const documentType = req.body.documentType as string;
+        const returnUrl = req.body.returnUrl || RouteNames.documents;
+        
+        // Validate uploaded file
+        const validationError = validateUploadedFile(req.files as Express.Multer.File[]);
+        if (validationError) {
+          return redirectWithError(req, res, next, documentType, returnUrl, validationError);
+        }
+
+        // Convert kebab-case to SCREAMING_SNAKE_CASE for enum lookup
+        const documentTypeKey = documentType
+          .toUpperCase()
+          .replace(/-/g, '_');
+        
         const selectedType =
           CitizenUploadDocumentType[
-          req.body.documentType as keyof typeof CitizenUploadDocumentType
+          documentTypeKey as keyof typeof CitizenUploadDocumentType
           ];
 
-        await documentController.uploadDocumentToEvidenceStore(
-          req as unknown as AppRequest,
-          selectedType
-        );
+        try {
+          await documentController.uploadDocumentToEvidenceStore(
+            req as unknown as AppRequest,
+            selectedType
+          );
+        } catch (error) {
+          // Handle upload processing errors
+          logger.error('Error uploading document', { error });
+          return redirectWithError(req, res, next, documentType, returnUrl, FILE_VALIDATION_ERRORS.UPLOAD_FAILED);
+        }
 
-        res.redirect(RouteNames.documents);
+        // Clear errors on successful upload
+        if (req.session.uploadErrors) {
+          delete req.session.uploadErrors[documentType];
+          if (Object.keys(req.session.uploadErrors).length === 0) {
+            delete req.session.uploadErrors;
+          }
+        }
+        
+        req.session.save((err) => {
+          if (err) {
+            return next(err);
+          }
+          res.redirect(returnUrl);
+        });
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  function redirectWithError(
+    req: Request,
+    res: Response,
+    next: (error?: Error) => void,
+    documentType: string,
+    returnUrl: string,
+    errorMessage: string
+  ): void {
+    // Store error in session
+    if (!req.session.uploadErrors) {
+      req.session.uploadErrors = {};
+    }
+    req.session.uploadErrors[documentType] = errorMessage;
+    
+    req.session.save((err) => {
+      if (err) {
+        return next(err);
+      }
+      res.redirect(returnUrl);
+    });
+  }
+
+  app.delete(
+    RouteNames.documentRemove,
+    oidcMiddleware,
+    (req, res, next) => {
+      try {
+        const appReq = req as AppRequest;
+        const { fileId } = req.params;
+
+        if (!appReq.session.documents?.documentDetails) {
+          return res.json({ success: true, documents: [] });
+        }
+
+        appReq.session.documents.documentDetails =
+          appReq.session.documents.documentDetails.filter(
+            doc => doc.id !== fileId
+          );
+
+        logger.info('Document removed from session', { fileId });
+
+        res.json({
+          success: true,
+          fileId,
+          remainingCount: appReq.session.documents.documentDetails.length,
+        });
       } catch (error) {
         next(error);
       }

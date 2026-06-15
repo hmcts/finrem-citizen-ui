@@ -1,6 +1,6 @@
 import { Request } from 'express';
 
-import { getDocumentLabel, getSelectedDocumentTypesForDisplay } from '../../../../main/functions/util/documentUtil';
+import { getDocumentLabel, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename } from '../../../../main/functions/util/documentUtil';
 
 describe('documentUtil', () => {
   describe('getDocumentLabel', () => {
@@ -267,6 +267,104 @@ describe('documentUtil', () => {
       expect(result[1].order).toBe(1);
       expect(result[0].id).toBe('uuid-1');
       expect(result[1].id).toBe('uuid-3');
+    });
+  });
+
+  describe('shouldAutoRename', () => {
+    it('should return true for all form documents that should be auto-renamed', () => {
+      expect(shouldAutoRename('family-mediation-information-and-assessment-meeting-miam-form-form-fm1')).toBe(true);
+      expect(shouldAutoRename('statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5')).toBe(true);
+      expect(shouldAutoRename('estimate-of-costs-incurred-form-h')).toBe(true);
+      expect(shouldAutoRename('statement-of-costs-form-h1')).toBe(true);
+      expect(shouldAutoRename('statement-of-costs-summary-assessment-form-n260')).toBe(true);
+      expect(shouldAutoRename('certificate-of-service-form-fp6')).toBe(true);
+      expect(shouldAutoRename('response-to-the-notice-of-first-appointment-form-g')).toBe(true);
+    });
+
+    it('should return true for all statement documents that should be auto-renamed', () => {
+      expect(shouldAutoRename('position-statement')).toBe(true);
+      expect(shouldAutoRename('chronology')).toBe(true);
+      expect(shouldAutoRename('statement-of-issues')).toBe(true);
+      expect(shouldAutoRename('section-25-statement')).toBe(true);
+      expect(shouldAutoRename('witness-statement')).toBe(true);
+    });
+
+    it('should return true for all composite and financial documents that should be auto-renamed', () => {
+      expect(shouldAutoRename('composite-case-summary-form-es1')).toBe(true);
+      expect(shouldAutoRename('composite-schedule-of-assets-and-income-form-es2')).toBe(true);
+      expect(shouldAutoRename('market-appraisal-or-valuation-of-family-home')).toBe(true);
+      expect(shouldAutoRename('housing-needs-property-particulars')).toBe(true);
+    });
+
+    it('should return true for all offers, reports and bundle documents that should be auto-renamed', () => {
+      expect(shouldAutoRename('open-offers')).toBe(true);
+      expect(shouldAutoRename('without-prejudice-offers-for-settlement')).toBe(true);
+      expect(shouldAutoRename('questionnaire-request-for-further-documents')).toBe(true);
+      expect(shouldAutoRename('pension-report-expert-report')).toBe(true);
+      expect(shouldAutoRename('hearing-bundle')).toBe(true);
+      expect(shouldAutoRename('fdr-bundle')).toBe(true);
+    });
+
+    it('should return false for document types that should not be auto-renamed', () => {
+      expect(shouldAutoRename('bank-statements')).toBe(false);
+      expect(shouldAutoRename('payslips')).toBe(false);
+      expect(shouldAutoRename('p60')).toBe(false);
+      expect(shouldAutoRename('other-document')).toBe(false);
+    });
+
+    it('should return false for unknown document types', () => {
+      expect(shouldAutoRename('unknown-type')).toBe(false);
+      expect(shouldAutoRename('')).toBe(false);
+    });
+  });
+
+  describe('getDocumentRenameFormat', () => {
+    it('should return the correct rename format for form documents', () => {
+      expect(getDocumentRenameFormat('family-mediation-information-and-assessment-meeting-miam-form-form-fm1')).toBe('FormFM1');
+      expect(getDocumentRenameFormat('statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5')).toBe('FormFM5');
+      expect(getDocumentRenameFormat('estimate-of-costs-incurred-form-h')).toBe('FormH');
+      expect(getDocumentRenameFormat('statement-of-costs-form-h1')).toBe('FormH1');
+      expect(getDocumentRenameFormat('statement-of-costs-summary-assessment-form-n260')).toBe('N260');
+      expect(getDocumentRenameFormat('certificate-of-service-form-fp6')).toBe('FP6');
+      expect(getDocumentRenameFormat('response-to-the-notice-of-first-appointment-form-g')).toBe('FormG');
+    });
+
+    it('should return the correct rename format for statement documents', () => {
+      expect(getDocumentRenameFormat('position-statement')).toBe('PositionStatement');
+      expect(getDocumentRenameFormat('chronology')).toBe('Chronology');
+      expect(getDocumentRenameFormat('statement-of-issues')).toBe('StatementOfIssues');
+      expect(getDocumentRenameFormat('section-25-statement')).toBe('s25statement');
+      expect(getDocumentRenameFormat('witness-statement')).toBe('WitnessStatements');
+    });
+
+    it('should return the correct rename format for composite and financial documents', () => {
+      expect(getDocumentRenameFormat('composite-case-summary-form-es1')).toBe('ES1');
+      expect(getDocumentRenameFormat('composite-schedule-of-assets-and-income-form-es2')).toBe('ES2');
+      expect(getDocumentRenameFormat('market-appraisal-or-valuation-of-family-home')).toBe('FamilyHomeValuation');
+      expect(getDocumentRenameFormat('housing-needs-property-particulars')).toBe('Property-Particulars');
+    });
+
+    it('should return the correct rename format for offers and reports', () => {
+      expect(getDocumentRenameFormat('open-offers')).toBe('OpenOffers');
+      expect(getDocumentRenameFormat('without-prejudice-offers-for-settlement')).toBe('WithoutPrejudiceOffers');
+      expect(getDocumentRenameFormat('questionnaire-request-for-further-documents')).toBe('Questionnaire');
+      expect(getDocumentRenameFormat('pension-report-expert-report')).toBe('ExpertReports');
+    });
+
+    it('should return the correct rename format for bundle documents', () => {
+      expect(getDocumentRenameFormat('hearing-bundle')).toBe('bundle');
+      expect(getDocumentRenameFormat('fdr-bundle')).toBe('bundle');
+    });
+
+    it('should return empty string for document types that are not auto-renamed', () => {
+      expect(getDocumentRenameFormat('bank-statements')).toBe('');
+      expect(getDocumentRenameFormat('payslips')).toBe('');
+      expect(getDocumentRenameFormat('p60')).toBe('');
+    });
+
+    it('should return empty string for unknown document types', () => {
+      expect(getDocumentRenameFormat('unknown-type')).toBe('');
+      expect(getDocumentRenameFormat('')).toBe('');
     });
   });
 });

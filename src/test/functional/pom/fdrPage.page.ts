@@ -5,7 +5,7 @@ import { GettingHelpPanel } from './components/gettingHelpPanel.component';
 
 const URL_PATTERNS = {
   DASHBOARD: /\/dashboard/,
-  DOCUMENT_SELECTION: /\/upload\/document-type-selection/,
+  DOCUMENT_SELECTION: /\/upload\/document-selection/,
   FDR: /\/upload\/fdr/,
 };
 

@@ -1,0 +1,25 @@
+{% from "../macros/getting-help.njk" import gettingHelp %}
+
+{% extends "template.njk" %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% if previousStep %}
+        <a href="/upload/{{ previousStep }}" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
+      {% endif %}
+
+      <h2 class="govuk-heading-l">Check your uploaded documents</h2>
+
+      <form method="post">
+        <button type="submit" class="govuk-button" data-module="govuk-button">
+          Continue
+        </button>
+      </form>
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+      {{ gettingHelp(contactEmail) }}
+    </div>
+  </div>
+{% endblock %}
