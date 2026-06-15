@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { Locator, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 
 import { BasePage } from './basePage.page';
 import { GettingHelpPanel } from './components/gettingHelpPanel.component';
@@ -73,16 +73,27 @@ export class DocumentUploadPage extends BasePage {
     return this.page.getByRole('alert').getByRole('link', { name: message });
   }
 
-  async chooseFileAndUploadDocument(filePath: string = SUPPORTED_UPLOAD_FILES.docx): Promise<void> {
-    const labelledInput = this.page.getByLabel('Upload a file', { exact: true });
+  async chooseFileAndUploadDocument(
+    filePath: string = SUPPORTED_UPLOAD_FILES.docx,
+    documentType: 'Other document' | 'Chronology' = 'Other document',
+    expectUploadSuccess = true,
+  ): Promise<void> {
+    const beforeCount = await this.uploadedFileLinks.count();
 
-    if (await labelledInput.count()) {
-      await labelledInput.setInputFiles(filePath);
+    const labelledInput = this.page
+      .getByLabel('Upload a file', { exact: true })
+      .nth(documentType === 'Chronology' ? 1 : 0);
+
+    await labelledInput.setInputFiles(filePath);
+    await this.page
+      .getByRole('button', { name: `Upload file for ${documentType}`, exact: true })
+      .click();
+
+    if (expectUploadSuccess) {
+      await expect(this.uploadedFileLinks).toHaveCount(beforeCount + 1, { timeout: 15000 });
     } else {
-      await this.page.locator('input[type="file"]').first().setInputFiles(filePath);
+      await expect(this.uploadedFileLinks).toHaveCount(beforeCount);
     }
-
-    await this.uploadFileButton.click();
   }
 
   async chooseFileAndUploadJpg(): Promise<void> {
@@ -101,6 +112,10 @@ export class DocumentUploadPage extends BasePage {
     await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.docx);
   }
 
+  async chooseFileAndUploadChronologyDocx(): Promise<void> {
+    await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.docx, 'Chronology');
+  }
+
   async chooseFileAndUploadXlsx(): Promise<void> {
     await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.xlsx);
   }
@@ -114,11 +129,11 @@ export class DocumentUploadPage extends BasePage {
   }
 
   async uploadInvalidFileFormat(): Promise<void> {
-    await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.txt);
+    await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.txt, 'Other document', false);
   }
 
   async uploadEmptyFile(): Promise<void> {
-    await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.emptyDocx);
+    await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.emptyDocx, 'Other document', false);
   }
 
   async clickContinue(): Promise<void> {
