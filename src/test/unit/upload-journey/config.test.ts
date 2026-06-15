@@ -208,9 +208,31 @@ describe('Upload Journey Configuration', () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.CheckUpload];
       expect(step.template).toBe('upload-journey/check-upload');
-      expect(step.next!()).toBe(UploadStepNames.SendToOtherParty);
+      expect(step.next!({ uploadMore: 'no' })).toBe(UploadStepNames.SendToOtherParty);
       expect(step.previous!()).toBe(UploadStepNames.UploadDocuments);
-      expect(step.validate).toBeUndefined();
+      expect(step.validate).toBeDefined();
+    });
+
+    it('should validate uploadMore field is required', () => {
+      const step = uploadSteps[UploadStepNames.CheckUpload];
+      const errors = step.validate!({});
+      expect(errors.uploadMore).toBe('Select yes if you want to upload any other documents');
+    });
+
+    it('should not return errors when uploadMore is provided', () => {
+      const step = uploadSteps[UploadStepNames.CheckUpload];
+      const errors = step.validate!({ uploadMore: 'yes' });
+      expect(Object.keys(errors)).toHaveLength(0);
+    });
+
+    it('should navigate to DocumentTypeSelection when user selects yes', () => {
+      const step = uploadSteps[UploadStepNames.CheckUpload];
+      expect(step.next!({ uploadMore: 'yes' })).toBe(UploadStepNames.DocumentTypeSelection);
+    });
+
+    it('should navigate to SendToOtherParty when user selects no', () => {
+      const step = uploadSteps[UploadStepNames.CheckUpload];
+      expect(step.next!({ uploadMore: 'no' })).toBe(UploadStepNames.SendToOtherParty);
     });
   });
 

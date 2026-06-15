@@ -1,4 +1,7 @@
 {% from "../macros/getting-help.njk" import gettingHelp %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
 {% extends "template.njk" %}
 
@@ -7,19 +10,91 @@
     <div class="govuk-grid-column-two-thirds">
       {% if previousStep %}
         <a href="/upload/{{ previousStep }}" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
+      {% else %}
+        <a href="/dashboard" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
       {% endif %}
 
-      <h2 class="govuk-heading-l">Check your uploaded documents</h2>
+      {% if errors.uploadMore %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: [
+            {
+              text: errors.uploadMore,
+              href: "#upload-more"
+            }
+          ]
+        }) }}
+      {% endif %}
 
-      <form method="post">
-        <button type="submit" class="govuk-button" data-module="govuk-button">
-          Continue
-        </button>
+      <h1 class="govuk-heading-l">Check your uploaded documents</h1>
+
+      <p class="govuk-body">Make sure you have:</p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>uploaded the correct documents</li>
+        <li>redacted any confidential information</li>
+      </ul>
+
+      <p class="govuk-body">
+        You should carefully check all of the documents you want to upload. You will not be able to delete any documents once you submit. If you need to remove or replace a document now, go back to the previous page.
+      </p>
+
+      {% if data.documentGroups and data.documentGroups.length > 0 %}
+        {% for group in data.documentGroups %}
+          <h3 class="govuk-heading-m govuk-!-margin-top-6">{{ group.label }}</h3>
+
+          {% if group.willCombine %}
+            <p class="govuk-body">
+              These documents will be combined into one document called <strong>{{ caseUserName or 'UserName' }}-{{ group.groupKey }}-DD-MM-YYYY</strong> when you submit. Its contents page will list the documents as you have named them.
+            </p>
+          {% endif %}
+
+          <ul class="govuk-list">
+            {% for file in group.files %}
+              <li class="govuk-!-margin-bottom-2">
+                <a href="{{ file.url }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
+                  {{ file.displayFilename }}
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post" class="govuk-!-margin-top-8">
+        {{ govukRadios({
+          name: "uploadMore",
+          fieldset: {
+            legend: {
+              text: "Do you want to upload any other documents?",
+              isPageHeading: false,
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          items: [
+            {
+              value: "yes",
+              text: "Yes",
+              checked: values.uploadMore === "yes"
+            },
+            {
+              value: "no",
+              text: "No",
+              checked: values.uploadMore === "no"
+            }
+          ],
+          errorMessage: errors.uploadMore and {
+            text: errors.uploadMore
+          }
+        }) }}
+
+        {{ govukButton({
+          text: "Continue"
+        }) }}
       </form>
     </div>
 
     <div class="govuk-grid-column-one-third">
-      {{ gettingHelp(contactEmail) }}
+      {{ gettingHelp(email) }}
     </div>
   </div>
 {% endblock %}

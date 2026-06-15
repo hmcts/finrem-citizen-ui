@@ -107,3 +107,43 @@ export const DOCUMENT_RENAME_FORMATS: Record<string, string> = {
   'hearing-bundle': 'bundle',
   'fdr-bundle': 'bundle',
 };
+
+/**
+ * Maps document types to their combined PDF naming format.
+ * Format: UserName-{CombinedFormat}-DD-MM-YY
+ * 
+ * Multiple uploaded files of these types will be combined into a single PDF
+ * with the specified naming convention when submitted.
+ */
+export const DOCUMENT_COMBINED_PDF_FORMATS: Record<string, string> = {
+  'updating-disclosure': 'UpdatingDisclosure',
+  'attachments-to-form-e': 'AttachmentsFormE',
+  'reply-to-questionnaire-supporting-documents': 'ReplyToQuestionnaireSupportingDocuments',
+  'reply-to-schedule-of-deficiencies-or-supplemental-questionnaires-supporting-documents': 'ReplyToScheduleOfDeficienciesSupportingDocuments',
+  
+  // Supporting financial documents (all share the same combined format)
+  'bank-statements': 'SupportingFinancialDocuments',
+  'payslips': 'SupportingFinancialDocuments',
+  'p60': 'SupportingFinancialDocuments',
+  'p45': 'SupportingFinancialDocuments',
+  'debt-statement': 'SupportingFinancialDocuments',
+  'list-of-assets': 'SupportingFinancialDocuments',
+  'loan-statement': 'SupportingFinancialDocuments',
+  'car-insurance-loan-statement': 'SupportingFinancialDocuments',
+  'personal-selling-sight-statement': 'SupportingFinancialDocuments',
+  'school-fees': 'SupportingFinancialDocuments',
+  'self-assessment-tax-forms': 'SupportingFinancialDocuments',
+  'universal-credit-statement': 'SupportingFinancialDocuments',
+  'mortgage-statements-for-other-properties': 'SupportingFinancialDocuments',
+  'mortgage-statements-for-family-home': 'SupportingFinancialDocuments',
+  'investment-statements': 'SupportingFinancialDocuments',
+  'business-accounts': 'SupportingFinancialDocuments',
+  'p11d': 'SupportingFinancialDocuments',
+  'tax-assessments': 'SupportingFinancialDocuments',
+  'income-evidence': 'SupportingFinancialDocuments',
+  'pension-statement': 'SupportingFinancialDocuments',
+  'other-property-valuation': 'SupportingFinancialDocuments',
+  'life-insurance-including-endowment-policies': 'SupportingFinancialDocuments',
+  'business-valuation': 'SupportingFinancialDocuments',
+  'management-accounts': 'SupportingFinancialDocuments',
+};
