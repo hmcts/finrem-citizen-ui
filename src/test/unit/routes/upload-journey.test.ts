@@ -551,7 +551,7 @@ describe('Upload Journey Routes', () => {
         session: {
           save: jest.fn((callback: (err?: Error) => void) => callback()),
         },
-        body: {},
+        body: { uploadMore: 'yes' },
       } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
