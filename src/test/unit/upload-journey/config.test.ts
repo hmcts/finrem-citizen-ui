@@ -171,4 +171,85 @@ describe('Upload Journey Configuration', () => {
       expect(errors).toEqual({});
     });
   });
+
+  describe(UploadStepNames.UploadDocuments, () => {
+    it('should have correct configuration', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      expect(step.template).toBe('upload-journey/upload-documents');
+      expect(step.next!()).toBe(UploadStepNames.CheckUpload);
+      expect(step.previous!()).toBe(UploadStepNames.DocumentTypeSelection);
+      expect(step.validate).toBeDefined();
+    });
+
+    it('should return error when no documents uploaded', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const mockReq = {
+        session: {
+          documents: {
+            documentDetails: [],
+          },
+        },
+      } as unknown as Request;
+
+      // @ts-expect-error - Mocking partial Request for testing
+      const errors = step.validate!({}, mockReq);
+      expect(errors.upload).toBe('You must upload at least one file before continuing');
+    });
+
+    it('should return no errors when documents uploaded', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const mockReq = {
+        session: {
+          documents: {
+            documentDetails: [{ id: '1', value: {} }],
+          },
+        },
+      } as unknown as Request;
+
+      // @ts-expect-error - Mocking partial Request for testing
+      const errors = step.validate!({}, mockReq);
+      expect(errors).toEqual({});
+    });
+
+    it('should return error when session.documents is undefined', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const mockReq = {
+        session: {},
+      } as unknown as Request;
+
+      // @ts-expect-error - Mocking partial Request for testing
+      const errors = step.validate!({}, mockReq);
+      expect(errors.upload).toBe('You must upload at least one file before continuing');
+    });
+  });
+
+  describe(UploadStepNames.CheckUpload, () => {
+    it('should have correct configuration', () => {
+      const step = uploadSteps[UploadStepNames.CheckUpload];
+      expect(step.template).toBe('upload-journey/check-upload');
+      expect(step.next!()).toBe(UploadStepNames.SendToOtherParty);
+      expect(step.previous!()).toBe(UploadStepNames.UploadDocuments);
+      expect(step.validate).toBeUndefined();
+    });
+  });
+
+  describe(UploadStepNames.SendToOtherParty, () => {
+    it('should have correct configuration', () => {
+      const step = uploadSteps[UploadStepNames.SendToOtherParty];
+      expect(step.template).toBe('upload-journey/send-to-other-party');
+      expect(step.next!()).toBe(UploadStepNames.Confirmation);
+      expect(step.previous!()).toBe(UploadStepNames.CheckUpload);
+      expect(step.validate).toBeUndefined();
+    });
+  });
+
+  describe(UploadStepNames.Confirmation, () => {
+    it('should have correct configuration', () => {
+      const step = uploadSteps[UploadStepNames.Confirmation];
+      expect(step.template).toBe('upload-journey/confirmation');
+      expect(step.next!()).toBeNull();
+      expect(step.previous!()).toBe(UploadStepNames.SendToOtherParty);
+      expect(step.validate).toBeUndefined();
+    });
+  });
 });
