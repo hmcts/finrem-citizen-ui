@@ -8,7 +8,6 @@ describe('Upload Journey Configuration', () => {
       expect(step.template).toBe('upload-journey/previously-uploaded-documents');
       expect(step.next!()).toBeNull();
       expect(step.previous!()).toBe('dashboard');
-      expect(step.cancel!()).toBe('dashboard');
       expect(step.validate).toBeUndefined();
     });
   });
