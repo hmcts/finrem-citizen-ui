@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { Application, NextFunction, Request, Response } from 'express';
 
+import { CaseRole } from '../../../main/app/case/definition';
 import { DocumentManagerController } from '../../../main/app/document/DocumentManagerController';
 import { RouteNames, UploadStepNames } from '../../../main/common-constants';
 import setupUploadJourneyRoute from '../../../main/routes/upload-journey';
@@ -772,6 +773,7 @@ describe('Upload Journey Routes', () => {
       const mockResponse = {
         case_details: {
           case_data: {
+            citizenApplicantDocument: [],
             citizenRespondentDocument: [
               {
                 value: {
@@ -810,6 +812,9 @@ describe('Upload Journey Routes', () => {
       const mockReq = {
         session: {
           caseNumber: '123',
+          user: {
+            caseRole: CaseRole.RESPONDENT,
+          },
         },
       } as unknown as Request;
 
@@ -843,13 +848,157 @@ describe('Upload Journey Routes', () => {
                 text: 'Statement of issues',
               },
               {
-                html: expect.stringContaining('Test-Demo.docx'),
+                html: '<a class="govuk-link" href="/documents/f6b20958-b1d9-4cda-8354-8b8236ef299d/download">Test-Demo.docx</a>',
               },
             ],
           ],
         }
       );
 
+      expect(next).not.toHaveBeenCalled();
+    });
+    it('should escape document names before rendering link html', async () => {
+      const mockResponse = {
+        case_details: {
+          case_data: {
+            citizenRespondentDocument: [
+              {
+                value: {
+                  DocumentLink: {
+                    document_url:
+                      'http://dm-store/documents/f6b20958-b1d9-4cda-8354-8b8236ef299d?download=true',
+                    upload_timestamp: '2026-06-15T08:11:58.314565476',
+                    document_filename: 'safe-fallback.pdf',
+                  },
+                  DocumentType: 'Statement of issues',
+                  DocumentFileName: '<script>alert("xss")</script>.pdf',
+                },
+              },
+            ],
+          },
+        },
+      };
+
+      const previouslyUploadedDocumentsMock = jest.fn<
+        (req: unknown, res: Response, caseId: string) => Promise<typeof mockResponse>
+      >();
+
+      previouslyUploadedDocumentsMock.mockResolvedValue(mockResponse);
+
+      (DocumentManagerController as jest.Mock).mockImplementation(() => ({
+        previouslyUploadedDocuments: previouslyUploadedDocumentsMock,
+      }));
+
+      setupUploadJourneyRoute(app);
+
+      const handler = getRegisteredHandler(
+        mockGet,
+        `${RouteNames.uploadJourney}/previously-uploaded-documents`
+      );
+
+      const mockReq = {
+        session: {
+          caseNumber: '123',
+          user: {
+            caseRole: CaseRole.RESPONDENT,
+          },
+        },
+      } as unknown as Request;
+
+      const mockRes = {
+        render: jest.fn(),
+      } as unknown as Response;
+
+      const next = jest.fn();
+
+      await handler(mockReq, mockRes, next);
+
+      const renderData = (mockRes.render as jest.Mock).mock.calls[0][1] as {
+        documentRows: { html?: string; text?: string }[][];
+      };
+      const documentRows = renderData.documentRows;
+      const documentNameCell = documentRows[0][2];
+
+      expect(documentNameCell.html).toBe(
+        '<a class="govuk-link" href="/documents/f6b20958-b1d9-4cda-8354-8b8236ef299d/download">&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;.pdf</a>'
+      );
+      expect(documentNameCell.html).not.toContain('<script>');
+      expect(next).not.toHaveBeenCalled();
+    });
+    it('should render plain text when document URL does not contain a valid document id', async () => {
+      const mockResponse = {
+        case_details: {
+          case_data: {
+            citizenRespondentDocument: [
+              {
+                value: {
+                  DocumentLink: {
+                    document_url:
+                      'http://dm-store/documents/not-a-valid-document-id?download=true',
+                    upload_timestamp: '2026-06-15T08:11:58.314565476',
+                    document_filename: 'fallback.pdf',
+                  },
+                  DocumentType: 'Statement of issues',
+                  DocumentFileName: 'Test-Demo.docx',
+                },
+              },
+            ],
+          },
+        },
+      };
+
+      const previouslyUploadedDocumentsMock = jest.fn<
+        (req: unknown, res: Response, caseId: string) => Promise<typeof mockResponse>
+      >();
+
+      previouslyUploadedDocumentsMock.mockResolvedValue(mockResponse);
+
+      (DocumentManagerController as jest.Mock).mockImplementation(() => ({
+        previouslyUploadedDocuments: previouslyUploadedDocumentsMock,
+      }));
+
+      setupUploadJourneyRoute(app);
+
+      const handler = getRegisteredHandler(
+        mockGet,
+        `${RouteNames.uploadJourney}/previously-uploaded-documents`
+      );
+
+      const mockReq = {
+        session: {
+          caseNumber: '123',
+          user: {
+            caseRole: CaseRole.RESPONDENT,
+          },
+        },
+      } as unknown as Request;
+
+      const mockRes = {
+        render: jest.fn(),
+      } as unknown as Response;
+
+      const next = jest.fn();
+
+      await handler(mockReq, mockRes, next);
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        'upload-journey/previously-uploaded-documents',
+        {
+          documentRows: [
+            [
+              {
+                text: '15 June 2026 at 8:11am',
+              },
+              {
+                text: 'Statement of issues',
+              },
+              {
+                text: 'Test-Demo.docx',
+              },
+            ],
+          ],
+        }
+      );
       expect(next).not.toHaveBeenCalled();
     });
     it('should call next with error when caseNumber is not in session', async () => {
@@ -901,6 +1050,9 @@ describe('Upload Journey Routes', () => {
       const mockReq = {
         session: {
           caseNumber: '123',
+          user: {
+            caseRole: CaseRole.RESPONDENT,
+          },
         },
       } as unknown as Request;
 

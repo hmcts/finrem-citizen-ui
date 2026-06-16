@@ -2,13 +2,20 @@ import type { Application, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { LoggerInstance } from 'winston';
 
-import { CitizenUploadDocument, ListValue } from '../app/case/definition';
+import { CaseRole, CitizenUploadDocument, ListValue } from '../app/case/definition';
 import { AppRequest } from '../app/controller/AppRequest';
 import { DocumentManagerController } from '../app/document/DocumentManagerController';
+import type {
+  PreviouslyUploadedDocument,
+  PreviouslyUploadedDocumentsCaseData,
+} from '../app/document/PreviouslyUploadedDocumentClient';
 import { RouteNames } from '../common-constants';
 import { getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename } from '../functions/util/documentUtil';
 import { oidcMiddleware } from '../middleware';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
+
+const previouslyUploadedDocumentsRoute = `${RouteNames.uploadJourney}/previously-uploaded-documents`;
+const documentIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function getUploadedFilesByType(req: Request): Record<string, { id: string; filename: string; url: string; displayFilename: string }[]> {
   const uploadedDocuments = req.session.documents?.documentDetails || [];
@@ -116,7 +123,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
   });
 
   app.get(
-    `${RouteNames.uploadJourney}/previously-uploaded-documents`,
+    previouslyUploadedDocumentsRoute,
     oidcMiddleware,
     async (req: Request, res: Response, next) => {
       const logger: LoggerInstance = console as unknown as LoggerInstance;
@@ -127,6 +134,11 @@ export default function setupUploadJourneyRoute(app: Application): void {
           throw new Error('No case number in session');
         }
 
+        const caseRole = req.session.user?.caseRole;
+        if (!caseRole) {
+          throw new Error('No case role in session');
+        }
+
         const response =
           await documentManagerController.previouslyUploadedDocuments(
             req as unknown as AppRequest,
@@ -135,15 +147,15 @@ export default function setupUploadJourneyRoute(app: Application): void {
           );
 
         const caseData = response?.case_details?.case_data;
-        const documents =
-          caseData?.citizenApplicantDocument ??
-          caseData?.citizenRespondentDocument ??
-          [];
+        const documents = getPreviouslyUploadedDocumentsByRole(caseRole, caseData);
 
         const documentRows = documents.map(document => {
           const value = document.value;
           const documentLink = value?.DocumentLink;
           const documentId = getDocumentIdFromUrl(documentLink?.document_url);
+          const fileName = value?.DocumentFileName ?? documentLink?.document_filename ?? '';
+          const documentNameCell = createdocumentNameCell(documentId, fileName);
+
           return [
             {
               text: documentLink?.upload_timestamp
@@ -153,11 +165,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
             {
               text: value?.DocumentType ?? '',
             },
-            {
-              html: documentId
-                ? `<a class="govuk-link" href="${RouteNames.documentDownload.replace(':documentId', documentId)}">${value?.DocumentFileName ?? documentLink?.document_filename}</a>`
-                : value?.DocumentFileName ?? '',
-            },
+            documentNameCell,
           ];
         });
 
@@ -262,8 +270,65 @@ export default function setupUploadJourneyRoute(app: Application): void {
 
 }
 
+function getPreviouslyUploadedDocumentsByRole(
+  caseRole: CaseRole,
+  caseData?: PreviouslyUploadedDocumentsCaseData
+): PreviouslyUploadedDocument[] {
+  if (caseRole === CaseRole.APPLICANT) {
+    return caseData?.citizenApplicantDocument ?? [];
+  } else if (caseRole === CaseRole.RESPONDENT) {
+    return caseData?.citizenRespondentDocument ?? [];
+  } else {
+    throw new Error(`Unsupported case role: ${caseRole}`);
+  }
+}
+
 function getDocumentIdFromUrl(documentUrl?: string): string | undefined {
-  return documentUrl?.split('/documents/')[1];
+  if (!documentUrl) {
+    return undefined;
+  }
+
+  let pathname: string;
+  try {
+    pathname = new URL(documentUrl, 'http://localhost').pathname;
+  } catch {
+    return undefined;
+  }
+
+  const pathSegments = pathname.split('/').filter(Boolean);
+  const documentsSegmentIndex = pathSegments.findIndex(segment => segment === 'documents');
+  const documentId = documentsSegmentIndex >= 0
+    ? pathSegments[documentsSegmentIndex + 1]
+    : undefined;
+
+  return documentId && documentIdPattern.test(documentId)
+    ? documentId
+    : undefined;
+}
+
+function getDocumentDownloadRoute(documentId: string): string {
+  return RouteNames.documentDownload.replace(':documentId', encodeURIComponent(documentId));
+}
+
+function createdocumentNameCell(documentId: string | undefined, fileName: string): { html: string } | { text: string } {
+  if (documentId && fileName) {
+    return {
+      html: `<a class="govuk-link" href="${getDocumentDownloadRoute(documentId)}">${escapeHtml(fileName)}</a>`,
+    };
+  }
+
+  return {
+    text: fileName,
+  };
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function formatUploadDate(timestamp: string): string {
