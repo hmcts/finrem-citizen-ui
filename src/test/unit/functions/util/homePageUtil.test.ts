@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { Request } from 'express';
 import { SessionData } from 'express-session';
 import { LoggerInstance } from 'winston';
@@ -26,6 +26,14 @@ jest.mock('../../../../main/app/case/case-api', () => ({
 jest.mock('../../../../main/app/auth/user', () => ({
   getSystemUser: jest.fn(),
 }));
+
+beforeEach(() => {
+  jest.spyOn(console, 'info').mockImplementation(() => {});
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 type MinimalCaseData = { id: string };
 
