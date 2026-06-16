@@ -1,8 +1,8 @@
-/// <reference path="../../types/accessible-autocomplete.d.ts" />
+/// <reference path="../types/accessible-autocomplete.d.ts" />
 
 import accessibleAutocomplete from 'accessible-autocomplete';
 
-import { PublicRoutes } from '../../common-constants';
+import { PublicRoutes } from '../common-constants';
 
 interface AutocompleteResult {
   id: number;

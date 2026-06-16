@@ -25,6 +25,7 @@ transformIgnorePatterns: [
     '!src/main/server.ts',
     '!src/main/development.ts',
     '!src/main/assets/**',
+    '!src/main/js/**',
     '!src/main/**/*.d.ts',
     '!src/main/routes/health.ts',
     '!src/main/routes/info.ts',
