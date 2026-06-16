@@ -363,6 +363,53 @@ describe('Upload Journey Routes', () => {
         errors: { someError: 'Error message' },
       }));
     });
+
+    it('should render check-upload with documents that do not have rename formats', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.CheckUpload },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'doc-1', value: { DocumentType: 'Payslips' } },
+            ],
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'file-1',
+                value: {
+                  DocumentType: 'Payslips',
+                  DocumentFileName: 'my-payslip.pdf',
+                  DocumentLink: {
+                    document_url: 'http://example.com/documents/file1',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/check-upload', expect.objectContaining({
+        data: expect.objectContaining({
+          documentGroups: expect.arrayContaining([
+            expect.objectContaining({
+              files: expect.arrayContaining([
+                expect.objectContaining({
+                  displayFilename: 'my-payslip.pdf',
+                }),
+              ]),
+            }),
+          ]),
+        }),
+      }));
+    });
   });
 
   describe('POST /upload/:stepId', () => {
