@@ -94,7 +94,6 @@ function getDocumentGroupsForCheckPage(req: Request): { groupKey: string; label:
   const filesByCombinedFormat = getUploadedFilesByCombinedFormat(req);
   const selectedDocumentTypes = getSelectedDocumentTypesForDisplay(req);
   
-  // Create a map of document type values to labels
   const labelMap = new Map<string, string>();
   selectedDocumentTypes.forEach(docType => {
     labelMap.set(docType.value, docType.label);
@@ -172,7 +171,6 @@ export default function setupUploadJourneyRoute(app: Application): void {
     documentDetails.push(newDocument);
     req.session.DocumentSelection.documentDetails = documentDetails;
     
-    // Map to display format for frontend
     const displayDocs = getSelectedDocumentTypesForDisplay(req);
     
     res.json({ success: true, documents: displayDocs });
@@ -192,7 +190,6 @@ export default function setupUploadJourneyRoute(app: Application): void {
       }
     }
     
-    // Map to display format for frontend
     const displayDocs = getSelectedDocumentTypesForDisplay(req);
     
     res.json({ success: true, documents: displayDocs });
@@ -207,19 +204,16 @@ export default function setupUploadJourneyRoute(app: Application): void {
 
     const previousStep = step.previous ? step.previous() : null;
     
-    // Map DocumentSelection to display format
     const selectedDocumentTypes = getSelectedDocumentTypesForDisplay(req);
     
-    // Get FDR value from session
     const fdrHearing = req.session.DocumentSelection?.isFinancialDisputeResolution;
 
-    // Get uploaded documents - use different grouping for check-upload page
+    // Get uploaded documents
     const uploadedFilesByType = getUploadedFilesByType(req);
     const documentGroups = req.params.stepId === 'check-upload' 
       ? getDocumentGroupsForCheckPage(req)
       : undefined;
 
-    // Get upload errors from session
     const uploadErrors = req.session.uploadErrors || {};
     delete req.session.uploadErrors;
 
@@ -248,14 +242,13 @@ export default function setupUploadJourneyRoute(app: Application): void {
     if (Object.keys(errors).length > 0) {
       const previousStep = step.previous ? step.previous() : null;
       
-      // Map DocumentSelection to display format
       const selectedDocumentTypes = getSelectedDocumentTypesForDisplay(req);
       
       const fdrHearing = req.body.fdrHearing 
         ? req.body.fdrHearing === 'true' 
         : undefined;
       
-      // Get uploaded documents - use different grouping for check-upload page
+      // Get uploaded documents
       const uploadedFilesByType = getUploadedFilesByType(req);
       const documentGroups = req.params.stepId === 'check-upload' 
         ? getDocumentGroupsForCheckPage(req)
