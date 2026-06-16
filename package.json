@@ -131,7 +131,7 @@
   "packageManager": "yarn@4.16.0",
   "resolutions": {
     "@grpc/grpc-js": "1.14.4",
-    "basic-ftp": "5.3.1",
+    "basic-ftp": "6.0.1",
     "handlebars": "4.7.9",
     "lodash": "4.18.1",
     "lodash-es": "4.18.1",
