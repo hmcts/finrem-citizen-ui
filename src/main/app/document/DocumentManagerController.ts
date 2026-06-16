@@ -150,9 +150,7 @@ export class DocumentManagerController {
     const caseRole = req.session.user?.caseRole;
     this.logger.info('is Applicant or respondent', caseRole);
 
-    const documentCollection = user.caseRole === CaseRole.APPLICANT
-        ? EVENT_TYPE.APPLICANT_UPLOAD_DOCUMENT
-        : EVENT_TYPE.RESPONDENT_UPLOAD_DOCUMENT;
+    const documentCollection = this.getDocumentCollection(user.caseRole as string);
 
     const systemUser = await getSystemUser();
     const previouslyUploadedDocumentClient = new PreviouslyUploadedDocumentClient(systemUser);
@@ -162,5 +160,15 @@ export class DocumentManagerController {
 
   private getApiClient(user: UserDetails): CaseDocumentManagementClient {
     return new CaseDocumentManagementClient(user);
+  }
+
+  private  getDocumentCollection(caseRole: string) {
+    if (caseRole === CaseRole.APPLICANT) {
+      return EVENT_TYPE.APPLICANT_UPLOAD_DOCUMENT;
+    } else if (caseRole === CaseRole.RESPONDENT) {
+      return EVENT_TYPE.RESPONDENT_UPLOAD_DOCUMENT;
+    }
+
+    throw new Error(`Unsupported case role: ${caseRole}`);
   }
 }

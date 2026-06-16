@@ -433,5 +433,22 @@ describe('DocumentManagerController', () => {
       );
     });
   });
+  test('throws an error when case role is unsupported', async () => {
+    const req = {
+      session: {
+        user: {
+          ...userDetails,
+          caseRole: 'INVALID',
+        },
+        caseNumber: '123',
+      },
+    } as unknown as AppRequest;
+
+    const res = {} as Response;
+
+    await expect(
+      controller.previouslyUploadedDocuments(req, res, '123')
+    ).rejects.toThrow('Unsupported case role');
+  });
 });
 
