@@ -852,5 +852,77 @@ describe('Upload Journey Routes', () => {
 
       expect(next).not.toHaveBeenCalled();
     });
+    it('should call next with error when caseNumber is not in session', async () => {
+      setupUploadJourneyRoute(app);
+
+      const handler = getRegisteredHandler(
+        mockGet,
+        `${RouteNames.uploadJourney}/previously-uploaded-documents`
+      );
+
+      const mockReq = {
+        session: {},
+      } as unknown as Request;
+
+      const mockRes = {
+        render: jest.fn(),
+      } as unknown as Response;
+
+      const next = jest.fn();
+
+      await handler(mockReq, mockRes, next);
+
+      expect(mockRes.render).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'No case number in session',
+        })
+      );
+    });
+    it('should call next with error when previouslyUploadedDocuments throws', async () => {
+      const error = new Error('Previously uploaded documents failed');
+
+      const previouslyUploadedDocumentsMock = jest.fn<
+        (req: unknown, res: Response, caseId: string) => Promise<never>>();
+
+      (DocumentManagerController as jest.Mock).mockImplementation(() => ({
+        previouslyUploadedDocuments: previouslyUploadedDocumentsMock,
+      }));
+
+      previouslyUploadedDocumentsMock.mockRejectedValue(error);
+      setupUploadJourneyRoute(app);
+
+      const handler = getRegisteredHandler(
+        mockGet,
+        `${RouteNames.uploadJourney}/previously-uploaded-documents`
+      );
+
+      const mockReq = {
+        session: {
+          caseNumber: '123',
+        },
+      } as unknown as Request;
+
+      const mockRes = {
+        render: jest.fn(),
+      } as unknown as Response;
+
+      const next = jest.fn();
+
+      await handler(mockReq, mockRes, next);
+
+      expect(previouslyUploadedDocumentsMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          session: expect.objectContaining({
+            caseNumber: '123',
+          }),
+        }),
+        mockRes,
+        '123'
+      );
+
+      expect(next).toHaveBeenCalledWith(error);
+    });
   });
 });
