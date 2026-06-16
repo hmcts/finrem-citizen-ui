@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { Application, Request, Response } from 'express';
 
 import { RouteNames } from '../../../main/common-constants';
@@ -42,6 +42,10 @@ describe('Home Routes', () => {
   let mockDelete: jest.Mock;
 
   beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'info').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+
     jest.resetModules();
     mockDelete = jest.fn();
     app = {
@@ -49,6 +53,10 @@ describe('Home Routes', () => {
       post: jest.fn(),
       delete: mockDelete,
     } as unknown as Application;
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('DELETE /documents/remove/:fileId', () => {
