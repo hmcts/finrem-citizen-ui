@@ -1,4 +1,4 @@
-import { getLogger } from '../assets/js/logger';
+import { getLogger } from './logger';
 
 interface SelectedDocumentType {
   id: number;

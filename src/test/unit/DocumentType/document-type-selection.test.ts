@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { initDocumentTypeSelection } from '../../../main/DocumentType/document-type-selection';
+import { initDocumentTypeSelection } from '../../../main/js/document-type-selection';
 
 describe('document-type-selection', () => {
   beforeEach(() => {
