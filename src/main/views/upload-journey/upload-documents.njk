@@ -13,17 +13,15 @@
         <a href="/upload/{{ previousStep }}" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
       {% endif %}
 
-      {% if errors and (errors | length) %}
-        {% set errorList = [] %}
-        {% for key, value in errors %}
-          {% set errorList = (errorList.push({
-            text: value,
-            href: "#" + ("file-upload-" + key if key != "upload" else "upload")
-          }), errorList) %}
-        {% endfor %}
+      {% if errors and errors.upload %}
         {{ govukErrorSummary({
           titleText: "There is a problem",
-          errorList: errorList
+          errorList: [
+            {
+              text: errors.upload,
+              href: "#upload"
+            }
+          ]
         }) }}
       {% endif %}
 
@@ -46,17 +44,6 @@
 
           <div class="govuk-inset-text govuk-!-margin-top-4">
             <form method="post" action="/documents/upload?documentType={{ documentType.value }}&returnUrl=/upload/upload-documents" enctype="multipart/form-data" data-upload-form="{{ documentType.value }}">
-              
-              {% if errors and errors[documentType.value] %}
-                {{ govukErrorMessage({
-                  text: errors[documentType.value],
-                  visuallyHiddenText: "Error",
-                  attributes: {
-                    "data-error-message": documentType.value
-                  }
-                }) }}
-              {% endif %}
-
               <input type="hidden" name="documentType" value="{{ documentType.value }}">
               <input type="hidden" name="returnUrl" value="/upload/upload-documents">
 
@@ -71,10 +58,10 @@
                   text: "Files must be in jpg, png, pdf, docx or xlsx format."
                 },
                 errorMessage: {
-                  text: errors[documentType.value]
-                } if errors and errors[documentType.value],
+                  text: errors.upload
+                } if errors and errors.upload,
                 attributes: {
-                  "aria-describedby": "file-upload-" + documentType.value + "-hint" + (" file-upload-" + documentType.value + "-error" if errors and errors[documentType.value])
+                  "aria-describedby": "file-upload-" + documentType.value + "-hint"
                 }
               }) }}
 
@@ -125,14 +112,6 @@
       {% endif %}
 
       <form method="post" class="govuk-!-margin-top-8">
-        {% if errors and errors.upload %}
-          <div id="upload" class="govuk-form-group govuk-form-group--error">
-            <span class="govuk-error-message">
-              <span class="govuk-visually-hidden">Error:</span> {{ errors.upload }}
-            </span>
-          </div>
-        {% endif %}
-        
         {{ govukButton({
           text: "Continue"
         }) }}

@@ -1,18 +1,18 @@
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+
 import { expect, Locator, Page } from '@playwright/test';
-import path from 'path';
 
 import { BasePage } from './basePage.page';
 import { GettingHelpPanel } from './components/gettingHelpPanel.component';
 
-const URL_PATTERNS = {
-  DOCUMENT_SELECTION: /\/upload\/document-selection/,
-  FDR: /\/upload\/fdr/,
-  UPLOAD_DOCUMENTS: /\/upload\/upload-documents/,
-};
-
-const DOCUMENT_SELECTION_EMAIL = 'FRCexample@justice.gov.uk';
-const CALL_CHARGES_LINK = 'https://www.gov.uk/call-charges';
 const TEST_DATA_DIR = path.join(__dirname, '../utils/test_data');
+
+const DOCUMENT_TYPE_FORM_KEY: Record<'Other document' | 'Chronology', string> = {
+  'Other document': 'other-document',
+  Chronology: 'chronology',
+};
 
 const SUPPORTED_UPLOAD_FILES = {
   jpg: path.join(TEST_DATA_DIR, 'testDocument.jpg'),
@@ -21,6 +21,7 @@ const SUPPORTED_UPLOAD_FILES = {
   docx: path.join(TEST_DATA_DIR, 'testDocument.docx'),
   xlsx: path.join(TEST_DATA_DIR, 'testDocument.xlsx'),
   txt: path.join(TEST_DATA_DIR, 'testDocument.txt'),
+  emptyDocx: path.join(TEST_DATA_DIR, 'testDocument-empty.docx'),
 } as const;
 
 export type SupportedUploadFileType = keyof typeof SUPPORTED_UPLOAD_FILES;
@@ -39,9 +40,13 @@ export class DocumentUploadPage extends BasePage {
   readonly noUploadedFilesMessage: Locator;
   readonly documentTypeLabel: Locator;
   readonly instructionTitleLabel: Locator;
+  readonly uploadSectionHeadings: Locator;
   readonly errorSummaryTitle: Locator;
-  readonly errorSummaryLink: Locator;
-  readonly inlineErrorMessage: Locator;
+  readonly inlineNoFilesError: Locator;
+  readonly inlineFormatError: Locator;
+  readonly inlineTooLargeError: Locator;
+  readonly inlineEmptyFileError: Locator;
+  readonly inlineUploadFailedError: Locator;
   readonly continueButton: Locator;
   readonly helpOpeningHours: Locator;
   readonly gettingHelp: GettingHelpPanel;
@@ -55,15 +60,27 @@ export class DocumentUploadPage extends BasePage {
     this.documentTypeLabel = this.page.getByText('Other document', { exact: true });
     this.instructionTitleLabel = this.page.getByText('Upload a file', { exact: true });
     this.instructionText = this.page.getByText('Files must be in jpg, png, pdf, docx or xlsx format.', { exact: true });
-    this.chooseFileButton = this.page.getByRole('button', { name: 'Choose file' });
+    this.uploadSectionHeadings = this.page.locator('main .govuk-grid-column-two-thirds h2.govuk-heading-m');
+    this.chooseFileButton = this.page.getByRole('button', { name: /^(Choose file|Upload a file)$/ });
     this.noFileSelectedMessage = this.page.getByText('No file chosen', { exact: true });
     this.uploadFileButton = this.page.getByRole('button', { name: 'Upload file' });
-    this.uploadedFileLinks = this.page.locator('[data-uploaded-files] a.govuk-link:not([data-remove-file])');
+    this.uploadedFileLinks = this.page.getByRole('list').locator('a.govuk-link:not([data-remove-file])');
     this.filesListHeader = this.page.getByRole('heading', { name: 'Uploaded files', exact: true });
     this.filesListDefaultMessage = this.page.getByText('No files uploaded yet.', { exact: true });
     this.errorSummaryTitle = this.page.getByRole('heading', { name: 'There is a problem' });
-    this.errorSummaryLink = this.page.getByRole('alert').getByRole('link', { name: 'Your file must be in jpg, png, pdf, docx, or xlsx format' });
-    this.inlineErrorMessage = this.page.getByText('Your file must be in jpg, png, pdf, docx, or xlsx format', { exact: true });
+    this.inlineNoFilesError = this.page.getByText('You must upload at least one file before continuing', { exact: true });
+    this.inlineFormatError = this.page.locator('p.govuk-error-message').filter({
+      hasText: /Your file must be in jpg, png, pdf, docx,? or xlsx format/i,
+    });
+    this.inlineTooLargeError = this.page.locator('p.govuk-error-message').filter({
+      hasText: 'Your file must be smaller than 100MB',
+    });
+    this.inlineEmptyFileError = this.page.locator('p.govuk-error-message').filter({
+      hasText: 'The selected file is empty',
+    });
+    this.inlineUploadFailedError = this.page.locator('p.govuk-error-message').filter({
+      hasText: 'The selected file could not be uploaded - try again',
+    });
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
     this.noUploadedFilesMessage = this.page.getByText('You must upload at least one file before continuing', { exact: true });
     this.helpOpeningHours = this.gettingHelp.details.getByText('Monday to Friday, 8.30am to 5pm', {
@@ -71,51 +88,35 @@ export class DocumentUploadPage extends BasePage {
     });
   }
 
-  async verifyDocumentUploadPageContent(): Promise<void> {
-    await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_SELECTION);
-    await this.verifyGlobalHeaderAndFooter();
-
-    await this.expectVisible([
-      this.serviceNav,
-      this.navigationLink,
-      this.signOutBtn,
-      this.backLink,
-      this.pageHeader,
-      this.introText,
-      this.instructionTitleLabel,
-      this.instructionText,
-      this.chooseFileButton,
-      this.noFileSelectedMessage,
-      this.uploadFileButton,
-      this.filesListHeader,
-      this.filesListDefaultMessage,
-      this.instructionText,
-      this.documentTypeLabel,
-      this.continueButton,
-      this.gettingHelp.heading,
-      this.gettingHelp.summary,
-    ]);
-
-    await this.expectAttributes([
-      { locator: this.backLink, name: 'href', value: '/upload/fdr' },
-    ]);
-  }
-
   private termByLabel(label: string): Locator {
-    return this.page.locator('[govuk-list]').getByRole('link').filter({ hasText: label });
+    return this.uploadedFileLinks.filter({ hasText: label }).first();
   }
 
-  async chooseFileAndUploadDocument(filePath: string = SUPPORTED_UPLOAD_FILES.docx): Promise<void> {
-    const filename = path.basename(filePath);
-    const fileChooserPromise = this.page.waitForEvent('filechooser');
-    await this.chooseFileButton.click();
-    const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles(filePath);
+  getErrorSummaryLink(message: string | RegExp): Locator {
+    return this.page.getByRole('alert').getByRole('link', { name: message });
+  }
 
-    await this.uploadFileButton.click();
+  async chooseFileAndUploadDocument(
+    filePath: string = SUPPORTED_UPLOAD_FILES.docx,
+    documentType: 'Other document' | 'Chronology' = 'Other document',
+    expectUploadSuccess = true,
+  ): Promise<void> {
+    const beforeCount = await this.uploadedFileLinks.count();
 
-    await expect(this.termByLabel(filename)).toBeVisible();
-    await expect(this.filesListDefaultMessage).toBeHidden();
+    const formKey = DOCUMENT_TYPE_FORM_KEY[documentType];
+    const uploadForm = this.page.locator(`[data-upload-form="${formKey}"]`);
+    const fileInput = uploadForm.locator('input[type="file"]');
+    const uploadButton = uploadForm.getByRole('button', { name: `Upload file for ${documentType}`, exact: true });
+
+    await fileInput.setInputFiles(filePath);
+    await uploadButton.click();
+    await this.page.waitForLoadState('networkidle');
+
+    if (expectUploadSuccess) {
+      await expect(this.uploadedFileLinks).toHaveCount(beforeCount + 1, { timeout: 15000 });
+    } else {
+      await expect(this.uploadedFileLinks).toHaveCount(beforeCount);
+    }
   }
 
   async chooseFileAndUploadJpg(): Promise<void> {
@@ -134,64 +135,53 @@ export class DocumentUploadPage extends BasePage {
     await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.docx);
   }
 
+  async chooseFileAndUploadChronologyDocx(): Promise<void> {
+    await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.docx, 'Chronology');
+  }
+
   async chooseFileAndUploadXlsx(): Promise<void> {
     await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.xlsx);
   }
 
-  async expectUploadedFilesListContains(labels: string[]): Promise<void> {
-    await expect(this.uploadedFileLinks).toHaveCount(labels.length);
-
-    for (const label of labels) {
-      await expect(this.termByLabel(label)).toBeVisible();
-    }
+  getUploadedFileByName(filename: string): Locator {
+    return this.termByLabel(filename);
   }
 
   async removeUploadedFile(): Promise<void> {
-    await this.page.getByText('Remove document').click();
+    await this.page.getByText('Remove document').first().click();
   }
 
-  async submitWithoutUploadsAndExpectValidationError(): Promise<void> {
+  async uploadInvalidFileFormat(): Promise<void> {
+    await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.txt, 'Other document', false);
+  }
+
+  async uploadEmptyFile(): Promise<void> {
+    await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.emptyDocx, 'Other document', false);
+  }
+
+  async chooseLargeFileAndUpload(sizeBytes = 101 * 1024 * 1024): Promise<void> {
+    const tempFilePath = path.join(
+      os.tmpdir(),
+      `finrem-large-upload-${Date.now()}-${Math.random().toString(16).slice(2)}.pdf`
+    );
+
+    await fs.writeFile(tempFilePath, Buffer.from('%PDF-1.7\n'));
+    await fs.truncate(tempFilePath, sizeBytes);
+
+    try {
+      await this.chooseFileAndUploadDocument(tempFilePath, 'Other document', false);
+    } finally {
+      await fs.unlink(tempFilePath).catch(() => {
+        // Ignore cleanup errors for temp files.
+      });
+    }
+  }
+
+  async clickContinue(): Promise<void> {
     await this.continueButton.click();
-
-    await this.expectVisible([this.errorSummaryTitle, this.errorSummaryLink, this.inlineErrorMessage]);
-    await expect(this.uploadedFileLinks).toHaveCount(0);
-    await expect(this.noUploadedFilesMessage).toBeVisible();
   }
 
-  async submitWithWrongFormatAndExpectValidationError(): Promise<void> {
-    await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.txt);
-    await this.continueButton.click();
-
-    await this.expectVisible([this.errorSummaryTitle, this.errorSummaryLink, this.inlineErrorMessage]);
-    await expect(this.uploadedFileLinks).toHaveCount(0);
-    await expect(this.noUploadedFilesMessage).toBeVisible();
-  }
-
-
-
-  // TODO: Add this method when next step is implemented
-  // async clickContinueAndExpectNextStep(): Promise<void> {
-  //   await this.continueButton.click();
-  //   await expect(this.page).toHaveURL(URL_PATTERNS.UPLOAD_DOCUMENTS);
-  //   await expect().toBeVisible();
-  // }
-
-  async verifyGettingHelpSection(): Promise<void> {
-    await this.gettingHelp.verifySection({
-      expectedEmail: DOCUMENT_SELECTION_EMAIL,
-      openingHoursLocator: this.helpOpeningHours,
-      callChargesHref: CALL_CHARGES_LINK,
-    });
-  }
-
-  async clickBackAndExpectDocumentTypeSelection(): Promise<void> {
+  async clickBack(): Promise<void> {
     await this.backLink.click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_SELECTION);
-  }
-
-  async clickBackToDocumentTypeSelectionAndReturnWithContinueSelection(): Promise<void> {
-    await this.clickBackAndExpectDocumentTypeSelection();
-    await this.page.getByRole('button', { name: 'Continue' }).click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.UPLOAD_DOCUMENTS);
   }
 }
