@@ -68,7 +68,8 @@ test.describe('[integration] Check uploaded documents page', () => {
       await runA11yAudit(axeUtils);
     });
 
-    test('[integration] Check uploaded documents requires upload-more selection before continuing @a11y', async ({
+    // error validation test
+    test('[integration] Check uploaded documents requires upload selection before continuing @a11y', async ({
       checkUploadPage,
       axeUtils,
     }) => {
