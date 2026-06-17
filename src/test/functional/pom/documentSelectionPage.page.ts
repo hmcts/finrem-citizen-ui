@@ -1,7 +1,7 @@
 import { expect, Locator, Page } from '@playwright/test';
 
 import { BasePage } from './basePage.page';
-import { GettingHelpPanel } from './components/gettingHelpPanel.component';
+import { GETTING_HELP_OPENING_HOURS, GettingHelpPanel } from './components/gettingHelpPanel.component';
 
 const URL_PATTERNS = {
   DOCUMENT_SELECTION: /\/upload\/document-type-selection/,
@@ -10,7 +10,6 @@ const URL_PATTERNS = {
 };
 
 const DOCUMENT_SELECTION_EMAIL = 'FRCexample@justice.gov.uk';
-const CALL_CHARGES_LINK = 'https://www.gov.uk/call-charges';
 
 export class DocumentSelectionPage extends BasePage {
   readonly backLink: Locator;
@@ -60,7 +59,7 @@ export class DocumentSelectionPage extends BasePage {
       exact: true,
     });
     this.uploadDocumentsHeading = this.page.getByRole('heading', { name: 'Upload your documents' });
-    this.helpOpeningHours = this.gettingHelp.details.getByText('Monday to Friday, 8.30am to 5pm', {
+    this.helpOpeningHours = this.gettingHelp.details.getByText(GETTING_HELP_OPENING_HOURS, {
       exact: false,
     });
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
@@ -170,7 +169,6 @@ export class DocumentSelectionPage extends BasePage {
     await this.gettingHelp.verifySection({
       expectedEmail: DOCUMENT_SELECTION_EMAIL,
       openingHoursLocator: this.helpOpeningHours,
-      callChargesHref: CALL_CHARGES_LINK,
     });
   }
 
