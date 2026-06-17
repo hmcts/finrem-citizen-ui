@@ -2,12 +2,30 @@ import { UploadStepNames } from '../../../main/common-constants';
 import { uploadSteps } from '../../../main/upload-journey/config';
 
 describe('Upload Journey Configuration', () => {
+  describe(UploadStepNames.PUD, () => {
+    it('should have correct configuration', () => {
+      const step = uploadSteps[UploadStepNames.PUD];
+      expect(step.template).toBe('upload-journey/previously-uploaded-documents');
+      expect(step.next!()).toBeNull();
+      expect(step.previous!()).toBe('dashboard');
+      expect(step.validate).toBeUndefined();
+    });
+  });
   describe(UploadStepNames.BeforeYouStart, () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.BeforeYouStart];
       expect(step.template).toBe('upload-journey/before-you-start');
       expect(step.next!()).toBe(UploadStepNames.Confidentiality);
       expect(step.previous!()).toBeNull();
+      expect(step.validate).toBeUndefined();
+    });
+  });
+  describe(UploadStepNames.PUD, () => {
+    it('should have correct configuration', () => {
+      const step = uploadSteps[UploadStepNames.PUD];
+      expect(step.template).toBe('upload-journey/previously-uploaded-documents');
+      expect(step.next!()).toBeNull();
+      expect(step.previous!()).toBe('dashboard');
       expect(step.validate).toBeUndefined();
     });
   });
@@ -34,18 +52,18 @@ describe('Upload Journey Configuration', () => {
     it('should return error when fdrHearing is not provided', () => {
       const step = uploadSteps[UploadStepNames.FDR];
       const body = {};
-      
+
       const errors = step.validate!(body);
-      
+
       expect(errors.fdrHearing).toBe('Select yes if you are uploading these documents for a Financial Dispute Resolution hearing');
     });
 
     it('should return no errors when fdrHearing is provided', () => {
       const step = uploadSteps[UploadStepNames.FDR];
       const body = { fdrHearing: 'yes' };
-      
+
       const errors = step.validate!(body);
-      
+
       expect(errors).toEqual({});
     });
   });
@@ -69,10 +87,10 @@ describe('Upload Journey Configuration', () => {
           }
         }
       } as unknown as Request;
-      
+
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!(body, mockReq);
-      
+
       expect(errors.documents).toBe('You must select what you want to upload');
     });
 
@@ -82,10 +100,10 @@ describe('Upload Journey Configuration', () => {
       const mockReq = {
         session: {}
       } as unknown as Request;
-      
+
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!(body, mockReq);
-      
+
       expect(errors.documents).toBe('You must select what you want to upload');
     });
 
@@ -101,19 +119,19 @@ describe('Upload Journey Configuration', () => {
           }
         }
       } as unknown as Request;
-      
+
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!(body, mockReq);
-      
+
       expect(errors).toEqual({});
     });
 
     it('should validate with undefined req', () => {
       const step = uploadSteps[UploadStepNames.DocumentTypeSelection];
       const body = {};
-      
+
       const errors = step.validate!(body, undefined);
-      
+
       expect(errors.documents).toBe('You must select what you want to upload');
     });
 
@@ -125,10 +143,10 @@ describe('Upload Journey Configuration', () => {
           DocumentSelection: {}
         }
       } as unknown as Request;
-      
+
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!(body, mockReq);
-      
+
       expect(errors.documents).toBe('You must select what you want to upload');
     });
 
@@ -145,10 +163,10 @@ describe('Upload Journey Configuration', () => {
           }
         }
       } as unknown as Request;
-      
+
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!(body, mockReq);
-      
+
       expect(errors).toEqual({});
     });
   });
