@@ -1,7 +1,7 @@
 import { expect, Locator, Page } from '@playwright/test';
 
 import { BasePage } from './basePage.page';
-import { GettingHelpPanel } from './components/gettingHelpPanel.component';
+import { GETTING_HELP_OPENING_HOURS, GettingHelpPanel } from './components/gettingHelpPanel.component';
 
 // URL path constants
 const URL_PATTERNS = {
@@ -9,8 +9,6 @@ const URL_PATTERNS = {
   DASHBOARD: /\/dashboard/, 
   CONFIDENTIALITY: /\/upload\/confidentiality/,
 };
-
-const CALL_CHARGES_LINK = 'https://www.gov.uk/call-charges';
 
 export class BeforeYouStartPage extends BasePage {
   readonly govUkHeader: Locator;
@@ -82,7 +80,7 @@ export class BeforeYouStartPage extends BasePage {
     );
     this.startNowButton = this.page.getByRole('button', { name: 'Start now' });
     this.gettingHelp = new GettingHelpPanel(this.page);
-    this.helpOpeningHours = this.gettingHelp.details.getByText('Monday to Friday, 8.30am to 5pm', {
+    this.helpOpeningHours = this.gettingHelp.details.getByText(GETTING_HELP_OPENING_HOURS, {
       exact: false,
     });
   }
@@ -130,7 +128,6 @@ export class BeforeYouStartPage extends BasePage {
   async verifyGettingHelpSection(): Promise<void> {
     await this.gettingHelp.verifySection({
       openingHoursLocator: this.helpOpeningHours,
-      callChargesHref: CALL_CHARGES_LINK,
     });
   }
 
