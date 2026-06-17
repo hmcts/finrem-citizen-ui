@@ -10,3 +10,4 @@ export const JURISDICTION = 'DIVORCE';
 export const CASE_DOCUMENT_MANAGEMENT_SERVICE_URL = 'services.caseDocumentManagement.url';
 export const CITIZEN_APPLICANT_DOCUMENT = 'citizenApplicantDocument';
 export const CITIZEN_RESPONDENT_DOCUMENT = 'citizenRespondentDocument';
+export const CASE_DATA_API_URL = 'services.case.url';

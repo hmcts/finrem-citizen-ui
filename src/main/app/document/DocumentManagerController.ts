@@ -7,7 +7,14 @@ import { getCaseApi } from '../case/case-api';
 import { CITIZEN_APPLICANT_DOCUMENT, CITIZEN_RESPONDENT_DOCUMENT, EVENT_TYPE } from '../case/case-type';
 import { CaseRole, CitizenUploadDocument, CitizenUploadDocumentType, ListValue } from '../case/definition';
 import type { AppRequest, UserDetails } from '../controller/AppRequest';
-import { CaseDocumentManagementClient, Classification } from './CaseDocumentManagementClient';
+import {
+  CaseDocumentManagementClient,
+  Classification
+} from './CaseDocumentManagementClient';
+import {
+  PreviouslyUploadedDocumentClient,
+  PreviouslyUploadedDocumentsResponse
+} from './PreviouslyUploadedDocumentClient';
 
 export class DocumentManagerController {
     constructor(private readonly logger: LoggerInstance) { }
@@ -116,15 +123,52 @@ export class DocumentManagerController {
             throw new Error('No user in session');
         }
 
-        if (!req.session.caseNumber || req.session.caseNumber !== caseId) {
-            res.status(403).send('Forbidden');
-            return;
-        }
+    if (!req.session.caseNumber || req.session.caseNumber !== caseId) {
+      res.status(403).send('Forbidden');
+      return;
+    }
+    const systemUser = await getSystemUser();
+    await this.getApiClient(systemUser).getDocument(res, documentId);
+  }
 
-        await this.getApiClient(user).getDocument(res, documentId);
+  public async previouslyUploadedDocuments(
+    req: AppRequest,
+    res: Response,
+    caseId: string
+  ): Promise<PreviouslyUploadedDocumentsResponse> {
+    const user = req.session.user;
+
+    if (!user) {
+      throw new Error('No user in session');
     }
 
-    private getApiClient(user: UserDetails): CaseDocumentManagementClient {
-        return new CaseDocumentManagementClient(user);
+    if (!req.session.caseNumber || req.session.caseNumber !== caseId) {
+      res.status(403).send('Forbidden');
+      throw new Error('Forbidden');
     }
+
+    const caseRole = req.session.user?.caseRole;
+    this.logger.info('is Applicant or respondent', caseRole);
+
+    const documentCollection = this.getDocumentCollection(user.caseRole as string);
+
+    const systemUser = await getSystemUser();
+    const previouslyUploadedDocumentClient = new PreviouslyUploadedDocumentClient(systemUser);
+
+    return previouslyUploadedDocumentClient.getPreviouslyUploadedDocuments(caseId, documentCollection);
+  }
+
+  private getApiClient(user: UserDetails): CaseDocumentManagementClient {
+    return new CaseDocumentManagementClient(user);
+  }
+
+  private  getDocumentCollection(caseRole: string) {
+    if (caseRole === CaseRole.APPLICANT) {
+      return EVENT_TYPE.APPLICANT_UPLOAD_DOCUMENT;
+    } else if (caseRole === CaseRole.RESPONDENT) {
+      return EVENT_TYPE.RESPONDENT_UPLOAD_DOCUMENT;
+    }
+
+    throw new Error(`Unsupported case role: ${caseRole}`);
+  }
 }

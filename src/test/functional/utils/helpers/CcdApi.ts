@@ -67,7 +67,7 @@ export class CcdApi {
         'Content-Type': 'application/json'
       }
     });
-    
+
     return response.data;
   }
 
@@ -78,7 +78,7 @@ export class CcdApi {
     serviceToken: string
   ): Promise<string> {
     let lastError: Error | null = null;
-    
+
     for (let attempt = 0; attempt <= CCD_RETRY_CONFIG.maxRetries; attempt++) {
       try {
         const startCaseResponse = await axiosRequest<{ token: string }>({
@@ -94,11 +94,11 @@ export class CcdApi {
       } catch (error) {
         lastError = error as Error;
         const errorMessage = lastError.message || '';
-        
+
         // Check if this is a retryable 404 (CCD eventual consistency)
-        const is404 = errorMessage.includes('status 404') || 
+        const is404 = errorMessage.includes('status 404') ||
                       errorMessage.includes('No case found');
-        
+
         if (is404 && attempt < CCD_RETRY_CONFIG.maxRetries) {
           const delayMs = Math.min(
             CCD_RETRY_CONFIG.initialDelayMs * Math.pow(2, attempt),
@@ -119,12 +119,12 @@ export class CcdApi {
           await wait(delayMs);
           continue;
         }
-        
+
         // Non-retryable error or max retries exceeded
         throw lastError;
       }
     }
-    
+
     throw lastError!;
   }
 
@@ -176,12 +176,6 @@ export class CcdApi {
     const data = updateJsonFileWithEnvValues(rawData) as Record<string, JsonValue>;
 
     this.makeModifications(dataModifications, data);
-
-    // Debug: log the payload data keys
-     
-    //console.log('[DEBUG] Payload fields:', Object.keys(data));
-     
-    //console.log('[DEBUG] Using credentials for user:', userName);
 
     const payload: CcdEventPayload = {
       data,
@@ -252,7 +246,7 @@ export class CcdApi {
       },
       event_token: eventToken
     };
-    
+
     const saveCaseResponse = await this.saveCase(
       ccdSaveEventPath,
       authToken,
@@ -351,7 +345,7 @@ export class CcdApi {
    */
   private replaceInObject(obj: Record<string, JsonValue>, placeholder: string, replacement: JsonValue): void {
     if (typeof obj !== 'object' || obj === null) {return;}
-    
+
     for (const prop in obj) {
       if (typeof obj[prop] === 'string' && obj[prop] === placeholder) {
         obj[prop] = replacement;
