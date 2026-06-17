@@ -1,4 +1,8 @@
 {% from "../macros/getting-help.njk" import gettingHelp %}
+{% from "govuk/components/details/macro.njk" import govukDetails %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
 {% extends "template.njk" %}
 
@@ -9,12 +13,56 @@
         <a href="/upload/{{ previousStep }}" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
       {% endif %}
 
+      {% if errors.understand %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: [
+            {
+              text: "You must select 'I understand' before continuing",
+              href: "#understand"
+            }
+          ]
+        }) }}
+      {% endif %}
+
       <h1 class="govuk-heading-l">You need to send these documents to the other party</h1>
 
+      <p class="govuk-body">
+        For full transparency between you and the other party, you need to serve these documents on them, or their solicitor if they have one.
+      </p>
+
+      <p class="govuk-body">
+        Refer to your court order for specific instructions.
+      </p>
+
+      <p class="govuk-body">
+        The court will not normally serve any of the documents you have submitted on the other party for you. Uploading your documents to this online account does not count as serving the other party.
+      </p>
+
+      {{ govukDetails({
+        summaryText: "I am not able to send documents to the other party",
+        html: "<p class='govuk-body'>You must contact the court as soon as possible if you are not able to send your documents with the other party. This could be because it is unsafe to do so, there is a court order in place preventing contact, or you do not have their contact details.</p>
+        <p class='govuk-body'>If the court has already agreed to send your documents for you, you must email the court to tell them you have uploaded your documents ready for service.</p>"
+      }) }}
+
       <form method="post">
-        <button type="submit" class="govuk-button" data-module="govuk-button">
-          Continue
-        </button>
+        {{ govukCheckboxes({
+          name: "understand",
+          items: [
+            {
+              value: "yes",
+              text: "I understand",
+              checked: values.understand === "yes"
+            }
+          ],
+          errorMessage: errors.understand and {
+            text: errors.understand
+          }
+        }) }}
+
+        {{ govukButton({
+          text: "Submit"
+        }) }}
       </form>
     </div>
 
