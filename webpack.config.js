@@ -1,6 +1,6 @@
 const path = require('path');
 
-const sourcePath = path.resolve(__dirname, 'src/main/assets/js');
+const sourcePath = path.resolve(__dirname, 'src/main/js');
 const govukFrontend = require(path.resolve(__dirname, 'webpack/govukFrontend'));
 const scss = require(path.resolve(__dirname, 'webpack/scss'));
 const HtmlWebpack = require(path.resolve(__dirname, 'webpack/htmlWebpack'));

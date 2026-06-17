@@ -1,9 +1,9 @@
-import '../scss/main.scss';
+import '../assets/scss/main.scss';
 
 import { initAll } from 'govuk-frontend';
 
-import { initDocumentTypeSelection } from '../../DocumentType/document-type-selection';
 import { initAutocomplete } from './autocomplete';
+import { initDocumentTypeSelection } from './document-type-selection';
 import { initUploadedDocuments, initUploadValidation } from './upload-documents';
 
 initAll();
