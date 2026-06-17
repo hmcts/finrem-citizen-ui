@@ -30,6 +30,24 @@ test.describe('[integration] Dashboard upload journey', () => {
     await runA11yAudit(axeUtils);
   });
 
+  test('[integration] Dashboard getting help panel shows expected support details when expanded @a11y', async ({
+    dashboardPage,
+    axeUtils,
+  }) => {
+    await dashboardPage.verifyDashboardPageContent();
+    await dashboardPage.verifyGettingHelpSection();
+    await runA11yAudit(axeUtils);
+  });
+
+  test('[integration] Dashboard divorce-account inset is conditionally rendered and valid when present @a11y', async ({
+    dashboardPage,
+    axeUtils,
+  }) => {
+    await dashboardPage.verifyDashboardPageContent();
+    await dashboardPage.verifyDivorceAccountInsetIfVisible();
+    await runA11yAudit(axeUtils);
+  });
+
   test('[integration] Before-you-start sections and help details are visible and accessible @a11y', async ({
     dashboardPage,
     beforeYouStartPage,
