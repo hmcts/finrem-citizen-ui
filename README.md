@@ -19,6 +19,7 @@ Use [src/test/functional/specFiles/README.md](src/test/functional/specFiles/READ
 - environment gating and target selection behavior
 - mock vs integration rules
 - accessibility testing conventions
+- worker and retry strategy for fast, stable Playwright runs
 - script matrix and best-practice run order
 
 This root README keeps only a brief testing summary. The specFiles guide is authoritative for test logic and test operations.
@@ -45,7 +46,7 @@ At a high level, the user flow is:
 - Node.js `>=22.22.0`
 - Yarn `4.x`
 - Docker (optional, for containerized local runs)
-- Playwright browser dependencies (installed automatically by `yarn test:functional`)
+- Playwright browser dependencies (install with `yarn test:functional:install-deps`)
 
 ## Run the App Locally
 
@@ -164,6 +165,11 @@ Optional for real access-code happy-path integration lane:
 
 - `ACCESS_CODE_REAL_INTEGRATION=true`
 
+Optional app runtime values:
+
+- `SESSION_STORE` (`in-memory` or `redis`; defaults to `in-memory`)
+- `REDIS_CONNECTION_STRING` (required when `SESSION_STORE=redis`)
+
 IDAM values:
 
 - If `IDAM_WEB_URL` and `IDAM_TESTING_SUPPORT_API_URL` are not set, defaults are derived from `IDAM_ENV` (defaults to `aat`).
@@ -234,6 +240,9 @@ yarn test
 # Includes any @a11y-tagged tests in the selected suites
 yarn test:functional
 
+# Run functional tests across Chromium, Firefox, and WebKit
+yarn test:functional:allBrowsers
+
 # Run functional tests in interactive Playwright UI mode
 yarn test:functional:allBrowsers:ui
 
@@ -248,6 +257,9 @@ yarn test:playwright:a11y:chrome
 
 # Run the broader QA gate before pushing code
 yarn qacichecks
+
+# Run the broader QA gate with cross-browser functional coverage
+yarn qacichecks:allBrowsers
 ```
 
 Use [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md) as the single source of truth for:

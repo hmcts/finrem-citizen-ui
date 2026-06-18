@@ -4491,7 +4491,7 @@ export enum CitizenUploadDocumentType {
     DIVORCE_CONDITIONAL_ORDER_DECREE_NISI = "Divorce Conditional Order / Decree Nisi",
     DIVORCE_FINAL_ORDER_DECREE_ABSOLUTE = "Divorce Final Order / Decree Absolute",
     ESTIMATE_OF_COSTS_INCURRED_FORM_H = "Estimate of costs incurred: Form H",
-    FAMILY_MEDIATION_INFORMATION_AND_ASSESSMENT_MEETING_MIAM_FORM_FM1 = "Family Mediation Information and Assessment Meeting (MIAM) Form: Form FM1",
+    FAMILY_MEDIATION_INFORMATION_AND_ASSESSMENT_MEETING_MIAM_FORM_FORM_FM1 = "Family Mediation Information and Assessment Meeting (MIAM) Form: Form FM1",
     FDR_BUNDLE = "FDR bundle",
     FINANCIAL_STATEMENT_FORM_E_E1_OR_E2 = "Financial statement: Form E, E1 or E2",
     HEARING_BUNDLE = "Hearing bundle",
@@ -4539,6 +4539,7 @@ export enum CitizenUploadDocumentType {
     UPDATING_DISCLOSURE = "Updating disclosure",
     WITNESS_STATEMENT = "Witness statement",
     WITHOUT_PREJUDICE_OFFERS_FOR_SETTLEMENT = "Without prejudice offers for settlement",
+    OTHER_DOCUMENT = "Other document",
 }
 
 export const enum Yes {

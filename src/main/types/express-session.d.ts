@@ -19,5 +19,6 @@ declare module 'express-session' {
     caseUserName?: string;
     DocumentSelection?: UserDocumentSelection;
     documents?: UserDocumentSelection;
+    uploadErrors?: Record<string, string>;
   }
 }

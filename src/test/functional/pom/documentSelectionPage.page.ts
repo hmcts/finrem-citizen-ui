@@ -1,7 +1,7 @@
 import { expect, Locator, Page } from '@playwright/test';
 
 import { BasePage } from './basePage.page';
-import { GettingHelpPanel } from './components/gettingHelpPanel.component';
+import { GETTING_HELP_OPENING_HOURS, GettingHelpPanel } from './components/gettingHelpPanel.component';
 
 const URL_PATTERNS = {
   DOCUMENT_SELECTION: /\/upload\/document-type-selection/,
@@ -10,7 +10,6 @@ const URL_PATTERNS = {
 };
 
 const DOCUMENT_SELECTION_EMAIL = 'FRCexample@justice.gov.uk';
-const CALL_CHARGES_LINK = 'https://www.gov.uk/call-charges';
 
 export class DocumentSelectionPage extends BasePage {
   readonly backLink: Locator;
@@ -60,7 +59,7 @@ export class DocumentSelectionPage extends BasePage {
       exact: true,
     });
     this.uploadDocumentsHeading = this.page.getByRole('heading', { name: 'Upload your documents' });
-    this.helpOpeningHours = this.gettingHelp.details.getByText('Monday to Friday, 8.30am to 5pm', {
+    this.helpOpeningHours = this.gettingHelp.details.getByText(GETTING_HELP_OPENING_HOURS, {
       exact: false,
     });
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
@@ -105,6 +104,38 @@ export class DocumentSelectionPage extends BasePage {
     await expect(this.noDocumentsMessage).toBeHidden();
   }
 
+  async addOtherDocumentAndContinue(): Promise<void> {
+    const otherDocumentLabel = 'Other document';
+    await this.documentTypeInput.fill('other document');
+
+    const suggestion = this.page.getByRole('option', { name: otherDocumentLabel });
+    await expect(suggestion).toBeVisible();
+    await suggestion.click();
+
+    await this.addDocumentButton.click();
+
+    await expect(this.termByLabel(otherDocumentLabel)).toBeVisible();
+    await expect(this.noDocumentsMessage).toBeHidden();
+
+    await this.continueButton.click();
+  }
+
+  async addChronologyAndContinue(): Promise<void> {
+    const chronologyLabel = 'Chronology';
+    await this.documentTypeInput.fill('chronology');
+
+    const suggestion = this.page.getByRole('option', { name: chronologyLabel });
+    await expect(suggestion).toBeVisible();
+    await suggestion.click();
+
+    await this.addDocumentButton.click();
+
+    await expect(this.termByLabel(chronologyLabel)).toBeVisible();
+    await expect(this.noDocumentsMessage).toBeHidden();
+
+    await this.continueButton.click();
+  }
+
   async expectDocumentsListContains(labels: string[]): Promise<void> {
     await expect(this.documentList).toHaveCount(labels.length);
 
@@ -138,7 +169,6 @@ export class DocumentSelectionPage extends BasePage {
     await this.gettingHelp.verifySection({
       expectedEmail: DOCUMENT_SELECTION_EMAIL,
       openingHoursLocator: this.helpOpeningHours,
-      callChargesHref: CALL_CHARGES_LINK,
     });
   }
 

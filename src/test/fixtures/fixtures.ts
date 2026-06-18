@@ -4,9 +4,11 @@ import dotenv from 'dotenv';
 
 import { BasePage } from '../functional/pom/basePage.page';
 import { BeforeYouStartPage } from '../functional/pom/beforeYouStart.page';
+import { CheckUploadPage } from '../functional/pom/checkUploadPage.page';
 import { ConfidentialityPage } from '../functional/pom/confidentialityPage.page';
 import { DashboardPage } from '../functional/pom/dashboardPage.page';
 import { DocumentSelectionPage } from '../functional/pom/documentSelectionPage.page';
+import { DocumentUploadPage } from '../functional/pom/documentUploadPage.page';
 import { EnterAccessCodePage } from '../functional/pom/enterAccessCode.page';
 import { EnterCaseNumberPage } from '../functional/pom/enterCaseNumber.page';
 import { FdrPage } from '../functional/pom/fdrPage.page';
@@ -115,6 +117,8 @@ type MyFixtures = {
   confidentialityPage: ConfidentialityPage;
   fdrPage: FdrPage;
   documentSelectionPage: DocumentSelectionPage;
+  documentUploadPage: DocumentUploadPage;
+  checkUploadPage: CheckUploadPage;
   assertionHelpers: AssertionHelpers;
 };
 
@@ -216,6 +220,14 @@ export const test = base.extend<MyFixtures & MockOptions>({
 
   documentSelectionPage: async ({ page }, use) => {
     await use(new DocumentSelectionPage(page));
+  },
+
+  documentUploadPage: async ({ page }, use) => {
+    await use(new DocumentUploadPage(page));
+  },
+
+  checkUploadPage: async ({ page }, use) => {
+    await use(new CheckUploadPage(page));
   },
 
   /**

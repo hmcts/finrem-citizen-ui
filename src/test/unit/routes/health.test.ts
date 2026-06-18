@@ -49,11 +49,10 @@ type ConfigModule = {
 describe('health route', () => {
   const mockedConfig = config as unknown as jest.Mocked<ConfigModule>;
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+  function mockConfig(sessionStore = 'in-memory'): void {
     mockedConfig.get.mockImplementation(<T>(key: string): T => {
-      if (key === 'features.redis') {
-        return 'false' as T;
+      if (key === 'session.store') {
+        return sessionStore as T;
       }
 
       if (key === 'services.case.url') {
@@ -66,6 +65,15 @@ describe('health route', () => {
 
       throw new Error(`Unexpected config key: ${key}`);
     });
+  }
+
+  function getRedisHealthCallback(): () => Promise<unknown> {
+    return raw.mock.calls[0][0] as () => Promise<unknown>;
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockConfig();
   });
 
   test('adds a CCD health check using services.case.url', () => {
@@ -84,5 +92,34 @@ describe('health route', () => {
         shutdownCheck: expect.objectContaining({ type: 'raw' }),
       }),
     }));
+  });
+
+  test('redis check is up without ping when session store is in-memory', async () => {
+    const app = { locals: {} } as Application;
+
+    health(app);
+
+    await expect(getRedisHealthCallback()()).resolves.toEqual({ status: 'UP' });
+  });
+
+  test('redis check pings app redis client when session store is redis', async () => {
+    mockConfig('redis');
+    const ping = jest.fn<() => Promise<string>>().mockResolvedValue('PONG');
+    const app = { locals: { redisClient: { ping } } } as unknown as Application;
+
+    health(app);
+
+    await expect(getRedisHealthCallback()()).resolves.toEqual({ status: 'UP' });
+    expect(ping).toHaveBeenCalled();
+  });
+
+  test('redis check is down when redis store is selected but client is missing', async () => {
+    mockConfig('redis');
+    const app = { locals: {} } as Application;
+
+    health(app);
+
+    await expect(getRedisHealthCallback()()).resolves.toEqual({ status: 'DOWN' });
+    expect(mockLogger.error).toHaveBeenCalledWith('Redis health check failed: redisClient missing from app.locals');
   });
 });

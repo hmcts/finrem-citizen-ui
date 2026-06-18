@@ -1,3 +1,25 @@
 yarn build || exit 1
 yarn test || exit 1
 yarn lint --fix || exit 1
+
+audit_output="$(mktemp)"
+cleanup() {
+  rm -f "$audit_output"
+}
+trap cleanup EXIT
+
+if yarn npm audit --recursive --environment production --json > "$audit_output"; then
+  audit_exit=0
+else
+  audit_exit=$?
+fi
+
+if [ "$audit_exit" -ne 0 ] && [ "$audit_exit" -ne 1 ]; then
+  exit "$audit_exit"
+fi
+
+if ! cmp -s "$audit_output" yarn-audit-known-issues; then
+  cp "$audit_output" yarn-audit-known-issues
+  echo "yarn-audit-known-issues was updated. Review and stage it before committing."
+  exit 1
+fi
