@@ -4,7 +4,6 @@ import { BasePage } from './basePage.page';
 
 const URL_PATTERNS = {
   PREVIOUSLY_UPLOADED: /\/upload\/previously-uploaded-documents(?:\?.*)?$/,
-  DOCUMENT_TYPE_SELECTION: /\/upload\/document-type-selection(?:\?.*)?$/,
   DASHBOARD: /\/dashboard(?:\?.*)?$/,
 };
 
@@ -18,7 +17,7 @@ export class PreviouslyUploadedDocumentsPage extends BasePage {
   readonly documentNameHeader: Locator;
   readonly tableRows: Locator;
   readonly documentLinks: Locator;
-  readonly continueButton: Locator;
+  readonly backLink: Locator;
   readonly cancelLink: Locator;
 
   constructor(readonly page: Page) {
@@ -36,7 +35,7 @@ export class PreviouslyUploadedDocumentsPage extends BasePage {
     this.tableRows = page.locator('tbody.govuk-table__body tr.govuk-table__row');
     this.documentLinks = page.locator('tbody.govuk-table__body tr.govuk-table__row a.govuk-link');
 
-    this.continueButton = page.getByRole('button', { name: 'Continue' });
+    this.backLink = page.getByRole('main').getByRole('link', { name: 'Back', exact: true });
     this.cancelLink = page.getByRole('button', { name: 'Return to account' });
   }
 
@@ -77,9 +76,9 @@ export class PreviouslyUploadedDocumentsPage extends BasePage {
     }
   }
 
-  async clickContinue(): Promise<void> {
-    await this.continueButton.click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_TYPE_SELECTION);
+  async clickBack(): Promise<void> {
+    await this.backLink.click();
+    await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
   }
 
   async clickCancel(): Promise<void> {
