@@ -17,6 +17,10 @@ type MockSession = {
     isFinancialDisputeResolution?: boolean;
     documentDetails?: { id?: string; value?: { DocumentType?: string } }[];
   };
+  documents?: {
+    documentDetails?: { id?: string; value?: { DocumentType?: string } }[];
+  };
+  uploadErrors?: Record<string, string>;
   save?: (callback: (err?: Error) => void) => void;
   [key: string]: unknown;
 };
@@ -1048,6 +1052,95 @@ describe('Upload Journey Routes', () => {
             value: 'other-document',
           }),
         ],
+      });
+    });
+
+    it('should remove uploaded files for the removed document type', () => {
+      const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
+      const mockSave = jest.fn((callback: (err?: Error) => void) => callback());
+      const mockReq = {
+        params: { index: '0' },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'uuid-1', value: { DocumentType: 'MORTGAGE' } },
+              { id: 'uuid-2', value: { DocumentType: 'BANK_STATEMENTS' } },
+            ],
+          },
+          documents: {
+            documentDetails: [
+              { id: 'doc1', value: { DocumentType: 'MORTGAGE' } },
+              { id: 'doc2', value: { DocumentType: 'BANK_STATEMENTS' } },
+            ],
+          },
+          save: mockSave,
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockReq.session?.documents?.documentDetails).toHaveLength(1);
+      expect(mockReq.session?.documents?.documentDetails?.[0].value?.DocumentType).toBe('BANK_STATEMENTS');
+      expect(mockSave).toHaveBeenCalled();
+    });
+
+    it('should clear upload errors for the removed document type', () => {
+      const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
+      const mockSave = jest.fn((callback: (err?: Error) => void) => callback());
+      const mockReq = {
+        params: { index: '0' },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'uuid-1', value: { DocumentType: 'MORTGAGE' } },
+            ],
+          },
+          uploadErrors: {
+            'mortgage': 'Some error',
+            'other': 'Another error',
+          },
+          save: mockSave,
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        json: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockReq.session?.uploadErrors?.['mortgage']).toBeUndefined();
+      expect(mockReq.session?.uploadErrors?.['other']).toBe('Another error');
+      expect(mockSave).toHaveBeenCalled();
+    });
+
+    it('should handle session save errors', () => {
+      const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
+      const mockSave = jest.fn((callback: (err?: Error) => void) => callback(new Error('Save failed')));
+      const mockReq = {
+        params: { index: '0' },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'uuid-1', value: { DocumentType: 'MORTGAGE' } },
+            ],
+          },
+          save: mockSave,
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        json: jest.fn(),
+        status: jest.fn().mockReturnThis(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Failed to save session',
       });
     });
   });
