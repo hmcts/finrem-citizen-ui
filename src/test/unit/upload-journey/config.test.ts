@@ -185,7 +185,7 @@ describe('Upload Journey Configuration', () => {
       const mockReq = {
         session: {
           DocumentSelection: {
-            documentDetails: [{ id: '1', value: { DocumentType: 'MORTGAGE' } }],
+            documentDetails: [{ id: '1', value: { DocumentType: 'Mortgage statements' } }],
           },
           documents: {
             documentDetails: [],
@@ -204,14 +204,14 @@ describe('Upload Journey Configuration', () => {
         session: {
           DocumentSelection: {
             documentDetails: [
-              { id: '1', value: { DocumentType: 'MORTGAGE' } },
-              { id: '2', value: { DocumentType: 'BANK_STATEMENTS' } },
+              { id: '1', value: { DocumentType: 'Mortgage statements' } },
+              { id: '2', value: { DocumentType: 'Bank statements' } },
             ],
           },
           documents: {
             documentDetails: [
-              { id: 'doc1', value: { DocumentType: 'MORTGAGE' } },
-              { id: 'doc2', value: { DocumentType: 'BANK_STATEMENTS' } },
+              { id: 'doc1', value: { DocumentType: 'Mortgage statements' } },
+              { id: 'doc2', value: { DocumentType: 'Bank statements' } },
             ],
           },
         },
@@ -227,7 +227,7 @@ describe('Upload Journey Configuration', () => {
       const mockReq = {
         session: {
           DocumentSelection: {
-            documentDetails: [{ id: '1', value: { DocumentType: 'MORTGAGE' } }],
+            documentDetails: [{ id: '1', value: { DocumentType: 'Mortgage statements' } }],
           },
         },
       } as unknown as Request;
@@ -243,13 +243,13 @@ describe('Upload Journey Configuration', () => {
         session: {
           DocumentSelection: {
             documentDetails: [
-              { id: '1', value: { DocumentType: 'MORTGAGE' } },
-              { id: '2', value: { DocumentType: 'BANK_STATEMENTS' } },
+              { id: '1', value: { DocumentType: 'Mortgage statements' } },
+              { id: '2', value: { DocumentType: 'Bank statements' } },
             ],
           },
           documents: {
             documentDetails: [
-              { id: 'doc1', value: { DocumentType: 'MORTGAGE' } },
+              { id: 'doc1', value: { DocumentType: 'Mortgage statements' } },
             ],
           },
         },
@@ -267,8 +267,8 @@ describe('Upload Journey Configuration', () => {
         session: {
           DocumentSelection: {
             documentDetails: [
-              { id: '1', value: { DocumentType: 'MORTGAGE' } },
-              { id: '2', value: { DocumentType: 'OTHER' } },
+              { id: '1', value: { DocumentType: 'Mortgage statements' } },
+              { id: '2', value: { DocumentType: 'Other' } },
             ],
           },
           documents: {

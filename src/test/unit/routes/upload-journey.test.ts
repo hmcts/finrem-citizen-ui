@@ -18,7 +18,14 @@ type MockSession = {
     documentDetails?: { id?: string; value?: { DocumentType?: string } }[];
   };
   documents?: {
-    documentDetails?: { id?: string; value?: { DocumentType?: string } }[];
+    documentDetails?: { 
+      id?: string; 
+      value?: { 
+        DocumentType?: string;
+        DocumentFileName?: string;
+        DocumentLink?: { document_url?: string };
+      } 
+    }[];
   };
   uploadErrors?: Record<string, string>;
   save?: (callback: (err?: Error) => void) => void;
@@ -958,6 +965,7 @@ describe('Upload Journey Routes', () => {
   describe('DELETE /upload/document-type-selection/remove/:index', () => {
     it('should remove document from session', () => {
       const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
+      const mockSave = jest.fn((callback: (err?: Error) => void) => callback());
       const mockReq = {
         params: { index: '0' },
         session: {
@@ -967,6 +975,7 @@ describe('Upload Journey Routes', () => {
               { id: 'uuid-2', value: { DocumentType: 'BANK_STATEMENTS' } },
             ],
           },
+          save: mockSave,
         },
       } as PartialRequestWithSession;
       const mockRes = {
@@ -985,12 +994,14 @@ describe('Upload Journey Routes', () => {
 
     it('should handle invalid index', () => {
       const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
+      const mockSave = jest.fn((callback: (err?: Error) => void) => callback());
       const mockReq = {
         params: { index: '99' },
         session: {
           DocumentSelection: {
             documentDetails: [{ id: 'uuid-1', value: { DocumentType: 'PAYSLIPS' } }],
           },
+          save: mockSave,
         },
       } as PartialRequestWithSession;
       const mockRes = {
@@ -1005,9 +1016,12 @@ describe('Upload Journey Routes', () => {
 
     it('should handle when DocumentSelection is undefined', () => {
       const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
+      const mockSave = jest.fn((callback: (err?: Error) => void) => callback());
       const mockReq = {
         params: { index: '0' },
-        session: {},
+        session: {
+          save: mockSave,
+        },
       } as PartialRequestWithSession;
       const mockRes = {
         json: jest.fn(),
@@ -1023,6 +1037,7 @@ describe('Upload Journey Routes', () => {
 
     it('should update session when removing document with valid DocumentSelection', () => {
       const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
+      const mockSave = jest.fn((callback: (err?: Error) => void) => callback());
       const documentDetails = [
         { id: 'uuid-1', value: { DocumentType: 'points-of-claim-defence' } },
         { id: 'uuid-2', value: { DocumentType: 'other-document' } },
@@ -1033,6 +1048,7 @@ describe('Upload Journey Routes', () => {
           DocumentSelection: {
             documentDetails: [...documentDetails],
           },
+          save: mockSave,
         },
       } as PartialRequestWithSession;
       const mockRes = {
