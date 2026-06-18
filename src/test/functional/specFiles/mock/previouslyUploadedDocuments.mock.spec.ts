@@ -26,6 +26,7 @@ test.describe('[mock] Previously uploaded documents', () => {
     );
 
     await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+
     await dashboardPage.verifyDashboardPageContent();
     await dashboardPage.viewPreviouslyUploadedLink.click();
   });
