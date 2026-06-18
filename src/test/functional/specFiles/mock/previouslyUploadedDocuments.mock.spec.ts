@@ -65,7 +65,7 @@ test.describe('[mock] Previously uploaded documents', () => {
     await runA11yAudit(axeUtils);
   });
 
-  test('[mock] Continue and cancel actions navigate correctly from previously uploaded documents @a11y', async ({
+  test('[mock] Back and return to account actions navigate correctly from previously uploaded documents @a11y', async ({
     page,
     dashboardPage,
     axeUtils,
@@ -78,7 +78,9 @@ test.describe('[mock] Previously uploaded documents', () => {
     await dashboardPage.verifyDashboardPageContent();
     await dashboardPage.viewPreviouslyUploadedLink.click();
 
-    await previouslyUploadedDocumentsPage.clickContinue();
+    await previouslyUploadedDocumentsPage.clickBack();
+    await dashboardPage.verifyDashboardPageContent();
+
     await runA11yAudit(axeUtils);
   });
 });
