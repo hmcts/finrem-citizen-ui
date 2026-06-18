@@ -291,13 +291,13 @@ export default function (app: Application): void {
     async (req, res, next) => {
       try {
         const appReq = req as AppRequest;
+        const isFDR = req.body.isFDR === 'on';
 
         if (!appReq.session.documents) {
           appReq.session.documents = {};
         }
 
-        appReq.session.documents.isFinancialDisputeResolution =
-          req.body.isFinancialDisputeResolution === 'on';
+        appReq.session.documents.isFinancialDisputeResolution = isFDR;
 
         await documentController.LinkDocumentsToCase(appReq);
 
