@@ -1,5 +1,6 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+import { isGatewayErrorContent } from '../utils/helpers/gatewayError';
 import { BasePage } from './basePage.page';
 import { GettingHelpPanel } from './components/gettingHelpPanel.component';
 
@@ -8,6 +9,8 @@ const URL_PATTERNS = {
   DOCUMENT_SELECTION: /\/upload\/document-type-selection/,
   FDR: /\/upload\/fdr/,
 };
+
+const NAVIGATION_TIMEOUT_MS = 15_000;
 
 // FDR = Financial Dispute Resolution.
 const FDR_EMAIL = 'FRCexample@justice.gov.uk';
@@ -32,8 +35,8 @@ export class FdrPage extends BasePage {
       'This should be written on the hearing notice you received from the court.',
       { exact: true }
     );
-    this.yesOption = this.page.getByLabel('Yes');
-    this.noOption = this.page.getByLabel('No, they are for a different hearing');
+    this.yesOption = this.page.getByRole('radio', { name: 'Yes' });
+    this.noOption = this.page.getByRole('radio', { name: 'No, they are for a different hearing' });
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
     this.inlineErrorMessage = this.page.getByText(
       'Select yes if you are uploading these documents for a Financial Dispute Resolution hearing'
@@ -70,15 +73,40 @@ export class FdrPage extends BasePage {
   }
 
   async selectYesAndContinue(): Promise<void> {
-    await this.yesOption.check();
-    await this.continueButton.click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_SELECTION);
+    await this.selectOptionAndContinue(this.yesOption);
   }
 
   async selectNoAndContinue(): Promise<void> {
-    await this.noOption.check();
-    await this.continueButton.click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_SELECTION);
+    await this.selectOptionAndContinue(this.noOption);
+  }
+
+  private async selectOptionAndContinue(option: Locator): Promise<void> {
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      await expect(option).toBeVisible({ timeout: NAVIGATION_TIMEOUT_MS });
+      await option.click();
+      await expect(option).toBeChecked({ timeout: NAVIGATION_TIMEOUT_MS });
+      await this.continueButton.click();
+
+      try {
+        await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_SELECTION, {
+          timeout: NAVIGATION_TIMEOUT_MS,
+        });
+        return;
+      } catch (error) {
+        const bodyText = await this.page.locator('body').innerText().catch(() => '');
+        const shouldRetry = attempt === 1 && isGatewayErrorContent(bodyText);
+
+        if (!shouldRetry) {
+          throw error;
+        }
+
+        // AAT can transiently render a gateway page; reload once and retry submit.
+        await this.page.reload({ waitUntil: 'domcontentloaded' });
+        await expect(this.page).toHaveURL(URL_PATTERNS.FDR, {
+          timeout: NAVIGATION_TIMEOUT_MS,
+        });
+      }
+    }
   }
 
   async verifyGettingHelpSection(): Promise<void> {
