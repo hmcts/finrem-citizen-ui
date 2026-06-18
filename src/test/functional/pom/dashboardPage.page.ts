@@ -30,7 +30,7 @@ export class DashboardPage extends BasePage {
 
   constructor(readonly page: Page) {
     super(page);
-    this.userNameHeader = this.page.getByRole('heading', { name: 'Your financial remedy case' });
+    this.userNameHeader = this.page.getByRole('heading', { name: /^(Applicant|Respondent)$/ });
     this.caseNumberText = this.page.getByText(/Case number\s+/i);
     this.divorceAccountHeading = this.page.getByRole('heading', { name: 'This is your financial remedy account' });
     this.divorceAccountLink = this.page.getByRole('link', { name: 'go to your divorce account (opens in new tab)' });
