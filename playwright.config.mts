@@ -24,6 +24,8 @@ const finalBaseUrl = getBaseUrl();
 const isLocal = finalBaseUrl.includes('localhost');
 const displayEnv = isLocal ? 'local' : process.env.RUNNING_ENV || 'aat';
 const slowMoMs = Number(process.env.PLAYWRIGHT_SLOWMO_MS || '0');
+const configuredWorkers = Number.parseInt(process.env.PLAYWRIGHT_WORKERS || '', 10);
+const workerCount = Number.isFinite(configuredWorkers) && configuredWorkers > 0 ? configuredWorkers : 4;
 const commonUse = (CommonConfig.recommended.use ?? {}) as Record<string, unknown>;
 const commonLaunchOptions = (commonUse.launchOptions ?? {}) as Record<string, unknown>;
 
@@ -49,7 +51,7 @@ export default defineConfig({
 
   tsconfig: 'src/test/tsconfig.json',
 
-  workers: process.env.CI ? 4 : undefined, 
+  workers: workerCount,
 
   testDir: './src/test',
   testMatch: ['**/*.spec.ts'],
