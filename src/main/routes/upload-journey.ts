@@ -212,13 +212,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
 
       // Clear upload errors for this document type
       if (removedDocType && req.session.uploadErrors) {
-        const kebabCase = removedDocType
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/\//g, '-')
-          .replace(/[():,]/g, '')
-          .replace(/-+/g, '-');
-        delete req.session.uploadErrors[kebabCase];
+        delete req.session.uploadErrors[removedDocType];
       }
     }
 

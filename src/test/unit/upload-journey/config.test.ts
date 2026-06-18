@@ -258,7 +258,7 @@ describe('Upload Journey Configuration', () => {
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!({}, mockReq);
       expect(errors.upload).toBe('You must upload at least one file before continuing');
-      expect(errors['bank-statements']).toBe('You must upload at least one file before continuing');
+      expect(errors['Bank statements']).toBe('You must upload at least one file before continuing');
     });
 
     it('should return per-document-type errors for all missing types', () => {

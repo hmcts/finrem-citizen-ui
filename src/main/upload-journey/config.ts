@@ -81,13 +81,7 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
       selectedDocTypes.forEach(selectedDoc => {
         const docType = selectedDoc.value?.DocumentType;
         if (docType && !uploadedDocTypeSet.has(docType)) {
-          const kebabCase = docType
-            .toLowerCase()
-            .replace(/\s+/g, '-')
-            .replace(/\//g, '-')
-            .replace(/[():,]/g, '')
-            .replace(/-+/g, '-');
-          errors[kebabCase] = 'You must upload at least one file before continuing';
+          errors[docType] = 'You must upload at least one file before continuing';
           errors.upload = 'You must upload at least one file before continuing';
         }
       });

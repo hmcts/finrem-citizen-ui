@@ -1111,12 +1111,12 @@ describe('Upload Journey Routes', () => {
         session: {
           DocumentSelection: {
             documentDetails: [
-              { id: 'uuid-1', value: { DocumentType: 'MORTGAGE' } },
+              { id: 'uuid-1', value: { DocumentType: 'Mortgage statements' } },
             ],
           },
           uploadErrors: {
-            'mortgage': 'Some error',
-            'other': 'Another error',
+            'Mortgage statements': 'Some error',
+            'Other': 'Another error',
           },
           save: mockSave,
         },
@@ -1127,8 +1127,8 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockReq.session?.uploadErrors?.['mortgage']).toBeUndefined();
-      expect(mockReq.session?.uploadErrors?.['other']).toBe('Another error');
+      expect(mockReq.session?.uploadErrors?.['Mortgage statements']).toBeUndefined();
+      expect(mockReq.session?.uploadErrors?.['Other']).toBe('Another error');
       expect(mockSave).toHaveBeenCalled();
     });
 
