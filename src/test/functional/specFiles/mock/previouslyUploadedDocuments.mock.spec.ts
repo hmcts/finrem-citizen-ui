@@ -2,6 +2,9 @@ import { expect, test } from '../../../fixtures/fixtures';
 import { PreviouslyUploadedDocumentsPage } from '../../pom/previouslyUploadedDocumentsPage.page';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 
+const runningEnv = process.env.RUNNING_ENV || '';
+const isPreviewOrAat = runningEnv.startsWith('pr-') || runningEnv === 'aat';
+
 /**
  * MOCK-ONLY TESTS: Previously uploaded documents
  *
@@ -11,8 +14,13 @@ import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
  */
 test.describe('[mock] Previously uploaded documents', () => {
   test.use({ useMockTestSupport: true });
+  test.skip(
+    isPreviewOrAat,
+    'Mock-only suite skipped on preview/AAT. Run locally with ENABLE_TEST_SUPPORT_ROUTES=true.'
+  );
 
   test.beforeEach(async ({
+    page,
     loggedInPage: _loggedInPage,
     basePage,
     enterAccessCodePage,
@@ -26,6 +34,12 @@ test.describe('[mock] Previously uploaded documents', () => {
     );
 
     await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+
+    // Assert the intended post-submit state
+    await expect(page).toHaveURL(/\/dashboard(?:\?.*)?$/, { timeout: 15_000 });
+    await expect(
+      page.getByRole('heading', { name: /^(Applicant|Respondent|Your financial remedy case)$/ })
+    ).toBeVisible();
 
     await dashboardPage.verifyDashboardPageContent();
     await dashboardPage.viewPreviouslyUploadedLink.click();
