@@ -192,17 +192,45 @@ export default function setupUploadJourneyRoute(app: Application): void {
     const index = parseInt(indexParam, 10);
 
     if (index >= 0 && index < documentDetails.length) {
+      // Capture the document type being removed
+      const removedDocType = documentDetails[index]?.value?.DocumentType;
+
+      // Remove from DocumentSelection
       documentDetails.splice(index, 1);
 
       if (req.session.DocumentSelection) {
         req.session.DocumentSelection.documentDetails = documentDetails;
       }
+
+      // Clean up uploaded files for this document type
+      if (removedDocType && req.session.documents?.documentDetails) {
+        req.session.documents.documentDetails = 
+          req.session.documents.documentDetails.filter(
+            doc => doc.value?.DocumentType !== removedDocType
+          );
+      }
+
+      // Clear upload errors for this document type
+      if (removedDocType && req.session.uploadErrors) {
+        const kebabCase = removedDocType
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/\//g, '-')
+          .replace(/[():,]/g, '')
+          .replace(/-+/g, '-');
+        delete req.session.uploadErrors[kebabCase];
+      }
     }
 
-    // Map to display format for frontend
-    const displayDocs = getSelectedDocumentTypesForDisplay(req);
-
-    res.json({ success: true, documents: displayDocs });
+    req.session.save((err) => {
+      if (err) {
+        return res.status(500).json({ success: false, error: 'Failed to save session' });
+      }
+      
+      // Map to display format for frontend
+      const displayDocs = getSelectedDocumentTypesForDisplay(req);
+      res.json({ success: true, documents: displayDocs });
+    });
   });
 
   app.get(
