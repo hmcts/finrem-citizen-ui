@@ -1,5 +1,6 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+import { isGatewayErrorContent } from '../utils/helpers/gatewayError';
 import { BasePage } from './basePage.page';
 import { GETTING_HELP_OPENING_HOURS, GettingHelpPanel } from './components/gettingHelpPanel.component';
 
@@ -11,10 +12,6 @@ const URL_PATTERNS = {
 };
 
 const NAVIGATION_TIMEOUT_MS = 15_000;
-
-function isGatewayErrorContent(text: string): boolean {
-  return /bad gateway|upstream connect error|502/i.test(text);
-}
 
 const CHECK_UPLOAD_EMAIL = 'FRCexample@justice.gov.uk';
 
