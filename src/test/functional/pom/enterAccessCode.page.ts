@@ -46,6 +46,8 @@ export class EnterAccessCodePage extends BasePage {
     await this.accessCodeInput.press('Tab');
     await this.continueBtn.waitFor({ state: 'visible' });
     await this.continueBtn.click();
+    // Wait for page to stabilize after submit (works for both navigation and validation re-render)
+    await this.page.waitForLoadState('networkidle', { timeout: 10_000 });
   }
 
   async expectValidationError(message: string): Promise<void> {
