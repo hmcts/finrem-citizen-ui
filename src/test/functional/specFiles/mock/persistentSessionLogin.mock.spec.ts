@@ -42,10 +42,10 @@ async function navigateToLinkedDashboard(
 // To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
 const runRealIntegrationAccessCodeTests = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
 
-test.describe('[mock] Persistent Session After Re-login', () => {
+test.describe('[local-integration] Persistent Session After Re-login', () => {
   test.use({ useMockTestSupport: true });
   // Only run if ACCESS_CODE_REAL_INTEGRATION=true
-  test.skip(!runRealIntegrationAccessCodeTests, 'Set ACCESS_CODE_REAL_INTEGRATION=true to enable.');
+  test.skip(!runRealIntegrationAccessCodeTests, 'Local integration only. Set ACCESS_CODE_REAL_INTEGRATION=true to run.');
 
   /**
    * Verify that after logging in, entering case number and access code,
@@ -57,7 +57,7 @@ test.describe('[mock] Persistent Session After Re-login', () => {
    * This test depends on mock CCD endpoints for invalidate-access-code events.
    * It is skipped unless ACCESS_CODE_REAL_INTEGRATION=true.
    */
-  test('[mock] User lands on dashboard after re-login without re-entering case details @a11y', async ({
+  test('[local-integration-mock] User lands on dashboard after re-login without re-entering case details @a11y', async ({
     loggedInPage,
     basePage,
     dashboardPage,
@@ -91,12 +91,12 @@ test.describe('[mock] Persistent Session After Re-login', () => {
   /**
    * Verify that case session persists across multiple tabs/contexts
    * within the same authenticated session.
-   * [mock] Uses hardcoded access codes injected via test session endpoint.
+   * [local-integration-mock] Uses hardcoded access codes injected via test session endpoint.
    * 
    * This test depends on mock CCD endpoints for invalidate-access-code events.
    * It is skipped unless ACCESS_CODE_REAL_INTEGRATION=true.
    */
-  test('[mock] Case session persists across multiple tabs in same browser context @a11y', async ({
+  test('[local-integration-mock] Case session persists across multiple tabs in same browser context @a11y', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
@@ -129,7 +129,7 @@ test.describe('[mock] Persistent Session After Re-login', () => {
    * This test depends on mock CCD endpoints for invalidate-access-code events.
    * It is skipped unless ACCESS_CODE_REAL_INTEGRATION=true.
    */
-  test('[mock] Case session persists when navigating away and back to dashboard @a11y', async ({
+  test('[local-integration-mock] Case session persists when navigating away and back to dashboard @a11y', async ({
     loggedInPage: _loggedInPage,
     basePage,
     dashboardPage,
