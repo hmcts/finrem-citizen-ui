@@ -23,6 +23,10 @@ function isTransientA11yNavigationError(error: unknown): boolean {
   return /documentElement|flattenTree|runPartialRecursive|Execution context was destroyed/i.test(message);
 }
 
+function isGatewayErrorContent(text: string): boolean {
+  return /bad gateway|upstream connect error|502/i.test(text);
+}
+
 async function waitForStableAuditDom(page: Page): Promise<void> {
   await page.waitForLoadState('domcontentloaded');
   await page.waitForFunction(() => {
@@ -31,11 +35,31 @@ async function waitForStableAuditDom(page: Page): Promise<void> {
   });
 }
 
+async function ensureAuditablePageContent(page: Page): Promise<void> {
+  const bodyText = await page.locator('body').innerText();
+
+  if (!isGatewayErrorContent(bodyText)) {
+    return;
+  }
+
+  // Transient gateway pages appear in AAT occasionally; retry once before failing.
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await waitForStableAuditDom(page);
+
+  const reloadedBodyText = await page.locator('body').innerText();
+  if (isGatewayErrorContent(reloadedBodyText)) {
+    throw new Error(
+      `Gateway error page detected before accessibility audit. URL: ${page.url()}`
+    );
+  }
+}
+
 export async function runA11yAudit(axeUtils: AxeUtils, explicitPage?: Page): Promise<void> {
   const page = explicitPage ?? (axeUtils as unknown as { page: Page }).page;
 
   // Route transitions can briefly detach frame DOM; guard before running axe.
   await waitForStableAuditDom(page);
+  await ensureAuditablePageContent(page);
 
   try {
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
@@ -46,6 +70,7 @@ export async function runA11yAudit(axeUtils: AxeUtils, explicitPage?: Page): Pro
 
     // One retry handles occasional frame/DOM churn during route transitions.
     await waitForStableAuditDom(page);
+    await ensureAuditablePageContent(page);
     await axeUtils.audit(DEFAULT_AXE_OPTIONS);
   }
 
