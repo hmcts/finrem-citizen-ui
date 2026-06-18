@@ -3,6 +3,7 @@ import { type Page } from '@playwright/test';
 
 import { type AuthSession, DEFAULT_AXE_OPTIONS, expect } from '../../../fixtures/fixtures';
 import { DocumentUploadPage } from '../../pom/documentUploadPage.page';
+import { isGatewayErrorContent } from '../../utils/helpers/gatewayError';
 
 export function expectAuthenticated(session: AuthSession): void {
   expect(session.authStatus).toBe('success');
@@ -21,10 +22,6 @@ export function hasRunA11yAudit(page: Page): page is MarkedPage {
 function isTransientA11yNavigationError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return /documentElement|flattenTree|runPartialRecursive|Execution context was destroyed/i.test(message);
-}
-
-function isGatewayErrorContent(text: string): boolean {
-  return /bad gateway|upstream connect error|502/i.test(text);
 }
 
 async function waitForStableAuditDom(page: Page): Promise<void> {
