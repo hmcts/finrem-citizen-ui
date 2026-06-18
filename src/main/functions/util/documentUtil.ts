@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
 import { CitizenUploadDocument, ListValue } from '../../app/case/definition';
-import { DOCUMENT_RENAME_FORMATS } from '../../common-constants';
+import { DOCUMENT_COMBINED_PDF_FORMATS, DOCUMENT_RENAME_FORMATS } from '../../common-constants';
 import documentTypes from '../../models/document-types.json';
 
 interface DocumentType {
@@ -31,6 +31,14 @@ export function shouldAutoRename(documentTypeValue: string): boolean {
 
 export function getDocumentRenameFormat(documentTypeValue: string): string {
   return DOCUMENT_RENAME_FORMATS[documentTypeValue] || '';
+}
+
+export function shouldCombineIntoPDF(documentTypeValue: string): boolean {
+  return documentTypeValue in DOCUMENT_COMBINED_PDF_FORMATS;
+}
+
+export function getCombinedPDFFormat(documentTypeValue: string): string {
+  return DOCUMENT_COMBINED_PDF_FORMATS[documentTypeValue] || '';
 }
 
 export function getSelectedDocumentTypesForDisplay(req: Request): SelectedDocumentTypeDisplay[] {

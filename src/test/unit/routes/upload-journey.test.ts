@@ -320,6 +320,159 @@ describe('Upload Journey Routes', () => {
         }),
       }));
     });
+
+    it('should render check-upload step with document groups', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.CheckUpload },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'doc-1', value: { DocumentType: 'bank-statements' } },
+            ],
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'file-1',
+                value: {
+                  DocumentType: 'bank-statements',
+                  DocumentFileName: 'statement1.pdf',
+                  DocumentLink: {
+                    document_url: 'http://example.com/documents/file1',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/check-upload', expect.objectContaining({
+        data: expect.objectContaining({
+          documentGroups: expect.any(Array),
+        }),
+        previousStep: UploadStepNames.UploadDocuments,
+      }));
+    });
+
+    it('should clear upload errors from session after rendering', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.UploadDocuments },
+        session: {
+          uploadErrors: { someError: 'Error message' },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockReq.session?.uploadErrors).toBeUndefined();
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/upload-documents', expect.objectContaining({
+        errors: { someError: 'Error message' },
+      }));
+    });
+
+    it('should render check-upload with documents that do not have rename formats', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.CheckUpload },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'doc-1', value: { DocumentType: 'Payslips' } },
+            ],
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'file-1',
+                value: {
+                  DocumentType: 'Payslips',
+                  DocumentFileName: 'my-payslip.pdf',
+                  DocumentLink: {
+                    document_url: 'http://example.com/documents/file1',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/check-upload', expect.objectContaining({
+        data: expect.objectContaining({
+          documentGroups: expect.arrayContaining([
+            expect.objectContaining({
+              files: expect.arrayContaining([
+                expect.objectContaining({
+                  displayFilename: 'my-payslip.pdf',
+                }),
+              ]),
+            }),
+          ]),
+        }),
+      }));
+    });
+
+    it('should render check-upload with auto-renamed documents', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.CheckUpload },
+        session: {
+          caseUserName: 'JohnSmith',
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'doc-1', value: { DocumentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)' } },
+            ],
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'file-1',
+                value: {
+                  DocumentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
+                  DocumentFileName: 'original-filename.pdf',
+                  DocumentLink: {
+                    document_url: 'http://example.com/documents/file1',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/check-upload', expect.objectContaining({
+        data: expect.objectContaining({
+          uploadedFiles: expect.objectContaining({
+            'family-mediation-information-and-assessment-meeting-miam-form-form-fm1': expect.arrayContaining([
+              expect.objectContaining({
+                displayFilename: expect.stringContaining('JohnSmith-FormFM1'),
+              }),
+            ]),
+          }),
+        }),
+      }));
+    });
   });
 
   describe('POST /upload/:stepId', () => {
@@ -557,6 +710,119 @@ describe('Upload Journey Routes', () => {
       );
     });
 
+    it('should render validation error when uploadMore is missing on check-upload', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.CheckUpload },
+        session: {},
+        body: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        'upload-journey/check-upload',
+        expect.objectContaining({
+          errors: {
+            uploadMore: 'Select yes if you want to upload any other documents',
+          },
+          values: expect.objectContaining({
+            uploadMore: undefined,
+          }),
+        })
+      );
+      expect(mockRes.redirect).not.toHaveBeenCalled();
+    });
+
+    it('should redirect to document-type-selection when user selects yes on check-upload', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.CheckUpload },
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: { uploadMore: 'yes' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
+      expect(mockRes.render).not.toHaveBeenCalled();
+    });
+
+    it('should redirect to send-to-other-party when user selects no on check-upload', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.CheckUpload },
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: { uploadMore: 'no' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/send-to-other-party`);
+      expect(mockRes.render).not.toHaveBeenCalled();
+    });
+
+    it('should render check-upload with uploadMore value when validation fails', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.CheckUpload },
+        session: {
+          documents: {
+            documentDetails: [
+              {
+                id: 'file-1',
+                value: {
+                  DocumentType: 'bank-statements',
+                  DocumentFileName: 'statement.pdf',
+                  DocumentLink: {
+                    document_url: 'http://example.com/documents/file1',
+                  },
+                },
+              },
+            ],
+          },
+        },
+        body: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        'upload-journey/check-upload',
+        expect.objectContaining({
+          data: expect.objectContaining({
+            documentGroups: expect.any(Array),
+          }),
+          errors: {
+            uploadMore: 'Select yes if you want to upload any other documents',
+          },
+          values: expect.objectContaining({
+            uploadMore: undefined,
+          }),
+        })
+      );
+    });
+
     it('should redirect to same step when no next step is defined', () => {
       const { uploadSteps } = require('../../../main/upload-journey/config');
       const originalNext = uploadSteps[UploadStepNames.CheckUpload].next;
@@ -568,7 +834,7 @@ describe('Upload Journey Routes', () => {
         session: {
           save: jest.fn((callback: (err?: Error) => void) => callback()),
         },
-        body: {},
+        body: { uploadMore: 'yes' },
       } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
@@ -580,6 +846,24 @@ describe('Upload Journey Routes', () => {
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/${UploadStepNames.CheckUpload}`);
 
       uploadSteps[UploadStepNames.CheckUpload].next = originalNext;
+    });
+
+    it('should throw error when session save fails', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.BeforeYouStart },
+        session: {
+          save: jest.fn((callback: (err?: Error) => void) => callback(new Error('Session save failed'))),
+        },
+        body: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      expect(() => {
+        handler(mockReq as unknown as Request, mockRes as Response);
+      }).toThrow('Session save failed');
     });
   });
 

@@ -8,7 +8,7 @@ export type UploadStepId = typeof UploadStepNames[keyof typeof UploadStepNames];
 export type UploadStep = {
   template: string;
   validate?: (body: Record<string, unknown>, req?: Request) => Record<string, string>;
-  next?: () => UploadStepId | null;
+  next?: (body?: Record<string, unknown>) => UploadStepId | null;
   previous?: () => UploadStepId | null;
 };
 
@@ -80,7 +80,19 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
   [UploadStepNames.CheckUpload]: {
     template: 'upload-journey/check-upload',
-    next: () => UploadStepNames.SendToOtherParty,
+    validate: (body: Record<string, unknown>) => {
+      const errors: Record<string, string> = {};
+      if (!body.uploadMore) {
+        errors.uploadMore = 'Select yes if you want to upload any other documents';
+      }
+      return errors;
+    },
+    next: (body?: Record<string, unknown>) => {
+      if (body?.uploadMore === 'yes') {
+        return UploadStepNames.DocumentTypeSelection;
+      }
+      return UploadStepNames.SendToOtherParty;
+    },
     previous: () => UploadStepNames.UploadDocuments,
   },
 

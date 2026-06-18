@@ -9,6 +9,8 @@ const URL_PATTERNS = {
   BEFORE_YOU_START: /\/upload\/before-you-start/, // Base path; allows query params
 };
 
+const DASHBOARD_CONTACT_EMAIL = 'FRCexample@justice.gov.uk';
+
 export class DashboardPage extends BasePage {
   readonly userNameHeader: Locator;
   readonly caseNumberText: Locator;
@@ -121,6 +123,22 @@ export class DashboardPage extends BasePage {
 
   async verifyPreviouslyUploadedLinkHidden(): Promise<void> {
     await expect(this.viewPreviouslyUploadedLink).toBeHidden();
+  }
+
+  async verifyGettingHelpSection(): Promise<void> {
+    await this.gettingHelp.verifySection({
+      expectedEmail: DASHBOARD_CONTACT_EMAIL,
+    });
+  }
+
+  async verifyDivorceAccountInsetIfVisible(): Promise<void> {
+    const isVisible = await this.divorceAccountHeading.isVisible();
+    if (isVisible) {
+      await this.verifyDivorceAccountInset();
+      return;
+    }
+
+    await this.verifyDivorceAccountHeadingHidden();
   }
 
   // Click the document upload button

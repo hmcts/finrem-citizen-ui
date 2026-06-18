@@ -5,7 +5,7 @@ import path from 'node:path';
 import { expect, Locator, Page } from '@playwright/test';
 
 import { BasePage } from './basePage.page';
-import { GettingHelpPanel } from './components/gettingHelpPanel.component';
+import { GETTING_HELP_OPENING_HOURS, GettingHelpPanel } from './components/gettingHelpPanel.component';
 
 const TEST_DATA_DIR = path.join(__dirname, '../utils/test_data');
 
@@ -83,7 +83,7 @@ export class DocumentUploadPage extends BasePage {
     });
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
     this.noUploadedFilesMessage = this.page.getByText('You must upload at least one file before continuing', { exact: true });
-    this.helpOpeningHours = this.gettingHelp.details.getByText('Monday to Friday, 8.30am to 5pm', {
+    this.helpOpeningHours = this.gettingHelp.details.getByText(GETTING_HELP_OPENING_HOURS, {
       exact: false,
     });
   }
@@ -119,6 +119,28 @@ export class DocumentUploadPage extends BasePage {
     }
   }
 
+  async chooseFileAndUploadDocumentByTypeValue(
+    documentTypeValue: string,
+    filePath: string = SUPPORTED_UPLOAD_FILES.docx,
+    expectUploadSuccess = true,
+  ): Promise<void> {
+    const beforeCount = await this.uploadedFileLinks.count();
+
+    const uploadForm = this.page.locator(`[data-upload-form="${documentTypeValue}"]`);
+    const fileInput = uploadForm.locator('input[type="file"]');
+    const uploadButton = uploadForm.getByRole('button', { name: /Upload file for/i });
+
+    await fileInput.setInputFiles(filePath);
+    await uploadButton.click();
+    await this.page.waitForLoadState('networkidle');
+
+    if (expectUploadSuccess) {
+      await expect(this.uploadedFileLinks).toHaveCount(beforeCount + 1, { timeout: 15000 });
+    } else {
+      await expect(this.uploadedFileLinks).toHaveCount(beforeCount);
+    }
+  }
+
   async chooseFileAndUploadJpg(): Promise<void> {
     await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.jpg);
   }
@@ -141,6 +163,14 @@ export class DocumentUploadPage extends BasePage {
 
   async chooseFileAndUploadXlsx(): Promise<void> {
     await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.xlsx);
+  }
+
+  async chooseFileAndUploadBankStatementDocx(): Promise<void> {
+    await this.chooseFileAndUploadDocumentByTypeValue('bank-statements', SUPPORTED_UPLOAD_FILES.docx);
+  }
+
+  async chooseFileAndUploadPayslipDocx(): Promise<void> {
+    await this.chooseFileAndUploadDocumentByTypeValue('payslips', SUPPORTED_UPLOAD_FILES.docx);
   }
 
   getUploadedFileByName(filename: string): Locator {

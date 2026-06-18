@@ -10,7 +10,7 @@ import type {
   PreviouslyUploadedDocumentsCaseData,
 } from '../app/document/PreviouslyUploadedDocumentClient';
 import { RouteNames } from '../common-constants';
-import { getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename } from '../functions/util/documentUtil';
+import { getCombinedPDFFormat, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF } from '../functions/util/documentUtil';
 import { oidcMiddleware } from '../middleware';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
 
@@ -56,6 +56,89 @@ function getUploadedFilesByType(req: Request): Record<string, { id: string; file
   });
 
   return uploadedFilesByType;
+}
+
+function getUploadedFilesByCombinedFormat(req: Request): Record<string, { id: string; filename: string; url: string; displayFilename: string; originalDocumentType: string }[]> {
+  const uploadedDocuments = req.session.documents?.documentDetails || [];
+  const uploadedFilesByCombinedFormat: Record<string, { id: string; filename: string; url: string; displayFilename: string; originalDocumentType: string }[]> = {};
+
+  uploadedDocuments.forEach(doc => {
+    // DocumentType is stored as enum value (e.g., "Chronology")
+    // Convert to kebab-case to match template expectations (e.g., "chronology")
+    const enumValue = doc.value?.DocumentType || '';
+    const kebabCase = enumValue
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/\//g, '-')  // Replace slashes with hyphens
+      .replace(/[():,]/g, '')  // Remove parentheses, colons, and commas
+      .replace(/-+/g, '-');  // Collapse multiple hyphens into one
+
+    const originalFilename = doc.value?.DocumentFileName || '';
+
+    // Extract document ID from URL and construct download route
+    const documentUrl = doc.value?.DocumentLink?.document_url || '';
+    const extractedDocumentId = documentUrl.split('/').pop() || '';
+    const downloadUrl = extractedDocumentId ? `/documents/${extractedDocumentId}/download` : '';
+
+    // Group by combined PDF format if applicable, otherwise by original document type
+    const groupKey = shouldCombineIntoPDF(kebabCase)
+      ? getCombinedPDFFormat(kebabCase)
+      : kebabCase;
+
+    if (!uploadedFilesByCombinedFormat[groupKey]) {
+      uploadedFilesByCombinedFormat[groupKey] = [];
+    }
+    uploadedFilesByCombinedFormat[groupKey].push({
+      id: doc.id || '',
+      filename: originalFilename,
+      url: downloadUrl,
+      displayFilename: originalFilename,
+      originalDocumentType: kebabCase,
+    });
+  });
+
+  return uploadedFilesByCombinedFormat;
+}
+
+function getDocumentGroupsForCheckPage(req: Request): { groupKey: string; label: string; files: { id: string; filename: string; url: string; displayFilename: string }[]; willCombine: boolean }[] {
+  const filesByCombinedFormat = getUploadedFilesByCombinedFormat(req);
+  const selectedDocumentTypes = getSelectedDocumentTypesForDisplay(req);
+
+  const labelMap = new Map<string, string>();
+  selectedDocumentTypes.forEach(docType => {
+    labelMap.set(docType.value, docType.label);
+  });
+
+  const groups: { groupKey: string; label: string; files: { id: string; filename: string; url: string; displayFilename: string }[]; willCombine: boolean }[] = [];
+
+  // Process each group
+  Object.entries(filesByCombinedFormat).forEach(([groupKey, files]) => {
+    // Check if this is a combined format or original document type
+    const isCombinedFormat = files.length > 0 && shouldCombineIntoPDF(files[0].originalDocumentType);
+
+    let label: string;
+    if (isCombinedFormat) {
+      // For combined formats, use the label from the first document type in the group
+      label = labelMap.get(files[0].originalDocumentType) || groupKey;
+    } else {
+      // For non-combined, use the original document type label
+      label = labelMap.get(groupKey) || groupKey;
+    }
+
+    groups.push({
+      groupKey,
+      label,
+      files: files.map(f => ({
+        id: f.id,
+        filename: f.filename,
+        url: f.url,
+        displayFilename: f.displayFilename,
+      })),
+      willCombine: isCombinedFormat,
+    });
+  });
+
+  return groups;
 }
 
 function generateRenamedFilename(documentTypeValue: string, originalFilename: string, caseUserName?: string): string {
@@ -194,13 +277,16 @@ export default function setupUploadJourneyRoute(app: Application): void {
 
     // Get uploaded documents grouped by document type
     const uploadedFilesByType = getUploadedFilesByType(req);
+    const documentGroups = req.params.stepId === 'check-upload' 
+      ? getDocumentGroupsForCheckPage(req)
+      : undefined;
 
     // Get upload errors from session
     const uploadErrors = req.session.uploadErrors || {};
     delete req.session.uploadErrors;
 
     res.render(step.template, {
-      data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType },
+      data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType, documentGroups },
       errors: uploadErrors,
       values: { selectedDocumentTypes, fdrHearing },
       previousStep,
@@ -208,6 +294,8 @@ export default function setupUploadJourneyRoute(app: Application): void {
       caseUserName: req.session.caseUserName,
       shouldAutoRename,
       getDocumentRenameFormat,
+      shouldCombineIntoPDF,
+      getCombinedPDFFormat,
     });
   });
 
@@ -230,16 +318,21 @@ export default function setupUploadJourneyRoute(app: Application): void {
 
       // Get uploaded documents grouped by document type
       const uploadedFilesByType = getUploadedFilesByType(req);
+      const documentGroups = req.params.stepId === 'check-upload' 
+        ? getDocumentGroupsForCheckPage(req)
+        : undefined;
 
       return res.render(step.template, {
-        data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType },
+        data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType, documentGroups },
         errors,
-        values: { selectedDocumentTypes, fdrHearing },
+        values: { selectedDocumentTypes, fdrHearing, uploadMore: req.body.uploadMore },
         previousStep,
         email: 'FRCexample@justice.gov.uk',
         caseUserName: req.session.caseUserName,
         shouldAutoRename,
         getDocumentRenameFormat,
+        shouldCombineIntoPDF,
+        getCombinedPDFFormat,
       });
     }
 
@@ -251,7 +344,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
       req.session.DocumentSelection.isFinancialDisputeResolution = req.body.fdrHearing === 'true';
     }
 
-    const nextStep = step.next ? step.next() : null;
+    const nextStep = step.next ? step.next(req.body) : null;
     const redirectUrl = nextStep
       ? `${RouteNames.uploadJourney}/${nextStep}`
       : `${RouteNames.uploadJourney}/${req.params.stepId}`;

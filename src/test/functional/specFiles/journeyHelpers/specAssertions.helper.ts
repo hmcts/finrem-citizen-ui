@@ -18,11 +18,38 @@ export function hasRunA11yAudit(page: Page): page is MarkedPage {
   return Boolean((page as MarkedPage)[A11Y_AUDIT_MARKER]);
 }
 
+function isTransientA11yNavigationError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /documentElement|flattenTree|runPartialRecursive|Execution context was destroyed/i.test(message);
+}
+
+async function waitForStableAuditDom(page: Page): Promise<void> {
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForFunction(() => {
+    const doc = globalThis.document;
+    return Boolean(doc?.documentElement) && doc.readyState !== 'loading';
+  });
+}
+
 export async function runA11yAudit(axeUtils: AxeUtils, explicitPage?: Page): Promise<void> {
-  await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  const page = explicitPage ?? (axeUtils as unknown as { page: Page }).page;
+
+  // Route transitions can briefly detach frame DOM; guard before running axe.
+  await waitForStableAuditDom(page);
+
+  try {
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  } catch (error) {
+    if (!isTransientA11yNavigationError(error)) {
+      throw error;
+    }
+
+    // One retry handles occasional frame/DOM churn during route transitions.
+    await waitForStableAuditDom(page);
+    await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+  }
 
   // Accessibility-tree check acts as a screen-reader proxy assertion for each audited state.
-  const page = explicitPage ?? (axeUtils as unknown as { page: Page }).page;
   const ariaSnapshot = await page.locator('main, body').first().ariaSnapshot();
   expect(ariaSnapshot).toBeTruthy();
   (page as MarkedPage)[A11Y_AUDIT_MARKER] = true;
