@@ -1,4 +1,4 @@
-import { defineConfig, devices,type ReporterDescription } from '@playwright/test';
+import { defineConfig, devices, type ReporterDescription } from '@playwright/test';
 import dotenv from 'dotenv';
 
 // Import HMCTS common configs
@@ -17,7 +17,6 @@ const getBaseUrl = (): string => {
   if (env.startsWith('pr-')) {
     return `https://finrem-citizen-ui-${env}.preview.platform.hmcts.net`;
   }
-  // For AAT/demo/etc use the citizen UI, not manage-case (XUI)
   return `https://finrem-citizen-ui.${env}.platform.hmcts.net`;
 };
 
@@ -46,8 +45,11 @@ const isRunningApiTests = process.env.RUN_API_TESTS === 'true';
 export default defineConfig({
   ...CommonConfig.recommended,
 
-  // Link to your test-specific tsconfig
+ // Link to test-specific tsconfig
+
   tsconfig: 'src/test/tsconfig.json',
+
+  workers: process.env.CI ? 4 : undefined, 
 
   testDir: './src/test',
   testMatch: ['**/*.spec.ts'],
