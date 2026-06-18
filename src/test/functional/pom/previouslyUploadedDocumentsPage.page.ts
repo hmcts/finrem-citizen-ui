@@ -37,7 +37,7 @@ export class PreviouslyUploadedDocumentsPage extends BasePage {
     this.documentLinks = page.locator('tbody.govuk-table__body tr.govuk-table__row a.govuk-link');
 
     this.continueButton = page.getByRole('button', { name: 'Continue' });
-    this.cancelLink = page.getByRole('link', { name: 'Cancel' });
+    this.cancelLink = page.getByRole('button', { name: 'Return to account' });
   }
 
   async verifyPageContent(): Promise<void> {
