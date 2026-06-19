@@ -5,7 +5,7 @@ import { LoggerInstance } from 'winston';
 import { getSystemUser } from '../auth/user';
 import { getCaseApi } from '../case/case-api';
 import { CITIZEN_APPLICANT_DOCUMENT, CITIZEN_RESPONDENT_DOCUMENT, EVENT_TYPE } from '../case/case-type';
-import { CaseRole, CitizenUploadDocument, CitizenUploadDocumentType, ListValue, YesOrNo } from '../case/definition';
+import { CaseRole, CitizenUploadDocument, CitizenUploadDocumentType, ListValue } from '../case/definition';
 import type { AppRequest, UserDetails } from '../controller/AppRequest';
 import {
   CaseDocumentManagementClient,
@@ -43,6 +43,7 @@ export class DocumentManagerController {
             filesCreated.map(file => ({
                 id: generateUuid(),
                 value: {
+                    DocumentComment: 'Uploaded by applicant',
                     DocumentFileName: file.originalDocumentName,
                     DocumentType: documentType,
                     DocumentLink: {
@@ -82,7 +83,6 @@ export class DocumentManagerController {
         }
 
         const documents = req.session.documents?.documentDetails ?? [];
-        const isFDR = req.session.documents?.isFinancialDisputeResolution ?? false;
 
         if (!documents.length) {
             throw new Error('No documents in session to send');
@@ -93,21 +93,13 @@ export class DocumentManagerController {
                 ? CITIZEN_APPLICANT_DOCUMENT
                 : CITIZEN_RESPONDENT_DOCUMENT;
 
-        const updatedDocuments = documents.map(doc => ({
-            ...doc,
-            value: {
-                ...doc.value,
-                isFDR: isFDR ? YesOrNo.YES : YesOrNo.NO,
-            },
-        }));
-
         const systemUser = await getSystemUser();
         const caseworkerUserApi = getCaseApi(systemUser, this.logger);
 
         req.session.caseData = await caseworkerUserApi.triggerEvent(
             req.session.caseNumber,
             {
-                [documentsKey]: updatedDocuments,
+                [documentsKey]: documents,
             },
             caseRole === CaseRole.APPLICANT
                 ? EVENT_TYPE.APPLICANT_UPLOAD_DOCUMENT
@@ -116,10 +108,7 @@ export class DocumentManagerController {
 
         delete req.session.documents;
 
-        this.logger.info('Document collection sent to CCD', {
-            documentCount: updatedDocuments.length,
-            isFDR,
-        });
+        this.logger.info('Document collection sent to CCD');
     }
 
     public async downloadDocument(

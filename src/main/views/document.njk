@@ -85,12 +85,6 @@
               <span class="govuk-hint"> (unavailable)</span>
             {% endif %}
 
-            {% if doc.value.isFDR == "Yes" %}
-              <strong class="govuk-tag govuk-tag--blue" style="margin-left:10px;">
-                FDR
-              </strong>
-            {% endif %}
-
           </li>
         {% endfor %}
       </ul>
@@ -112,15 +106,16 @@
             <div class="govuk-checkboxes__item">
               <input
                 class="govuk-checkboxes__input"
-                id="isFDR"
-                name="isFDR"
+                id="isFinancialDisputeResolution"
+                name="isFinancialDisputeResolution"
                 type="checkbox"
+                {% if isFDR %}checked{% endif %}
               >
               <label
                 class="govuk-label govuk-checkboxes__label"
-                for="isFDR"
+                for="isFinancialDisputeResolution"
               >
-                Apply FDR to all uploaded documents
+                This is a Financial Dispute Resolution (FDR) submission
               </label>
             </div>
           </div>
