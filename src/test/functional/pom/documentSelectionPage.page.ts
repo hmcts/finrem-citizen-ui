@@ -145,10 +145,14 @@ export class DocumentSelectionPage extends BasePage {
   }
 
   async removeDocumentByLabel(label: string): Promise<void> {
+    const documentTerm = this.termByLabel(label);
+
     await this.page
       .locator('[data-document-types-list]')
       .getByRole('link', { name: `Remove ${label}` })
       .click();
+
+    await expect(documentTerm).toHaveCount(0);
   }
 
   async submitWithoutDocumentsAndExpectValidationError(): Promise<void> {

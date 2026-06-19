@@ -65,20 +65,21 @@ test.describe('[integration] Dashboard upload journey', () => {
   test('[integration] Before-you-start supports back navigation and start-now progression @a11y', async ({
     dashboardPage,
     beforeYouStartPage,
+    confidentialityPage,
     axeUtils,
   }) => {
     await dashboardPage.verifyDashboardPageContent();
     await dashboardPage.clickGoToDocumentUpload();
 
     await beforeYouStartPage.verifyBeforeYouStartPageContent();
-    await runA11yAudit(axeUtils);
 
     await beforeYouStartPage.goBackToDashboard();
     await dashboardPage.verifyDashboardPageContent();
     await dashboardPage.verifyDivorceAccountHeadingHidden();
-    await runA11yAudit(axeUtils);
 
     await dashboardPage.clickGoToDocumentUpload();
     await beforeYouStartPage.startUploadJourney();
+    await confidentialityPage.verifyConfidentialityPageContent();
+    await runA11yAudit(axeUtils);
   });
 });

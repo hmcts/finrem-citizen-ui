@@ -1,5 +1,6 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+import { isGatewayErrorContent } from '../utils/helpers/gatewayError';
 import { BasePage } from './basePage.page';
 import { GETTING_HELP_OPENING_HOURS, GettingHelpPanel } from './components/gettingHelpPanel.component';
 
@@ -9,6 +10,8 @@ const URL_PATTERNS = {
   SEND_TO_OTHER_PARTY: /\/upload\/send-to-other-party/,
   UPLOAD_DOCUMENTS: /\/upload\/upload-documents/,
 };
+
+const NAVIGATION_TIMEOUT_MS = 15_000;
 
 const CHECK_UPLOAD_EMAIL = 'FRCexample@justice.gov.uk';
 
@@ -75,8 +78,30 @@ export class CheckUploadPage extends BasePage {
     });
   }
 
+  private async ensureCheckUploadPageLoaded(): Promise<void> {
+    await expect(this.page).toHaveURL(URL_PATTERNS.CHECK_UPLOAD, {
+      timeout: NAVIGATION_TIMEOUT_MS,
+    });
+
+    const bodyText = await this.page.locator('body').innerText().catch(() => '');
+    if (!isGatewayErrorContent(bodyText)) {
+      return;
+    }
+
+    // AAT can briefly serve a gateway page after upload submission; reload once and retry the page check.
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(this.page).toHaveURL(URL_PATTERNS.CHECK_UPLOAD, {
+      timeout: NAVIGATION_TIMEOUT_MS,
+    });
+
+    const reloadedBodyText = await this.page.locator('body').innerText().catch(() => '');
+    if (isGatewayErrorContent(reloadedBodyText)) {
+      throw new Error(`Gateway error page detected on check-upload page. URL: ${this.page.url()}`);
+    }
+  }
+
   async verifyCheckUploadPageContent(): Promise<void> {
-    await expect(this.page).toHaveURL(URL_PATTERNS.CHECK_UPLOAD);
+    await this.ensureCheckUploadPageLoaded();
     await this.verifyGlobalHeaderAndFooter();
 
     await this.expectVisible([
@@ -113,11 +138,10 @@ export class CheckUploadPage extends BasePage {
   }
 
   async selectUploadMore(choice: 'yes' | 'no'): Promise<void> {
-    if (choice === 'yes') {
-      await this.yesRadio.check();
-      return;
-    }
-    await this.noRadio.check();
+    const radio = choice === 'yes' ? this.yesRadio : this.noRadio;
+    await expect(radio).toBeVisible({ timeout: NAVIGATION_TIMEOUT_MS });
+    await radio.click();
+    await expect(radio).toBeChecked({ timeout: NAVIGATION_TIMEOUT_MS });
   }
 
   async clickContinue(): Promise<void> {
@@ -130,15 +154,34 @@ export class CheckUploadPage extends BasePage {
   }
 
   async selectYesAndContinue(): Promise<void> {
-    await this.selectUploadMore('yes');
-    await this.clickContinue();
-    await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_TYPE_SELECTION);
+    await this.selectUploadMoreAndContinue('yes', URL_PATTERNS.DOCUMENT_TYPE_SELECTION);
   }
 
   async selectNoAndContinue(): Promise<void> {
-    await this.selectUploadMore('no');
-    await this.clickContinue();
-    await expect(this.page).toHaveURL(URL_PATTERNS.SEND_TO_OTHER_PARTY);
+    await this.selectUploadMoreAndContinue('no', URL_PATTERNS.SEND_TO_OTHER_PARTY);
+  }
+
+  private async selectUploadMoreAndContinue(choice: 'yes' | 'no', expectedUrl: RegExp): Promise<void> {
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      await this.selectUploadMore(choice);
+      await this.clickContinue();
+
+      try {
+        await expect(this.page).toHaveURL(expectedUrl, { timeout: NAVIGATION_TIMEOUT_MS });
+        return;
+      } catch (error) {
+        const bodyText = await this.page.locator('body').innerText().catch(() => '');
+        const shouldRetry = attempt === 1 && isGatewayErrorContent(bodyText);
+
+        if (!shouldRetry) {
+          throw error;
+        }
+
+        // AAT can transiently render a gateway page; reload once and retry the choice.
+        await this.page.reload({ waitUntil: 'domcontentloaded' });
+        await expect(this.page).toHaveURL(URL_PATTERNS.CHECK_UPLOAD, { timeout: NAVIGATION_TIMEOUT_MS });
+      }
+    }
   }
 
   async expectSendToOtherPartyHeadingVisible(): Promise<void> {

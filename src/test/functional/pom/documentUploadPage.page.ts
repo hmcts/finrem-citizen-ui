@@ -110,10 +110,10 @@ export class DocumentUploadPage extends BasePage {
 
     await fileInput.setInputFiles(filePath);
     await uploadButton.click();
-    await this.page.waitForLoadState('networkidle');
 
     if (expectUploadSuccess) {
       await expect(this.uploadedFileLinks).toHaveCount(beforeCount + 1, { timeout: 15000 });
+      await expect(this.inlineUploadFailedError).toHaveCount(0);
     } else {
       await expect(this.uploadedFileLinks).toHaveCount(beforeCount);
     }
@@ -132,10 +132,10 @@ export class DocumentUploadPage extends BasePage {
 
     await fileInput.setInputFiles(filePath);
     await uploadButton.click();
-    await this.page.waitForLoadState('networkidle');
 
     if (expectUploadSuccess) {
       await expect(this.uploadedFileLinks).toHaveCount(beforeCount + 1, { timeout: 15000 });
+      await expect(this.inlineUploadFailedError).toHaveCount(0);
     } else {
       await expect(this.uploadedFileLinks).toHaveCount(beforeCount);
     }
