@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
 import { UploadStepNames, ViewNames } from '../common-constants';
-import { FILE_VALIDATION_ERRORS } from '../functions/util/uploadValidation';
+import { toDocumentTypeKey } from '../functions/util/documentUtil';
 
 export type UploadStepId = typeof UploadStepNames[keyof typeof UploadStepNames];
 
@@ -69,13 +69,13 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
       const selectedDocTypes = req?.session?.DocumentSelection?.documentDetails || [];
       const uploadedDocs = req?.session?.documents?.documentDetails || [];
 
-      if (uploadedDocs.length === 0) {
-        errors.upload = FILE_VALIDATION_ERRORS.NO_FILE;
-        return errors;
-      }
-
+      // Uploaded files store DocumentType as the enum value (e.g. "Bank statements"),
+      // while selected types store the kebab-case value (e.g. "bank-statements").
+      // Normalise both to the kebab-case key before comparing.
       const uploadedDocTypeSet = new Set(
-        uploadedDocs.map(doc => doc.value?.DocumentType).filter(Boolean)
+        uploadedDocs
+          .map(doc => (doc.value?.DocumentType ? toDocumentTypeKey(doc.value.DocumentType) : ''))
+          .filter(Boolean)
       );
 
       selectedDocTypes.forEach(selectedDoc => {

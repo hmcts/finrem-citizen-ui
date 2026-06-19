@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { Application, Request, Response } from 'express';
 
+import { CitizenUploadDocumentType } from '../../../main/app/case/definition';
 import { RouteNames } from '../../../main/common-constants';
 
 // Mock the DocumentManagerController
@@ -408,6 +409,34 @@ describe('Home Routes', () => {
 
       // Should not have uploadErrors
       expect(mockReq.session?.uploadErrors).toBeUndefined();
+      expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
+    });
+
+    it('should resolve documentType when sent as an enum value', async () => {
+      mockUploadDocumentToEvidenceStore.mockResolvedValueOnce(undefined as never);
+
+      const homeRoutes = require('../../../main/routes/home').default;
+      homeRoutes(app);
+
+      const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
+      const mockReq = {
+        files: [{ originalname: 'test.pdf', size: 1024 }],
+        body: { documentType: CitizenUploadDocumentType.BANK_STATEMENTS, returnUrl: '/upload/upload-documents' },
+        session: {
+          save: jest.fn((cb: (err?: Error) => void) => cb()),
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockUploadDocumentToEvidenceStore).toHaveBeenCalledWith(
+        expect.anything(),
+        CitizenUploadDocumentType.BANK_STATEMENTS
+      );
       expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
     });
 

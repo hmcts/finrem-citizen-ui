@@ -185,7 +185,7 @@ describe('Upload Journey Configuration', () => {
       const mockReq = {
         session: {
           DocumentSelection: {
-            documentDetails: [{ id: '1', value: { DocumentType: 'Mortgage statements' } }],
+            documentDetails: [{ id: '1', value: { DocumentType: 'mortgage-statements' } }],
           },
           documents: {
             documentDetails: [],
@@ -196,6 +196,7 @@ describe('Upload Journey Configuration', () => {
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!({}, mockReq);
       expect(errors.upload).toBe('You must upload at least one file before continuing');
+      expect(errors['mortgage-statements']).toBe('You must upload at least one file before continuing');
     });
 
     it('should return no errors when all selected document types have uploads', () => {
@@ -204,8 +205,8 @@ describe('Upload Journey Configuration', () => {
         session: {
           DocumentSelection: {
             documentDetails: [
-              { id: '1', value: { DocumentType: 'Mortgage statements' } },
-              { id: '2', value: { DocumentType: 'Bank statements' } },
+              { id: '1', value: { DocumentType: 'mortgage-statements' } },
+              { id: '2', value: { DocumentType: 'bank-statements' } },
             ],
           },
           documents: {
@@ -227,7 +228,7 @@ describe('Upload Journey Configuration', () => {
       const mockReq = {
         session: {
           DocumentSelection: {
-            documentDetails: [{ id: '1', value: { DocumentType: 'Mortgage statements' } }],
+            documentDetails: [{ id: '1', value: { DocumentType: 'mortgage-statements' } }],
           },
         },
       } as unknown as Request;
@@ -243,8 +244,8 @@ describe('Upload Journey Configuration', () => {
         session: {
           DocumentSelection: {
             documentDetails: [
-              { id: '1', value: { DocumentType: 'Mortgage statements' } },
-              { id: '2', value: { DocumentType: 'Bank statements' } },
+              { id: '1', value: { DocumentType: 'mortgage-statements' } },
+              { id: '2', value: { DocumentType: 'bank-statements' } },
             ],
           },
           documents: {
@@ -258,7 +259,8 @@ describe('Upload Journey Configuration', () => {
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!({}, mockReq);
       expect(errors.upload).toBe('You must upload at least one file before continuing');
-      expect(errors['Bank statements']).toBe('You must upload at least one file before continuing');
+      expect(errors['bank-statements']).toBe('You must upload at least one file before continuing');
+      expect(errors['mortgage-statements']).toBeUndefined();
     });
 
     it('should return per-document-type errors for all missing types', () => {
@@ -267,8 +269,8 @@ describe('Upload Journey Configuration', () => {
         session: {
           DocumentSelection: {
             documentDetails: [
-              { id: '1', value: { DocumentType: 'Mortgage statements' } },
-              { id: '2', value: { DocumentType: 'Other' } },
+              { id: '1', value: { DocumentType: 'mortgage-statements' } },
+              { id: '2', value: { DocumentType: 'other' } },
             ],
           },
           documents: {
@@ -280,6 +282,8 @@ describe('Upload Journey Configuration', () => {
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!({}, mockReq);
       expect(errors.upload).toBe('You must upload at least one file before continuing');
+      expect(errors['mortgage-statements']).toBe('You must upload at least one file before continuing');
+      expect(errors['other']).toBe('You must upload at least one file before continuing');
     });
   });
 
