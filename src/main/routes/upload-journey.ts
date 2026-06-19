@@ -10,7 +10,7 @@ import type {
   PreviouslyUploadedDocumentsCaseData,
 } from '../app/document/PreviouslyUploadedDocumentClient';
 import { RouteNames } from '../common-constants';
-import { getCombinedPDFFormat, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF } from '../functions/util/documentUtil';
+import { getCombinedPDFFormat, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey } from '../functions/util/documentUtil';
 import { oidcMiddleware } from '../middleware';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
 
@@ -192,17 +192,47 @@ export default function setupUploadJourneyRoute(app: Application): void {
     const index = parseInt(indexParam, 10);
 
     if (index >= 0 && index < documentDetails.length) {
+      // Capture the document type being removed
+      const removedDocType = documentDetails[index]?.value?.DocumentType;
+
+      // Remove from DocumentSelection
       documentDetails.splice(index, 1);
 
       if (req.session.DocumentSelection) {
         req.session.DocumentSelection.documentDetails = documentDetails;
       }
+
+      // Clean up uploaded files for this document type
+      if (removedDocType && req.session.documents?.documentDetails) {
+        // Normalize both document types to kebab-case for comparison
+        // removedDocType is already kebab-case from DocumentSelection
+        // but uploaded DocumentType is an enum value, so normalize it
+        const removedDocTypeKey = toDocumentTypeKey(removedDocType);
+        
+        req.session.documents.documentDetails = 
+          req.session.documents.documentDetails.filter(doc => {
+            const uploadedDocTypeKey = doc.value?.DocumentType 
+              ? toDocumentTypeKey(doc.value.DocumentType)
+              : '';
+            return uploadedDocTypeKey !== removedDocTypeKey;
+          });
+      }
+
+      // Clear upload errors for this document type
+      if (removedDocType && req.session.uploadErrors) {
+        delete req.session.uploadErrors[removedDocType];
+      }
     }
 
-    // Map to display format for frontend
-    const displayDocs = getSelectedDocumentTypesForDisplay(req);
-
-    res.json({ success: true, documents: displayDocs });
+    req.session.save((err) => {
+      if (err) {
+        return res.status(500).json({ success: false, error: 'Failed to save session' });
+      }
+      
+      // Map to display format for frontend
+      const displayDocs = getSelectedDocumentTypesForDisplay(req);
+      res.json({ success: true, documents: displayDocs });
+    });
   });
 
   app.get(

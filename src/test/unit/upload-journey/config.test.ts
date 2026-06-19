@@ -184,6 +184,9 @@ describe('Upload Journey Configuration', () => {
       const step = uploadSteps[UploadStepNames.UploadDocuments];
       const mockReq = {
         session: {
+          DocumentSelection: {
+            documentDetails: [{ id: '1', value: { DocumentType: 'mortgage-statements' } }],
+          },
           documents: {
             documentDetails: [],
           },
@@ -193,14 +196,24 @@ describe('Upload Journey Configuration', () => {
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!({}, mockReq);
       expect(errors.upload).toBe('You must upload at least one file before continuing');
+      expect(errors['mortgage-statements']).toBe('You must upload at least one file before continuing');
     });
 
-    it('should return no errors when documents uploaded', () => {
+    it('should return no errors when all selected document types have uploads', () => {
       const step = uploadSteps[UploadStepNames.UploadDocuments];
       const mockReq = {
         session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: '1', value: { DocumentType: 'mortgage-statements' } },
+              { id: '2', value: { DocumentType: 'bank-statements' } },
+            ],
+          },
           documents: {
-            documentDetails: [{ id: '1', value: {} }],
+            documentDetails: [
+              { id: 'doc1', value: { DocumentType: 'Mortgage statements' } },
+              { id: 'doc2', value: { DocumentType: 'Bank statements' } },
+            ],
           },
         },
       } as unknown as Request;
@@ -213,12 +226,64 @@ describe('Upload Journey Configuration', () => {
     it('should return error when session.documents is undefined', () => {
       const step = uploadSteps[UploadStepNames.UploadDocuments];
       const mockReq = {
-        session: {},
+        session: {
+          DocumentSelection: {
+            documentDetails: [{ id: '1', value: { DocumentType: 'mortgage-statements' } }],
+          },
+        },
       } as unknown as Request;
 
       // @ts-expect-error - Mocking partial Request for testing
       const errors = step.validate!({}, mockReq);
       expect(errors.upload).toBe('You must upload at least one file before continuing');
+    });
+
+    it('should return errors when some document types are missing uploads', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const mockReq = {
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: '1', value: { DocumentType: 'mortgage-statements' } },
+              { id: '2', value: { DocumentType: 'bank-statements' } },
+            ],
+          },
+          documents: {
+            documentDetails: [
+              { id: 'doc1', value: { DocumentType: 'Mortgage statements' } },
+            ],
+          },
+        },
+      } as unknown as Request;
+
+      // @ts-expect-error - Mocking partial Request for testing
+      const errors = step.validate!({}, mockReq);
+      expect(errors.upload).toBe('You must upload at least one file before continuing');
+      expect(errors['bank-statements']).toBe('You must upload at least one file before continuing');
+      expect(errors['mortgage-statements']).toBeUndefined();
+    });
+
+    it('should return per-document-type errors for all missing types', () => {
+      const step = uploadSteps[UploadStepNames.UploadDocuments];
+      const mockReq = {
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: '1', value: { DocumentType: 'mortgage-statements' } },
+              { id: '2', value: { DocumentType: 'other' } },
+            ],
+          },
+          documents: {
+            documentDetails: [],
+          },
+        },
+      } as unknown as Request;
+
+      // @ts-expect-error - Mocking partial Request for testing
+      const errors = step.validate!({}, mockReq);
+      expect(errors.upload).toBe('You must upload at least one file before continuing');
+      expect(errors['mortgage-statements']).toBe('You must upload at least one file before continuing');
+      expect(errors['other']).toBe('You must upload at least one file before continuing');
     });
   });
 
