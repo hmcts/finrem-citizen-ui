@@ -3,6 +3,7 @@ import type { Application, NextFunction, Request, Response } from 'express';
 
 import { CaseRole } from '../../../main/app/case/definition';
 import { RouteNames, ViewNames } from '../../../main/common-constants';
+import { requireCaseRole } from '../../../main/middleware/require-case-role';
 import setupDashboardRoute from '../../../main/routes/dashboard';
 
 
@@ -19,14 +20,34 @@ jest.mock('../../../main/middleware', () => ({
 
 describe('Dashboard Route', () => {
   let mockGet: jest.Mock;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let handler: (req: Request, res: Response) => Promise<void>;
 
   async function callHandler(session: Record<string, unknown> = {}) {
     const req = { session } as unknown as Request;
-    const res = { render: jest.fn() } as unknown as Response;
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      render: jest.fn()
+    } as unknown as Response;
 
-    await handler(req, res);
-    return res;
+    const next = jest.fn();
+
+    const middleware = mockGet.mock.calls[0][2] as (
+      req: Request,
+      res: Response,
+      next: NextFunction
+    ) => void;
+
+    const routeHandler = mockGet.mock.calls[0][3] as (
+      req: Request,
+      res: Response
+    ) => Promise<void>;
+    middleware(req, res, next);
+    if ((res.status as jest.Mock).mock.calls.length > 0) {
+      return { req, res, next };
+    }
+    await routeHandler(req, res);
+    return { req, res, next };
   }
 
   beforeEach(() => {
@@ -35,22 +56,22 @@ describe('Dashboard Route', () => {
     mockGet = jest.fn();
     setupDashboardRoute({ get: mockGet } as unknown as Application);
 
-    handler = mockGet.mock.calls[0][2] as typeof handler;
+    handler = mockGet.mock.calls[0][3] as typeof handler;
   });
 
   it('should register dashboard route with oidc middleware', () => {
     expect(mockGet).toHaveBeenCalledWith(
       RouteNames.dashboard,
       expect.any(Function),
+      expect.any(Function),
       expect.any(Function)
     );
   });
 
   it('should render dashboard view with applicant name from caseData', async () => {
-    const res = await callHandler({
+    const { res } = await callHandler({
       caseNumber: '1234-5678-9012-3456',
-      user: { hasNFDCase: true },
-      caseRole: CaseRole.APPLICANT,
+      user: { caseRole: CaseRole.APPLICANT, hasNFDCase: true },
       caseUserName: 'John Smith',
       caseData: {
         applicantFlags: { partyName: 'John Smith' },
@@ -69,11 +90,25 @@ describe('Dashboard Route', () => {
     );
   });
 
+  it('should block access if no caseRole', () => {
+    const req = {
+      session: {
+        user: {}
+      }
+    } as unknown as Request;
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      render: jest.fn()
+    } as unknown as Response;
+    const next = jest.fn();
+    requireCaseRole(req, res, next);
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(next).not.toHaveBeenCalled();
+  });
   it('should render dashboard view with respondent name from caseData', async () => {
-    const res = await callHandler({
+    const { res } = await callHandler({
       caseNumber: '1234-5678-9012-3456',
-      user: { hasNFDCase: false },
-      caseRole: CaseRole.RESPONDENT,
+      user: { caseRole: CaseRole.RESPONDENT, hasNFDCase: false },
       caseUserName: 'Jane Doe',
       caseData: {
         respondentFlags: { partyName: 'Jane Doe' },
@@ -92,7 +127,11 @@ describe('Dashboard Route', () => {
   });
 
   it('should pass undefined when session data is missing', async () => {
-    const res = await callHandler();
+    const { res } = await callHandler({
+      user: {
+        caseRole: CaseRole.APPLICANT,
+      },
+    });
 
     expect(res.render).toHaveBeenCalledWith(
       ViewNames.Dashboard,
@@ -106,9 +145,9 @@ describe('Dashboard Route', () => {
   });
 
   it('should use role fallback when partyName is missing', async () => {
-    const res = await callHandler({
+    const { res } = await callHandler({
       caseNumber: '1234-5678-9012-3456',
-      caseRole: CaseRole.APPLICANT,
+      user: { caseRole: CaseRole.APPLICANT },
       caseUserName: 'Applicant',
       caseData: {
         applicantFlags: {},
@@ -125,10 +164,9 @@ describe('Dashboard Route', () => {
   });
 
   it('should set hasDivorceCase to true when user has NFD case (shows blue divorce account box)', async () => {
-    const res = await callHandler({
+    const { res } = await callHandler({
       caseNumber: '1234-5678-9012-3456',
-      user: { hasNFDCase: true },
-      caseRole: CaseRole.APPLICANT,
+      user: {    caseRole: CaseRole.APPLICANT, hasNFDCase: true },
       caseUserName: 'John Smith',
       caseData: {
         applicantFlags: { partyName: 'John Smith' },
@@ -145,10 +183,9 @@ describe('Dashboard Route', () => {
   });
 
   it('should set hasDivorceCase to false when user does not have NFD case (hides blue divorce account box)', async () => {
-    const res = await callHandler({
+    const { res } = await callHandler({
       caseNumber: '1234-5678-9012-3456',
-      user: { hasNFDCase: false },
-      caseRole: CaseRole.RESPONDENT,
+      user: { caseRole: CaseRole.RESPONDENT, hasNFDCase: false },
       caseUserName: 'Jane Doe',
       caseData: {
         respondentFlags: { partyName: 'Jane Doe' },
@@ -165,9 +202,12 @@ describe('Dashboard Route', () => {
   });
 
   it('should default hasDivorceCase to false when user object is missing', async () => {
-    const res = await callHandler({
+    const { res } = await callHandler({
       caseNumber: '1234-5678-9012-3456',
       caseUserName: 'Test User',
+      user: {
+        caseRole: CaseRole.APPLICANT,
+      },
     });
 
     expect(res.render).toHaveBeenCalledWith(
