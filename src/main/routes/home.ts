@@ -192,14 +192,17 @@ export default function (app: Application): void {
           return redirectWithError(req, res, next, documentType, returnUrl, validationError);
         }
 
-        // Convert kebab-case to SCREAMING_SNAKE_CASE for enum lookup
+        // documentType may already be an enum value (e.g. "Bank statements")
+        // or kebab-case (e.g. "bank-statements"). Resolve to the enum value.
+        const isEnumValue = (Object.values(CitizenUploadDocumentType) as string[]).includes(documentType);
         const documentTypeKey = documentType
           .toUpperCase()
           .replace(/-/g, '_');
-        
-        const selectedType =
-          CitizenUploadDocumentType[
-          documentTypeKey as keyof typeof CitizenUploadDocumentType
+
+        const selectedType = isEnumValue
+          ? (documentType as CitizenUploadDocumentType)
+          : CitizenUploadDocumentType[
+            documentTypeKey as keyof typeof CitizenUploadDocumentType
           ];
 
         try {

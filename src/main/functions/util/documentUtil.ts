@@ -25,6 +25,15 @@ export function getDocumentLabel(value: string): string {
   return docType?.label || '';
 }
 
+export function toDocumentTypeKey(documentType: string): string {
+  return documentType
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/\//g, '-')
+    .replace(/[():,]/g, '')
+    .replace(/-+/g, '-');
+}
+
 export function shouldAutoRename(documentTypeValue: string): boolean {
   return documentTypeValue in DOCUMENT_RENAME_FORMATS;
 }

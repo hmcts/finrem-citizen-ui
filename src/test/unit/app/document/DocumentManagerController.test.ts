@@ -450,7 +450,7 @@ describe('DocumentManagerController', () => {
       controller.previouslyUploadedDocuments(req, res, '123')
     ).rejects.toThrow('Unsupported case role');
   });
-  test('sets isFDR to NO when isFinancialDisputeResolution is false or undefined', async () => {
+  test('sets isFDR to NO on each uploaded case document when isFinancialDisputeResolution is false or undefined', async () => {
     const triggerEventMock = jest.fn().mockResolvedValue({});
 
     const { getCaseApi } = require('../../../../main/app/case/case-api');
@@ -465,7 +465,8 @@ describe('DocumentManagerController', () => {
         documents: {
           isFinancialDisputeResolution: false,
           documentDetails: [
-            { id: '1', value: {} },
+            { id: '1', value: { existing: 'field' } },
+            { id: '2', value: { existing: 'field-2' } },
           ],
         },
       } as unknown as AppRequest['session'],
@@ -479,6 +480,13 @@ describe('DocumentManagerController', () => {
         citizenApplicantDocument: [
           expect.objectContaining({
             value: expect.objectContaining({
+              existing: 'field',
+              isFDR: YesOrNo.NO,
+            }),
+          }),
+          expect.objectContaining({
+            value: expect.objectContaining({
+              existing: 'field-2',
               isFDR: YesOrNo.NO,
             }),
           }),
@@ -488,7 +496,7 @@ describe('DocumentManagerController', () => {
     );
   });
 
-  test('sets isFDR to YES when isFinancialDisputeResolution is true', async () => {
+  test('sets isFDR to YES on each uploaded case document when isFinancialDisputeResolution is true', async () => {
     const triggerEventMock = jest.fn().mockResolvedValue({});
 
     const { getCaseApi } = require('../../../../main/app/case/case-api');
@@ -504,6 +512,7 @@ describe('DocumentManagerController', () => {
           isFinancialDisputeResolution: true,
           documentDetails: [
             { id: '1', value: { existing: 'field' } },
+            { id: '2', value: { existing: 'field-2' } },
           ],
         },
       } as unknown as AppRequest['session'],
@@ -518,6 +527,12 @@ describe('DocumentManagerController', () => {
           expect.objectContaining({
             value: expect.objectContaining({
               existing: 'field',
+              isFDR: YesOrNo.YES,
+            }),
+          }),
+          expect.objectContaining({
+            value: expect.objectContaining({
+              existing: 'field-2',
               isFDR: YesOrNo.YES,
             }),
           }),

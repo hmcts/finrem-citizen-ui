@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
 import { UploadStepNames, ViewNames } from '../common-constants';
-import { FILE_VALIDATION_ERRORS } from '../functions/util/uploadValidation';
+import { toDocumentTypeKey } from '../functions/util/documentUtil';
 
 export type UploadStepId = typeof UploadStepNames[keyof typeof UploadStepNames];
 
@@ -66,11 +66,25 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
     validate: (body: Record<string, unknown>, req?: Request) => {
       const errors: Record<string, string> = {};
 
-      // Check if at least one document has been uploaded
+      const selectedDocTypes = req?.session?.DocumentSelection?.documentDetails || [];
       const uploadedDocs = req?.session?.documents?.documentDetails || [];
-      if (uploadedDocs.length === 0) {
-        errors.upload = FILE_VALIDATION_ERRORS.NO_FILE;
-      }
+
+      // Uploaded files store DocumentType as the enum value (e.g. "Bank statements"),
+      // while selected types store the kebab-case value (e.g. "bank-statements").
+      // Normalise both to the kebab-case key before comparing.
+      const uploadedDocTypeSet = new Set(
+        uploadedDocs
+          .map(doc => (doc.value?.DocumentType ? toDocumentTypeKey(doc.value.DocumentType) : ''))
+          .filter(Boolean)
+      );
+
+      selectedDocTypes.forEach(selectedDoc => {
+        const docType = selectedDoc.value?.DocumentType;
+        if (docType && !uploadedDocTypeSet.has(docType)) {
+          errors[docType] = 'You must upload at least one file before continuing';
+          errors.upload = 'You must upload at least one file before continuing';
+        }
+      });
 
       return errors;
     },
