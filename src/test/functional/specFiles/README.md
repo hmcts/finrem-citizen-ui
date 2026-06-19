@@ -242,9 +242,9 @@ The functional scripts use benchmarked defaults chosen to optimize wall-clock ti
 
 Default worker/retry settings in `package.json`:
 
-- `yarn test:functional` (Chromium): `--workers=${PLAYWRIGHT_CHROMIUM_WORKERS:-8}` and `--retries=${PLAYWRIGHT_RETRIES:-2}`
+- `yarn test:functional` (Chromium): `--workers=${PLAYWRIGHT_CHROMIUM_WORKERS:-8}` and `--retries=${PLAYWRIGHT_RETRIES:-3}`
 - `yarn test:functional:pr` (Chromium + `@PR`): same defaults as Chromium main run
-- `yarn test:functional:allBrowsers` (Chromium, Firefox, WebKit): `--workers=${PLAYWRIGHT_CHROMIUM_WORKERS:-8}` and `--retries=${PLAYWRIGHT_RETRIES:-2}`
+- `yarn test:functional:allBrowsers` (Chromium, Firefox, WebKit): `--workers=${PLAYWRIGHT_CHROMIUM_WORKERS:-8}` and `--retries=${PLAYWRIGHT_RETRIES:-3}`
 - `yarn test:playwright:a11y:chrome` (Chromium + `@a11y`): `--workers=${PLAYWRIGHT_A11Y_CHROMIUM_WORKERS:-6}` and `--retries=${PLAYWRIGHT_A11Y_RETRIES:-1}`
 - `yarn test:playwright:a11y:all-browsers` (Chromium, Firefox, WebKit + `@a11y`): `--workers=${PLAYWRIGHT_A11Y_ALL_BROWSERS_WORKERS:-4}` and `--retries=${PLAYWRIGHT_A11Y_RETRIES:-1}`
 - `yarn test:functional:headed:slowmo`: fixed `--workers=1` (intentional for interactive debugging)
@@ -255,7 +255,7 @@ Why these values:
 - With 72 tests in the suite, chromium-only benchmark on a 14-core macOS runner improved from ~119.63s (4 workers) to ~87.43s (6 workers) to ~56.28s (8 workers) with equivalent pass/skip profile.
 - All-browsers runs are more resource-intensive because three engines run in one command; this script currently shares `PLAYWRIGHT_CHROMIUM_WORKERS` so one env var can throttle or increase both main functional lanes together.
 - A11y runs execute heavier accessibility audits; lower worker defaults (`6` for Chromium a11y, `4` for all-browsers a11y) reduce contention and transient audit flake.
-- `retries=2` keeps functional runs resilient to transient environment/network issues without over-serializing execution.
+- `retries=3` keeps functional runs resilient to transient environment/network issues without over-serializing execution.
 - `retries=1` for a11y strikes a balance between stability and runtime for audit-focused lanes.
 
 When to override defaults:
@@ -268,10 +268,10 @@ Override examples:
 
 ```bash
 # Constrain Chromium run for a smaller CI agent
-PLAYWRIGHT_CHROMIUM_WORKERS=6 PLAYWRIGHT_RETRIES=2 yarn test:functional
+PLAYWRIGHT_CHROMIUM_WORKERS=6 PLAYWRIGHT_RETRIES=3 yarn test:functional
 
 # Increase parallelism for both Chromium-only and all-browsers functional lanes
-PLAYWRIGHT_CHROMIUM_WORKERS=10 PLAYWRIGHT_RETRIES=2 yarn test:functional:allBrowsers
+PLAYWRIGHT_CHROMIUM_WORKERS=10 PLAYWRIGHT_RETRIES=3 yarn test:functional:allBrowsers
 
 # Pure speed benchmark with retries disabled
 PLAYWRIGHT_RETRIES=0 yarn test:functional
