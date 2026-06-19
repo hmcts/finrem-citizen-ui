@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { LoggerInstance } from 'winston';
 
-import { CaseRole } from '../../../../main/app/case/definition';
+import { CaseRole, YesOrNo } from '../../../../main/app/case/definition';
 import { AppRequest, UserDetails } from '../../../../main/app/controller/AppRequest';
 import { DocumentManagerController } from '../../../../main/app/document/DocumentManagerController';
 import { PreviouslyUploadedDocumentClient } from '../../../../main/app/document/PreviouslyUploadedDocumentClient';
@@ -449,6 +449,82 @@ describe('DocumentManagerController', () => {
     await expect(
       controller.previouslyUploadedDocuments(req, res, '123')
     ).rejects.toThrow('Unsupported case role');
+  });
+  test('sets isFDR to NO when isFinancialDisputeResolution is false or undefined', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({
+      triggerEvent: triggerEventMock,
+    });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: {
+          isFinancialDisputeResolution: false,
+          documentDetails: [
+            { id: '1', value: {} },
+          ],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(triggerEventMock).toHaveBeenCalledWith(
+      '123',
+      expect.objectContaining({
+        citizenApplicantDocument: [
+          expect.objectContaining({
+            value: expect.objectContaining({
+              isFDR: YesOrNo.NO,
+            }),
+          }),
+        ],
+      }),
+      expect.any(String)
+    );
+  });
+
+  test('sets isFDR to YES when isFinancialDisputeResolution is true', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({
+      triggerEvent: triggerEventMock,
+    });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: {
+          isFinancialDisputeResolution: true,
+          documentDetails: [
+            { id: '1', value: { existing: 'field' } },
+          ],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(triggerEventMock).toHaveBeenCalledWith(
+      '123',
+      expect.objectContaining({
+        citizenApplicantDocument: [
+          expect.objectContaining({
+            value: expect.objectContaining({
+              existing: 'field',
+              isFDR: YesOrNo.YES,
+            }),
+          }),
+        ],
+      }),
+      expect.any(String)
+    );
   });
 });
 
