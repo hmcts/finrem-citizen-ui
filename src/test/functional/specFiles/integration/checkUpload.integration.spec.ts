@@ -118,8 +118,8 @@ test.describe('[integration] Check uploaded documents page', () => {
       fdrPage
     );
 
-    await documentSelectionPage.addDocumentBySearchTerm('bank', 'Bank statements');
-    await documentSelectionPage.addDocumentBySearchTerm('chronology', 'Chronology');
+    await documentSelectionPage.addDocumentBySearchTerm('badfdfnk', 'Bank stadfdftements');
+    await documentSelectionPage.addDocumentBySearchTerm('chronodffdlogy', 'Chrondfdfdfology');
     await documentSelectionPage.clickContinueAndExpectUploadDocumentsStep();
 
     await documentUploadPage.chooseFileAndUploadBankStatementDocx();
