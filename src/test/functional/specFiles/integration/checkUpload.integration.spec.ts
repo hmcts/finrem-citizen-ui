@@ -222,7 +222,7 @@ test.describe('[integration] Check uploaded documents page', () => {
     await runA11yAudit(axeUtils);
   });
 
-  test('[integration] Changing document types removes Mortgage files and keeps Bank plus persisted Other upload @a11y', async ({
+  test('[integration] Changing document types removes uploads for removed types and keeps new Bank upload @a11y', async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
     beforeYouStartPage,
@@ -273,23 +273,26 @@ test.describe('[integration] Check uploaded documents page', () => {
     // Go to check page
     await documentUploadPage.clickContinue();
 
-    // Wait for the main heading to be visible
+    // Wait for the page to fully re-render with updated document selection
+    await checkUploadPage.page.waitForLoadState('networkidle');
     await expect(checkUploadPage.pageHeader).toBeVisible();
     
-    // Then wait for the Bank statements heading to be visible
-    await expect(checkUploadPage.page.getByRole('heading', {
-      level: 3,
-      name: 'Bank statements',
-      exact: true,
-    })).toBeVisible();
-
-    // Verify the expected document groups
-    await checkUploadPage.expectDocumentGroupVisible('Other document');
+    // Removed document types should not appear after the selection change is processed
     await expect(checkUploadPage.page.getByRole('heading', {
       level: 3,
       name: 'Mortgage statements for family home',
       exact: true,
     })).toHaveCount(0);
+    await expect(checkUploadPage.page.getByRole('heading', {
+      level: 3,
+      name: 'Other document',
+      exact: true,
+    })).toHaveCount(0);
+
+    await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(1);
+
+    // Only the newly selected Bank upload should remain
+    await checkUploadPage.expectDocumentGroupVisible('Bank statements');
 
     await runA11yAudit(axeUtils);
   });
