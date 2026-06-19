@@ -166,4 +166,122 @@ test.describe('[integration] Check uploaded documents page', () => {
     await runA11yAudit(axeUtils);
   });
 
+  test('[integration] Removing a document type deletes its uploaded files @a11y', async ({
+    loggedInPage: _loggedInPage,
+    dashboardPage,
+    beforeYouStartPage,
+    confidentialityPage,
+    basePage,
+    fdrPage,
+    documentSelectionPage,
+    documentUploadPage,
+    checkUploadPage,
+    axeUtils,
+  }) => {
+    await navigateToUploadDocumentsStep(
+      dashboardPage,
+      beforeYouStartPage,
+      confidentialityPage,
+      basePage,
+      fdrPage
+    );
+
+    // Step 1: Add Mortgage and Other document types
+    await documentSelectionPage.addDocumentBySearchTerm('mortgage', 'Mortgage statements for family home');
+    await documentSelectionPage.addDocumentBySearchTerm('other', 'Other document');
+    await documentSelectionPage.clickContinueAndExpectUploadDocumentsStep();
+
+    // Step 2: Upload both documents
+    await documentUploadPage.chooseFileAndUploadDocumentByTypeValue('mortgage-statements-for-family-home');
+    await documentUploadPage.chooseFileAndUploadDocx();
+    await documentUploadPage.clickContinue();
+
+    // Step 3: Verify check upload page shows both documents
+    await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(2);
+
+    // Step 4: Go back to document selection
+    await checkUploadPage.clickBackAndExpectUploadDocuments();
+    await documentUploadPage.clickBack();
+
+    // Step 5: Remove Mortgage document type from selection
+    await documentSelectionPage.removeDocumentByLabel('Mortgage statements for family home');
+    await expect(documentSelectionPage.documentList).toHaveCount(1);
+
+    // Step 6: Continue to check page - removed type and its files should be gone
+    await documentSelectionPage.clickContinueAndExpectUploadDocumentsStep();
+    await documentUploadPage.clickContinue();
+
+    // Remaining selected type (Other) still has its file, so no validation error is expected
+    await expect(checkUploadPage.errorSummaryTitle).toHaveCount(0);
+    await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(1);
+    await checkUploadPage.expectDocumentGroupVisible('Other document');
+    await expect(
+      checkUploadPage.page.getByRole('heading', { level: 3, name: 'Mortgage statements for family home', exact: true })
+    ).toHaveCount(0);
+
+    await runA11yAudit(axeUtils);
+  });
+
+  test('[integration] Changing document types removes Mortgage files and keeps Bank plus persisted Other upload @a11y', async ({
+    loggedInPage: _loggedInPage,
+    dashboardPage,
+    beforeYouStartPage,
+    confidentialityPage,
+    basePage,
+    fdrPage,
+    documentSelectionPage,
+    documentUploadPage,
+    checkUploadPage,
+    axeUtils,
+  }) => {
+    await navigateToUploadDocumentsStep(
+      dashboardPage,
+      beforeYouStartPage,
+      confidentialityPage,
+      basePage,
+      fdrPage
+    );
+
+    // Step 1: Add Mortgage and Other document types
+    await documentSelectionPage.addDocumentBySearchTerm('mortgage', 'Mortgage statements for family home');
+    await documentSelectionPage.addDocumentBySearchTerm('other', 'Other document');
+    await documentSelectionPage.clickContinueAndExpectUploadDocumentsStep();
+
+    // Step 2: Upload both documents
+    await documentUploadPage.chooseFileAndUploadDocumentByTypeValue('mortgage-statements-for-family-home');
+    await documentUploadPage.chooseFileAndUploadDocx();
+    await documentUploadPage.clickContinue();
+
+    // Step 3: Verify both files on check page
+    await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(2);
+
+    // Step 4: Go back to document selection
+    await checkUploadPage.clickBackAndExpectUploadDocuments();
+    await documentUploadPage.clickBack();
+
+    // Step 5: Remove both Mortgage and Other, add Bank instead
+    await documentSelectionPage.removeDocumentByLabel('Mortgage statements for family home');
+    await documentSelectionPage.removeDocumentByLabel('Other document');
+    await documentSelectionPage.addDocumentBySearchTerm('bank', 'Bank statements');
+
+    // Step 6: Continue to upload page
+    await documentSelectionPage.clickContinueAndExpectUploadDocumentsStep();
+
+    // Step 7: Upload Bank statement
+    await documentUploadPage.chooseFileAndUploadBankStatementDocx();
+
+    // Step 8: Go to check page
+    await documentUploadPage.clickContinue();
+
+    // Step 9: In current behavior, Mortgage file is removed, while Other + new Bank are shown
+    await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(2);
+    await checkUploadPage.expectDocumentGroupVisible('Bank statements');
+    await checkUploadPage.expectDocumentGroupVisible('Other document');
+    await expect(
+      checkUploadPage.page.getByRole('heading', { level: 3, name: 'Mortgage statements for family home', exact: true })
+    ).toHaveCount(0);
+
+    await runA11yAudit(axeUtils);
+  });
+
 });
