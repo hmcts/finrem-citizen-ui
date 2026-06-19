@@ -189,12 +189,16 @@ test.describe('[integration] Document upload page', () => {
     documentUploadPage,
     axeUtils,
   }) => {
-    await documentUploadPage.uploadInvalidFileFormat();
+    test.setTimeout(60_000); // a11y scans in integration can exceed 30s
 
-    // In integration runs, invalid client-side selection may clear the input without
-    // rendering a stable inline error node. Continuing produces a deterministic validation state.
+    await documentUploadPage.uploadInvalidFileFormat();
     await documentUploadPage.clickContinue();
     await assertNoFilesValidationError(documentUploadPage);
+
+    // extra stability guard before axe scan
+    await expect(documentUploadPage.pageHeader).toBeVisible();
+    await expect(documentUploadPage.errorSummaryTitle).toBeVisible();
+
     await runA11yAudit(axeUtils);
   });
 
@@ -208,8 +212,34 @@ test.describe('[integration] Document upload page', () => {
     // fallback "at least one file" validation when the empty selection is discarded.
     await documentUploadPage.clickContinue();
     const emptyFileError = documentUploadPage.getErrorSummaryLink('The selected file is empty');
+    const inlineEmptyFileError = documentUploadPage.inlineEmptyFileError;
     const noFileError = documentUploadPage.getErrorSummaryLink('You must upload at least one file before continuing');
-    await expect(emptyFileError.or(documentUploadPage.inlineEmptyFileError).or(noFileError).first()).toBeVisible();
+
+    // Prefer polling explicit outcomes over composing optional locators, which can be flaky in integration timing.
+    let validationOutcome = 'none';
+    await expect
+      .poll(async () => {
+        if (await emptyFileError.isVisible().catch(() => false)) {
+          validationOutcome = 'empty-file-error';
+          return validationOutcome;
+        }
+        if (await inlineEmptyFileError.isVisible().catch(() => false)) {
+          validationOutcome = 'inline-empty-file-error';
+          return validationOutcome;
+        }
+        if (await noFileError.isVisible().catch(() => false)) {
+          validationOutcome = 'no-file-error';
+          return validationOutcome;
+        }
+        validationOutcome = 'none';
+        return validationOutcome;
+      }, { timeout: 15_000 })
+      .not.toBe('none');
+
+    if (validationOutcome === 'no-file-error') {
+      await assertNoFilesValidationError(documentUploadPage);
+    }
+
     await expect(documentUploadPage.uploadedFileLinks).toHaveCount(0);
     await runA11yAudit(axeUtils);
   });
