@@ -3045,7 +3045,6 @@ export interface FeeItem {
 export interface CitizenUploadDocument extends HasCaseDocument {
     generalDocumentUploadDateTime: DateAsString;
     DocumentType: CitizenUploadDocumentType;
-    isFDR: YesOrNo;
     DocumentEmailContent: string;
     DocumentLink: CitizenDocument;
     DocumentDateAdded: DateAsString;
