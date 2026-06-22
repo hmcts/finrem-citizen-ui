@@ -24,8 +24,18 @@ export class CaseApiClient {
 
       await this.server.post(UrlEndPoints.CaseUsers, payload);
     } catch (err) {
+      const errorMessage = 'Case user roles could not be added.';
       this.logError(err as AxiosError);
-      throw new Error('Case user roles could not be added.');
+      AppInsights.trackException(
+        err instanceof Error ? err : new Error(errorMessage),
+        {
+          operation: 'addCaseUserRoles',
+          endpoint: UrlEndPoints.CaseUsers,
+          statusCode:
+            (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
+        }
+      );
+      throw new Error(errorMessage);
     }
   }
 
@@ -140,7 +150,8 @@ export class CaseApiClient {
         {
           operation: 'sendEvent',
           caseId,
-          endpoint: UrlEndPoints.CaseEvents(caseId),
+          eventName,
+          endpoint: UrlEndPoints.CaseEventTrigger(caseId, eventName),
           statusCode:
             (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
         }
