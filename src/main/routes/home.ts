@@ -13,6 +13,7 @@ import { RouteNames, ViewNames } from '../common-constants';
 import { orchestrateHome } from '../functions/util/homePageUtil';
 import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../functions/util/uploadValidation';
 import { oidcMiddleware } from '../middleware';
+import { AppInsights } from '../modules/appinsights';
 
 export default function (app: Application): void {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
@@ -60,11 +61,18 @@ export default function (app: Application): void {
       });
     } catch (error) {
       const err = error as Error;
+      const errorMessage = 'Failed to add user to case.';
       logger.error('Error adding user to case', { error: err.message });
-
+      AppInsights.trackException(error, {
+        route: RouteNames.caseUserRole,
+        userId: assignments[0].user_id,
+        caseRole: assignments[0].case_role,
+        caseId: assignments[0].case_id,
+        reason: errorMessage,
+      });
       return res.status(500).json({
         success: false,
-        message: 'Failed to add user to case.',
+        message: errorMessage,
         error: err.message,
       });
     }
@@ -146,36 +154,36 @@ export default function (app: Application): void {
       if (err) {
         const documentType = req.body.documentType as string;
         const returnUrl = req.body.returnUrl || RouteNames.documents;
-        
+
         // Handle Multer-specific errors
         if (err instanceof multer.MulterError) {
           if (err.code === 'LIMIT_FILE_SIZE') {
-            logger.warn('File size limit exceeded', { 
+            logger.warn('File size limit exceeded', {
               fieldname: err.field,
-              limit: '100MB' 
+              limit: '100MB'
             });
             return redirectWithError(
-              req, 
-              res, 
+              req,
+              res,
               next,
-              documentType, 
-              returnUrl, 
+              documentType,
+              returnUrl,
               FILE_VALIDATION_ERRORS.TOO_LARGE
             );
           }
-          
+
           // Handle other Multer errors
           logger.error('Multer error', { code: err.code, field: err.field });
           return redirectWithError(
-            req, 
-            res, 
+            req,
+            res,
             next,
-            documentType, 
-            returnUrl, 
+            documentType,
+            returnUrl,
             FILE_VALIDATION_ERRORS.UPLOAD_FAILED
           );
         }
-        
+
         // Pass non-Multer errors to next error handler
         return next(err);
       }
@@ -185,7 +193,7 @@ export default function (app: Application): void {
       try {
         const documentType = req.body.documentType as string;
         const returnUrl = req.body.returnUrl || RouteNames.documents;
-        
+
         // Validate uploaded file
         const validationError = validateUploadedFile(req.files as Express.Multer.File[]);
         if (validationError) {
@@ -223,7 +231,7 @@ export default function (app: Application): void {
             delete req.session.uploadErrors;
           }
         }
-        
+
         req.session.save((err) => {
           if (err) {
             return next(err);
@@ -249,7 +257,7 @@ export default function (app: Application): void {
       req.session.uploadErrors = {};
     }
     req.session.uploadErrors[documentType] = errorMessage;
-    
+
     req.session.save((err) => {
       if (err) {
         return next(err);
