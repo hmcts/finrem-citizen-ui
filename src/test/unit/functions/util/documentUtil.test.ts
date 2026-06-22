@@ -1,6 +1,13 @@
 import { Request } from 'express';
 
-import { getDocumentLabel, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename } from '../../../../main/functions/util/documentUtil';
+import {
+  getCombinedPDFFormat,
+  getDocumentLabel,
+  getDocumentRenameFormat,
+  getSelectedDocumentTypesForDisplay,
+  shouldAutoRename,
+  shouldCombineIntoPDF,
+} from '../../../../main/functions/util/documentUtil';
 
 describe('documentUtil', () => {
   describe('getDocumentLabel', () => {
@@ -365,6 +372,34 @@ describe('documentUtil', () => {
     it('should return empty string for unknown document types', () => {
       expect(getDocumentRenameFormat('unknown-type')).toBe('');
       expect(getDocumentRenameFormat('')).toBe('');
+    });
+  });
+
+  describe('shouldCombineIntoPDF', () => {
+    it('should return true for documents that should be combined into a PDF', () => {
+      expect(shouldCombineIntoPDF('updating-disclosure')).toBe(true);
+      expect(shouldCombineIntoPDF('attachments-to-form-e')).toBe(true);
+      expect(shouldCombineIntoPDF('bank-statements')).toBe(true);
+    });
+
+    it('should return false for documents that should not be combined into a PDF', () => {
+      expect(shouldCombineIntoPDF('position-statement')).toBe(false);
+      expect(shouldCombineIntoPDF('unknown-type')).toBe(false);
+      expect(shouldCombineIntoPDF('')).toBe(false);
+    });
+  });
+
+  describe('getCombinedPDFFormat', () => {
+    it('should return the correct combined PDF format', () => {
+      expect(getCombinedPDFFormat('updating-disclosure')).toBe('UpdatingDisclosure');
+      expect(getCombinedPDFFormat('attachments-to-form-e')).toBe('AttachmentsFormE');
+      expect(getCombinedPDFFormat('bank-statements')).toBe('SupportingFinancialDocuments');
+    });
+
+    it('should return empty string when the document type is not combined into a PDF', () => {
+      expect(getCombinedPDFFormat('position-statement')).toBe('');
+      expect(getCombinedPDFFormat('unknown-type')).toBe('');
+      expect(getCombinedPDFFormat('')).toBe('');
     });
   });
 });
