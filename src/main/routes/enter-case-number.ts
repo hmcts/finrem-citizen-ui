@@ -5,6 +5,7 @@ import { Application, Request, Response } from 'express';
 import { RouteNames, ViewNames } from '../common-constants';
 import { loadCaseAndReloadSession } from '../functions/util/homePageUtil';
 import { oidcMiddleware } from '../middleware';
+import { AppInsights } from '../modules/appinsights';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -96,7 +97,12 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
     // Validate case exists in CCD backend
     try {
       await loadCaseAndReloadSession(req, caseId, logger);
-    } catch {
+    } catch (error) {
+      AppInsights.trackException(error, {
+        route: RouteNames.enterCaseNumber,
+        caseId,
+        reason: 'We cannot find that case number, Enter the case number that you received from the court',
+      });
       // Case doesn't exist or user doesn't have access
       req.session.caseNumberErrors = {
         caseNumber: 'We cannot find that case number, Enter the case number that you received from the court',

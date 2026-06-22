@@ -26,6 +26,8 @@ const displayEnv = isLocal ? 'local' : process.env.RUNNING_ENV || 'aat';
 const slowMoMs = Number(process.env.PLAYWRIGHT_SLOWMO_MS || '0');
 const configuredWorkers = Number.parseInt(process.env.PLAYWRIGHT_WORKERS || '', 10);
 const workerCount = Number.isFinite(configuredWorkers) && configuredWorkers > 0 ? configuredWorkers : 4;
+const configuredRetries = Number.parseInt(process.env.PLAYWRIGHT_RETRIES || '', 10);
+const retryCount = Number.isFinite(configuredRetries) && configuredRetries >= 0 ? configuredRetries : 3;
 const commonUse = (CommonConfig.recommended.use ?? {}) as Record<string, unknown>;
 const commonLaunchOptions = (commonUse.launchOptions ?? {}) as Record<string, unknown>;
 
@@ -52,6 +54,7 @@ export default defineConfig({
   tsconfig: 'src/test/tsconfig.json',
 
   workers: workerCount,
+  retries: retryCount,
 
   testDir: './src/test',
   testMatch: ['**/*.spec.ts'],
