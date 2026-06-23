@@ -4,10 +4,10 @@ import { Response } from 'express';
 import FormData from 'form-data';
 
 import { UrlEndPoints } from '../../common-constants';
+import { generateRenamedFilename, shouldAutoRename, toDocumentTypeKey } from '../../functions/util/documentUtil';
 import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
 import { CASE_DOCUMENT_MANAGEMENT_SERVICE_URL, CASE_TYPE, JURISDICTION } from '../case/case-type';
 import type { UserDetails } from '../controller/AppRequest';
-import { generateRenamedFilename, shouldAutoRename, toDocumentTypeKey } from '../../functions/util/documentUtil';
 
 export class CaseDocumentManagementClient {
   client: AxiosInstance;
