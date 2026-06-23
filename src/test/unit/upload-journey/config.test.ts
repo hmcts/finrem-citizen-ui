@@ -336,7 +336,7 @@ describe('Upload Journey Configuration', () => {
 
     it('should pass validation when understand is checked', () => {
       const step = uploadSteps[UploadStepNames.SendToOtherParty];
-      const errors = step.validate!({ understand: 'true' });
+      const errors = step.validate!({ understand: 'yes' });
       expect(Object.keys(errors)).toHaveLength(0);
     });
   });

@@ -121,7 +121,7 @@ describe('Upload Journey Routes', () => {
         errors: {},
         values: { selectedDocumentTypes: [], fdrHearing: undefined },
         previousStep: null,
-        email: 'FRCexample@justice.gov.uk',
+        contactEmail: 'FRCexample@justice.gov.uk',
       }));
     });
 
@@ -148,7 +148,7 @@ describe('Upload Journey Routes', () => {
         errors: {},
         values: { selectedDocumentTypes: [], fdrHearing: true },
         previousStep: UploadStepNames.Confidentiality,
-        email: 'FRCexample@justice.gov.uk',
+        contactEmail: 'FRCexample@justice.gov.uk',
       }));
     });
 
@@ -190,7 +190,7 @@ describe('Upload Journey Routes', () => {
           ]),
         }),
         previousStep: UploadStepNames.FDR,
-        email: 'FRCexample@justice.gov.uk',
+        contactEmail: 'FRCexample@justice.gov.uk',
       }));
     });
 
