@@ -27,7 +27,7 @@
     "test:functional": "yarn playwright install --with-deps && playwright test --config playwright.config.mts --project chromium --retries=${PLAYWRIGHT_RETRIES:-3}",
     "test:fullfunctional": "yarn test:functional",
     "test:functional:allBrowsers": "playwright test --config playwright.config.mts --retries=${PLAYWRIGHT_RETRIES:-3}",
-    "test:functional:pr": "playwright test --config playwright.config.mts --project chromium --retries=${PLAYWRIGHT_RETRIES:-3} --grep @PR",
+    "test:functional:pr": "playwright test --config playwright.config.mts --project chromium --retries=${PLAYWRIGHT_RETRIES:-2} --grep @PR",
     "test:functional:headed:slowmo": "PWDEBUG=1 PLAYWRIGHT_SLOWMO_MS=250 playwright test --config playwright.config.mts --project chromium --headed --workers=1",
     "test:functional:allBrowsers:ui": "playwright test --ui",
     "setup:manual-test": "yarn setup:manual-test:mock",
