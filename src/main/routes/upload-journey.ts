@@ -10,7 +10,7 @@ import type {
   PreviouslyUploadedDocumentsCaseData,
 } from '../app/document/PreviouslyUploadedDocumentClient';
 import { RouteNames } from '../common-constants';
-import { getCombinedPDFFormat, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey } from '../functions/util/documentUtil';
+import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey } from '../functions/util/documentUtil';
 import { oidcMiddleware } from '../middleware';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
 
@@ -75,6 +75,11 @@ function getUploadedFilesByCombinedFormat(req: Request): Record<string, { id: st
 
     const originalFilename = doc.value?.DocumentFileName || '';
 
+    // Check if this document type should be auto-renamed
+    const displayFilename = shouldAutoRename(kebabCase)
+      ? generateRenamedFilename(kebabCase, originalFilename, req.session.caseUserName)
+      : originalFilename;
+
     // Extract document ID from URL and construct download route
     const documentUrl = doc.value?.DocumentLink?.document_url || '';
     const extractedDocumentId = documentUrl.split('/').pop() || '';
@@ -92,7 +97,7 @@ function getUploadedFilesByCombinedFormat(req: Request): Record<string, { id: st
       id: doc.id || '',
       filename: originalFilename,
       url: downloadUrl,
-      displayFilename: originalFilename,
+      displayFilename,
       originalDocumentType: kebabCase,
     });
   });
@@ -139,27 +144,6 @@ function getDocumentGroupsForCheckPage(req: Request): { groupKey: string; label:
   });
 
   return groups;
-}
-
-function generateRenamedFilename(documentTypeValue: string, originalFilename: string, caseUserName?: string): string {
-  const format = getDocumentRenameFormat(documentTypeValue);
-  if (!format) {
-    return originalFilename;
-  }
-
-  // Extract file extension
-  const extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
-
-  // Generate date string DD-MM-YYYY
-  const now = new Date();
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = now.getFullYear();
-  const dateStr = `${day}-${month}-${year}`;
-
-  // Format: UserName-DocumentType-DD-MM-YYYY.ext
-  const userName = caseUserName || 'UserName';
-  return `${userName}-${format}-${dateStr}${extension}`;
 }
 
 export default function setupUploadJourneyRoute(app: Application): void {

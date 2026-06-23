@@ -484,6 +484,54 @@ describe('Upload Journey Routes', () => {
         }),
       }));
     });
+
+    it('should render check-upload with auto-renamed documents in documentGroups', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.CheckUpload },
+        session: {
+          caseUserName: 'JohnSmith',
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'doc-1', value: { DocumentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)' } },
+            ],
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'file-1',
+                value: {
+                  DocumentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
+                  DocumentFileName: 'original-filename.pdf',
+                  DocumentLink: {
+                    document_url: 'http://example.com/documents/file1',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/check-upload', expect.objectContaining({
+        data: expect.objectContaining({
+          documentGroups: expect.arrayContaining([
+            expect.objectContaining({
+              files: expect.arrayContaining([
+                expect.objectContaining({
+                  displayFilename: expect.stringContaining('JohnSmith-FormFM1'),
+                }),
+              ]),
+            }),
+          ]),
+        }),
+      }));
+    });
   });
 
   describe('POST /upload/:stepId', () => {
