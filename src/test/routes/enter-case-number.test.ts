@@ -1,9 +1,15 @@
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, jest, test } from '@jest/globals';
 import request from 'supertest';
 
 import { app } from '../../main/app';
 
+jest.mock('../../main/modules/appinsights');
+
 describe('Enter Case Number page', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('on GET /enter-case-number', () => {
     test('should redirect to login when not authenticated', async () => {
       const res = await request(app).get('/enter-case-number');
