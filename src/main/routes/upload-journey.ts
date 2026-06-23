@@ -10,7 +10,7 @@ import type {
   PreviouslyUploadedDocumentsCaseData,
 } from '../app/document/PreviouslyUploadedDocumentClient';
 import { RouteNames } from '../common-constants';
-import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey } from '../functions/util/documentUtil';
+import { getCombinedPDFFormat, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey } from '../functions/util/documentUtil';
 import { oidcMiddleware } from '../middleware';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
 
@@ -32,12 +32,7 @@ function getUploadedFilesByType(req: Request): Record<string, { id: string; file
       .replace(/[():,]/g, '')  // Remove parentheses, colons, and commas
       .replace(/-+/g, '-');  // Collapse multiple hyphens into one
 
-    const originalFilename = doc.value?.DocumentFileName || '';
-
-    // Check if this document type should be auto-renamed
-    const displayFilename = shouldAutoRename(kebabCase)
-      ? generateRenamedFilename(kebabCase, originalFilename, req.session.caseUserName)
-      : originalFilename;
+    const filename = doc.value?.DocumentFileName || '';
 
     // Extract document ID from URL and construct download route
     const documentUrl = doc.value?.DocumentLink?.document_url || '';
@@ -49,9 +44,9 @@ function getUploadedFilesByType(req: Request): Record<string, { id: string; file
     }
     uploadedFilesByType[kebabCase].push({
       id: doc.id || '',
-      filename: originalFilename,
+      filename,
       url: downloadUrl,
-      displayFilename,
+      displayFilename: filename,
     });
   });
 
@@ -73,12 +68,7 @@ function getUploadedFilesByCombinedFormat(req: Request): Record<string, { id: st
       .replace(/[():,]/g, '')  // Remove parentheses, colons, and commas
       .replace(/-+/g, '-');  // Collapse multiple hyphens into one
 
-    const originalFilename = doc.value?.DocumentFileName || '';
-
-    // Check if this document type should be auto-renamed
-    const displayFilename = shouldAutoRename(kebabCase)
-      ? generateRenamedFilename(kebabCase, originalFilename, req.session.caseUserName)
-      : originalFilename;
+    const filename = doc.value?.DocumentFileName || '';
 
     // Extract document ID from URL and construct download route
     const documentUrl = doc.value?.DocumentLink?.document_url || '';
@@ -95,9 +85,9 @@ function getUploadedFilesByCombinedFormat(req: Request): Record<string, { id: st
     }
     uploadedFilesByCombinedFormat[groupKey].push({
       id: doc.id || '',
-      filename: originalFilename,
+      filename,
       url: downloadUrl,
-      displayFilename,
+      displayFilename: filename,
       originalDocumentType: kebabCase,
     });
   });

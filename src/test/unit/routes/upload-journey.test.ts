@@ -456,7 +456,7 @@ describe('Upload Journey Routes', () => {
                 id: 'file-1',
                 value: {
                   DocumentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
-                  DocumentFileName: 'original-filename.pdf',
+                  DocumentFileName: 'JohnSmith-FormFM1-23-06-2026.pdf',
                   DocumentLink: {
                     document_url: 'http://example.com/documents/file1',
                   },
@@ -502,7 +502,7 @@ describe('Upload Journey Routes', () => {
                 id: 'file-1',
                 value: {
                   DocumentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
-                  DocumentFileName: 'original-filename.pdf',
+                  DocumentFileName: 'JohnSmith-FormFM1-23-06-2026.pdf',
                   DocumentLink: {
                     document_url: 'http://example.com/documents/file1',
                   },
