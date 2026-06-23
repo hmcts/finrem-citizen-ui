@@ -27,29 +27,31 @@ describe('Dashboard Route', () => {
     const req = { session } as unknown as Request;
     const res = {
       status: jest.fn().mockReturnThis(),
-      render: jest.fn()
+      render: jest.fn(),
     } as unknown as Response;
 
     const next = jest.fn();
-
-    const middleware = mockGet.mock.calls[0][2] as (
+    const middlewares = mockGet.mock.calls[0].slice(1) as ((
       req: Request,
       res: Response,
       next: NextFunction
-    ) => void;
+    ) => unknown)[];
+    // run middleware chain in order
+    for (const fn of middlewares) {
+      await fn(req, res, next);
 
-    const routeHandler = mockGet.mock.calls[0][3] as (
-      req: Request,
-      res: Response
-    ) => Promise<void>;
-    middleware(req, res, next);
-    if ((res.status as jest.Mock).mock.calls.length > 0) {
-      return { req, res, next };
+      // stop if response already sent
+      if ((res.status as jest.Mock).mock.calls.length > 0) {
+        return { req, res, next };
+      }
+
+      if ((res.render as jest.Mock).mock.calls.length > 0) {
+        return { req, res, next };
+      }
     }
-    await routeHandler(req, res);
+
     return { req, res, next };
   }
-
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -62,6 +64,7 @@ describe('Dashboard Route', () => {
   it('should register dashboard route with oidc middleware', () => {
     expect(mockGet).toHaveBeenCalledWith(
       RouteNames.dashboard,
+      expect.any(Function),
       expect.any(Function),
       expect.any(Function),
       expect.any(Function)
