@@ -7,8 +7,7 @@ import { glob } from 'glob';
 import * as path from 'path';
 
 import { ViewNames } from './common-constants';
-import { HTTPError } from './HttpError';
-import { contactEmailMiddleware } from './middleware';
+import { contactEmailMiddleware, globalErrorHandler } from './middleware';
 import { AppInsights } from './modules/appinsights';
 import { Helmet } from './modules/helmet';
 import { Nunjucks } from './modules/nunjucks';
@@ -72,12 +71,4 @@ app.use((req, res) => {
   res.render(ViewNames.NotFound);
 });
 
-app.use((err: HTTPError, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  logger.error(`${err.stack || err}`);
-  logger.error(err?.message);
-  logger.error(err?.stack);
-  res.locals.message = err.message;
-  res.locals.error = env === 'development' ? err : {};
-  res.status(err.status || 500);
-  res.render(ViewNames.Error);
-});
+app.use(globalErrorHandler);

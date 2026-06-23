@@ -1,9 +1,10 @@
 import { Response } from 'express';
 import { LoggerInstance } from 'winston';
 
-import { CaseRole } from '../../../../main/app/case/definition';
+import { CaseRole, YesOrNo } from '../../../../main/app/case/definition';
 import { AppRequest, UserDetails } from '../../../../main/app/controller/AppRequest';
 import { DocumentManagerController } from '../../../../main/app/document/DocumentManagerController';
+import { PreviouslyUploadedDocumentClient } from '../../../../main/app/document/PreviouslyUploadedDocumentClient';
 
 jest.mock('../../../../main/app/auth/user', () => ({
   getSystemUser: jest.fn().mockResolvedValue({}),
@@ -17,6 +18,16 @@ jest.mock('../../../../main/app/case/case-api', () => ({
 
 jest.mock('uuid', () => ({
   v4: jest.fn(() => 'mock-uuid'),
+}));
+
+jest.mock('../../../../main/app/document/PreviouslyUploadedDocumentClient', () => ({
+  PreviouslyUploadedDocumentClient: jest.fn().mockImplementation(() => ({
+    getPreviouslyUploadedDocuments: jest.fn(),
+  })),
+}));
+
+jest.mock('../../../../main/app/auth/user', () => ({
+  getSystemUser: jest.fn().mockResolvedValue({}),
 }));
 
 describe('DocumentManagerController', () => {
@@ -226,7 +237,12 @@ describe('DocumentManagerController', () => {
       expect(getDocumentMock).toHaveBeenCalledWith(res, 'doc-123');
     });
 
-    test('passes correct user into getApiClient', async () => {
+    test('passes system user into getApiClient', async () => {
+      const systemUser = { accessToken: 'system-token' };
+
+      const { getSystemUser } = require('../../../../main/app/auth/user');
+      getSystemUser.mockResolvedValue(systemUser);
+
       const getDocumentMock = jest.fn().mockResolvedValue(undefined);
 
       const getApiClientMock = jest.fn().mockReturnValue({
@@ -248,7 +264,7 @@ describe('DocumentManagerController', () => {
 
       await controller.downloadDocument(req, res, 'doc-456', '456');
 
-      expect(getApiClientMock).toHaveBeenCalledWith(userDetails);
+      expect(getApiClientMock).toHaveBeenCalledWith(systemUser);
       expect(getDocumentMock).toHaveBeenCalledWith(res, 'doc-456');
     });
 
@@ -271,4 +287,259 @@ describe('DocumentManagerController', () => {
       expect(res.send).toHaveBeenCalledWith('Forbidden');
     });
   });
+
+  describe('previouslyUploadedDocuments', () => {
+    const mockResponse = {
+      case_details: {
+        id: 123,
+        jurisdiction: 'DIVORCE',
+        state: 'prepareForHearing',
+        version: 1,
+        case_type_id: 'FinancialRemedyContested',
+        created_date: '2025-09-01T17:59:33.096969',
+        last_modified: '2026-06-15T08:11:58.318546',
+        last_state_modified_date: '2026-06-15T08:09:26.395018',
+        security_classification: 'PUBLIC',
+        case_data: {
+          citizenApplicantDocument: [],
+        },
+      },
+      event_id: 'CUI_applicantUploadDocuments',
+    };
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    test('throws when user is missing from session', async () => {
+      const req = {
+        session: { user: undefined },
+      } as unknown as AppRequest;
+
+      const res = {} as Response;
+
+      await expect(
+        controller.previouslyUploadedDocuments(req, res, '123')
+      ).rejects.toThrow('No user in session');
+    });
+
+    test('returns 403 and throws when caseId does not match session', async () => {
+      const req = {
+        session: {
+          user: userDetails,
+          caseNumber: '123',
+        },
+      } as unknown as AppRequest;
+
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+      } as unknown as Response;
+
+      await expect(
+        controller.previouslyUploadedDocuments(req, res, '999')
+      ).rejects.toThrow('Forbidden');
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.send).toHaveBeenCalledWith('Forbidden');
+    });
+
+    test('uses applicant upload document event for applicant', async () => {
+      const getPreviouslyUploadedDocumentsMock = jest
+        .fn()
+        .mockResolvedValue(mockResponse);
+
+      (PreviouslyUploadedDocumentClient as jest.Mock).mockImplementation(() => ({
+        getPreviouslyUploadedDocuments: getPreviouslyUploadedDocumentsMock,
+      }));
+
+      const req = {
+        session: {
+          user: {
+            ...userDetails,
+            caseRole: CaseRole.APPLICANT,
+          },
+          caseNumber: '123',
+        },
+      } as unknown as AppRequest;
+
+      const res = {} as Response;
+
+      const result = await controller.previouslyUploadedDocuments(req, res, '123');
+
+      expect(getPreviouslyUploadedDocumentsMock).toHaveBeenCalledWith(
+        '123',
+        'CUI_applicantUploadDocuments'
+      );
+      expect(result).toBe(mockResponse);
+    });
+
+    test('uses respondent upload document event for respondent', async () => {
+      const getPreviouslyUploadedDocumentsMock = jest
+        .fn()
+        .mockResolvedValue({
+          ...mockResponse,
+          event_id: 'CUI_respondentUploadDocuments',
+        });
+
+      (PreviouslyUploadedDocumentClient as jest.Mock).mockImplementation(() => ({
+        getPreviouslyUploadedDocuments: getPreviouslyUploadedDocumentsMock,
+      }));
+
+      const req = {
+        session: {
+          user: {
+            ...userDetails,
+            caseRole: CaseRole.RESPONDENT,
+          },
+          caseNumber: '123',
+        },
+      } as unknown as AppRequest;
+
+      const res = {} as Response;
+
+      const result = await controller.previouslyUploadedDocuments(req, res, '123');
+
+      expect(getPreviouslyUploadedDocumentsMock).toHaveBeenCalledWith(
+        '123',
+        'CUI_respondentUploadDocuments'
+      );
+      expect(result.event_id).toBe('CUI_respondentUploadDocuments');
+    });
+
+    test('logs case role', async () => {
+      const getPreviouslyUploadedDocumentsMock = jest
+        .fn()
+        .mockResolvedValue(mockResponse);
+
+      (PreviouslyUploadedDocumentClient as jest.Mock).mockImplementation(() => ({
+        getPreviouslyUploadedDocuments: getPreviouslyUploadedDocumentsMock,
+      }));
+
+      const req = {
+        session: {
+          user: userDetails,
+          caseNumber: '123',
+        },
+      } as unknown as AppRequest;
+
+      const res = {} as Response;
+
+      await controller.previouslyUploadedDocuments(req, res, '123');
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'is Applicant or respondent',
+        CaseRole.APPLICANT
+      );
+    });
+  });
+  test('throws an error when case role is unsupported', async () => {
+    const req = {
+      session: {
+        user: {
+          ...userDetails,
+          caseRole: 'INVALID',
+        },
+        caseNumber: '123',
+      },
+    } as unknown as AppRequest;
+
+    const res = {} as Response;
+
+    await expect(
+      controller.previouslyUploadedDocuments(req, res, '123')
+    ).rejects.toThrow('Unsupported case role');
+  });
+  test('sets isFDR to NO on each uploaded case document when isFinancialDisputeResolution is false or undefined', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({
+      triggerEvent: triggerEventMock,
+    });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: {
+          isFinancialDisputeResolution: false,
+          documentDetails: [
+            { id: '1', value: { existing: 'field' } },
+            { id: '2', value: { existing: 'field-2' } },
+          ],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(triggerEventMock).toHaveBeenCalledWith(
+      '123',
+      expect.objectContaining({
+        citizenApplicantDocument: [
+          expect.objectContaining({
+            value: expect.objectContaining({
+              existing: 'field',
+              isFDR: YesOrNo.NO,
+            }),
+          }),
+          expect.objectContaining({
+            value: expect.objectContaining({
+              existing: 'field-2',
+              isFDR: YesOrNo.NO,
+            }),
+          }),
+        ],
+      }),
+      expect.any(String)
+    );
+  });
+
+  test('sets isFDR to YES on each uploaded case document when isFinancialDisputeResolution is true', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({
+      triggerEvent: triggerEventMock,
+    });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: {
+          isFinancialDisputeResolution: true,
+          documentDetails: [
+            { id: '1', value: { existing: 'field' } },
+            { id: '2', value: { existing: 'field-2' } },
+          ],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(triggerEventMock).toHaveBeenCalledWith(
+      '123',
+      expect.objectContaining({
+        citizenApplicantDocument: [
+          expect.objectContaining({
+            value: expect.objectContaining({
+              existing: 'field',
+              isFDR: YesOrNo.YES,
+            }),
+          }),
+          expect.objectContaining({
+            value: expect.objectContaining({
+              existing: 'field-2',
+              isFDR: YesOrNo.YES,
+            }),
+          }),
+        ],
+      }),
+      expect.any(String)
+    );
+  });
 });
+

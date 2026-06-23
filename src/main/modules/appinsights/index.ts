@@ -13,4 +13,11 @@ export class AppInsights {
       });
     }
   }
+
+  static trackException(error: Error, properties: Record<string, string> = {}): void {
+    appInsights.defaultClient?.trackException({
+      exception: error,
+      properties,
+    });
+  }
 }

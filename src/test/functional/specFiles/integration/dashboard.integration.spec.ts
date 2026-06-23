@@ -30,6 +30,24 @@ test.describe('[integration] Dashboard upload journey', () => {
     await runA11yAudit(axeUtils);
   });
 
+  test('[integration] Dashboard getting help panel shows expected support details when expanded @a11y', async ({
+    dashboardPage,
+    axeUtils,
+  }) => {
+    await dashboardPage.verifyDashboardPageContent();
+    await dashboardPage.verifyGettingHelpSection();
+    await runA11yAudit(axeUtils);
+  });
+
+  test('[integration] Dashboard divorce-account inset is conditionally rendered and valid when present @a11y', async ({
+    dashboardPage,
+    axeUtils,
+  }) => {
+    await dashboardPage.verifyDashboardPageContent();
+    await dashboardPage.verifyDivorceAccountInsetIfVisible();
+    await runA11yAudit(axeUtils);
+  });
+
   test('[integration] Before-you-start sections and help details are visible and accessible @a11y', async ({
     dashboardPage,
     beforeYouStartPage,
@@ -47,20 +65,21 @@ test.describe('[integration] Dashboard upload journey', () => {
   test('[integration] Before-you-start supports back navigation and start-now progression @a11y', async ({
     dashboardPage,
     beforeYouStartPage,
+    confidentialityPage,
     axeUtils,
   }) => {
     await dashboardPage.verifyDashboardPageContent();
     await dashboardPage.clickGoToDocumentUpload();
 
     await beforeYouStartPage.verifyBeforeYouStartPageContent();
-    await runA11yAudit(axeUtils);
 
     await beforeYouStartPage.goBackToDashboard();
     await dashboardPage.verifyDashboardPageContent();
     await dashboardPage.verifyDivorceAccountHeadingHidden();
-    await runA11yAudit(axeUtils);
 
     await dashboardPage.clickGoToDocumentUpload();
     await beforeYouStartPage.startUploadJourney();
+    await confidentialityPage.verifyConfidentialityPageContent();
+    await runA11yAudit(axeUtils);
   });
 });

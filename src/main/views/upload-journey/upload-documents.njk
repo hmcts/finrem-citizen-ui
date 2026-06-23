@@ -43,6 +43,14 @@
           {% endif %}
 
           <div class="govuk-inset-text govuk-!-margin-top-4">
+            {% set docTypeError = errors[documentType.value] if errors %}
+            {% if docTypeError %}
+              {{ govukErrorMessage({
+                text: docTypeError,
+                classes: "govuk-!-margin-bottom-4"
+              }) }}
+            {% endif %}
+
             <form method="post" action="/documents/upload?documentType={{ documentType.value }}&returnUrl=/upload/upload-documents" enctype="multipart/form-data" data-upload-form="{{ documentType.value }}">
               <input type="hidden" name="documentType" value="{{ documentType.value }}">
               <input type="hidden" name="returnUrl" value="/upload/upload-documents">
@@ -57,9 +65,6 @@
                 hint: {
                   text: "Files must be in jpg, png, pdf, docx or xlsx format."
                 },
-                errorMessage: {
-                  text: errors.upload
-                } if errors and errors.upload,
                 attributes: {
                   "aria-describedby": "file-upload-" + documentType.value + "-hint"
                 }

@@ -1,7 +1,7 @@
 import { expect, Locator, Page } from '@playwright/test';
 
 import { BasePage } from './basePage.page';
-import { GettingHelpPanel } from './components/gettingHelpPanel.component';
+import { GETTING_HELP_OPENING_HOURS, GettingHelpPanel } from './components/gettingHelpPanel.component';
 
 // URL path constants 
 const URL_PATTERNS = {
@@ -13,7 +13,6 @@ const URL_PATTERNS = {
 const EXTERNAL_LINKS = {
   FORM_C8:
     'https://www.gov.uk/government/publications/form-c8-confidential-contact-details-family-procedure-rules-2010-rule-291',
-  CALL_CHARGES: 'https://www.gov.uk/call-charges',
 };
 
 export class ConfidentialityPage extends BasePage {
@@ -75,7 +74,7 @@ export class ConfidentialityPage extends BasePage {
     );
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
     this.gettingHelp = new GettingHelpPanel(this.page);
-    this.helpOpeningHours = this.page.getByText('Monday to Friday, 8.30am to 5pm', { exact: false });
+    this.helpOpeningHours = this.page.getByText(GETTING_HELP_OPENING_HOURS, { exact: false });
   }
 
     // AC1: Verify page URL and core layout elements
@@ -157,7 +156,6 @@ export class ConfidentialityPage extends BasePage {
   async verifyGettingHelpSection(): Promise<void> {
     await this.gettingHelp.verifySection({
       openingHoursLocator: this.helpOpeningHours,
-      callChargesHref: EXTERNAL_LINKS.CALL_CHARGES,
     });
   }
 

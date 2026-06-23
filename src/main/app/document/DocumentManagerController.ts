@@ -5,9 +5,16 @@ import { LoggerInstance } from 'winston';
 import { getSystemUser } from '../auth/user';
 import { getCaseApi } from '../case/case-api';
 import { CITIZEN_APPLICANT_DOCUMENT, CITIZEN_RESPONDENT_DOCUMENT, EVENT_TYPE } from '../case/case-type';
-import { CaseRole, CitizenUploadDocument, CitizenUploadDocumentType, ListValue } from '../case/definition';
+import { CaseRole, CitizenUploadDocument, CitizenUploadDocumentType, ListValue, YesOrNo } from '../case/definition';
 import type { AppRequest, UserDetails } from '../controller/AppRequest';
-import { CaseDocumentManagementClient, Classification } from './CaseDocumentManagementClient';
+import {
+  CaseDocumentManagementClient,
+  Classification
+} from './CaseDocumentManagementClient';
+import {
+  PreviouslyUploadedDocumentClient,
+  PreviouslyUploadedDocumentsResponse
+} from './PreviouslyUploadedDocumentClient';
 
 export class DocumentManagerController {
     constructor(private readonly logger: LoggerInstance) { }
@@ -36,7 +43,6 @@ export class DocumentManagerController {
             filesCreated.map(file => ({
                 id: generateUuid(),
                 value: {
-                    DocumentComment: 'Uploaded by applicant',
                     DocumentFileName: file.originalDocumentName,
                     DocumentType: documentType,
                     DocumentLink: {
@@ -76,6 +82,7 @@ export class DocumentManagerController {
         }
 
         const documents = req.session.documents?.documentDetails ?? [];
+        const isFDR = req.session.documents?.isFinancialDisputeResolution ?? false;
 
         if (!documents.length) {
             throw new Error('No documents in session to send');
@@ -86,13 +93,21 @@ export class DocumentManagerController {
                 ? CITIZEN_APPLICANT_DOCUMENT
                 : CITIZEN_RESPONDENT_DOCUMENT;
 
+        const updatedDocuments = documents.map(doc => ({
+            ...doc,
+            value: {
+                ...doc.value,
+                isFDR: isFDR ? YesOrNo.YES : YesOrNo.NO,
+            },
+        }));
+
         const systemUser = await getSystemUser();
         const caseworkerUserApi = getCaseApi(systemUser, this.logger);
 
         req.session.caseData = await caseworkerUserApi.triggerEvent(
             req.session.caseNumber,
             {
-                [documentsKey]: documents,
+                [documentsKey]: updatedDocuments,
             },
             caseRole === CaseRole.APPLICANT
                 ? EVENT_TYPE.APPLICANT_UPLOAD_DOCUMENT
@@ -101,7 +116,10 @@ export class DocumentManagerController {
 
         delete req.session.documents;
 
-        this.logger.info('Document collection sent to CCD');
+        this.logger.info('Document collection sent to CCD', {
+            documentCount: updatedDocuments.length,
+            isFDR,
+        });
     }
 
     public async downloadDocument(
@@ -116,15 +134,52 @@ export class DocumentManagerController {
             throw new Error('No user in session');
         }
 
-        if (!req.session.caseNumber || req.session.caseNumber !== caseId) {
-            res.status(403).send('Forbidden');
-            return;
-        }
+    if (!req.session.caseNumber || req.session.caseNumber !== caseId) {
+      res.status(403).send('Forbidden');
+      return;
+    }
+    const systemUser = await getSystemUser();
+    await this.getApiClient(systemUser).getDocument(res, documentId);
+  }
 
-        await this.getApiClient(user).getDocument(res, documentId);
+  public async previouslyUploadedDocuments(
+    req: AppRequest,
+    res: Response,
+    caseId: string
+  ): Promise<PreviouslyUploadedDocumentsResponse> {
+    const user = req.session.user;
+
+    if (!user) {
+      throw new Error('No user in session');
     }
 
-    private getApiClient(user: UserDetails): CaseDocumentManagementClient {
-        return new CaseDocumentManagementClient(user);
+    if (!req.session.caseNumber || req.session.caseNumber !== caseId) {
+      res.status(403).send('Forbidden');
+      throw new Error('Forbidden');
     }
+
+    const caseRole = req.session.user?.caseRole;
+    this.logger.info('is Applicant or respondent', caseRole);
+
+    const documentCollection = this.getDocumentCollection(user.caseRole as string);
+
+    const systemUser = await getSystemUser();
+    const previouslyUploadedDocumentClient = new PreviouslyUploadedDocumentClient(systemUser);
+
+    return previouslyUploadedDocumentClient.getPreviouslyUploadedDocuments(caseId, documentCollection);
+  }
+
+  private getApiClient(user: UserDetails): CaseDocumentManagementClient {
+    return new CaseDocumentManagementClient(user);
+  }
+
+  private  getDocumentCollection(caseRole: string) {
+    if (caseRole === CaseRole.APPLICANT) {
+      return EVENT_TYPE.APPLICANT_UPLOAD_DOCUMENT;
+    } else if (caseRole === CaseRole.RESPONDENT) {
+      return EVENT_TYPE.RESPONDENT_UPLOAD_DOCUMENT;
+    }
+
+    throw new Error(`Unsupported case role: ${caseRole}`);
+  }
 }

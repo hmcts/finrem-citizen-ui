@@ -9,8 +9,11 @@ const URL_PATTERNS = {
   BEFORE_YOU_START: /\/upload\/before-you-start/, // Base path; allows query params
 };
 
+const DASHBOARD_CONTACT_EMAIL = 'FRCexample@justice.gov.uk';
+
 export class DashboardPage extends BasePage {
   readonly userNameHeader: Locator;
+  readonly caseHeading: Locator;
   readonly caseNumberText: Locator;
   readonly divorceAccountHeading: Locator;
   readonly divorceAccountLink: Locator;
@@ -28,7 +31,8 @@ export class DashboardPage extends BasePage {
 
   constructor(readonly page: Page) {
     super(page);
-    this.userNameHeader = this.page.getByRole('heading', { name: 'Your financial remedy case' });
+    this.userNameHeader = this.page.getByRole('heading', { name: /^(Applicant|Respondent)$/ });
+    this.caseHeading = this.page.getByRole('heading', { name: 'Your financial remedy case' });
     this.caseNumberText = this.page.getByText(/Case number\s+/i);
     this.divorceAccountHeading = this.page.getByRole('heading', { name: 'This is your financial remedy account' });
     this.divorceAccountLink = this.page.getByRole('link', { name: 'go to your divorce account (opens in new tab)' });
@@ -69,8 +73,14 @@ export class DashboardPage extends BasePage {
     await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
     await this.verifyGlobalHeaderAndFooter();
 
+    // Integration environments can render either role heading or generic case heading.
+    if (await this.userNameHeader.first().isVisible()) {
+      await expect(this.userNameHeader.first()).toBeVisible();
+    } else {
+      await expect(this.caseHeading).toBeVisible();
+    }
+
     await this.expectVisible([
-      this.userNameHeader,
       this.caseNumberText,
       this.latestInformationHeading,
       this.latestInformationText,
@@ -121,6 +131,22 @@ export class DashboardPage extends BasePage {
 
   async verifyPreviouslyUploadedLinkHidden(): Promise<void> {
     await expect(this.viewPreviouslyUploadedLink).toBeHidden();
+  }
+
+  async verifyGettingHelpSection(): Promise<void> {
+    await this.gettingHelp.verifySection({
+      expectedEmail: DASHBOARD_CONTACT_EMAIL,
+    });
+  }
+
+  async verifyDivorceAccountInsetIfVisible(): Promise<void> {
+    const isVisible = await this.divorceAccountHeading.isVisible();
+    if (isVisible) {
+      await this.verifyDivorceAccountInset();
+      return;
+    }
+
+    await this.verifyDivorceAccountHeadingHidden();
   }
 
   // Click the document upload button
