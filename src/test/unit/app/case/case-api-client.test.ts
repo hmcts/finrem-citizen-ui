@@ -7,8 +7,10 @@ import { EVENT_TYPE } from '../../../../main/app/case/case-type';
 import { CaseRole, YesOrNo } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { UrlEndPoints } from '../../../../main/common-constants';
+import { AppInsights } from '../../../../main/modules/appinsights';
 
 jest.mock('axios');
+jest.mock('../../../../main/modules/appinsights');
 
 const userDetails: UserDetails = {
   accessToken: '123',
@@ -24,6 +26,7 @@ const userDetails: UserDetails = {
 
 describe('CaseApi', () => {
   const mockedAxios = axios as jest.Mocked<typeof axios>;
+  const mockedAppInsights = AppInsights as jest.Mocked<typeof AppInsights>;
 
   let mockLogger = {
     error: jest.fn().mockImplementation((message: string) => message),
@@ -32,6 +35,7 @@ describe('CaseApi', () => {
 
   let api: CaseApiClient;
   beforeEach(() => {
+    jest.clearAllMocks();
     mockLogger = {
       error: jest.fn().mockImplementation((message: string) => message),
       info: jest.fn().mockImplementation((message: string) => message),
@@ -63,6 +67,13 @@ describe('CaseApi', () => {
     await expect(api.getCaseById('1234')).rejects.toThrow('Case could not be retrieved.');
 
     expect(mockLogger.error).toHaveBeenCalledWith('API Error GET https://example.com');
+    expect(mockedAppInsights.trackException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        operation: 'getCaseById',
+        caseId: '1234',
+      })
+    );
   });
 
   test('Should catch all errors', async () => {
@@ -73,6 +84,13 @@ describe('CaseApi', () => {
     await expect(api.getCaseById('1234')).rejects.toThrow('Case could not be retrieved.');
 
     expect(mockLogger.error).toHaveBeenCalledWith('API Error', 'Error');
+    expect(mockedAppInsights.trackException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        operation: 'getCaseById',
+        caseId: '1234',
+      })
+    );
   });
 });
 
@@ -86,8 +104,10 @@ describe('CaseApi.addCaseUserRoles', () => {
   let mockAxios: jest.Mocked<Pick<typeof axios, 'post' | 'get'>>;
   let mockLogger: LoggerInstance;
   let api: CaseApiClient;
+  const mockedAppInsights = AppInsights as jest.Mocked<typeof AppInsights>;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     mockAxios = {
       post: jest.fn(),
       get: jest.fn(),
@@ -147,6 +167,15 @@ describe('CaseApi.addCaseUserRoles', () => {
     expect(mockLogger.info).toHaveBeenCalledWith('Response: ', {
       error: 'Internal error',
     });
+
+    expect(mockedAppInsights.trackException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        operation: 'addCaseUserRoles',
+        endpoint: UrlEndPoints.CaseUsers,
+        statusCode: '500',
+      })
+    );
   });
 });
 
@@ -154,8 +183,10 @@ describe('CaseApiClient.findExistingUserCases', () => {
   let mockAxios: jest.Mocked<Pick<typeof axios, 'post' | 'get'>>;
   let mockLogger: LoggerInstance;
   let api: CaseApiClient;
+  const mockedAppInsights = AppInsights as jest.Mocked<typeof AppInsights>;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     mockAxios = {
       post: jest.fn(),
       get: jest.fn(),
@@ -215,6 +246,15 @@ describe('CaseApiClient.findExistingUserCases', () => {
       'Response: ',
       { error: 'bad' }
     );
+
+    expect(mockedAppInsights.trackException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        operation: 'findExistingUserCases',
+        caseType: CASE_TYPE,
+        statusCode: '500',
+      })
+    );
   });
 });
 
@@ -222,6 +262,7 @@ describe('CaseApiClient.sendEvent', () => {
   let mockAxios: jest.Mocked<Pick<typeof axios, 'get' | 'post'>>;
   let mockLogger: LoggerInstance;
   let api: CaseApiClient;
+  const mockedAppInsights = AppInsights as jest.Mocked<typeof AppInsights>;
 
   const CASE_ID = '123456';
   const EVENT_NAME = EVENT_TYPE.INVALIDATE_APPLICANT_ACCESS_CODE;
@@ -240,6 +281,7 @@ const applicantAccessCodes = [
 ];
 
   beforeEach(() => {
+    jest.clearAllMocks();
     mockAxios = {
       get: jest.fn(),
       post: jest.fn(),
@@ -360,6 +402,16 @@ const applicantAccessCodes = [
       'Response: ',
       { error: 'bad request' }
     );
+
+    expect(mockedAppInsights.trackException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        operation: 'sendEvent',
+        caseId: CASE_ID,
+        eventName: EVENT_NAME,
+        statusCode: '400',
+      })
+    );
   });
 });
 
@@ -367,8 +419,10 @@ describe('CaseApiClient.getCaseUserRoles', () => {
   let mockAxios: jest.Mocked<Pick<typeof axios, 'post'>>;
   let mockLogger: LoggerInstance;
   let api: CaseApiClient;
+  const mockedAppInsights = AppInsights as jest.Mocked<typeof AppInsights>;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     mockAxios = {
       post: jest.fn(),
     } as unknown as jest.Mocked<Pick<typeof axios, 'post'>>;
@@ -438,6 +492,15 @@ describe('CaseApiClient.getCaseUserRoles', () => {
     expect(mockLogger.info).toHaveBeenCalledWith(
       'Response: ',
       { error: 'Internal error' }
+    );
+
+    expect(mockedAppInsights.trackException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        operation: 'getCaseUserRoles',
+        endpoint: UrlEndPoints.CaseRoles,
+        statusCode: '500',
+      })
     );
   });
 });
