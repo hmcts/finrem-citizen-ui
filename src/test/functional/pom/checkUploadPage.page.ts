@@ -35,6 +35,19 @@ export class CheckUploadPage extends BasePage {
   readonly helpOpeningHours: Locator;
   readonly gettingHelp: GettingHelpPanel;
   readonly sendToOtherPartyHeading: Locator;
+  readonly sendToOtherPartyIntro: Locator;
+  readonly sendToOtherPartyCourtOrderText: Locator;
+  readonly sendToOtherPartyCourtWillNotServeText: Locator;
+  readonly unableToSendDetailsContainer: Locator;
+  readonly unableToSendDetails: Locator;
+  readonly unableToSendDetailsSummary: Locator;
+  readonly unableToSendDetailsParagraphOne: Locator;
+  readonly unableToSendDetailsParagraphTwo: Locator;
+  readonly understandCheckbox: Locator;
+  readonly submitButton: Locator;
+  readonly understandErrorSummaryLink: Locator;
+  readonly understandInlineError: Locator;
+  readonly confirmationHeading: Locator;
 
   constructor(readonly page: Page) {
     super(page);
@@ -76,6 +89,35 @@ export class CheckUploadPage extends BasePage {
       name: 'You need to send these documents to the other party',
       exact: true,
     });
+    this.sendToOtherPartyIntro = this.page.getByText(
+      'For full transparency between you and the other party, you need to serve these documents on them, or their solicitor if they have one.',
+      { exact: true }
+    );
+    this.sendToOtherPartyCourtOrderText = this.page.getByText(
+      'Refer to your court order for specific instructions.',
+      { exact: true }
+    );
+    this.sendToOtherPartyCourtWillNotServeText = this.page.getByText(
+      'The court will not normally serve any of the documents you have submitted on the other party for you. Uploading your documents to this online account does not count as serving the other party.',
+      { exact: true }
+    );
+    this.unableToSendDetailsContainer = this.page
+      .locator('details')
+      .filter({ hasText: 'I am not able to send documents to the other party' });
+
+    this.unableToSendDetails = this.unableToSendDetailsContainer;
+    this.unableToSendDetailsSummary = this.unableToSendDetailsContainer.locator('summary');
+    this.unableToSendDetailsParagraphOne = this.unableToSendDetailsContainer.locator('p').first();
+    this.unableToSendDetailsParagraphTwo = this.unableToSendDetailsContainer.locator('p').nth(1);
+    this.understandCheckbox = this.page.getByRole('checkbox', { name: 'I understand', exact: true });
+    this.submitButton = this.page.getByRole('button', { name: 'Submit', exact: true });
+    this.understandErrorSummaryLink = this.page
+      .getByRole('alert')
+      .getByRole('link', { name: "You must select 'I understand' before continuing" });
+    this.understandInlineError = this.page.getByText("Error: You must select 'I understand' before continuing", {
+      exact: true,
+    });
+    this.confirmationHeading = this.page.getByRole('heading', { name: 'Documents uploaded', exact: true });
   }
 
   private async ensureCheckUploadPageLoaded(): Promise<void> {
@@ -186,6 +228,72 @@ export class CheckUploadPage extends BasePage {
 
   async expectSendToOtherPartyHeadingVisible(): Promise<void> {
     await expect(this.sendToOtherPartyHeading).toBeVisible();
+  }
+
+  async verifySendToOtherPartyPageContent(): Promise<void> {
+    await expect(this.page).toHaveURL(URL_PATTERNS.SEND_TO_OTHER_PARTY, {
+      timeout: NAVIGATION_TIMEOUT_MS,
+    });
+
+    await this.verifyGlobalHeaderAndFooter();
+
+    await this.expectVisible([
+      this.serviceNav,
+      this.navigationLink,
+      this.signOutBtn,
+      this.backLink,
+      this.sendToOtherPartyHeading,
+      this.sendToOtherPartyIntro,
+      this.sendToOtherPartyCourtOrderText,
+      this.sendToOtherPartyCourtWillNotServeText,
+      this.unableToSendDetailsSummary,
+      this.understandCheckbox,
+      this.submitButton,
+      this.gettingHelp.heading,
+      this.gettingHelp.summary,
+    ]);
+
+    await expect(this.understandCheckbox).not.toBeChecked();
+    await this.expectAttributes([
+      { locator: this.backLink, name: 'href', value: '/upload/check-upload' },
+    ]);
+  }
+
+  async expandUnableToSendGuidanceAndVerifyContent(): Promise<void> {
+    await this.unableToSendDetailsSummary.click();
+    await expect(this.unableToSendDetails).toHaveAttribute('open', '');
+    await this.expectVisible([
+      this.unableToSendDetailsParagraphOne,
+      this.unableToSendDetailsParagraphTwo,
+    ]);
+  }
+
+  async submitWithoutUnderstandingAndExpectValidationError(): Promise<void> {
+    await this.submitButton.click();
+
+    await this.expectVisible([
+      this.errorSummaryTitle,
+      this.understandErrorSummaryLink,
+      this.understandInlineError,
+    ]);
+
+    // Error container presence confirms validation state; aria-invalid may not be set by backend
+    await expect(this.page.locator('.govuk-form-group--error').filter({ has: this.understandCheckbox })).toBeVisible();
+  }
+
+  async acceptUnderstandingAndSubmit(): Promise<void> {
+    await this.understandCheckbox.check();
+    await expect(this.understandCheckbox).toBeChecked();
+    await this.submitButton.click();
+    await expect(this.page).toHaveURL(/\/upload\/confirmation/, {
+      timeout: NAVIGATION_TIMEOUT_MS,
+    });
+    await expect(this.confirmationHeading).toBeVisible();
+  }
+
+  async clickBackAndExpectCheckUpload(): Promise<void> {
+    await this.backLink.click();
+    await expect(this.page).toHaveURL(URL_PATTERNS.CHECK_UPLOAD);
   }
 
   async clickBackAndExpectUploadDocuments(): Promise<void> {
