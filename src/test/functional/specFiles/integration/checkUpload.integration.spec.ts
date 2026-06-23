@@ -13,7 +13,7 @@ import {
  * branching decisions, validation, getting-help details, back navigation,
  * and accessibility assertions.
  */
-test.describe('[integration] Check uploaded documents page @PR', () => {
+test.describe('[integration] Check uploaded documents page', () => {
   test.describe('[integration] Check uploaded documents page with uploaded other document', () => {
     test.beforeEach(async ({
       loggedInPage: _loggedInPage,
