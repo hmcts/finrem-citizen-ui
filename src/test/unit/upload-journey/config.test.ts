@@ -325,7 +325,19 @@ describe('Upload Journey Configuration', () => {
       expect(step.template).toBe('upload-journey/send-to-other-party');
       expect(step.next!()).toBe(UploadStepNames.Confirmation);
       expect(step.previous!()).toBe(UploadStepNames.CheckUpload);
-      expect(step.validate).toBeUndefined();
+      expect(step.validate).toBeDefined();
+    });
+
+    it('should validate understand checkbox', () => {
+      const step = uploadSteps[UploadStepNames.SendToOtherParty];
+      const errors = step.validate!({});
+      expect(errors.understand).toBe("You must select 'I understand' before continuing");
+    });
+
+    it('should pass validation when understand is checked', () => {
+      const step = uploadSteps[UploadStepNames.SendToOtherParty];
+      const errors = step.validate!({ understand: 'true' });
+      expect(Object.keys(errors)).toHaveLength(0);
     });
   });
 
