@@ -10,7 +10,7 @@ import type {
   PreviouslyUploadedDocumentsCaseData,
 } from '../app/document/PreviouslyUploadedDocumentClient';
 import { RouteNames } from '../common-constants';
-import { getCombinedPDFFormat, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey } from '../functions/util/documentUtil';
+import { getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey } from '../functions/util/documentUtil';
 import { oidcMiddleware } from '../middleware';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
 
