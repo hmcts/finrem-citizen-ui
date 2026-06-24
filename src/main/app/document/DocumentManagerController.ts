@@ -49,7 +49,7 @@ export class DocumentManagerController {
                 value: {
                     // Note: file.originalDocumentName from CDAM actually contains the renamed filename
                     DocumentFileName: file.originalDocumentName,
-                    originalFileName: originalFilenames[index],
+                    OriginalFileName: originalFilenames[index],
                     DocumentType: documentType,
                     DocumentLink: {
                         document_url: file._links.self.href,
