@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 
 export interface UserCredentials {
   username: string;
@@ -23,10 +23,6 @@ export class IdamPage {
    * Landing page -> Email -> Password
    */
   async login(user: UserCredentials): Promise<void> {
-    const authErrorHeading = this.page.getByRole('heading', {
-      name: /Access to this resource requires authorisation/i,
-    });
-
     // Reject cookie banner which can block interactions with the login flow if not dismissed.
     const rejectCookies = this.page.getByRole('button', { name: /reject .*cookies/i });
     if (await rejectCookies.isVisible({ timeout: 2_000 }).catch(() => false)) {
@@ -35,15 +31,23 @@ export class IdamPage {
 
     const signInButton = this.page.getByRole('button', { name: /sign in/i });
     const signInLink = this.page.getByRole('link', { name: /sign in/i });
+    const signInEntry = signInButton.or(signInLink).first();
 
-    // If already on credential step, skip sign-in click.
+    // If already on the credential step, skip the sign-in click.
     if (!(await this.emailInput.isVisible({ timeout: 2_000 }).catch(() => false))) {
-      if (await signInButton.isVisible({ timeout: 3_000 }).catch(() => false)) {
-        await signInButton.click();
-      } else if (await signInLink.isVisible({ timeout: 3_000 }).catch(() => false)) {
-        await signInLink.click();
-      } else if (await authErrorHeading.isVisible({ timeout: 3_000 }).catch(() => false)) {
-        throw new Error(`IDAM authorisation page shown before sign-in. URL: ${this.page.url()}`);
+      // Extended wait for slow-loading AAT login pages.
+      let entryVisible = await signInEntry.isVisible({ timeout: 8_000 }).catch(() => false);
+
+      // Pod restarts or transient gateway errors can cause /login to render without controls;
+      // a single reload recovers in most cases.
+      if (!entryVisible && this.page.url().includes('/login')) {
+        await this.page.reload({ waitUntil: 'domcontentloaded' });
+        entryVisible = await signInEntry.isVisible({ timeout: 8_000 }).catch(() => false);
+      }
+
+      if (entryVisible) {
+        await expect(signInEntry).toBeVisible({ timeout: 10_000 });
+        await signInEntry.click();
       } else {
         throw new Error(`Sign-in entry point not found. URL: ${this.page.url()}`);
       }
