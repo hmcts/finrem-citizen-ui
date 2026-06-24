@@ -7,8 +7,12 @@ import { EVENT_TYPE } from '../../../../main/app/case/case-type';
 import { CaseRole, YesOrNo } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { UrlEndPoints } from '../../../../main/common-constants';
+import { trackApiClientExceptionTelemetry } from '../../../../main/middleware/global-error-handler';
 
-jest.mock('axios');
+jest.mock('../../../../main/middleware/global-error-handler', () => ({
+  ...jest.requireActual('../../../../main/middleware/global-error-handler'),
+  trackApiClientExceptionTelemetry: jest.fn(),
+}));
 
 const userDetails: UserDetails = {
   accessToken: '123',
@@ -22,9 +26,12 @@ const userDetails: UserDetails = {
   roles: ['something'],
 };
 
-describe('CaseApi', () => {
-  const mockedAxios = axios as jest.Mocked<typeof axios>;
+beforeEach(() => {
+  jest.clearAllMocks();
+});
 
+describe('CaseApi', () => {
+  let mockedAxios: jest.Mocked<Pick<typeof axios, 'get' | 'post'>>;
   let mockLogger = {
     error: jest.fn().mockImplementation((message: string) => message),
     info: jest.fn().mockImplementation((message: string) => message),
@@ -32,12 +39,16 @@ describe('CaseApi', () => {
 
   let api: CaseApiClient;
   beforeEach(() => {
+    mockedAxios = {
+      get: jest.fn(),
+      post: jest.fn(),
+    } as unknown as jest.Mocked<Pick<typeof axios, 'get' | 'post'>>;
     mockLogger = {
       error: jest.fn().mockImplementation((message: string) => message),
       info: jest.fn().mockImplementation((message: string) => message),
     } as unknown as LoggerInstance;
 
-    api = new CaseApiClient(mockedAxios, mockLogger);
+    api = new CaseApiClient(mockedAxios as unknown as AxiosInstance, mockLogger);
   });
 
   test('Should return case for caseId passed', async () => {
@@ -52,6 +63,7 @@ describe('CaseApi', () => {
 
     const userCase = await api.getCaseById('1234');
     expect(userCase).toStrictEqual({ id: '1234', accessCode: 'NFSDCLV3' });
+    expect(trackApiClientExceptionTelemetry).not.toHaveBeenCalled();
   });
 
   test('Should throw error when case could not be fetched', async () => {
@@ -63,9 +75,20 @@ describe('CaseApi', () => {
     await expect(api.getCaseById('1234')).rejects.toThrow('Case could not be retrieved.');
 
     expect(mockLogger.error).toHaveBeenCalledWith('API Error GET https://example.com');
+    expect(trackApiClientExceptionTelemetry).toHaveBeenCalledTimes(1);
+    expect(trackApiClientExceptionTelemetry).toHaveBeenCalledWith(
+      {
+        config: { method: 'GET', url: 'https://example.com' },
+        request: 'mock request',
+      },
+      'Case could not be retrieved.'
+    );
   });
 
   test('Should catch all errors', async () => {
+    const error = {
+      message: 'Error',
+    };
     mockedAxios.get.mockRejectedValue({
       message: 'Error',
     });
@@ -73,6 +96,11 @@ describe('CaseApi', () => {
     await expect(api.getCaseById('1234')).rejects.toThrow('Case could not be retrieved.');
 
     expect(mockLogger.error).toHaveBeenCalledWith('API Error', 'Error');
+    expect(trackApiClientExceptionTelemetry).toHaveBeenCalledTimes(1);
+    expect(trackApiClientExceptionTelemetry).toHaveBeenCalledWith(
+      error,
+      'Case could not be retrieved.'
+    );
   });
 });
 
@@ -117,6 +145,7 @@ describe('CaseApi.addCaseUserRoles', () => {
     expect(mockAxios.post).toHaveBeenCalledWith('/case-users', {
       case_users: assignments,
     });
+    expect(trackApiClientExceptionTelemetry).not.toHaveBeenCalled();
   });
 
   test('should log error + response and throw when API returns error.response', async () => {
@@ -147,6 +176,11 @@ describe('CaseApi.addCaseUserRoles', () => {
     expect(mockLogger.info).toHaveBeenCalledWith('Response: ', {
       error: 'Internal error',
     });
+    expect(trackApiClientExceptionTelemetry).toHaveBeenCalledTimes(1);
+    expect(trackApiClientExceptionTelemetry).toHaveBeenCalledWith(
+      axiosError,
+      'Case user roles could not be added.'
+    );
   });
 });
 
@@ -185,6 +219,7 @@ describe('CaseApiClient.findExistingUserCases', () => {
       expect.any(String)
     );
     expect(result).toEqual(cases);
+    expect(trackApiClientExceptionTelemetry).not.toHaveBeenCalled();
   });
 
   test('should return false when 404 is returned', async () => {
@@ -196,9 +231,17 @@ describe('CaseApiClient.findExistingUserCases', () => {
 
     expect(result).toBe(false);
     expect(mockLogger.error).not.toHaveBeenCalled();
+    expect(trackApiClientExceptionTelemetry).not.toHaveBeenCalled();
   });
 
   test('should log error and throw when error occurs', async () => {
+    const axiosError = {
+      config: { method: 'post', url: '/searchCases?ctid=FinancialRemedyContested' },
+      response: {
+        status: 500,
+        data: { error: 'bad' },
+      },
+    };
     mockAxios.post.mockRejectedValue({
       config: { method: 'post', url: UrlEndPoints.SearchCases(CASE_TYPE) },
       response: { status: 500, data: { error: 'bad' } },
@@ -215,6 +258,11 @@ describe('CaseApiClient.findExistingUserCases', () => {
       'Response: ',
       { error: 'bad' }
     );
+    expect(trackApiClientExceptionTelemetry).toHaveBeenCalledTimes(1);
+    expect(trackApiClientExceptionTelemetry).toHaveBeenCalledWith(
+      axiosError,
+      'Case could not be retrieved.'
+    );
   });
 });
 
@@ -226,7 +274,7 @@ describe('CaseApiClient.sendEvent', () => {
   const CASE_ID = '123456';
   const EVENT_NAME = EVENT_TYPE.INVALIDATE_APPLICANT_ACCESS_CODE;
 
-  
+
 const applicantAccessCodes = [
   {
     id: '9319d817-ade5-4e9e-a204-261331158a0e',
@@ -294,6 +342,7 @@ const applicantAccessCodes = [
       state: 'Submitted',
       applicantAccessCodes,
     });
+    expect(trackApiClientExceptionTelemetry).not.toHaveBeenCalled();
   });
 
   test('should retry once for retriable error and then succeed', async () => {
@@ -333,9 +382,17 @@ const applicantAccessCodes = [
       state: 'Updated',
       applicantAccessCodes,
     });
+    expect(trackApiClientExceptionTelemetry).not.toHaveBeenCalled();
   });
 
   test('should throw immediately for non-retriable error', async () => {
+    const axiosError = {
+      config: { method: 'post', url: UrlEndPoints.CaseEvents(CASE_ID) },
+      response: {
+        status: 400,
+        data: { error: 'bad request' },
+      },
+    };
     mockAxios.get.mockResolvedValue({
       data: { token: 'event-token' },
     });
@@ -359,6 +416,11 @@ const applicantAccessCodes = [
     expect(mockLogger.info).toHaveBeenCalledWith(
       'Response: ',
       { error: 'bad request' }
+    );
+    expect(trackApiClientExceptionTelemetry).toHaveBeenCalledTimes(1);
+    expect(trackApiClientExceptionTelemetry).toHaveBeenCalledWith(
+      axiosError,
+      'Case could not be updated.'
     );
   });
 });
@@ -409,6 +471,7 @@ describe('CaseApiClient.getCaseUserRoles', () => {
       request
     );
     expect(result).toEqual(responseData);
+    expect(trackApiClientExceptionTelemetry).not.toHaveBeenCalled();
   });
 
   test('should log error and throw when API call fails', async () => {
@@ -438,6 +501,11 @@ describe('CaseApiClient.getCaseUserRoles', () => {
     expect(mockLogger.info).toHaveBeenCalledWith(
       'Response: ',
       { error: 'Internal error' }
+    );
+    expect(trackApiClientExceptionTelemetry).toHaveBeenCalledTimes(1);
+    expect(trackApiClientExceptionTelemetry).toHaveBeenCalledWith(
+      axiosError,
+      'Case roles could not be fetched.'
     );
   });
 });

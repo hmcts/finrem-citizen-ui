@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { AxiosError } from 'axios';
 import type { NextFunction, Request, Response } from 'express';
 
 import { ViewNames } from '../../../main/common-constants';
-import { globalErrorHandler } from '../../../main/middleware/global-error-handler';
+import { globalErrorHandler, trackApiClientExceptionTelemetry } from '../../../main/middleware/global-error-handler';
 import { AppInsights } from '../../../main/modules/appinsights';
 
 jest.mock('@hmcts/nodejs-logging', () => {
@@ -168,5 +169,81 @@ describe('globalErrorHandler', () => {
     expect(next).toHaveBeenCalledWith(error);
     expect(res.status).not.toHaveBeenCalled();
     expect(res.render).not.toHaveBeenCalled();
+  });
+});
+
+describe('trackApiClientExceptionTelemetry', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('should track exception with axios metadata', () => {
+    const axiosError = Object.assign(new Error('API failed'), {
+      config: {
+        method: 'post',
+        url: '/searchCases',
+      },
+      response: {
+        status: 500,
+      },
+    }) as AxiosError;
+
+    trackApiClientExceptionTelemetry(
+      axiosError,
+      'Case roles could not be fetched.'
+    );
+
+    expect(AppInsights.trackException).toHaveBeenCalledWith(
+      axiosError,
+      {
+        method: 'post',
+        url: '/searchCases',
+        statusCode: '500',
+      }
+    );
+  });
+
+  test('should create Error when input is not an Error instance', () => {
+    const axiosError = {
+      config: {
+        method: 'get',
+        url: '/getCaseById',
+      },
+      response: {
+        status: 404,
+      },
+    } as AxiosError;
+
+    trackApiClientExceptionTelemetry(
+      axiosError,
+      'Request failed'
+    );
+
+    expect(AppInsights.trackException).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Request failed',
+      }),
+      {
+        method: 'get',
+        url: '/getCaseById',
+        statusCode: '404',
+      }
+    );
+  });
+
+  test('should use default values when axios metadata is missing', () => {
+    trackApiClientExceptionTelemetry(
+      new Error('Boom'),
+      'Fallback message'
+    );
+
+    expect(AppInsights.trackException).toHaveBeenCalledWith(
+      expect.any(Error),
+      {
+        method: 'unknown',
+        url: 'unknown',
+        statusCode: '0',
+      }
+    );
   });
 });

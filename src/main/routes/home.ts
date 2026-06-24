@@ -13,7 +13,7 @@ import { RouteNames, ViewNames } from '../common-constants';
 import { orchestrateHome } from '../functions/util/homePageUtil';
 import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../functions/util/uploadValidation';
 import { oidcMiddleware } from '../middleware';
-import { AppInsights } from '../modules/appinsights';
+import { trackApiClientExceptionTelemetry } from '../middleware/global-error-handler';
 
 export default function (app: Application): void {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
@@ -63,13 +63,7 @@ export default function (app: Application): void {
       const err = error as Error;
       const errorMessage = 'Failed to add user to case.';
       logger.error('Error adding user to case', { error: err.message });
-      AppInsights.trackException(error, {
-        route: RouteNames.caseUserRole,
-        userId: assignments[0].user_id,
-        caseRole: assignments[0].case_role,
-        caseId: assignments[0].case_id,
-        reason: errorMessage,
-      });
+      trackApiClientExceptionTelemetry(err, errorMessage);
       return res.status(500).json({
         success: false,
         message: errorMessage,
