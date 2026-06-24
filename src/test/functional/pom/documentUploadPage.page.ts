@@ -204,7 +204,9 @@ export class DocumentUploadPage extends BasePage {
 
         await expect(this.uploadedFileLinks).toHaveCount(beforeCount - 1, { timeout: 10_000 });
         return true;
-      } catch {
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn('UI remove attempt failed', error);
         return false;
       }
     };
