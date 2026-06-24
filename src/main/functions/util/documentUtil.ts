@@ -64,3 +64,24 @@ export function getSelectedDocumentTypesForDisplay(req: Request): SelectedDocume
     order: index,
   }));
 }
+
+export function generateRenamedFilename(documentTypeValue: string, originalFilename: string, caseUserName?: string): string {
+  const format = getDocumentRenameFormat(documentTypeValue);
+  if (!format) {
+    return originalFilename;
+  }
+
+  // Extract file extension
+  const extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+
+  // Generate date string DD-MM-YYYY
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  const dateStr = `${day}-${month}-${year}`;
+
+  // Format: UserName-DocumentType-DD-MM-YYYY.ext
+  const userName = caseUserName || 'UserName';
+  return `${userName}-${format}-${dateStr}${extension}`;
+}

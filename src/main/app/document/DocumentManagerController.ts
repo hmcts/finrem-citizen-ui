@@ -37,6 +37,8 @@ export class DocumentManagerController {
         const filesCreated = await this.getApiClient(user).create({
             files: req.files,
             classification: Classification.Public,
+            documentType,
+            caseUserName: req.session.caseUserName,
         });
 
         const newUploads: ListValue<Partial<CitizenUploadDocument> | null>[] =

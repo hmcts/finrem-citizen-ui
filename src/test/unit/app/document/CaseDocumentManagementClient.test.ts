@@ -250,4 +250,136 @@ describe('CaseDocumentManagementClient', () => {
 
     expect(mockPipe).toHaveBeenCalledWith(res);
   });
+
+  describe('file renaming', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-06-23T14:00:00.000Z'));
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    test('renames files for auto-rename document types', async () => {
+      mockAxios.post.mockResolvedValue({
+        data: {
+          documents: [
+            {
+              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026.pdf',
+              size: 100,
+              mimeType: 'application/pdf',
+              createdOn: '2024-01-01',
+              modifiedOn: '2024-01-01',
+              classification: Classification.Public,
+              _links: {
+                self: { href: '/documents/1' },
+                binary: { href: '/documents/1/binary' },
+                thumbnail: { href: '/documents/1/thumb' },
+              },
+            },
+          ],
+        },
+      });
+
+      const files: Express.Multer.File[] = [
+        {
+          fieldname: 'files',
+          originalname: 'my-document.pdf',
+          encoding: '7bit',
+          mimetype: 'application/pdf',
+          size: 100,
+          buffer: Buffer.from('file'),
+          stream: Readable.from([]),
+          destination: '',
+          filename: '',
+          path: '',
+        },
+      ];
+
+      const result = await client.create({
+        files,
+        classification: Classification.Public,
+        documentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
+        caseUserName: 'JohnSmith',
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026.pdf');
+    });
+
+    test('does not rename files when documentType is not provided', async () => {
+      mockAxios.post.mockResolvedValue({
+        data: {
+          documents: [
+            {
+              originalDocumentName: 'original-file.pdf',
+              _links: {},
+            },
+          ],
+        },
+      });
+
+      const files: Express.Multer.File[] = [
+        {
+          fieldname: 'files',
+          originalname: 'original-file.pdf',
+          encoding: '7bit',
+          mimetype: 'application/pdf',
+          size: 100,
+          buffer: Buffer.from('file'),
+          stream: Readable.from([]),
+          destination: '',
+          filename: '',
+          path: '',
+        },
+      ];
+
+      const result = await client.create({
+        files,
+        classification: Classification.Public,
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].originalDocumentName).toBe('original-file.pdf');
+    });
+
+    test('does not rename files for document types without rename format', async () => {
+      mockAxios.post.mockResolvedValue({
+        data: {
+          documents: [
+            {
+              originalDocumentName: 'bank-statement.pdf',
+              _links: {},
+            },
+          ],
+        },
+      });
+
+      const files: Express.Multer.File[] = [
+        {
+          fieldname: 'files',
+          originalname: 'bank-statement.pdf',
+          encoding: '7bit',
+          mimetype: 'application/pdf',
+          size: 100,
+          buffer: Buffer.from('file'),
+          stream: Readable.from([]),
+          destination: '',
+          filename: '',
+          path: '',
+        },
+      ];
+
+      const result = await client.create({
+        files,
+        classification: Classification.Public,
+        documentType: 'Bank statements',
+        caseUserName: 'JohnSmith',
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].originalDocumentName).toBe('bank-statement.pdf');
+    });
+  });
 });
