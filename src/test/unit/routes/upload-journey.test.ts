@@ -18,6 +18,7 @@ type MockSession = {
     documentDetails?: { id?: string; value?: { DocumentType?: string } }[];
   };
   documents?: {
+    isFinancialDisputeResolution?: boolean;
     documentDetails?: { 
       id?: string; 
       value?: { 
@@ -912,6 +913,187 @@ describe('Upload Journey Routes', () => {
           save: jest.fn((callback: (err?: Error) => void) => callback(new Error('Session save failed'))),
         },
         body: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      await expect(handler(mockReq as unknown as Request, mockRes as Response)).rejects.toThrow('Session save failed');
+    });
+
+    it('should submit documents to CCD when send-to-other-party is submitted', async () => {
+      // @ts-ignore - Jest mock typing issue
+      const mockLinkDocumentsToCase = jest.fn().mockResolvedValue(undefined) as jest.Mock;
+      (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
+        LinkDocumentsToCase: mockLinkDocumentsToCase,
+      }));
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: 'send-to-other-party' },
+        session: {
+          DocumentSelection: {
+            isFinancialDisputeResolution: true,
+            documentDetails: [{ id: '1', value: { DocumentType: 'Chronology' } }],
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'doc1',
+                value: {
+                  DocumentFileName: 'test.pdf',
+                  DocumentType: 'Chronology',
+                  DocumentLink: { document_url: 'http://dm-store/doc1' },
+                },
+              },
+            ],
+          },
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: { understand: 'yes' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      await handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockLinkDocumentsToCase).toHaveBeenCalledWith(mockReq);
+      expect(mockReq.session?.documents?.isFinancialDisputeResolution).toBe(true);
+      expect(mockReq.session?.DocumentSelection).toBeUndefined();
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
+    });
+
+    it('should handle send-to-other-party submission without DocumentSelection', async () => {
+      // @ts-ignore - Jest mock typing issue
+      const mockLinkDocumentsToCase = jest.fn().mockResolvedValue(undefined) as jest.Mock;
+      (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
+        LinkDocumentsToCase: mockLinkDocumentsToCase,
+      }));
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: 'send-to-other-party' },
+        session: {
+          documents: {
+            documentDetails: [
+              {
+                id: 'doc1',
+                value: {
+                  DocumentFileName: 'test.pdf',
+                  DocumentType: 'Chronology',
+                  DocumentLink: { document_url: 'http://dm-store/doc1' },
+                },
+              },
+            ],
+          },
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: { understand: 'yes' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      await handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockLinkDocumentsToCase).toHaveBeenCalledWith(mockReq);
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
+    });
+
+    it('should throw error when LinkDocumentsToCase fails', async () => {
+      // @ts-ignore - Jest mock typing issue
+      const mockLinkDocumentsToCase = jest.fn().mockRejectedValue(new Error('CCD submission failed')) as jest.Mock;
+      (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
+        LinkDocumentsToCase: mockLinkDocumentsToCase,
+      }));
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: 'send-to-other-party' },
+        session: {
+          DocumentSelection: {
+            isFinancialDisputeResolution: true,
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'doc1',
+                value: {
+                  DocumentFileName: 'test.pdf',
+                  DocumentType: 'Chronology',
+                  DocumentLink: { document_url: 'http://dm-store/doc1' },
+                },
+              },
+            ],
+          },
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: { understand: 'yes' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      await expect(handler(mockReq as unknown as Request, mockRes as Response)).rejects.toThrow('CCD submission failed');
+    });
+
+    it('should create documents object when it does not exist', async () => {
+      // @ts-ignore - Jest mock typing issue
+      const mockLinkDocumentsToCase = jest.fn().mockResolvedValue(undefined) as jest.Mock;
+      (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
+        LinkDocumentsToCase: mockLinkDocumentsToCase,
+      }));
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: 'send-to-other-party' },
+        session: {
+          DocumentSelection: {
+            isFinancialDisputeResolution: true,
+          },
+          // No documents object
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: { understand: 'yes' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      await handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockReq.session?.documents).toBeDefined();
+      expect(mockReq.session?.documents?.isFinancialDisputeResolution).toBe(true);
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
+    });
+
+    it('should throw error when session save fails after submission', async () => {
+      // @ts-ignore - Jest mock typing issue
+      const mockLinkDocumentsToCase = jest.fn().mockResolvedValue(undefined) as jest.Mock;
+      (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
+        LinkDocumentsToCase: mockLinkDocumentsToCase,
+      }));
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: 'send-to-other-party' },
+        session: {
+          documents: {
+            documentDetails: [
+              {
+                id: 'doc1',
+                value: {
+                  DocumentFileName: 'test.pdf',
+                  DocumentType: 'Chronology',
+                  DocumentLink: { document_url: 'http://dm-store/doc1' },
+                },
+              },
+            ],
+          },
+          save: jest.fn((callback: (err?: Error) => void) => callback(new Error('Session save failed'))),
+        },
+        body: { understand: 'yes' },
       } as PartialRequestWithSession;
       const mockRes = {
         redirect: jest.fn(),
