@@ -295,7 +295,6 @@ export default function setupUploadJourneyRoute(app: Application): void {
       errors: uploadErrors,
       values: { selectedDocumentTypes, fdrHearing },
       previousStep,
-      contactEmail: 'FRCexample@justice.gov.uk',
       caseUserName: req.session.caseUserName,
       shouldAutoRename,
       getDocumentRenameFormat,
@@ -331,9 +330,8 @@ export default function setupUploadJourneyRoute(app: Application): void {
       return res.render(step.template, {
         data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType, documentGroups },
         errors,
-        values: { selectedDocumentTypes, fdrHearing, uploadMore: req.body.uploadMore },
+        values: { selectedDocumentTypes, fdrHearing, uploadMore: req.body.uploadMore, understand: req.body.understand },
         previousStep,
-        contactEmail: 'FRCexample@justice.gov.uk',
         caseUserName: req.session.caseUserName,
         shouldAutoRename,
         getDocumentRenameFormat,
