@@ -107,8 +107,14 @@ export class CheckUploadPage extends BasePage {
 
     this.unableToSendDetails = this.unableToSendDetailsContainer;
     this.unableToSendDetailsSummary = this.unableToSendDetailsContainer.locator('summary');
-    this.unableToSendDetailsParagraphOne = this.unableToSendDetailsContainer.locator('p').first();
-    this.unableToSendDetailsParagraphTwo = this.unableToSendDetailsContainer.locator('p').nth(1);
+    this.unableToSendDetailsParagraphOne = this.unableToSendDetailsContainer.getByText(
+      'You must contact the court as soon as possible if you are not able to send your documents with the other party. This could be because it is unsafe to do so, there is a court order in place preventing contact, or you do not have their contact details.',
+      { exact: true }
+    );
+    this.unableToSendDetailsParagraphTwo = this.unableToSendDetailsContainer.getByText(
+      'If the court has already agreed to send your documents for you, you must email the court to tell them you have uploaded your documents ready for service.',
+      { exact: true }
+    );
     this.understandCheckbox = this.page.getByRole('checkbox', { name: 'I understand', exact: true });
     this.submitButton = this.page.getByRole('button', { name: 'Submit', exact: true });
     this.understandErrorSummaryLink = this.page
@@ -254,6 +260,7 @@ export class CheckUploadPage extends BasePage {
     ]);
 
     await expect(this.understandCheckbox).not.toBeChecked();
+    await expect(this.submitButton).toBeEnabled();
     await this.expectAttributes([
       { locator: this.backLink, name: 'href', value: '/upload/check-upload' },
     ]);
@@ -281,14 +288,9 @@ export class CheckUploadPage extends BasePage {
     await expect(this.page.locator('.govuk-form-group--error').filter({ has: this.understandCheckbox })).toBeVisible();
   }
 
-  async acceptUnderstandingAndSubmit(): Promise<void> {
+  async acceptUnderstanding(): Promise<void> {
     await this.understandCheckbox.check();
     await expect(this.understandCheckbox).toBeChecked();
-    await this.submitButton.click();
-    await expect(this.page).toHaveURL(/\/upload\/confirmation/, {
-      timeout: NAVIGATION_TIMEOUT_MS,
-    });
-    await expect(this.confirmationHeading).toBeVisible();
   }
 
   async clickBackAndExpectCheckUpload(): Promise<void> {
