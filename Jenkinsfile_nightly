@@ -45,6 +45,8 @@ def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 withNightlyPipeline(type, product, component) {
   env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes && yarn test:api"
   env.TEST_URL = params.URL_TO_TEST
+  // Reduce Playwright concurrency in nightly runs to lower pod memory pressure.
+  env.PLAYWRIGHT_WORKERS = "2"
   loadVaultSecrets(secrets)
 
   // TODO: Enable and implement when these tests are planned and written
