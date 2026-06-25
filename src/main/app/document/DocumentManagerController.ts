@@ -34,16 +34,22 @@ export class DocumentManagerController {
             throw new Error('No user in session');
         }
 
+        const originalFilenames = (req.files as Express.Multer.File[]).map(file => file.originalname);
+
         const filesCreated = await this.getApiClient(user).create({
             files: req.files,
             classification: Classification.Public,
+            documentType,
+            caseUserName: req.session.caseUserName,
         });
 
         const newUploads: ListValue<Partial<CitizenUploadDocument> | null>[] =
-            filesCreated.map(file => ({
+            filesCreated.map((file, index) => ({
                 id: generateUuid(),
                 value: {
+                    // Note: file.originalDocumentName from CDAM actually contains the renamed filename
                     DocumentFileName: file.originalDocumentName,
+                    OriginalFileName: originalFilenames[index],
                     DocumentType: documentType,
                     DocumentLink: {
                         document_url: file._links.self.href,

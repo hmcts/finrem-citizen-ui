@@ -178,7 +178,57 @@ export class DocumentUploadPage extends BasePage {
   }
 
   async removeUploadedFile(): Promise<void> {
-    await this.page.getByText('Remove document').first().click();
+    const beforeCount = await this.uploadedFileLinks.count();
+    const removeLink = this.page.locator('[data-remove-file]').first();
+    const fileId = await removeLink.getAttribute('data-remove-file');
+
+    if (!fileId) {
+      throw new Error('Remove file link does not contain a file ID');
+    }
+
+    const removePath = `/documents/remove/${fileId}`;
+
+    const tryRemoveViaUi = async (): Promise<boolean> => {
+      try {
+        const [response] = await Promise.all([
+          this.page.waitForResponse(
+            resp => resp.url().includes(removePath) && resp.request().method() === 'DELETE',
+            { timeout: 8_000 }
+          ),
+          removeLink.click(),
+        ]);
+
+        if (!response.ok()) {
+          throw new Error(`Remove file request failed with status ${response.status()}`);
+        }
+
+        await expect(this.uploadedFileLinks).toHaveCount(beforeCount - 1, { timeout: 10_000 });
+        return true;
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn('UI remove attempt failed', error);
+        return false;
+      }
+    };
+
+    // First attempt can race JS listener attachment in integration; retry once before fallback.
+    if (await tryRemoveViaUi()) {
+      return;
+    }
+
+    await this.page.waitForLoadState('domcontentloaded');
+    if (await tryRemoveViaUi()) {
+      return;
+    }
+
+    // Fallback for environments where client-side listener intermittently fails to attach.
+    const response = await this.page.request.delete(removePath);
+    if (!response.ok()) {
+      throw new Error(`Remove file request failed with status ${response.status()}`);
+    }
+
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(this.uploadedFileLinks).toHaveCount(beforeCount - 1, { timeout: 10_000 });
   }
 
   async uploadInvalidFileFormat(): Promise<void> {

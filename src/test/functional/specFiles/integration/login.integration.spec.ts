@@ -36,6 +36,9 @@ test.describe('[integration] Authenticated Citizen User Journey Verification', (
     });
 
     test('[integration] User can sign out via the UI and is redirected to IDAM @a11y', async ({ page, basePage, idamPage, axeUtils }) => {
+      // Audit app-owned content before leaving the service domain.
+      await runA11yAudit(axeUtils);
+
       // Perform the UI-driven sign out
       await basePage.signOut();
 
@@ -57,10 +60,12 @@ test.describe('[integration] Authenticated Citizen User Journey Verification', (
       // Verify that trying to go back to the app root redirects back to login
       await basePage.goto('/');
       await expect(page).toHaveURL(idamAuthEntryUrl, { timeout: 15_000 });
-      await runA11yAudit(axeUtils);
     });
 
     test('[integration] Verify Global Layout elements: Header, Footer @a11y', async ({ page, basePage, axeUtils }) => {
+      // Audit app-owned content before visiting external GOV.UK pages.
+      await runA11yAudit(axeUtils);
+
       // Verify footer links navigate correctly
       await basePage.licenceLink.click();
       await basePage.verifyUrl(/.*open-government-licence.*/);
@@ -69,6 +74,5 @@ test.describe('[integration] Authenticated Citizen User Journey Verification', (
 
       await basePage.copyRightImgLink.click();
       await basePage.verifyUrl(/.*crown-copyright.*/);
-      await runA11yAudit(axeUtils);
     });
 });
