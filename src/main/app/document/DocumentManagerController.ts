@@ -23,7 +23,7 @@ export class DocumentManagerController {
         req: AppRequest,
         documentType: CitizenUploadDocumentType
     ): Promise<void> {
-        this.logger.info('Uploading document via CDAM (session only)');
+        this.logger.info('Uploading document via CDAM');
 
         if (!req.files?.length || req.headers.accept?.includes('application/json')) {
             throw new Error('No files were uploaded');
