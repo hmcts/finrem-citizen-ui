@@ -4,6 +4,7 @@ import { Response } from 'express';
 import FormData from 'form-data';
 
 import { UrlEndPoints } from '../../common-constants';
+import { generateRenamedFilename, shouldAutoRename, toDocumentTypeKey } from '../../functions/util/documentUtil';
 import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
 import { CASE_DOCUMENT_MANAGEMENT_SERVICE_URL, CASE_TYPE, JURISDICTION } from '../case/case-type';
 import type { UserDetails } from '../controller/AppRequest';
@@ -26,9 +27,13 @@ export class CaseDocumentManagementClient {
   async create({
     files,
     classification,
+    documentType,
+    caseUserName,
   }: {
     files: UploadedFiles;
     classification: Classification;
+    documentType?: string;
+    caseUserName?: string;
   }): Promise<DocumentManagementFile[]> {
     const formData = new FormData();
     formData.append('caseTypeId', CASE_TYPE);
@@ -36,7 +41,18 @@ export class CaseDocumentManagementClient {
     formData.append('classification', classification);
 
     for (const [, file] of Object.entries(files)) {
-      formData.append('files', file.buffer, file.originalname);
+      // Determine the filename to use when uploading
+      let uploadFilename = file.originalname;
+      
+      // If documentType is provided, check if it should be auto-renamed
+      if (documentType) {
+        const documentTypeKey = toDocumentTypeKey(documentType);
+        if (shouldAutoRename(documentTypeKey)) {
+          uploadFilename = generateRenamedFilename(documentTypeKey, file.originalname, caseUserName);
+        }
+      }
+      
+      formData.append('files', file.buffer, uploadFilename);
     }
 
     const response: AxiosResponse<CaseDocumentManagementResponse> = await this.client.post(

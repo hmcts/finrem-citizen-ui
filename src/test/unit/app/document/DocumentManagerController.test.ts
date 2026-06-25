@@ -118,6 +118,38 @@ describe('DocumentManagerController', () => {
     expect(req.session.documents?.documentDetails?.[0].id).toBe('mock-uuid');
   });
 
+  test('stores OriginalFileName alongside DocumentFileName', async () => {
+    const createMock = jest.fn().mockResolvedValue([
+      {
+        originalDocumentName: 'JohnSmith-BankStatements-24-06-2026.pdf',
+        _links: {
+          self: { href: '/doc/1' },
+          binary: { href: '/doc/1/bin' },
+        },
+      },
+    ]);
+
+    (controller as unknown as {
+      getApiClient: () => { create: typeof createMock };
+    }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
+
+    const req = buildRequest({
+      files: [
+        {
+          buffer: Buffer.from('file'),
+          originalname: 'my-bank-statement.pdf',
+        } as Express.Multer.File,
+      ],
+    });
+
+    await controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never);
+
+    expect(req.session.documents?.documentDetails).toHaveLength(1);
+    const uploadedDoc = req.session.documents?.documentDetails?.[0].value;
+    expect(uploadedDoc?.DocumentFileName).toBe('JohnSmith-BankStatements-24-06-2026.pdf');
+    expect(uploadedDoc?.OriginalFileName).toBe('my-bank-statement.pdf');
+  });
+
   test('appends to existing documents', async () => {
     const createMock = jest.fn().mockResolvedValue([
       {
