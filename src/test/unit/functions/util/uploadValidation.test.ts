@@ -88,9 +88,9 @@ describe('uploadValidation', () => {
   });
 
   describe('validateUploadedFile', () => {
-    it('should return null when no files provided', () => {
-      expect(validateUploadedFile(undefined)).toBeNull();
-      expect(validateUploadedFile([])).toBeNull();
+    it('should return NO_FILE error when no files provided', () => {
+      expect(validateUploadedFile(undefined)).toBe(FILE_VALIDATION_ERRORS.NO_FILE);
+      expect(validateUploadedFile([])).toBe(FILE_VALIDATION_ERRORS.NO_FILE);
     });
 
     it('should return EMPTY error for zero-byte files', () => {
