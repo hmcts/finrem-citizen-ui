@@ -362,23 +362,22 @@ export default function setupUploadJourneyRoute(app: Application): void {
       const logger: LoggerInstance = console as unknown as LoggerInstance;
       const documentManagerController = new DocumentManagerController(logger);
       
-      try {
-        await documentManagerController.LinkDocumentsToCase(req as unknown as AppRequest);
-        
-        // Delete DocumentSelection after successful submission
-        delete req.session.DocumentSelection;
-        
-        // Redirect to confirmation page
-        return req.session.save((err) => {
+      await documentManagerController.LinkDocumentsToCase(req as unknown as AppRequest);
+      
+      // Delete DocumentSelection after successful submission
+      delete req.session.DocumentSelection;
+      
+      // Redirect to confirmation page
+      return new Promise<void>((resolve, reject) => {
+        req.session.save((err) => {
           if (err) {
-            throw err;
+            reject(err);
+          } else {
+            res.redirect(`${RouteNames.uploadJourney}/confirmation`);
+            resolve();
           }
-          res.redirect(`${RouteNames.uploadJourney}/confirmation`);
         });
-      } catch (error) {
-        // Handle error - could re-render with error message
-        throw error;
-      }
+      });
     }
 
     const nextStep = step.next ? step.next(req.body) : null;
