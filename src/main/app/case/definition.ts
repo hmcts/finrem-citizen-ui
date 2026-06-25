@@ -3051,6 +3051,7 @@ export interface CitizenUploadDocument extends HasCaseDocument {
     DocumentDateAdded: DateAsString;
     DocumentComment: string;
     DocumentFileName: string;
+    OriginalFileName?: string;
 }
 
 export interface UserDocumentSelection {
