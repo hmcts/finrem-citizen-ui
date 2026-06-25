@@ -917,8 +917,10 @@ describe('Upload Journey Routes', () => {
       const mockRes = {
         redirect: jest.fn(),
       } as Partial<Response>;
+      const mockNext = jest.fn();
 
-      await expect(handler(mockReq as unknown as Request, mockRes as Response)).rejects.toThrow('Session save failed');
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+      expect(mockNext).toHaveBeenCalledWith(new Error('Session save failed'));
     });
 
     it('should submit documents to CCD when send-to-other-party is submitted', async () => {
@@ -955,8 +957,9 @@ describe('Upload Journey Routes', () => {
       const mockRes = {
         redirect: jest.fn(),
       } as Partial<Response>;
+      const mockNext = jest.fn();
 
-      await handler(mockReq as unknown as Request, mockRes as Response);
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
 
       expect(mockLinkDocumentsToCase).toHaveBeenCalledWith(mockReq);
       expect(mockReq.session?.documents?.isFinancialDisputeResolution).toBe(true);
@@ -994,8 +997,9 @@ describe('Upload Journey Routes', () => {
       const mockRes = {
         redirect: jest.fn(),
       } as Partial<Response>;
+      const mockNext = jest.fn();
 
-      await handler(mockReq as unknown as Request, mockRes as Response);
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
 
       expect(mockLinkDocumentsToCase).toHaveBeenCalledWith(mockReq);
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
@@ -1034,8 +1038,10 @@ describe('Upload Journey Routes', () => {
       const mockRes = {
         redirect: jest.fn(),
       } as Partial<Response>;
+      const mockNext = jest.fn();
 
-      await expect(handler(mockReq as unknown as Request, mockRes as Response)).rejects.toThrow('CCD submission failed');
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+      expect(mockNext).toHaveBeenCalledWith(new Error('CCD submission failed'));
     });
 
     it('should create documents object when it does not exist', async () => {
@@ -1060,8 +1066,9 @@ describe('Upload Journey Routes', () => {
       const mockRes = {
         redirect: jest.fn(),
       } as Partial<Response>;
+      const mockNext = jest.fn();
 
-      await handler(mockReq as unknown as Request, mockRes as Response);
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
 
       expect(mockReq.session?.documents).toBeDefined();
       expect(mockReq.session?.documents?.isFinancialDisputeResolution).toBe(true);
@@ -1098,8 +1105,10 @@ describe('Upload Journey Routes', () => {
       const mockRes = {
         redirect: jest.fn(),
       } as Partial<Response>;
+      const mockNext = jest.fn();
 
-      await expect(handler(mockReq as unknown as Request, mockRes as Response)).rejects.toThrow('Session save failed');
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+      expect(mockNext).toHaveBeenCalledWith(new Error('Session save failed'));
     });
   });
 
