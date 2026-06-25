@@ -904,7 +904,7 @@ describe('Upload Journey Routes', () => {
       uploadSteps[UploadStepNames.CheckUpload].next = originalNext;
     });
 
-    it('should throw error when session save fails', () => {
+    it('should throw error when session save fails', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.BeforeYouStart },
@@ -917,9 +917,7 @@ describe('Upload Journey Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      expect(() => {
-        handler(mockReq as unknown as Request, mockRes as Response);
-      }).toThrow('Session save failed');
+      await expect(handler(mockReq as unknown as Request, mockRes as Response)).rejects.toThrow('Session save failed');
     });
   });
 

@@ -304,7 +304,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
   });
 
   // POST /upload/:stepId - Handle form submission for any upload journey step
-  app.post(`${RouteNames.uploadJourney}/:stepId`, oidcMiddleware, (req: Request, res: Response) => {
+  app.post(`${RouteNames.uploadJourney}/:stepId`, oidcMiddleware, async (req: Request, res: Response) => {
     const step = uploadSteps[req.params.stepId as UploadStepId];
     if (!step) {
       return res.status(404).send('Step not found');
@@ -346,6 +346,39 @@ export default function setupUploadJourneyRoute(app: Application): void {
         req.session.DocumentSelection = {};
       }
       req.session.DocumentSelection.isFinancialDisputeResolution = req.body.fdrHearing === 'true';
+    }
+
+    // Handle send-to-other-party submission - send documents to CCD
+    if (req.params.stepId === 'send-to-other-party') {
+      // Transfer FDR flag from DocumentSelection to documents
+      if (req.session.DocumentSelection?.isFinancialDisputeResolution !== undefined) {
+        if (!req.session.documents) {
+          req.session.documents = {};
+        }
+        req.session.documents.isFinancialDisputeResolution = req.session.DocumentSelection.isFinancialDisputeResolution;
+      }
+
+      // Submit documents to CCD
+      const logger: LoggerInstance = console as unknown as LoggerInstance;
+      const documentManagerController = new DocumentManagerController(logger);
+      
+      try {
+        await documentManagerController.LinkDocumentsToCase(req as unknown as AppRequest);
+        
+        // Delete DocumentSelection after successful submission
+        delete req.session.DocumentSelection;
+        
+        // Redirect to confirmation page
+        return req.session.save((err) => {
+          if (err) {
+            throw err;
+          }
+          res.redirect(`${RouteNames.uploadJourney}/confirmation`);
+        });
+      } catch (error) {
+        // Handle error - could re-render with error message
+        throw error;
+      }
     }
 
     const nextStep = step.next ? step.next(req.body) : null;
