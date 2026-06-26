@@ -112,6 +112,13 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
   [UploadStepNames.SendToOtherParty]: {
     template: 'upload-journey/send-to-other-party',
+    validate: (body: Record<string, unknown>) => {
+      const errors: Record<string, string> = {};
+      if (body.understand !== 'yes') {
+        errors.understand = "You must select 'I understand' before continuing";
+      }
+      return errors;
+    },
     next: () => UploadStepNames.Confirmation,
     previous: () => UploadStepNames.CheckUpload,
   },

@@ -25,7 +25,7 @@ export function isValidFileSize(sizeInBytes: number): boolean {
 export function validateUploadedFile(files: Express.Multer.File[] | undefined): string | null {
   
   if (!files || files.length === 0) {
-    return null;
+    return FILE_VALIDATION_ERRORS.NO_FILE;
   }
 
   const file = files[0];

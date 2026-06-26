@@ -17,6 +17,9 @@ import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.hel
  * - Environments with working authentication/session support
  */
 test.describe('[integration] FDR page', () => {
+  // Run serially to avoid concurrent logins overwhelming the AAT pod.
+  test.describe.configure({ mode: 'serial' });
+
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
