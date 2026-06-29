@@ -227,6 +227,7 @@ describe('DocumentManagerController', () => {
 
     await controller.LinkDocumentsToCase(req);
 
+    expect(getCaseApi).toHaveBeenCalledWith(req.session.user, mockLogger);
     expect(triggerEventMock).toHaveBeenCalled();
     expect(req.session.documents).toBeUndefined();
   });
