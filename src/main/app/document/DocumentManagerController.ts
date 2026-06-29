@@ -107,7 +107,7 @@ export class DocumentManagerController {
             },
         }));
 
-        const systemUser = await getSystemUser();
+        const systemUser = req.session.user as UserDetails;
         const caseworkerUserApi = getCaseApi(systemUser, this.logger);
 
         req.session.caseData = await caseworkerUserApi.triggerEvent(
