@@ -154,6 +154,40 @@ describe('CaseDocumentManagementClient', () => {
     );
   });
 
+  test('rejects when multipart content length cannot be calculated', async () => {
+    const getLengthSpy = jest.spyOn(FormData.prototype, 'getLength').mockImplementationOnce(
+      (callback: (error: Error | null, length: number) => void): void => {
+        callback(new Error('Unable to calculate content length'), 0);
+      }
+    );
+
+    const files: Express.Multer.File[] = [
+      {
+        fieldname: 'files',
+        originalname: 'file.pdf',
+        encoding: '7bit',
+        mimetype: 'application/pdf',
+        size: 100,
+        buffer: Buffer.from('file'),
+        stream: Readable.from([]),
+        destination: '',
+        filename: '',
+        path: '',
+      },
+    ];
+
+    try {
+      await expect(client.create({
+        files,
+        classification: Classification.Public,
+      })).rejects.toThrow('Unable to calculate content length');
+
+      expect(mockAxios.post).not.toHaveBeenCalled();
+    } finally {
+      getLengthSpy.mockRestore();
+    }
+  });
+
   test('returns empty array when no documents returned', async () => {
     mockAxios.post.mockResolvedValue({ data: {} });
 
