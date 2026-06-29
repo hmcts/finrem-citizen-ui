@@ -8,9 +8,9 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "rootDir": ".",
+    "rootDir": "../../",
     "lib": ["ESNext", "DOM"],
-    "types": ["node", "@playwright/test"],
+    "types": ["node", "@playwright/test", "jest", "express-session", "multer"],
     "baseUrl": "../../",
     "paths": {
       "router/*": ["src/main/router/*"],
@@ -19,5 +19,6 @@
       "@helpers/*": ["src/test/functional/utils/helpers/*"]
     }
   },
-  "include": ["functional/**/*.ts", "a11y/**/*.ts", "fixtures/**/*.ts", "../../playwright.config.mts"]
+  "include": ["**/*.ts", "../../playwright.config.mts"],
+  "exclude": []
 }
