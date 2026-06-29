@@ -60,16 +60,6 @@ export function getMatchingAccessCode(
 export function validateAccessCodeAgainstCase(
   matchingAccessCode: AccessCodeCollection
 ): AccessCodeValidationResult {
-  // Check if access code has expired
-  const validUntilDate = new Date(matchingAccessCode.value.validUntil);
-  const now = new Date();
-
-  if (now > validUntilDate) {
-    return {
-      isValid: false,
-      error: 'The access code you entered has expired. Contact the court to get a new code',
-    };
-  }
 
   // Check if access code has already been used
   if (matchingAccessCode.value.isValid === 'No') {

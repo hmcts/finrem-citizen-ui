@@ -90,8 +90,6 @@ describe('getMatchingAccessCode', () => {
         id: '1',
         value: {
           accessCode: 'AAAA1111',
-          createdAt: '2024-01-01',
-          validUntil: '2024-12-31',
           isValid: YesOrNo.YES,
         },
       },
@@ -101,8 +99,6 @@ describe('getMatchingAccessCode', () => {
         id: '2',
         value: {
           accessCode: 'BBBB2222',
-          createdAt: '2024-01-01',
-          validUntil: '2024-12-31',
           isValid: YesOrNo.YES,
         },
       },
@@ -140,54 +136,28 @@ describe('getMatchingAccessCode', () => {
 });
 
 describe('validateAccessCodeAgainstCase', () => {
-  const createMockAccessCode = (validUntil: string, isValid: YesOrNo): AccessCodeCollection => ({
+  const createMockAccessCode = (isValid: YesOrNo): AccessCodeCollection => ({
     id: '1',
     value: {
       accessCode: 'TEST1234',
-      createdAt: '2024-01-01',
-      validUntil,
       isValid,
     },
   });
 
-  it('should return valid when access code is not expired and not used', () => {
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 30);
-    const mockAccessCode = createMockAccessCode(futureDate.toISOString(), YesOrNo.YES);
+  it('should return valid when access code is not used', () => {
+    const mockAccessCode = createMockAccessCode(YesOrNo.YES);
     
     const result = validateAccessCodeAgainstCase(mockAccessCode);
     expect(result.isValid).toBe(true);
     expect(result.error).toBeUndefined();
   });
 
-  it('should return invalid when access code has expired', () => {
-    const pastDate = new Date();
-    pastDate.setDate(pastDate.getDate() - 1);
-    const mockAccessCode = createMockAccessCode(pastDate.toISOString(), YesOrNo.YES);
-    
-    const result = validateAccessCodeAgainstCase(mockAccessCode);
-    expect(result.isValid).toBe(false);
-    expect(result.error).toBe('The access code you entered has expired. Contact the court to get a new code');
-  });
-
   it('should return invalid when access code has already been used', () => {
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 30);
-    const mockAccessCode = createMockAccessCode(futureDate.toISOString(), YesOrNo.NO);
+    const mockAccessCode = createMockAccessCode(YesOrNo.NO);
     
     const result = validateAccessCodeAgainstCase(mockAccessCode);
     expect(result.isValid).toBe(false);
     expect(result.error).toBe('The access code you entered has already been used, you should contact the court.');
-  });
-
-  it('should prioritize expiry check over usage check', () => {
-    const pastDate = new Date();
-    pastDate.setDate(pastDate.getDate() - 1);
-    const mockAccessCode = createMockAccessCode(pastDate.toISOString(), YesOrNo.NO);
-    
-    const result = validateAccessCodeAgainstCase(mockAccessCode);
-    expect(result.isValid).toBe(false);
-    expect(result.error).toBe('The access code you entered has expired. Contact the court to get a new code');
   });
 });
 
@@ -261,24 +231,17 @@ describe('addUserToCaseForRole', () => {
 
 // ─── Route handler tests ───────────────────────────────────────────────────────
 
-const futureDate = () => {
-  const d = new Date();
-  d.setFullYear(d.getFullYear() + 1);
-  return d.toISOString();
-};
-
 const buildMockCaseData = (
   applicantCode = 'APPCODE1',
   respondentCode = 'RSPCODE1',
-  isValid: YesOrNo = YesOrNo.YES,
-  validUntil = futureDate()
+  isValid: YesOrNo = YesOrNo.YES
 ): FinremCaseData =>
   ({
     applicantAccessCodes: [
-      { id: '1', value: { accessCode: applicantCode, createdAt: '2024-01-01', validUntil, isValid } },
+      { id: '1', value: { accessCode: applicantCode, isValid } },
     ],
     respondentAccessCodes: [
-      { id: '2', value: { accessCode: respondentCode, createdAt: '2024-01-01', validUntil, isValid } },
+      { id: '2', value: { accessCode: respondentCode, isValid } },
     ],
     applicantFlags: {
       partyName: 'Test Applicant Name',
@@ -378,16 +341,6 @@ describe('POST /enter-access-code route handler', () => {
       .post('/enter-access-code').send({ accessCode: 'NOMATCH1' });
     expect(res.status).toBe(200);
     expect(res.body.locals.errors.accessCode).toBe('Access code does not match case number');
-  });
-
-  it('renders error when access code has expired', async () => {
-    const pastDate = new Date();
-    pastDate.setFullYear(pastDate.getFullYear() - 1);
-    const caseData = buildMockCaseData('APPCODE1', 'RSPCODE1', YesOrNo.YES, pastDate.toISOString());
-    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
-      .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
-    expect(res.status).toBe(200);
-    expect(res.body.locals.errors.accessCode).toContain('expired');
   });
 
   it('renders error when access code has already been used', async () => {
