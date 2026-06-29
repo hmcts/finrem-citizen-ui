@@ -2523,8 +2523,6 @@ export interface OrderSummary {
 
 export interface AccessCodeEntry {
   accessCode: string;
-  createdAt: DateAsString;
-  validUntil: DateAsString;
   isValid: YesOrNo;
 }
 
