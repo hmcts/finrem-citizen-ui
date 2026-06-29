@@ -152,11 +152,6 @@ export class OIDCModule {
         }
 
         const oidcClient = await getOidcClient();
-        this.logger.info(
-          `[oidc] Session saved successfully before redirect. sessionID=${req.sessionID}
-          codeVerifierPresent=${!!req.session?.codeVerifier}
-          noncePresent=${!!req.session?.nonce}`
-        );
 
         const codeVerifier = oidcClient.randomPKCECodeVerifier();
         req.session.codeVerifier = codeVerifier;
@@ -176,13 +171,6 @@ export class OIDCModule {
         }
 
         const authUrl = oidcClient.buildAuthorizationUrl(this.clientConfig!, parameters);
-        this.logger.info('authUrl.href', authUrl.href);
-        this.logger.info(
-          'before res.redirect(authUrl.href) !!!! codeVerifier ',
-          req.session.codeVerifier,
-          '!!!! nonce ',
-          req.session.nonce
-        );
         req.session.save(err => {
           if (err) {
             this.logger.error('Session save error before redirecting to IDAM:', err);
@@ -206,7 +194,6 @@ export class OIDCModule {
         this.logger.info('/oauth2/callback is called');
 
         const oidcClient = await getOidcClient();
-        this.logger.info('after await getOidcClient() ');
 
         const { codeVerifier, nonce } = req.session;
         this.logger.info(
@@ -250,16 +237,12 @@ export class OIDCModule {
         } satisfies UserDetails;
 
         req.session.save(() => {
-          this.logger.info('req.session.codeVerifier inside save ', req.session.codeVerifier);
-          this.logger.info('req.session.nonce after inside ', req.session.nonce);
           delete req.session.codeVerifier;
           delete req.session.nonce;
           const returnTo = req.session.returnTo ?? RouteNames.basePath;
           delete req.session.returnTo;
           res.redirect(returnTo);
         });
-        this.logger.info('req.session.nonce after save ', req.session.nonce);
-        this.logger.info('req.session.nonce after save ', req.session.nonce);
       } catch (err: unknown) {
         this.logger.error('OIDC callback error:', err);
         next(new OIDCCallbackError('Authentication callback failed'));
