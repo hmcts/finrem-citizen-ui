@@ -26,10 +26,6 @@ jest.mock('../../../../main/app/document/PreviouslyUploadedDocumentClient', () =
   })),
 }));
 
-jest.mock('../../../../main/app/auth/user', () => ({
-  getSystemUser: jest.fn().mockResolvedValue({}),
-}));
-
 describe('DocumentManagerController', () => {
   let mockLogger: LoggerInstance;
   let controller: DocumentManagerController;
@@ -229,6 +225,59 @@ describe('DocumentManagerController', () => {
 
     expect(triggerEventMock).toHaveBeenCalled();
     expect(req.session.documents).toBeUndefined();
+  });
+
+  test('uses the session user when creating case API client in LinkDocumentsToCase', async () => {
+    jest.clearAllMocks();
+
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({
+      triggerEvent: triggerEventMock,
+    });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: {
+          documentDetails: [{ id: '1', value: {} }],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(getCaseApi).toHaveBeenCalledWith(userDetails, mockLogger);
+    expect(triggerEventMock).toHaveBeenCalled();
+  });
+
+  test('does not call getSystemUser in LinkDocumentsToCase', async () => {
+    jest.clearAllMocks();
+
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    const { getSystemUser } = require('../../../../main/app/auth/user');
+
+    getCaseApi.mockReturnValue({
+      triggerEvent: triggerEventMock,
+    });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: {
+          documentDetails: [{ id: '1', value: {} }],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(getSystemUser).not.toHaveBeenCalled();
   });
 
   describe('downloadDocument', () => {
