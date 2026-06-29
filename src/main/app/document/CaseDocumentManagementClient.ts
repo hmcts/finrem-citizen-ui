@@ -61,13 +61,16 @@ export class CaseDocumentManagementClient {
       });
     }
 
+    const headers = {
+      ...formData.getHeaders(),
+      'Content-Length': await getFormDataLength(formData),
+    };
+
     const response: AxiosResponse<CaseDocumentManagementResponse> = await this.client.post(
       UrlEndPoints.UploadDocument,
       formData,
       {
-        headers: {
-          ...formData.getHeaders()
-        },
+        headers,
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
       }
@@ -127,6 +130,18 @@ function getUploadedFiles(files: UploadedFiles): Express.Multer.File[] {
   return Array.isArray(files) ? files : Object.values(files).flat();
 }
 
+function getFormDataLength(formData: FormData): Promise<number> {
+  return new Promise((resolve, reject) => {
+    formData.getLength((error, length) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve(length);
+    });
+  });
+}
 
 export enum Classification {
   Private = 'PRIVATE',
