@@ -11,11 +11,13 @@ describe('[MOCK] Case API endpoints', () => {
   const seededCaseTypeId = 'FinancialRemedyContested';
 
   beforeAll(async () => {
+    const createdAt = new Date().toISOString();
 
     const seededCase: NonNullable<MockCaseApiOptions['seedCases']>[number] = {
       id: seededCaseId,
       state: 'CaseAdded',
       caseTypeId: seededCaseTypeId,
+      createdDate: createdAt,
       data: {
         divorceCaseNumber: 'LV24D00001',
         applicantAccessCodes: [
