@@ -4,7 +4,7 @@ import { BasePage } from './basePage.page';
 import { GETTING_HELP_OPENING_HOURS, GettingHelpPanel } from './components/gettingHelpPanel.component';
 
 const URL_PATTERNS = {
-  DOCUMENT_SELECTION: /\/upload\/document-selection/,
+  DOCUMENT_SELECTION: /\/upload\/document-type-selection/,
   FDR: /\/upload\/fdr/,
   UPLOAD_DOCUMENTS: /\/upload\/upload-documents/,
 };
