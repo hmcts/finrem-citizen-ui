@@ -39,17 +39,10 @@ export default function setupTestSupportRoutes(app: Application): void {
       });
     }
 
-    const today = new Date().toISOString().split('T')[0];
-    const nextYear = new Date();
-    nextYear.setFullYear(nextYear.getFullYear() + 1);
-    const validUntil = nextYear.toISOString().split('T')[0];
-
     const applicantEntry: AccessCodeCollection = {
       id: 'mock-applicant-access-code',
       value: {
         accessCode: applicantCode.toUpperCase(),
-        createdAt: today,
-        validUntil,
         isValid: YesOrNo.YES,
       },
     };
@@ -58,8 +51,6 @@ export default function setupTestSupportRoutes(app: Application): void {
       id: 'mock-respondent-access-code',
       value: {
         accessCode: respondentCode.toUpperCase(),
-        createdAt: today,
-        validUntil,
         isValid: YesOrNo.YES,
       },
     };

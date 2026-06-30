@@ -1,4 +1,4 @@
-import { defineConfig, devices,type ReporterDescription } from '@playwright/test';
+import { defineConfig, devices, type ReporterDescription } from '@playwright/test';
 import dotenv from 'dotenv';
 
 // Import HMCTS common configs
@@ -17,7 +17,6 @@ const getBaseUrl = (): string => {
   if (env.startsWith('pr-')) {
     return `https://finrem-citizen-ui-${env}.preview.platform.hmcts.net`;
   }
-  // For AAT/demo/etc use the citizen UI, not manage-case (XUI)
   return `https://finrem-citizen-ui.${env}.platform.hmcts.net`;
 };
 
@@ -25,6 +24,10 @@ const finalBaseUrl = getBaseUrl();
 const isLocal = finalBaseUrl.includes('localhost');
 const displayEnv = isLocal ? 'local' : process.env.RUNNING_ENV || 'aat';
 const slowMoMs = Number(process.env.PLAYWRIGHT_SLOWMO_MS || '0');
+const configuredWorkers = Number.parseInt(process.env.PLAYWRIGHT_WORKERS || '', 10);
+const workerCount = Number.isFinite(configuredWorkers) && configuredWorkers > 0 ? configuredWorkers : 4;
+const configuredRetries = Number.parseInt(process.env.PLAYWRIGHT_RETRIES || '', 10);
+const retryCount = Number.isFinite(configuredRetries) && configuredRetries >= 0 ? configuredRetries : 3;
 const commonUse = (CommonConfig.recommended.use ?? {}) as Record<string, unknown>;
 const commonLaunchOptions = (commonUse.launchOptions ?? {}) as Record<string, unknown>;
 
@@ -46,8 +49,12 @@ const isRunningApiTests = process.env.RUN_API_TESTS === 'true';
 export default defineConfig({
   ...CommonConfig.recommended,
 
-  // Link to your test-specific tsconfig
+ // Link to test-specific tsconfig
+
   tsconfig: 'src/test/tsconfig.json',
+
+  workers: workerCount,
+  retries: retryCount,
 
   testDir: './src/test',
   testMatch: ['**/*.spec.ts'],

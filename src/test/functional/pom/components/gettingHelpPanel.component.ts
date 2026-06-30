@@ -1,5 +1,9 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+export const GETTING_HELP_OPENING_HOURS = 'Monday to Friday, 8.30am to 5pm';
+export const GETTING_HELP_PHONE = '0300 123 5577';
+export const GETTING_HELP_CALL_CHARGES_HREF = 'https://www.gov.uk/call-charges';
+
 type VerifyContactContentOptions = {
   openingHoursLocator?: Locator;
   callChargesHref?: string;
@@ -25,7 +29,7 @@ export class GettingHelpPanel {
     this.toggle = this.summary;
 
     this.emailLink = this.details.getByRole('link').filter({ hasText: /@/ });
-    this.telephoneText = this.page.getByText('0300 123 5577');
+    this.telephoneText = this.page.getByText(GETTING_HELP_PHONE);
     this.callChargesLink = this.page.getByRole('link', {
       name: 'Find out about call charges (opens in new tab)',
     });
@@ -75,9 +79,10 @@ export class GettingHelpPanel {
       await expect(this.emailLink).toHaveAttribute('href', /mailto:.+@.+/);
     }
 
-    if (options?.callChargesHref) {
-      await expect(this.callChargesLink).toHaveAttribute('href', options.callChargesHref);
-    }
+    await expect(this.callChargesLink).toHaveAttribute(
+      'href',
+      options?.callChargesHref ?? GETTING_HELP_CALL_CHARGES_HREF
+    );
 
     await expect(this.callChargesLink).toHaveAttribute('target', '_blank');
     await expect(this.callChargesLink).toHaveAttribute('rel', 'noopener noreferrer');

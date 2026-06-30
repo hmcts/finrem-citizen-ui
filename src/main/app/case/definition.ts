@@ -2523,8 +2523,6 @@ export interface OrderSummary {
 
 export interface AccessCodeEntry {
   accessCode: string;
-  createdAt: DateAsString;
-  validUntil: DateAsString;
   isValid: YesOrNo;
 }
 
@@ -3045,11 +3043,13 @@ export interface FeeItem {
 export interface CitizenUploadDocument extends HasCaseDocument {
     generalDocumentUploadDateTime: DateAsString;
     DocumentType: CitizenUploadDocumentType;
+    isFDR: YesOrNo;
     DocumentEmailContent: string;
     DocumentLink: CitizenDocument;
     DocumentDateAdded: DateAsString;
     DocumentComment: string;
     DocumentFileName: string;
+    OriginalFileName?: string;
 }
 
 export interface UserDocumentSelection {

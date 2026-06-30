@@ -222,16 +222,66 @@ Commands are defined in [../../../../package.json](../../../../package.json).
 
 | Script | Local | Local mock flow | Preview/AAT | Purpose |
 |---|---|---|---|---|
-| yarn test:functional | Yes | Yes | Yes (with ACCESS_CODE_REAL_INTEGRATION=true) | Main functional run on Chromium with retries; installs Playwright deps; includes @a11y-tagged tests |
-| yarn test:functional:pr | Yes | Yes | Yes | PR-tagged functional tests only (@PR) |
+| yarn test:functional:install-deps | Yes | Yes | Yes | Installs Playwright browser dependencies for first-time setup or runner refresh |
+| yarn test:functional | Yes | Yes | Yes (with ACCESS_CODE_REAL_INTEGRATION=true) | Main functional run on Chromium with tuned workers and retries for fast, stable feedback; includes @a11y-tagged tests |
+| yarn test:functional:allBrowsers | Yes | Yes | Yes (with ACCESS_CODE_REAL_INTEGRATION=true) | Cross-browser functional run (Chromium, Firefox, WebKit) using the shared functional worker/retry controls for consistent tuning |
+| yarn test:functional:pr | Yes | Yes | Yes | PR-tagged Chromium-only functional tests using the same tuned worker/retry defaults as main Chromium runs |
 | yarn test:functional:headed:slowmo | Yes | Yes | Yes | Interactive debugging with headed Chromium + Playwright inspector against the selected target |
 | yarn test:functional:allBrowsers:ui | Yes | Yes | Yes | Playwright UI mode for interactive debugging against the selected target |
 | yarn test:playwright:a11y:chrome | Yes | Yes | Yes | Accessibility-tagged tests on Chromium |
 | yarn test:playwright:a11y:all-browsers | Yes | Yes | Yes | Accessibility-tagged tests on all browsers + report |
 | yarn qacichecks | Yes | Yes | Yes | Broadest single-script QA gate: build, lint, unit, route, API, coverage, and functional tests on Chromium |
+| yarn qacichecks:allBrowsers | Yes | Yes | Yes | Broad QA gate with cross-browser functional coverage (Chromium, Firefox, WebKit) |
 
 `Local` means `.env` target selection points to `local`.
 `Local mock flow` means local target plus mock API + `ENABLE_TEST_SUPPORT_ROUTES=true` for mock-suite behavior.
+
+### Worker Strategy (Speed + Stability)
+
+The functional scripts use benchmarked defaults chosen to optimize wall-clock time while keeping stability acceptable for integration-style browser tests.
+
+Default worker/retry settings in `package.json`:
+
+- `yarn test:functional` (Chromium): `--workers=${PLAYWRIGHT_CHROMIUM_WORKERS:-8}` and `--retries=${PLAYWRIGHT_RETRIES:-3}`
+- `yarn test:functional:pr` (Chromium + `@PR`): same defaults as Chromium main run
+- `yarn test:functional:allBrowsers` (Chromium, Firefox, WebKit): `--workers=${PLAYWRIGHT_CHROMIUM_WORKERS:-8}` and `--retries=${PLAYWRIGHT_RETRIES:-3}`
+- `yarn test:playwright:a11y:chrome` (Chromium + `@a11y`): `--workers=${PLAYWRIGHT_A11Y_CHROMIUM_WORKERS:-6}` and `--retries=${PLAYWRIGHT_A11Y_RETRIES:-1}`
+- `yarn test:playwright:a11y:all-browsers` (Chromium, Firefox, WebKit + `@a11y`): `--workers=${PLAYWRIGHT_A11Y_ALL_BROWSERS_WORKERS:-4}` and `--retries=${PLAYWRIGHT_A11Y_RETRIES:-1}`
+- `yarn test:functional:headed:slowmo`: fixed `--workers=1` (intentional for interactive debugging)
+- `yarn test:functional:allBrowsers:ui`: worker count controlled in Playwright UI mode
+
+Why these values:
+
+- With 72 tests in the suite, chromium-only benchmark on a 14-core macOS runner improved from ~119.63s (4 workers) to ~87.43s (6 workers) to ~56.28s (8 workers) with equivalent pass/skip profile.
+- All-browsers runs are more resource-intensive because three engines run in one command; this script currently shares `PLAYWRIGHT_CHROMIUM_WORKERS` so one env var can throttle or increase both main functional lanes together.
+- A11y runs execute heavier accessibility audits; lower worker defaults (`6` for Chromium a11y, `4` for all-browsers a11y) reduce contention and transient audit flake.
+- `retries=3` keeps functional runs resilient to transient environment/network issues without over-serializing execution.
+- `retries=1` for a11y strikes a balance between stability and runtime for audit-focused lanes.
+
+When to override defaults:
+
+- If CI is resource-constrained or shows flake spikes, lower workers temporarily.
+- If local hardware is stronger and stable, increase workers for faster feedback.
+- For strict performance benchmarking, use `PLAYWRIGHT_RETRIES=0`.
+
+Override examples:
+
+```bash
+# Constrain Chromium run for a smaller CI agent
+PLAYWRIGHT_CHROMIUM_WORKERS=6 PLAYWRIGHT_RETRIES=3 yarn test:functional
+
+# Increase parallelism for both Chromium-only and all-browsers functional lanes
+PLAYWRIGHT_CHROMIUM_WORKERS=10 PLAYWRIGHT_RETRIES=3 yarn test:functional:allBrowsers
+
+# Pure speed benchmark with retries disabled
+PLAYWRIGHT_RETRIES=0 yarn test:functional
+
+# Run Chromium a11y lane faster on a strong local machine
+PLAYWRIGHT_A11Y_CHROMIUM_WORKERS=8 PLAYWRIGHT_A11Y_RETRIES=1 yarn test:playwright:a11y:chrome
+
+# Stabilize all-browsers a11y in a constrained CI agent
+PLAYWRIGHT_A11Y_ALL_BROWSERS_WORKERS=3 PLAYWRIGHT_A11Y_RETRIES=2 yarn test:playwright:a11y:all-browsers
+```
 
 ### Best Practice Run Order
 

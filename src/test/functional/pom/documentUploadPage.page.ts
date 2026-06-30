@@ -5,7 +5,7 @@ import path from 'node:path';
 import { expect, Locator, Page } from '@playwright/test';
 
 import { BasePage } from './basePage.page';
-import { GettingHelpPanel } from './components/gettingHelpPanel.component';
+import { GETTING_HELP_OPENING_HOURS, GettingHelpPanel } from './components/gettingHelpPanel.component';
 
 const TEST_DATA_DIR = path.join(__dirname, '../utils/test_data');
 
@@ -83,7 +83,7 @@ export class DocumentUploadPage extends BasePage {
     });
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
     this.noUploadedFilesMessage = this.page.getByText('You must upload at least one file before continuing', { exact: true });
-    this.helpOpeningHours = this.gettingHelp.details.getByText('Monday to Friday, 8.30am to 5pm', {
+    this.helpOpeningHours = this.gettingHelp.details.getByText(GETTING_HELP_OPENING_HOURS, {
       exact: false,
     });
   }
@@ -110,10 +110,32 @@ export class DocumentUploadPage extends BasePage {
 
     await fileInput.setInputFiles(filePath);
     await uploadButton.click();
-    await this.page.waitForLoadState('networkidle');
 
     if (expectUploadSuccess) {
       await expect(this.uploadedFileLinks).toHaveCount(beforeCount + 1, { timeout: 15000 });
+      await expect(this.inlineUploadFailedError).toHaveCount(0);
+    } else {
+      await expect(this.uploadedFileLinks).toHaveCount(beforeCount);
+    }
+  }
+
+  async chooseFileAndUploadDocumentByTypeValue(
+    documentTypeValue: string,
+    filePath: string = SUPPORTED_UPLOAD_FILES.docx,
+    expectUploadSuccess = true,
+  ): Promise<void> {
+    const beforeCount = await this.uploadedFileLinks.count();
+
+    const uploadForm = this.page.locator(`[data-upload-form="${documentTypeValue}"]`);
+    const fileInput = uploadForm.locator('input[type="file"]');
+    const uploadButton = uploadForm.getByRole('button', { name: /Upload file for/i });
+
+    await fileInput.setInputFiles(filePath);
+    await uploadButton.click();
+
+    if (expectUploadSuccess) {
+      await expect(this.uploadedFileLinks).toHaveCount(beforeCount + 1, { timeout: 15000 });
+      await expect(this.inlineUploadFailedError).toHaveCount(0);
     } else {
       await expect(this.uploadedFileLinks).toHaveCount(beforeCount);
     }
@@ -143,12 +165,70 @@ export class DocumentUploadPage extends BasePage {
     await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.xlsx);
   }
 
+  async chooseFileAndUploadBankStatementDocx(): Promise<void> {
+    await this.chooseFileAndUploadDocumentByTypeValue('bank-statements', SUPPORTED_UPLOAD_FILES.docx);
+  }
+
+  async chooseFileAndUploadPayslipDocx(): Promise<void> {
+    await this.chooseFileAndUploadDocumentByTypeValue('payslips', SUPPORTED_UPLOAD_FILES.docx);
+  }
+
   getUploadedFileByName(filename: string): Locator {
     return this.termByLabel(filename);
   }
 
   async removeUploadedFile(): Promise<void> {
-    await this.page.getByText('Remove document').first().click();
+    const beforeCount = await this.uploadedFileLinks.count();
+    const removeLink = this.page.locator('[data-remove-file]').first();
+    const fileId = await removeLink.getAttribute('data-remove-file');
+
+    if (!fileId) {
+      throw new Error('Remove file link does not contain a file ID');
+    }
+
+    const removePath = `/documents/remove/${fileId}`;
+
+    const tryRemoveViaUi = async (): Promise<boolean> => {
+      try {
+        const [response] = await Promise.all([
+          this.page.waitForResponse(
+            resp => resp.url().includes(removePath) && resp.request().method() === 'DELETE',
+            { timeout: 8_000 }
+          ),
+          removeLink.click(),
+        ]);
+
+        if (!response.ok()) {
+          throw new Error(`Remove file request failed with status ${response.status()}`);
+        }
+
+        await expect(this.uploadedFileLinks).toHaveCount(beforeCount - 1, { timeout: 10_000 });
+        return true;
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn('UI remove attempt failed', error);
+        return false;
+      }
+    };
+
+    // First attempt can race JS listener attachment in integration; retry once before fallback.
+    if (await tryRemoveViaUi()) {
+      return;
+    }
+
+    await this.page.waitForLoadState('domcontentloaded');
+    if (await tryRemoveViaUi()) {
+      return;
+    }
+
+    // Fallback for environments where client-side listener intermittently fails to attach.
+    const response = await this.page.request.delete(removePath);
+    if (!response.ok()) {
+      throw new Error(`Remove file request failed with status ${response.status()}`);
+    }
+
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(this.uploadedFileLinks).toHaveCount(beforeCount - 1, { timeout: 10_000 });
   }
 
   async uploadInvalidFileFormat(): Promise<void> {

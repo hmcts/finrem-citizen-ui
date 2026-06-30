@@ -13,8 +13,6 @@ import { type AccessCodeCollection, type AccessCodeEntry, YesOrNo } from '../../
 
 const entry = (code: string): AccessCodeEntry => ({
   accessCode: code,
-  createdAt: '2024-01-01',
-  validUntil: '2024-12-31',
   isValid: YesOrNo.YES,
 });
 

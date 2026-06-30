@@ -1,5 +1,9 @@
+import { randomUUID } from 'crypto';
 import { Application, Request, Response } from 'express';
+import { promises as fs } from 'fs';
 import multer from 'multer';
+import { tmpdir } from 'os';
+import path from 'path';
 import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../app/auth/user';
@@ -13,6 +17,7 @@ import { RouteNames, ViewNames } from '../common-constants';
 import { orchestrateHome } from '../functions/util/homePageUtil';
 import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../functions/util/uploadValidation';
 import { oidcMiddleware } from '../middleware';
+import { AppInsights } from '../modules/appinsights';
 
 export default function (app: Application): void {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
@@ -60,11 +65,18 @@ export default function (app: Application): void {
       });
     } catch (error) {
       const err = error as Error;
+      const errorMessage = 'Failed to add user to case.';
       logger.error('Error adding user to case', { error: err.message });
-
+      AppInsights.trackException(error, {
+        route: RouteNames.caseUserRole,
+        userId: assignments[0].user_id,
+        caseRole: assignments[0].case_role,
+        caseId: assignments[0].case_id,
+        reason: errorMessage,
+      });
       return res.status(500).json({
         success: false,
-        message: 'Failed to add user to case.',
+        message: errorMessage,
         error: err.message,
       });
     }
@@ -77,7 +89,12 @@ export default function (app: Application): void {
   });
 
   const upload = multer({
-    storage: multer.memoryStorage(),
+    storage: multer.diskStorage({
+      destination: tmpdir(),
+      filename: (_req, file, callback) => {
+        callback(null, `${randomUUID()}${path.extname(file.originalname)}`);
+      },
+    }),
     limits: {
       fileSize: 100 * 1024 * 1024, // 100MB max file size
     },
@@ -97,6 +114,21 @@ export default function (app: Application): void {
       return redirectWithError(req, res, next, documentType, returnUrl, FILE_VALIDATION_ERRORS.TOO_LARGE);
     }
     next();
+  }
+
+  async function cleanupUploadedFiles(files: Express.Multer.File[] | undefined): Promise<void> {
+    await Promise.all((files ?? [])
+      .filter(file => !!file.path)
+      .map(async file => {
+        try {
+          await fs.unlink(file.path);
+        } catch (error) {
+          logger.warn('Failed to remove temporary upload file', {
+            filePath: file.path,
+            error,
+          });
+        }
+      }));
   }
 
   const documentController = new DocumentManagerController(logger);
@@ -146,36 +178,36 @@ export default function (app: Application): void {
       if (err) {
         const documentType = req.body.documentType as string;
         const returnUrl = req.body.returnUrl || RouteNames.documents;
-        
+
         // Handle Multer-specific errors
         if (err instanceof multer.MulterError) {
           if (err.code === 'LIMIT_FILE_SIZE') {
-            logger.warn('File size limit exceeded', { 
+            logger.warn('File size limit exceeded', {
               fieldname: err.field,
-              limit: '100MB' 
+              limit: '100MB'
             });
             return redirectWithError(
-              req, 
-              res, 
+              req,
+              res,
               next,
-              documentType, 
-              returnUrl, 
+              documentType,
+              returnUrl,
               FILE_VALIDATION_ERRORS.TOO_LARGE
             );
           }
-          
+
           // Handle other Multer errors
           logger.error('Multer error', { code: err.code, field: err.field });
           return redirectWithError(
-            req, 
-            res, 
+            req,
+            res,
             next,
-            documentType, 
-            returnUrl, 
+            documentType,
+            returnUrl,
             FILE_VALIDATION_ERRORS.UPLOAD_FAILED
           );
         }
-        
+
         // Pass non-Multer errors to next error handler
         return next(err);
       }
@@ -185,21 +217,24 @@ export default function (app: Application): void {
       try {
         const documentType = req.body.documentType as string;
         const returnUrl = req.body.returnUrl || RouteNames.documents;
-        
+
         // Validate uploaded file
         const validationError = validateUploadedFile(req.files as Express.Multer.File[]);
         if (validationError) {
           return redirectWithError(req, res, next, documentType, returnUrl, validationError);
         }
 
-        // Convert kebab-case to SCREAMING_SNAKE_CASE for enum lookup
+        // documentType may already be an enum value (e.g. "Bank statements")
+        // or kebab-case (e.g. "bank-statements"). Resolve to the enum value.
+        const isEnumValue = (Object.values(CitizenUploadDocumentType) as string[]).includes(documentType);
         const documentTypeKey = documentType
           .toUpperCase()
           .replace(/-/g, '_');
-        
-        const selectedType =
-          CitizenUploadDocumentType[
-          documentTypeKey as keyof typeof CitizenUploadDocumentType
+
+        const selectedType = isEnumValue
+          ? (documentType as CitizenUploadDocumentType)
+          : CitizenUploadDocumentType[
+            documentTypeKey as keyof typeof CitizenUploadDocumentType
           ];
 
         try {
@@ -213,6 +248,8 @@ export default function (app: Application): void {
           return redirectWithError(req, res, next, documentType, returnUrl, FILE_VALIDATION_ERRORS.UPLOAD_FAILED);
         }
 
+        await cleanupUploadedFiles(req.files as Express.Multer.File[]);
+
         // Clear errors on successful upload
         if (req.session.uploadErrors) {
           delete req.session.uploadErrors[documentType];
@@ -220,7 +257,7 @@ export default function (app: Application): void {
             delete req.session.uploadErrors;
           }
         }
-        
+
         req.session.save((err) => {
           if (err) {
             return next(err);
@@ -228,6 +265,7 @@ export default function (app: Application): void {
           res.redirect(returnUrl);
         });
       } catch (error) {
+        await cleanupUploadedFiles(req.files as Express.Multer.File[]);
         next(error);
       }
     }
@@ -241,12 +279,14 @@ export default function (app: Application): void {
     returnUrl: string,
     errorMessage: string
   ): void {
+    void cleanupUploadedFiles(req.files as Express.Multer.File[]);
+
     // Store error in session
     if (!req.session.uploadErrors) {
       req.session.uploadErrors = {};
     }
     req.session.uploadErrors[documentType] = errorMessage;
-    
+
     req.session.save((err) => {
       if (err) {
         return next(err);
@@ -291,13 +331,13 @@ export default function (app: Application): void {
     async (req, res, next) => {
       try {
         const appReq = req as AppRequest;
+        const isFDR = req.body.isFDR === 'on';
 
         if (!appReq.session.documents) {
           appReq.session.documents = {};
         }
 
-        appReq.session.documents.isFinancialDisputeResolution =
-          req.body.isFinancialDisputeResolution === 'on';
+        appReq.session.documents.isFinancialDisputeResolution = isFDR;
 
         await documentController.LinkDocumentsToCase(appReq);
 

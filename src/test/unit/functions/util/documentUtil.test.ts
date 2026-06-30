@@ -1,6 +1,6 @@
 import { Request } from 'express';
 
-import { getDocumentLabel, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename } from '../../../../main/functions/util/documentUtil';
+import { generateRenamedFilename, getDocumentLabel, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename } from '../../../../main/functions/util/documentUtil';
 
 describe('documentUtil', () => {
   describe('getDocumentLabel', () => {
@@ -365,6 +365,81 @@ describe('documentUtil', () => {
     it('should return empty string for unknown document types', () => {
       expect(getDocumentRenameFormat('unknown-type')).toBe('');
       expect(getDocumentRenameFormat('')).toBe('');
+    });
+  });
+
+  describe('generateRenamedFilename', () => {
+    beforeEach(() => {
+      // Mock Date to return consistent values for testing
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-06-23T14:00:00.000Z'));
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should generate renamed filename with user name for auto-rename document types', () => {
+      const result = generateRenamedFilename(
+        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        'my-document.pdf',
+        'JohnSmith'
+      );
+      expect(result).toBe('JohnSmith-FormFM1-23-06-2026.pdf');
+    });
+
+    it('should use default UserName when caseUserName is not provided', () => {
+      const result = generateRenamedFilename(
+        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        'my-document.pdf'
+      );
+      expect(result).toBe('UserName-FormFM1-23-06-2026.pdf');
+    });
+
+    it('should preserve file extension from original filename', () => {
+      const result = generateRenamedFilename(
+        'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5',
+        'original.docx',
+        'JaneSmith'
+      );
+      expect(result).toBe('JaneSmith-FormFM5-23-06-2026.docx');
+    });
+
+    it('should return original filename for document types without rename format', () => {
+      const result = generateRenamedFilename(
+        'bank-statements',
+        'my-bank-statement.pdf',
+        'JohnSmith'
+      );
+      expect(result).toBe('my-bank-statement.pdf');
+    });
+
+    it('should handle different file extensions', () => {
+      const pdfResult = generateRenamedFilename(
+        'estimate-of-costs-incurred-form-h',
+        'costs.pdf',
+        'TestUser'
+      );
+      expect(pdfResult).toBe('TestUser-FormH-23-06-2026.pdf');
+
+      const docxResult = generateRenamedFilename(
+        'estimate-of-costs-incurred-form-h',
+        'costs.docx',
+        'TestUser'
+      );
+      expect(docxResult).toBe('TestUser-FormH-23-06-2026.docx');
+    });
+
+    it('should format date correctly with leading zeros', () => {
+      // Test with a date that has single-digit day and month
+      jest.setSystemTime(new Date('2026-01-05T14:00:00.000Z'));
+      
+      const result = generateRenamedFilename(
+        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        'document.pdf',
+        'User'
+      );
+      expect(result).toBe('User-FormFM1-05-01-2026.pdf');
     });
   });
 });
