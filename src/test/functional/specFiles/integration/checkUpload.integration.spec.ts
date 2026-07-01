@@ -362,7 +362,9 @@ test.describe('[integration] Check uploaded documents page', () => {
 
     // Remove both Mortgage and Other, add Bank instead
     await documentSelectionPage.removeDocumentByLabel('Mortgage statements for family home');
+    await documentSelectionPage.page.waitForLoadState('networkidle');
     await documentSelectionPage.removeDocumentByLabel('Other document');
+    await documentSelectionPage.page.waitForLoadState('networkidle');
     await documentSelectionPage.addDocumentBySearchTerm('bank', 'Bank statements');
 
     // Continue to upload page
