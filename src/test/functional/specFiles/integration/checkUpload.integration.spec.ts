@@ -222,6 +222,7 @@ test.describe('[integration] Check uploaded documents page', () => {
     await documentUploadPage.chooseFileAndUploadChronologyDocx();
     await documentUploadPage.clickContinue();
 
+    await checkUploadPage.ensureCheckUploadPageLoaded();
     await checkUploadPage.expectDocumentGroupVisible('Bank statements');
     await checkUploadPage.expectDocumentGroupVisible('Chronology');
     await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(2);
@@ -307,6 +308,7 @@ test.describe('[integration] Check uploaded documents page', () => {
     await documentSelectionPage.clickContinueAndExpectUploadDocumentsStep();
     await documentUploadPage.clickContinue();
 
+    await checkUploadPage.ensureCheckUploadPageLoaded();
     // Remaining selected type (Other) still has its file, so no validation error is expected
     await expect(checkUploadPage.errorSummaryTitle).toHaveCount(0);
     await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(1);
@@ -370,6 +372,7 @@ test.describe('[integration] Check uploaded documents page', () => {
     await documentUploadPage.clickContinue();
 
     // Prefer user-visible readiness over networkidle
+    await checkUploadPage.ensureCheckUploadPageLoaded();
     await checkUploadPage.verifyCheckUploadPageContent();
     await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(1);
     await checkUploadPage.expectDocumentGroupVisible('Bank statements');
