@@ -1,7 +1,7 @@
 import { Request } from 'express';
 
+import { DOCUMENT_RENAME_FORMATS } from '../../../../main/common-constants';
 import { generateRenamedFilename, getDocumentLabel, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename } from '../../../../main/functions/util/documentUtil';
-
 describe('documentUtil', () => {
   describe('getDocumentLabel', () => {
     it('should return the label for a valid document type', () => {
@@ -72,9 +72,9 @@ describe('documentUtil', () => {
           },
         },
       } as unknown as Request;
-      
+
       const result = getSelectedDocumentTypesForDisplay(req);
-      
+
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         id: 'uuid-123',
@@ -111,9 +111,9 @@ describe('documentUtil', () => {
           },
         },
       } as unknown as Request;
-      
+
       const result = getSelectedDocumentTypesForDisplay(req);
-      
+
       expect(result).toHaveLength(3);
       expect(result[0]).toEqual({
         id: 'uuid-1',
@@ -148,9 +148,9 @@ describe('documentUtil', () => {
           },
         },
       } as unknown as Request;
-      
+
       const result = getSelectedDocumentTypesForDisplay(req);
-      
+
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         id: 'uuid-1',
@@ -173,9 +173,9 @@ describe('documentUtil', () => {
           },
         },
       } as unknown as Request;
-      
+
       const result = getSelectedDocumentTypesForDisplay(req);
-      
+
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         id: 'uuid-1',
@@ -199,9 +199,9 @@ describe('documentUtil', () => {
           },
         },
       } as unknown as Request;
-      
+
       const result = getSelectedDocumentTypesForDisplay(req);
-      
+
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         id: '',
@@ -226,9 +226,9 @@ describe('documentUtil', () => {
           },
         },
       } as unknown as Request;
-      
+
       const result = getSelectedDocumentTypesForDisplay(req);
-      
+
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         id: 'uuid-1',
@@ -259,9 +259,9 @@ describe('documentUtil', () => {
           },
         },
       } as unknown as Request;
-      
+
       const result = getSelectedDocumentTypesForDisplay(req);
-      
+
       expect(result).toHaveLength(2);
       expect(result[0].order).toBe(0);
       expect(result[1].order).toBe(1);
@@ -379,6 +379,55 @@ describe('documentUtil', () => {
       jest.useRealTimers();
     });
 
+
+    it('should rename FM1', () => {
+      const result = generateRenamedFilename(
+        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        'fm1.pdf',
+        'SamThompson'
+      );
+
+      expect(result).toBe('SamThompson-FormFM1-23-06-2026.pdf');
+    });
+
+    it('should rename N260 ', () => {
+      const result = generateRenamedFilename(
+        'statement-of-costs-summary-assessment-form-n260',
+        'n260.pdf',
+        'SamThompson'
+      );
+
+      expect(result).toBe('SamThompson-N260-23-06-2026.pdf');
+    });
+
+
+it('should generate correct format for all configured rename mappings', () => {
+  Object.entries(DOCUMENT_RENAME_FORMATS).forEach(([docType, format]) => {
+    const result = generateRenamedFilename(docType, 'file.pdf', 'Sam');
+
+    expect(result).toBe(`Sam-${format}-23-06-2026.pdf`);
+  });
+});
+
+it('should handle file without extension gracefully', () => {
+  const result = generateRenamedFilename(
+    'statement-of-costs-summary-assessment-form-n260',
+    'file',
+    'Sam'
+  );
+
+  expect(result).toBe('Sam-N260-23-06-2026');
+});
+
+it('should not rename document not in mapping', () => {
+  const result = generateRenamedFilename(
+    'medical-report',
+    'medical.pdf',
+    'Sam'
+  );
+
+  expect(result).toBe('medical.pdf');
+});
     it('should generate renamed filename with user name for auto-rename document types', () => {
       const result = generateRenamedFilename(
         'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
@@ -433,7 +482,7 @@ describe('documentUtil', () => {
     it('should format date correctly with leading zeros', () => {
       // Test with a date that has single-digit day and month
       jest.setSystemTime(new Date('2026-01-05T14:00:00.000Z'));
-      
+
       const result = generateRenamedFilename(
         'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
         'document.pdf',

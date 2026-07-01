@@ -28,7 +28,7 @@
       <h1 class="govuk-heading-l">Upload your documents</h1>
 
       <p class="govuk-body">
-        Upload each of your documents in the corresponding section. 
+        Upload each of your documents in the corresponding section.
         You will be able to check what you have uploaded before you submit them to the court.
       </p>
 
@@ -36,11 +36,11 @@
         {% for documentType in data.selectedDocumentTypes %}
           <h2 class="govuk-heading-m govuk-!-margin-top-8">{{ documentType.label }}</h2>
 
-          {% if shouldAutoRename(documentType.value) %}
-            <p class="govuk-body">
-              When you upload this document, it will automatically be renamed to <strong>{{ caseUserName or 'UserName' }}-{{ getDocumentRenameFormat(documentType.value) }}-DD-MM-YY</strong>.
-            </p>
-          {% endif %}
+         {% if shouldAutoRename(documentType.value) %}
+  <p class="govuk-body">
+    When you upload this document, it will automatically be renamed to <strong>{{ getRenamePreview(documentType.value, caseUserName) }}</strong>.
+  </p>
+{% endif %}
 
           <div class="govuk-inset-text govuk-!-margin-top-4">
             {% set docTypeError = errors[documentType.value] if errors %}
@@ -85,7 +85,7 @@
 
           <div data-uploaded-files="{{ documentType.value }}">
             {% set uploadedFiles = data.uploadedFiles[documentType.value] if data.uploadedFiles %}
-            
+
             {% if uploadedFiles and uploadedFiles.length > 0 %}
               <ul class="govuk-list">
                 {% for file in uploadedFiles %}
@@ -93,8 +93,8 @@
                     <a href="{{ file.url }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
                       {{ file.displayFilename }}
                     </a>
-                    <a href="#" 
-                       class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-2" 
+                    <a href="#"
+                       class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-2"
                        data-remove-file="{{ file.id }}"
                        data-document-type="{{ documentType.value }}"
                        aria-label="Remove {{ file.displayFilename }}">
