@@ -257,6 +257,7 @@ test.describe('[integration] Check uploaded documents page', () => {
     await documentUploadPage.chooseFileAndUploadPayslipDocx();
     await documentUploadPage.clickContinue();
 
+    await checkUploadPage.ensureCheckUploadPageLoaded();
     await expect(checkUploadPage.combineInformation).toBeVisible();
     await expect(checkUploadPage.combinedDocumentName).toContainText('-SupportingFinancialDocuments-DD-MM-YYYY');
     await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(2);
