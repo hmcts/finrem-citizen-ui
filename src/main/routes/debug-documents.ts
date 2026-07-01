@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* istanbul ignore file */
 import type { Request, Response, Router } from 'express';
 
 import { CaseRole } from '../app/case/definition';
