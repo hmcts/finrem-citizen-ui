@@ -140,17 +140,11 @@ export class DocumentManagerController {
         // Check what CCD returned
         const returnedDocuments = (req.session.caseData?.[documentsKey] as typeof updatedDocuments) ?? [];
         this.logger.info('AFTER CCD response:', {
+            sentCount: allDocuments.length,
             returnedCount: returnedDocuments.length,
+            difference: returnedDocuments.length - allDocuments.length,
             returnedDocs: returnedDocuments.map(d => ({ id: d.id, filename: d.value?.DocumentFileName })),
         });
-        
-        if (returnedDocuments.length > allDocuments.length) {
-            this.logger.warn('⚠️ CCD RETURNED MORE DOCUMENTS THAN WE SENT!', {
-                sent: allDocuments.length,
-                received: returnedDocuments.length,
-                difference: returnedDocuments.length - allDocuments.length,
-            });
-        }
 
         delete req.session.documents;
 
