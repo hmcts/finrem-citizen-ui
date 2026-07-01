@@ -139,8 +139,8 @@ describe('uploadValidation', () => {
 
     it('should return TOO_LARGE error for files over 100MB', async () => {
       const files = [
-        { 
-          originalname: 'test.pdf', 
+        {
+          originalname: 'test.pdf',
           size: 101 * 1024 * 1024,
           buffer: Buffer.from('test')
         } as Express.Multer.File,
@@ -256,8 +256,8 @@ describe('uploadValidation', () => {
 
     it('should check type before size validation', async () => {
       const files = [
-        { 
-          originalname: 'test.txt', 
+        {
+          originalname: 'test.txt',
           size: 200 * 1024 * 1024,
           buffer: Buffer.from('test')
         } as Express.Multer.File,
@@ -287,7 +287,6 @@ describe('uploadValidation', () => {
       expect(await validateUploadedFile(files)).toBeNull();
     });
 
-    // Lines 65 + 127: catch block returns UPLOAD_FAILED; settleWithError is called on stream error
     it('should return UPLOAD_FAILED when disk-backed PDF cannot be read', async () => {
       const files = [
         {
@@ -299,7 +298,6 @@ describe('uploadValidation', () => {
       expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.UPLOAD_FAILED);
     });
 
-    // Line 149: previous = current.subarray(...) runs when marker not yet found in a chunk
     it('should return null for disk-backed PDF without encryption marker', async () => {
       const tempDirectory = await mkdtemp(join(tmpdir(), 'upload-validation-'));
       const filePath = join(tempDirectory, 'plain.pdf');
@@ -321,7 +319,6 @@ describe('uploadValidation', () => {
       }
     });
 
-    // Lines 172 + 192: findLastSignature returns -1 when no EOCD; zipHasEncryptedEntry returns false
     it('should return null for docx buffer with no ZIP end-of-central-directory signature', async () => {
       const files = [
         {
@@ -333,7 +330,6 @@ describe('uploadValidation', () => {
       expect(await validateUploadedFile(files)).toBeNull();
     });
 
-    // Line 179: EOCD found but centralDirectorySize is zero
     it('should return null for docx with zero central directory size in EOCD', async () => {
       const buffer = Buffer.alloc(100);
       buffer.writeUInt32LE(0x06054b50, 78); // EOCD signature at byte 78 (leaves room for 22-byte EOCD)
@@ -349,7 +345,6 @@ describe('uploadValidation', () => {
       expect(await validateUploadedFile(files)).toBeNull();
     });
 
-    // Line 221: valid EOCD with valid centralDirectorySize but wrong central directory entry signature
     it('should return null for docx with invalid central directory entry signature', async () => {
       const centralDirectory = Buffer.alloc(46);
       centralDirectory.writeUInt32LE(0xdeadbeef, 0); // wrong signature (expected 0x02014b50)
@@ -371,7 +366,6 @@ describe('uploadValidation', () => {
       expect(await validateUploadedFile(files)).toBeNull();
     });
 
-    // Lines 239 + 270: open() and handle.close() in centralDirectoryPathHasEncryptedEntry
     it('should detect password protected xlsx from disk path', async () => {
       const tempDirectory = await mkdtemp(join(tmpdir(), 'upload-validation-'));
       const filePath = join(tempDirectory, 'encrypted.xlsx');
@@ -416,7 +410,6 @@ describe('uploadValidation', () => {
       }
     });
 
-    // Line 294: readFileRange returns empty buffer when file has neither buffer nor path
     it('should return null for docx with neither buffer nor path', async () => {
       const files = [
         {
