@@ -286,5 +286,145 @@ describe('uploadValidation', () => {
       ];
       expect(await validateUploadedFile(files)).toBeNull();
     });
+
+    // Lines 65 + 127: catch block returns UPLOAD_FAILED; settleWithError is called on stream error
+    it('should return UPLOAD_FAILED when disk-backed PDF cannot be read', async () => {
+      const files = [
+        {
+          originalname: 'test.pdf',
+          size: 1024,
+          path: '/nonexistent/path/that/does/not/exist.pdf',
+        } as Express.Multer.File,
+      ];
+      expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.UPLOAD_FAILED);
+    });
+
+    // Line 149: previous = current.subarray(...) runs when marker not yet found in a chunk
+    it('should return null for disk-backed PDF without encryption marker', async () => {
+      const tempDirectory = await mkdtemp(join(tmpdir(), 'upload-validation-'));
+      const filePath = join(tempDirectory, 'plain.pdf');
+
+      try {
+        await writeFile(filePath, Buffer.from('%PDF-1.7 this is a plain PDF document with no encryption'));
+
+        const files = [
+          {
+            originalname: 'plain.pdf',
+            size: 1024,
+            path: filePath,
+          } as Express.Multer.File,
+        ];
+
+        expect(await validateUploadedFile(files)).toBeNull();
+      } finally {
+        await rm(tempDirectory, { recursive: true, force: true });
+      }
+    });
+
+    // Lines 172 + 192: findLastSignature returns -1 when no EOCD; zipHasEncryptedEntry returns false
+    it('should return null for docx buffer with no ZIP end-of-central-directory signature', async () => {
+      const files = [
+        {
+          originalname: 'document.docx',
+          size: 100,
+          buffer: Buffer.alloc(100),
+        } as Express.Multer.File,
+      ];
+      expect(await validateUploadedFile(files)).toBeNull();
+    });
+
+    // Line 179: EOCD found but centralDirectorySize is zero
+    it('should return null for docx with zero central directory size in EOCD', async () => {
+      const buffer = Buffer.alloc(100);
+      buffer.writeUInt32LE(0x06054b50, 78); // EOCD signature at byte 78 (leaves room for 22-byte EOCD)
+      // centralDirectorySize at eocdOffset+12 = byte 90: left as 0 by Buffer.alloc
+
+      const files = [
+        {
+          originalname: 'document.docx',
+          size: 100,
+          buffer,
+        } as Express.Multer.File,
+      ];
+      expect(await validateUploadedFile(files)).toBeNull();
+    });
+
+    // Line 221: valid EOCD with valid centralDirectorySize but wrong central directory entry signature
+    it('should return null for docx with invalid central directory entry signature', async () => {
+      const centralDirectory = Buffer.alloc(46);
+      centralDirectory.writeUInt32LE(0xdeadbeef, 0); // wrong signature (expected 0x02014b50)
+
+      const eocd = Buffer.alloc(22);
+      eocd.writeUInt32LE(0x06054b50, 0);             // EOCD signature
+      eocd.writeUInt32LE(centralDirectory.length, 12); // centralDirectorySize = 46
+      eocd.writeUInt32LE(0, 16);                      // centralDirectoryOffset = 0
+
+      const buffer = Buffer.concat([centralDirectory, eocd]);
+
+      const files = [
+        {
+          originalname: 'document.docx',
+          size: buffer.length,
+          buffer,
+        } as Express.Multer.File,
+      ];
+      expect(await validateUploadedFile(files)).toBeNull();
+    });
+
+    // Lines 239 + 270: open() and handle.close() in centralDirectoryPathHasEncryptedEntry
+    it('should detect password protected xlsx from disk path', async () => {
+      const tempDirectory = await mkdtemp(join(tmpdir(), 'upload-validation-'));
+      const filePath = join(tempDirectory, 'encrypted.xlsx');
+
+      try {
+        const zipBuffer = createZipBufferWithCentralDirectory(true);
+        await writeFile(filePath, zipBuffer);
+
+        const files = [
+          {
+            originalname: 'encrypted.xlsx',
+            size: zipBuffer.length,
+            path: filePath,
+          } as Express.Multer.File,
+        ];
+
+        expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.PASSWORD_PROTECTED);
+      } finally {
+        await rm(tempDirectory, { recursive: true, force: true });
+      }
+    });
+
+    it('should return null for disk-backed xlsx without encryption', async () => {
+      const tempDirectory = await mkdtemp(join(tmpdir(), 'upload-validation-'));
+      const filePath = join(tempDirectory, 'plain.xlsx');
+
+      try {
+        const zipBuffer = createZipBufferWithCentralDirectory(false);
+        await writeFile(filePath, zipBuffer);
+
+        const files = [
+          {
+            originalname: 'plain.xlsx',
+            size: zipBuffer.length,
+            path: filePath,
+          } as Express.Multer.File,
+        ];
+
+        expect(await validateUploadedFile(files)).toBeNull();
+      } finally {
+        await rm(tempDirectory, { recursive: true, force: true });
+      }
+    });
+
+    // Line 294: readFileRange returns empty buffer when file has neither buffer nor path
+    it('should return null for docx with neither buffer nor path', async () => {
+      const files = [
+        {
+          originalname: 'document.docx',
+          size: 1024,
+        } as Express.Multer.File,
+      ];
+      expect(await validateUploadedFile(files)).toBeNull();
+    });
   });
 });
