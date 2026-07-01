@@ -259,6 +259,8 @@ export class DocumentUploadPage extends BasePage {
 
   async clickContinue(): Promise<void> {
     await this.continueButton.click();
+    await this.page.waitForURL(/\/upload\/check-upload/, { timeout: 15000 });
+    await this.page.waitForLoadState('networkidle', { timeout: 10000 });
   }
 
   async clickBack(): Promise<void> {
