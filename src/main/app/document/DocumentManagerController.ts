@@ -107,8 +107,23 @@ export class DocumentManagerController {
             },
         }));
 
+        // Get existing documents from caseData
+        const existingDocuments = (req.session.caseData?.[documentsKey] as typeof updatedDocuments) ?? [];
+
+        this.logger.info('=== DOCUMENT UPLOAD DEBUG ===');
+        this.logger.info('Existing documents in caseData:', {
+            count: existingDocuments.length,
+            docs: existingDocuments.map(d => ({ id: d.id, filename: d.value?.DocumentFileName })),
+        });
+        this.logger.info('New documents to upload:', {
+            count: updatedDocuments.length,
+            docs: updatedDocuments.map(d => ({ id: d.id, filename: d.value?.DocumentFileName })),
+        });
+
         const systemUser = req.session.user as UserDetails;
         const caseworkerUserApi = getCaseApi(systemUser, this.logger);
+
+        this.logger.info('Sending to CCD - ONLY new documents');
 
         req.session.caseData = await caseworkerUserApi.triggerEvent(
             req.session.caseNumber,
@@ -119,6 +134,13 @@ export class DocumentManagerController {
                 ? EVENT_TYPE.APPLICANT_UPLOAD_DOCUMENT
                 : EVENT_TYPE.RESPONDENT_UPLOAD_DOCUMENT
         );
+
+        // Check what CCD returned
+        const returnedDocuments = (req.session.caseData?.[documentsKey] as typeof updatedDocuments) ?? [];
+        this.logger.info('CCD returned documents:', {
+            count: returnedDocuments.length,
+            docs: returnedDocuments.map(d => ({ id: d.id, filename: d.value?.DocumentFileName })),
+        });
 
         delete req.session.documents;
 
