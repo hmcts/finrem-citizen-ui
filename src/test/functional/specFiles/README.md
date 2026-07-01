@@ -224,6 +224,7 @@ Commands are defined in [../../../../package.json](../../../../package.json).
 |---|---|---|---|---|
 | yarn test:functional:install-deps | Yes | Yes | Yes | Installs Playwright browser dependencies for first-time setup or runner refresh |
 | yarn test:functional | Yes | Yes | Yes (with ACCESS_CODE_REAL_INTEGRATION=true) | Main functional run on Chromium with tuned workers and retries for fast, stable feedback; includes @a11y-tagged tests |
+| yarn test:functional:quick | Yes | Yes | Yes (with ACCESS_CODE_REAL_INTEGRATION=true) | Chromium-only fast local run with retries disabled and no Playwright install step |
 | yarn test:functional:allBrowsers | Yes | Yes | Yes (with ACCESS_CODE_REAL_INTEGRATION=true) | Cross-browser functional run (Chromium, Firefox, WebKit) using the shared functional worker/retry controls for consistent tuning |
 | yarn test:functional:pr | Yes | Yes | Yes | PR-tagged Chromium-only functional tests using the same tuned worker/retry defaults as main Chromium runs |
 | yarn test:functional:headed:slowmo | Yes | Yes | Yes | Interactive debugging with headed Chromium + Playwright inspector against the selected target |
@@ -243,6 +244,7 @@ The functional scripts use benchmarked defaults chosen to optimize wall-clock ti
 Default worker/retry settings in `package.json`:
 
 - `yarn test:functional` (Chromium): `--workers=${PLAYWRIGHT_CHROMIUM_WORKERS:-8}` and `--retries=${PLAYWRIGHT_RETRIES:-3}`
+- `yarn test:functional:quick` (Chromium): `PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-8}` and `PLAYWRIGHT_RETRIES=0`
 - `yarn test:functional:pr` (Chromium + `@PR`): same defaults as Chromium main run
 - `yarn test:functional:allBrowsers` (Chromium, Firefox, WebKit): `--workers=${PLAYWRIGHT_CHROMIUM_WORKERS:-8}` and `--retries=${PLAYWRIGHT_RETRIES:-3}`
 - `yarn test:playwright:a11y:chrome` (Chromium + `@a11y`): `--workers=${PLAYWRIGHT_A11Y_CHROMIUM_WORKERS:-6}` and `--retries=${PLAYWRIGHT_A11Y_RETRIES:-1}`
@@ -262,6 +264,7 @@ When to override defaults:
 
 - If CI is resource-constrained or shows flake spikes, lower workers temporarily.
 - If local hardware is stronger and stable, increase workers for faster feedback.
+- `PLAYWRIGHT_WORKERS` controls the worker count used by the Playwright config; `PLAYWRIGHT_CHROMIUM_WORKERS` is only used by the shell snippets in this document.
 - For strict performance benchmarking, use `PLAYWRIGHT_RETRIES=0`.
 
 Override examples:
