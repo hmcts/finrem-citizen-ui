@@ -41,6 +41,7 @@ transformIgnorePatterns: [
     '!src/main/mock-case-api/**',
     '!src/main/modules/auth-provider/**',
     '!src/main/routes/demo.ts',
+    '!src/main/routes/debug-documents.ts',
   ],
   coverageThreshold: {
     global: {
