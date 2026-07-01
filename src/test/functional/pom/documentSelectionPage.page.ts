@@ -92,13 +92,24 @@ export class DocumentSelectionPage extends BasePage {
   }
 
   async addDocumentBySearchTerm(searchTerm: string, expectedDocumentLabel: string): Promise<void> {
-    await this.documentTypeInput.fill(searchTerm);
+    await this.documentTypeInput.fill('');
+    await this.documentTypeInput.pressSequentially(searchTerm);
+
+    await this.page.waitForResponse(response => {
+      return response.url().includes('/autocomplete')
+        && response.url().includes(`q=${encodeURIComponent(searchTerm)}`)
+        && response.ok();
+    });
 
     const suggestion = this.page.getByRole('option', { name: expectedDocumentLabel });
     await expect(suggestion).toBeVisible();
     await suggestion.click();
 
     await this.addDocumentButton.click();
+
+    await this.page.waitForResponse(response => {
+      return response.url().includes('/add-document') || response.url().includes('/document-type-selection');
+    });
 
     await expect(this.termByLabel(expectedDocumentLabel)).toBeVisible();
     await expect(this.noDocumentsMessage).toBeHidden();
