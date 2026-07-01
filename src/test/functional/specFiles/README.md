@@ -244,7 +244,7 @@ The functional scripts use benchmarked defaults chosen to optimize wall-clock ti
 Default worker/retry settings in `package.json`:
 
 - `yarn test:functional` (Chromium): `--workers=${PLAYWRIGHT_CHROMIUM_WORKERS:-8}` and `--retries=${PLAYWRIGHT_RETRIES:-3}`
-- `yarn test:functional:quick` (Chromium): `PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-8}` and `PLAYWRIGHT_RETRIES=0`
+- `yarn test:functional:quick` (Chromium): `PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-6}` and `PLAYWRIGHT_RETRIES=0`
 - `yarn test:functional:pr` (Chromium + `@PR`): same defaults as Chromium main run
 - `yarn test:functional:allBrowsers` (Chromium, Firefox, WebKit): `--workers=${PLAYWRIGHT_CHROMIUM_WORKERS:-8}` and `--retries=${PLAYWRIGHT_RETRIES:-3}`
 - `yarn test:playwright:a11y:chrome` (Chromium + `@a11y`): `--workers=${PLAYWRIGHT_A11Y_CHROMIUM_WORKERS:-6}` and `--retries=${PLAYWRIGHT_A11Y_RETRIES:-1}`
