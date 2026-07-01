@@ -162,7 +162,7 @@ export class CheckUploadPage extends BasePage {
     });
   }
 
-  private async ensureCheckUploadPageLoaded(): Promise<void> {
+  async ensureCheckUploadPageLoaded(): Promise<void> {
     await expect(this.page).toHaveURL(URL_PATTERNS.CHECK_UPLOAD, {
       timeout: NAVIGATION_TIMEOUT_MS,
     });
