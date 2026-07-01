@@ -59,6 +59,7 @@ test.describe('[integration] Document selection page', () => {
     await documentSelectionPage.addDocumentBySearchTerm('bank', 'Bank statements');
 
     await documentSelectionPage.removeDocumentByLabel('Payslips');
+    await documentSelectionPage.page.waitForLoadState('networkidle');
     await documentSelectionPage.expectDocumentsListContains(['Bank statements']);
     await runA11yAudit(axeUtils);
   });
