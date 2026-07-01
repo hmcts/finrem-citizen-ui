@@ -230,6 +230,7 @@ export class CheckUploadPage extends BasePage {
 
   async clickContinue(): Promise<void> {
     await this.continueButton.click();
+    await this.page.waitForLoadState('networkidle', { timeout: 10000 });
   }
 
   async submitWithoutSelectionAndExpectValidationError(): Promise<void> {
