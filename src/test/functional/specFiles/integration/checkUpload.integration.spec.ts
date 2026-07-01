@@ -295,6 +295,7 @@ test.describe('[integration] Check uploaded documents page', () => {
     await documentUploadPage.clickContinue();
 
     // Verify check upload page shows both documents
+    await checkUploadPage.ensureCheckUploadPageLoaded();
     await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(2);
 
     // Go back to document selection
@@ -352,6 +353,7 @@ test.describe('[integration] Check uploaded documents page', () => {
     await documentUploadPage.clickContinue();
 
     // Verify both files on check page
+    await checkUploadPage.ensureCheckUploadPageLoaded();
     await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(2);
 
     // Go back to document selection
