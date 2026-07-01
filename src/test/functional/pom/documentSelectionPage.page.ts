@@ -115,25 +115,16 @@ export class DocumentSelectionPage extends BasePage {
     await expect(this.noDocumentsMessage).toBeHidden();
   }
 
-  async addOtherDocumentAndContinue(): Promise<void> {
-    const otherDocumentLabel = 'Other document';
-    await this.documentTypeInput.fill('other document');
-
-    const suggestion = this.page.getByRole('option', { name: otherDocumentLabel });
-    await expect(suggestion).toBeVisible();
-    await suggestion.click();
-
-    await this.addDocumentButton.click();
-
-    await expect(this.termByLabel(otherDocumentLabel)).toBeVisible();
-    await expect(this.noDocumentsMessage).toBeHidden();
-
-    await this.continueButton.click();
-  }
-
   async addChronologyAndContinue(): Promise<void> {
     const chronologyLabel = 'Chronology';
     await this.documentTypeInput.fill('chronology');
+
+    // Wait for autocomplete API response
+    await this.page.waitForResponse(response => {
+      return response.url().includes('/autocomplete')
+        && response.url().includes('q=chronology')
+        && response.ok();
+    });
 
     const suggestion = this.page.getByRole('option', { name: chronologyLabel });
     await expect(suggestion).toBeVisible();
@@ -141,7 +132,40 @@ export class DocumentSelectionPage extends BasePage {
 
     await this.addDocumentButton.click();
 
+    // Wait for add-document API response
+    await this.page.waitForResponse(response => {
+      return response.url().includes('/add-document') || response.url().includes('/document-type-selection');
+    });
+
     await expect(this.termByLabel(chronologyLabel)).toBeVisible();
+    await expect(this.noDocumentsMessage).toBeHidden();
+
+    await this.continueButton.click();
+  }
+
+  async addOtherDocumentAndContinue(): Promise<void> {
+    const otherDocumentLabel = 'Other document';
+    await this.documentTypeInput.fill('other document');
+
+    // Wait for autocomplete API response
+    await this.page.waitForResponse(response => {
+      return response.url().includes('/autocomplete')
+        && response.url().includes('q=other%20document')
+        && response.ok();
+    });
+
+    const suggestion = this.page.getByRole('option', { name: otherDocumentLabel });
+    await expect(suggestion).toBeVisible();
+    await suggestion.click();
+
+    await this.addDocumentButton.click();
+
+    // Wait for add-document API response
+    await this.page.waitForResponse(response => {
+      return response.url().includes('/add-document') || response.url().includes('/document-type-selection');
+    });
+
+    await expect(this.termByLabel(otherDocumentLabel)).toBeVisible();
     await expect(this.noDocumentsMessage).toBeHidden();
 
     await this.continueButton.click();
