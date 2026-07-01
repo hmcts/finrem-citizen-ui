@@ -232,9 +232,7 @@ const applicantAccessCodes = [
     id: '9319d817-ade5-4e9e-a204-261331158a0e',
     value: {
       isValid: YesOrNo.NO,
-      createdAt: '2026-04-24T13:17:07.061694',
       accessCode: 'FBLV2NTR',
-      validUntil: '2026-07-23T13:17:07.061701',
     },
   },
 ];
