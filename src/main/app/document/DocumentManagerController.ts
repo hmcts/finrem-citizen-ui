@@ -107,13 +107,17 @@ export class DocumentManagerController {
             },
         }));
 
+        // Merge with existing documents from caseData to preserve previous uploads
+        const existingDocuments = (req.session.caseData?.[documentsKey] as typeof updatedDocuments) ?? [];
+        const allDocuments = [...existingDocuments, ...updatedDocuments];
+
         const systemUser = req.session.user as UserDetails;
         const caseworkerUserApi = getCaseApi(systemUser, this.logger);
 
         req.session.caseData = await caseworkerUserApi.triggerEvent(
             req.session.caseNumber,
             {
-                [documentsKey]: updatedDocuments,
+                [documentsKey]: allDocuments,
             },
             caseRole === CaseRole.APPLICANT
                 ? EVENT_TYPE.APPLICANT_UPLOAD_DOCUMENT
