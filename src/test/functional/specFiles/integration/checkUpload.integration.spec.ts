@@ -160,6 +160,38 @@ test.describe('[integration] Check uploaded documents page', () => {
       await checkUploadPage.expectDocumentLinkVisible('testDocument.docx');
       await runA11yAudit(axeUtils);
     });
+
+    test('[integration] Documents uploaded confirmation page shows expected content and layout @a11y', async ({
+      checkUploadPage,
+      axeUtils,
+    }) => {
+      await checkUploadPage.gotoConfirmationPage();
+      await checkUploadPage.verifyConfirmationPageContent();
+      await runA11yAudit(axeUtils);
+    });
+
+    test('[integration] Documents uploaded close and return button takes user to dashboard @a11y', async ({
+      checkUploadPage,
+      axeUtils,
+    }) => {
+      await checkUploadPage.gotoConfirmationPage();
+      await checkUploadPage.verifyConfirmationPageContent();
+      await checkUploadPage.clickCloseAndReturnToAccountAndExpectDashboard();
+      await runA11yAudit(axeUtils);
+    });
+
+    test('[integration] Documents uploaded back navigation returns to previous page and retains uploaded files @a11y', async ({
+      checkUploadPage,
+      axeUtils,
+    }) => {
+      await checkUploadPage.gotoConfirmationPage();
+      await checkUploadPage.verifyConfirmationPageContent();
+      await checkUploadPage.clickBackAndExpectSendToOtherParty();
+      await checkUploadPage.clickBackAndExpectCheckUpload();
+      await checkUploadPage.verifyCheckUploadPageContent();
+      await checkUploadPage.expectDocumentLinkVisible('testDocument.docx');
+      await runA11yAudit(axeUtils);
+    });
   });
 
   test('[integration] Check uploaded documents groups uploaded files by document type and shows file links @a11y', async ({
