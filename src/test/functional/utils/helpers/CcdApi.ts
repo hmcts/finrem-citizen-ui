@@ -33,9 +33,18 @@ const parseNumberEnv = (value: string | undefined, fallback: number): number => 
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 };
 
-// Retry configuration for CCD eventual consistency
+const shouldLogCcdProgress = (): boolean => process.env.CCD_LOG_PROGRESS === 'true';
+const shouldLogVerboseRetry = (): boolean => process.env.CCD_VERBOSE_RETRY === 'true';
+
+// Retry configuration for CCD eventual consistency.
+//
+// Why "Case not found" can appear even when tests pass:
+// - Immediately after create/update, CCD reads and start-event token lookups can hit
+//   a replica/index that has not caught up yet.
+// - A short retry window smooths this transient lag without masking persistent failures.
 const CCD_RETRY_CONFIG = {
-  maxRetries: parseNumberEnv(process.env.CCD_START_EVENT_MAX_RETRIES, process.env.CI ? 3 : 5),
+  // Total attempts = maxRetries + 1. Default to 2 attempts to fail fast.
+  maxRetries: parseNumberEnv(process.env.CCD_START_EVENT_MAX_RETRIES, 1),
   initialDelayMs: 2000,
   maxDelayMs: parseNumberEnv(process.env.CCD_START_EVENT_MAX_DELAY_MS, process.env.CI ? 4000 : 10000),
   retryableStatusCodes: [404]  // CaseNotFoundException - case not yet available
@@ -95,7 +104,8 @@ export class CcdApi {
         lastError = error as Error;
         const errorMessage = lastError.message || '';
 
-        // Check if this is a retryable 404 (CCD eventual consistency)
+        // Retry only known transient "not yet visible" 404s that can happen right
+        // after case creation/update due to CCD eventual consistency.
         const is404 = errorMessage.includes('status 404') ||
                       errorMessage.includes('No case found');
 
@@ -105,12 +115,13 @@ export class CcdApi {
             CCD_RETRY_CONFIG.maxDelayMs
           );
 
-          const verboseRetryLogs = process.env.CCD_VERBOSE_RETRY === 'true';
+          const verboseRetryLogs = shouldLogVerboseRetry();
           const shouldLogRetry =
             verboseRetryLogs
-            || !process.env.CI
-            || attempt === 0
-            || attempt === CCD_RETRY_CONFIG.maxRetries - 1;
+            || (
+              !!process.env.CI
+              && (attempt === 0 || attempt === CCD_RETRY_CONFIG.maxRetries - 1)
+            );
 
           if (shouldLogRetry) {
             // eslint-disable-next-line no-console
@@ -154,7 +165,7 @@ export class CcdApi {
     eventId: string,
     dataModifications: ReplacementAction[] = []
   ): Promise<string> {
-    if (!process.env.CI) {
+    if (shouldLogCcdProgress()) {
       // eslint-disable-next-line no-console
       console.info('Creating CCD case with event %s...', eventId);
     }
@@ -194,8 +205,10 @@ export class CcdApi {
       payload
     );
     const caseId = saveCaseResponse.data.id;
-    // eslint-disable-next-line no-console
-    console.info('Created case with id %s for event %s', caseId, eventId);
+    if (shouldLogCcdProgress()) {
+      // eslint-disable-next-line no-console
+      console.info('Created case with id %s for event %s', caseId, eventId);
+    }
 
     return caseId;
   }
@@ -209,7 +222,7 @@ export class CcdApi {
     dataLocation: string,
     replacements: ReplacementAction[] = []
   ): Promise<CcdCaseResponse> {
-    if (!process.env.CI) {
+    if (shouldLogCcdProgress()) {
       // eslint-disable-next-line no-console
       console.info('Updating CCD case id %s with event %s...', caseId, eventId);
     }
@@ -253,7 +266,7 @@ export class CcdApi {
       serviceToken,
       payload
     );
-    if (!process.env.CI) {
+    if (shouldLogCcdProgress()) {
       // eslint-disable-next-line no-console
       console.info('Updated case with id %s and event %s', caseId, eventId);
     }
@@ -269,7 +282,7 @@ export class CcdApi {
     jsonObject: Record<string, JsonValue>,
     shareCaseRef?: string
   ): Promise<CcdCaseResponse> {
-    if (!process.env.CI) {
+    if (shouldLogCcdProgress()) {
       // eslint-disable-next-line no-console
       console.info('Updating CCD case id %s with event %s (from JSON object)...', caseId, eventId);
     }
@@ -311,7 +324,7 @@ export class CcdApi {
       serviceToken,
       payload
     );
-    if (!process.env.CI) {
+    if (shouldLogCcdProgress()) {
       // eslint-disable-next-line no-console
       console.info('Updated case with id %s and event %s', caseId, eventId);
     }
