@@ -31,7 +31,7 @@ export class DashboardPage extends BasePage {
 
   constructor(readonly page: Page) {
     super(page);
-    this.userNameHeader = this.page.getByRole('heading', { level: 1, name: /(?:Applicant|Respondent)$/ });
+    this.userNameHeader = this.page.getByRole('heading', { level: 2, name: /(?:Applicant|Respondent)$/ });
     this.caseHeading = this.page.getByRole('heading', { name: 'Your financial remedy case' });
     this.caseNumberText = this.page.getByText(/Case number\s+/i);
     this.divorceAccountHeading = this.page.getByRole('heading', { name: 'This is your financial remedy account' });
@@ -74,11 +74,7 @@ export class DashboardPage extends BasePage {
     await this.verifyGlobalHeaderAndFooter();
 
     // Integration environments can render either role heading or generic case heading.
-    if (await this.userNameHeader.first().isVisible()) {
-      await expect(this.userNameHeader.first()).toBeVisible();
-    } else {
-      await expect(this.caseHeading).toBeVisible();
-    }
+    await expect(this.userNameHeader.or(this.caseHeading).first()).toBeVisible();
 
     await this.expectVisible([
       this.caseNumberText,
