@@ -139,21 +139,31 @@ Use when validating real integration behavior.
 Required:
 
 - Reachable CCD (local mock CCD, preview, or AAT)
-- ACCESS_CODE_REAL_INTEGRATION=true
 - No test-support route injection
 
 Default behavior:
 
-- Real happy-path suites are commonly gated and may be skipped unless integration mode is explicitly enabled.
+- Real happy-path suites run by default on preview/AAT targets.
+- Outside preview/AAT, set ACCESS_CODE_REAL_INTEGRATION=true to enable them.
 
 ## Environment Variables
 
 - ACCESS_CODE_REAL_INTEGRATION:
-  - false (default): integration-happy-path suites skipped
-  - true: integration-happy-path suites enabled
+   - true: integration-happy-path suites enabled for any target
+   - false: treated as local default; preview/AAT still run integration-happy-path suites
+- Access-code polling tuning (real integration happy-path):
+   - ACCESS_CODE_MAX_TOTAL_RUNTIME_MS (default: 30000)
+   - ACCESS_CODE_FETCH_ATTEMPTS_PER_CASE (default: 0, meaning timebox-until-deadline)
+   - ACCESS_CODE_FETCH_INITIAL_DELAY_MS (default: 500)
+   - ACCESS_CODE_FETCH_MAX_DELAY_MS (default: 2000)
+   - ACCESS_CODE_CASE_CREATION_ATTEMPTS (default: 1)
+   - ACCESS_CODE_MANAGE_HEARINGS_REATTEMPTS (default: 0)
 - ENABLE_TEST_SUPPORT_ROUTES:
   - true: test-support endpoints enabled (local mock flow)
   - false: test-support endpoints disabled (preview/AAT default)
+- CCD logging controls:
+   - CCD_LOG_PROGRESS=true enables create/update progress logs (default: quiet)
+   - CCD_VERBOSE_RETRY=true enables verbose retry/fallback logs (default: quiet locally, summarized in CI)
 
 Root .env target selection must define one active target block:
 
@@ -168,7 +178,8 @@ Set values for:
 
 Target selection in `.env` sets which environment Playwright and the app point at. It does not enable integration or mock-only behavior by itself.
 
-- For preview/AAT integration behavior, set `ACCESS_CODE_REAL_INTEGRATION=true`.
+- Preview/AAT targets run integration happy-path suites by default.
+- For non-preview/non-AAT targets, set `ACCESS_CODE_REAL_INTEGRATION=true` to enable integration happy-path suites.
 - For local mock-only suites, keep `ENABLE_TEST_SUPPORT_ROUTES=true` and the mock API running.
 
 ## Running Tests
@@ -191,7 +202,7 @@ yarn test:functional
 ```bash
 # Select target in .env first (RUNNING_ENV=pr-xxx or RUNNING_ENV=aat),
 # or set TEST_URL directly for an explicit deployed target.
-ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional
+yarn test:functional
 ```
 
 For preview/AAT runs, do not start the app locally with `yarn start:dev`.
@@ -204,11 +215,11 @@ Playwright targets the deployed environment directly when baseURL is non-localho
 yarn test:functional -- src/test/functional/specFiles/mock/
 
 # Integration folder only
-ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional -- src/test/functional/specFiles/integration/
+yarn test:functional -- src/test/functional/specFiles/integration/
 
 # Tag filtering
 yarn test:functional -- --grep "\[mock\]"
-ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional -- --grep "\[integration\]"
+yarn test:functional -- --grep "\[integration\]"
 
 # Single spec
 yarn test:functional -- src/test/functional/specFiles/integration/fdr.integration.spec.ts
@@ -223,9 +234,9 @@ Commands are defined in [../../../../package.json](../../../../package.json).
 | Script | Local | Local mock flow | Preview/AAT | Purpose |
 |---|---|---|---|---|
 | yarn test:functional:install-deps | Yes | Yes | Yes | Installs Playwright browser dependencies for first-time setup or runner refresh |
-| yarn test:functional | Yes | Yes | Yes (with ACCESS_CODE_REAL_INTEGRATION=true) | Main functional run on Chromium with tuned workers and retries for fast, stable feedback; includes @a11y-tagged tests |
-| yarn test:functional:quick | Yes | Yes | Yes (with ACCESS_CODE_REAL_INTEGRATION=true) | Chromium-only fast local run with retries disabled and no Playwright install step |
-| yarn test:functional:allBrowsers | Yes | Yes | Yes (with ACCESS_CODE_REAL_INTEGRATION=true) | Cross-browser functional run (Chromium, Firefox, WebKit) using the shared functional worker/retry controls for consistent tuning |
+| yarn test:functional | Yes | Yes | Yes | Main functional run on Chromium; includes @a11y-tagged tests |
+| yarn test:functional:quick | Yes | Yes | Yes | Chromium-only fast run with retries disabled and no Playwright install step |
+| yarn test:functional:allBrowsers | Yes | Yes | Yes | Cross-browser functional run (Chromium, Firefox, WebKit) |
 | yarn test:functional:pr | Yes | Yes | Yes | PR-tagged Chromium-only functional tests using the same tuned worker/retry defaults as main Chromium runs |
 | yarn test:functional:headed:slowmo | Yes | Yes | Yes | Interactive debugging with headed Chromium + Playwright inspector against the selected target |
 | yarn test:functional:allBrowsers:ui | Yes | Yes | Yes | Playwright UI mode for interactive debugging against the selected target |
@@ -239,51 +250,42 @@ Commands are defined in [../../../../package.json](../../../../package.json).
 
 ### Worker Strategy (Speed + Stability)
 
-The functional scripts use benchmarked defaults chosen to optimize wall-clock time while keeping stability acceptable for integration-style browser tests.
+Worker/retry behavior is controlled by script flags plus Playwright config defaults.
 
-Default worker/retry settings in `package.json`:
+Current effective defaults:
 
-- `yarn test:functional` (Chromium): `--workers=${PLAYWRIGHT_CHROMIUM_WORKERS:-8}` and `--retries=${PLAYWRIGHT_RETRIES:-3}`
-- `yarn test:functional:quick` (Chromium): `PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-6}` and `PLAYWRIGHT_RETRIES=0`
-- `yarn test:functional:pr` (Chromium + `@PR`): same defaults as Chromium main run
-- `yarn test:functional:allBrowsers` (Chromium, Firefox, WebKit): `--workers=${PLAYWRIGHT_CHROMIUM_WORKERS:-8}` and `--retries=${PLAYWRIGHT_RETRIES:-3}`
-- `yarn test:playwright:a11y:chrome` (Chromium + `@a11y`): `--workers=${PLAYWRIGHT_A11Y_CHROMIUM_WORKERS:-6}` and `--retries=${PLAYWRIGHT_A11Y_RETRIES:-1}`
-- `yarn test:playwright:a11y:all-browsers` (Chromium, Firefox, WebKit + `@a11y`): `--workers=${PLAYWRIGHT_A11Y_ALL_BROWSERS_WORKERS:-4}` and `--retries=${PLAYWRIGHT_A11Y_RETRIES:-1}`
-- `yarn test:functional:headed:slowmo`: fixed `--workers=1` (intentional for interactive debugging)
-- `yarn test:functional:allBrowsers:ui`: worker count controlled in Playwright UI mode
+- `PLAYWRIGHT_WORKERS`: default `4` when unset (from `playwright.config.mts`)
+- `PLAYWRIGHT_RETRIES`: default `2` for `yarn test:functional` and `yarn test:functional:pr` (script flag)
+- `PLAYWRIGHT_RETRIES`: default `3` for `yarn test:functional:allBrowsers` (script flag)
+- `PLAYWRIGHT_RETRIES=0` for `yarn test:functional:quick`
+- `yarn test:functional:headed:slowmo`: fixed `--workers=1`
 
-Why these values:
+Notes:
 
-- With 72 tests in the suite, chromium-only benchmark on a 14-core macOS runner improved from ~119.63s (4 workers) to ~87.43s (6 workers) to ~56.28s (8 workers) with equivalent pass/skip profile.
-- All-browsers runs are more resource-intensive because three engines run in one command; this script currently shares `PLAYWRIGHT_CHROMIUM_WORKERS` so one env var can throttle or increase both main functional lanes together.
-- A11y runs execute heavier accessibility audits; lower worker defaults (`6` for Chromium a11y, `4` for all-browsers a11y) reduce contention and transient audit flake.
-- `retries=3` keeps functional runs resilient to transient environment/network issues without over-serializing execution.
-- `retries=1` for a11y strikes a balance between stability and runtime for audit-focused lanes.
+- Integration tests can emit transient CCD retry/fallback behavior in AAT/preview; this is expected when eventual consistency settles within retry windows.
+- Override workers/retries per run when needed for agent size or debugging.
 
 When to override defaults:
 
 - If CI is resource-constrained or shows flake spikes, lower workers temporarily.
 - If local hardware is stronger and stable, increase workers for faster feedback.
-- `PLAYWRIGHT_WORKERS` controls the worker count used by the Playwright config; `PLAYWRIGHT_CHROMIUM_WORKERS` is only used by the shell snippets in this document.
+- `PLAYWRIGHT_WORKERS` controls worker count used by Playwright config.
 - For strict performance benchmarking, use `PLAYWRIGHT_RETRIES=0`.
 
 Override examples:
 
 ```bash
 # Constrain Chromium run for a smaller CI agent
-PLAYWRIGHT_CHROMIUM_WORKERS=6 PLAYWRIGHT_RETRIES=3 yarn test:functional
+PLAYWRIGHT_WORKERS=3 PLAYWRIGHT_RETRIES=2 yarn test:functional
 
-# Increase parallelism for both Chromium-only and all-browsers functional lanes
-PLAYWRIGHT_CHROMIUM_WORKERS=10 PLAYWRIGHT_RETRIES=3 yarn test:functional:allBrowsers
+# Increase parallelism for local feedback
+PLAYWRIGHT_WORKERS=6 PLAYWRIGHT_RETRIES=2 yarn test:functional
 
 # Pure speed benchmark with retries disabled
 PLAYWRIGHT_RETRIES=0 yarn test:functional
 
-# Run Chromium a11y lane faster on a strong local machine
-PLAYWRIGHT_A11Y_CHROMIUM_WORKERS=8 PLAYWRIGHT_A11Y_RETRIES=1 yarn test:playwright:a11y:chrome
-
-# Stabilize all-browsers a11y in a constrained CI agent
-PLAYWRIGHT_A11Y_ALL_BROWSERS_WORKERS=3 PLAYWRIGHT_A11Y_RETRIES=2 yarn test:playwright:a11y:all-browsers
+# Enable verbose CCD diagnostics when investigating integration flake
+CCD_LOG_PROGRESS=true CCD_VERBOSE_RETRY=true yarn test:functional -- src/test/functional/specFiles/integration/enterAccessCode.integration.spec.ts
 ```
 
 ### Best Practice Run Order
@@ -375,7 +377,7 @@ yarn test:functional -- src/test/functional/specFiles/mock/
 
 Cause:
 
-- ACCESS_CODE_REAL_INTEGRATION is not true, or suite-level feature gate remains active
+- Running outside preview/AAT target without enabling real integration happy-path mode
 
 Fix:
 
@@ -396,6 +398,28 @@ Fix:
 echo $CCD_URL
 echo $CCD_DATA_STORE_API_URL
 ```
+
+### Access codes not found after FR_issueApplication
+
+Cause:
+
+- CCD eventually-consistent read path has not yet surfaced generated access-code fields, or the target case record was updated but access-code collections are still empty.
+
+Fix:
+
+```bash
+# Increase polling window for shared AAT load
+export ACCESS_CODE_MAX_TOTAL_RUNTIME_MS=45000
+
+# Optional: keep polling timeboxed (0 = no hard attempt cap)
+export ACCESS_CODE_FETCH_ATTEMPTS_PER_CASE=0
+
+yarn test:functional -- src/test/functional/specFiles/integration/enterAccessCode.integration.spec.ts
+```
+
+Debug confirmation:
+
+- On failure, the error now includes a non-sensitive `debugSnapshot` showing counts/flags for `applicantAccessCodes` and `respondentAccessCodes` so you can confirm whether codes were generated.
 
 ## Maintenance Notes
 
