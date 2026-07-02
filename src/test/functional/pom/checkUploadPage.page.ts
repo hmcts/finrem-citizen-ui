@@ -9,6 +9,8 @@ const URL_PATTERNS = {
   DOCUMENT_TYPE_SELECTION: /\/upload\/document-type-selection/,
   SEND_TO_OTHER_PARTY: /\/upload\/send-to-other-party/,
   UPLOAD_DOCUMENTS: /\/upload\/upload-documents/,
+  CONFIRMATION: /\/upload\/confirmation/,
+  DASHBOARD: /\/dashboard/,
 };
 
 const NAVIGATION_TIMEOUT_MS = 15_000;
@@ -48,6 +50,14 @@ export class CheckUploadPage extends BasePage {
   readonly understandErrorSummaryLink: Locator;
   readonly understandInlineError: Locator;
   readonly confirmationHeading: Locator;
+  readonly confirmationPanel: Locator;
+  readonly confirmationWhatHappensNextHeading: Locator;
+  readonly confirmationSavedToCaseText: Locator;
+  readonly confirmationJudgeReviewText: Locator;
+  readonly confirmationViewFromAccountLink: Locator;
+  readonly confirmationReturnLaterText: Locator;
+  readonly confirmationEmailText: Locator;
+  readonly confirmationReturnToAccountButton: Locator;
 
   constructor(readonly page: Page) {
     super(page);
@@ -124,9 +134,35 @@ export class CheckUploadPage extends BasePage {
       exact: true,
     });
     this.confirmationHeading = this.page.getByRole('heading', { name: 'Documents uploaded', exact: true });
+    this.confirmationPanel = this.page.locator('.govuk-panel.govuk-panel--confirmation');
+    this.confirmationWhatHappensNextHeading = this.page.getByRole('heading', { name: 'What happens next', exact: true });
+    this.confirmationSavedToCaseText = this.page.getByText(
+      'Your documents have been uploaded and have been saved to your case',
+      { exact: false }
+    );
+    this.confirmationJudgeReviewText = this.page.getByText(
+      'ready for the judge to review at your hearing',
+      { exact: false }
+    );
+    this.confirmationViewFromAccountLink = this.page.getByRole('link', {
+      name: 'They can be viewed from your account',
+      exact: true,
+    });
+    this.confirmationReturnLaterText = this.page.getByText(
+      'You can come back anytime to upload more documents.',
+      { exact: true }
+    );
+    this.confirmationEmailText = this.page.getByText(
+      'You will receive an email to confirm that the upload was successful.',
+      { exact: true }
+    );
+    this.confirmationReturnToAccountButton = this.page.getByRole('button', {
+      name: 'Close and return to your account',
+      exact: true,
+    });
   }
 
-  private async ensureCheckUploadPageLoaded(): Promise<void> {
+  async ensureCheckUploadPageLoaded(): Promise<void> {
     await expect(this.page).toHaveURL(URL_PATTERNS.CHECK_UPLOAD, {
       timeout: NAVIGATION_TIMEOUT_MS,
     });
@@ -194,6 +230,7 @@ export class CheckUploadPage extends BasePage {
 
   async clickContinue(): Promise<void> {
     await this.continueButton.click();
+    await this.page.waitForLoadState('networkidle', { timeout: 10000 });
   }
 
   async submitWithoutSelectionAndExpectValidationError(): Promise<void> {
@@ -301,6 +338,53 @@ export class CheckUploadPage extends BasePage {
   async clickBackAndExpectUploadDocuments(): Promise<void> {
     await this.backLink.click();
     await expect(this.page).toHaveURL(URL_PATTERNS.UPLOAD_DOCUMENTS);
+  }
+
+  async gotoConfirmationPage(): Promise<void> {
+    await this.page.goto('/upload/confirmation');
+    await expect(this.page).toHaveURL(URL_PATTERNS.CONFIRMATION);
+  }
+
+  async verifyConfirmationPageContent(): Promise<void> {
+    await expect(this.page).toHaveURL(URL_PATTERNS.CONFIRMATION, {
+      timeout: NAVIGATION_TIMEOUT_MS,
+    });
+
+    await this.verifyGlobalHeaderAndFooter();
+
+    await this.expectVisible([
+      this.serviceNav,
+      this.navigationLink,
+      this.signOutBtn,
+      this.backLink,
+      this.confirmationPanel,
+      this.confirmationHeading,
+      this.confirmationWhatHappensNextHeading,
+      this.confirmationSavedToCaseText,
+      this.confirmationJudgeReviewText,
+      this.confirmationViewFromAccountLink,
+      this.confirmationReturnLaterText,
+      this.confirmationEmailText,
+      this.confirmationReturnToAccountButton,
+      this.gettingHelp.heading,
+      this.gettingHelp.summary,
+    ]);
+
+    await this.expectAttributes([
+      { locator: this.backLink, name: 'href', value: '/upload/send-to-other-party' },
+      { locator: this.confirmationViewFromAccountLink, name: 'href', value: '/dashboard' },
+      { locator: this.confirmationReturnToAccountButton, name: 'href', value: '/dashboard' },
+    ]);
+  }
+
+  async clickCloseAndReturnToAccountAndExpectDashboard(): Promise<void> {
+    await this.confirmationReturnToAccountButton.click();
+    await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
+  }
+
+  async clickBackAndExpectSendToOtherParty(): Promise<void> {
+    await this.backLink.click();
+    await expect(this.page).toHaveURL(URL_PATTERNS.SEND_TO_OTHER_PARTY);
   }
 
   async verifyGettingHelpSection(): Promise<void> {

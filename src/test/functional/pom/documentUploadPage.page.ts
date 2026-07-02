@@ -55,7 +55,7 @@ export class DocumentUploadPage extends BasePage {
     super(page);
     this.gettingHelp = new GettingHelpPanel(this.page);
     this.backLink = this.page.getByRole('link', { name: 'Back', exact: true });
-    this.pageHeader = this.page.getByRole('heading', { name: 'Upload your documents', exact: true });
+    this.pageHeader = this.page.getByRole('heading', { name: /Upload your documents/i });
     this.introText = this.page.getByText('Upload each of your documents in the corresponding section. You will be able to check what you have uploaded before you submit them to the court.', { exact: true });
     this.documentTypeLabel = this.page.getByText('Other document', { exact: true });
     this.instructionTitleLabel = this.page.getByText('Upload a file', { exact: true });
@@ -259,6 +259,7 @@ export class DocumentUploadPage extends BasePage {
 
   async clickContinue(): Promise<void> {
     await this.continueButton.click();
+    await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 });
   }
 
   async clickBack(): Promise<void> {

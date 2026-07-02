@@ -85,11 +85,20 @@ ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 
 # Terminal 3
 yarn test:functional
+
+# Faster local Chromium-only run
+yarn test:functional:quick
 ```
 
 Before running local functional tests, ensure `.env` uses local target values:
 - `CCD_URL=http://localhost:4100`
 - `CCD_DATA_STORE_API_URL=http://localhost:4100`
+
+Use `yarn test:functional:quick` when you want the same local target but faster feedback:
+- Chromium only
+- no `playwright install --with-deps` step
+- `PLAYWRIGHT_RETRIES=0`
+- `PLAYWRIGHT_WORKERS=6` by default, override with `PLAYWRIGHT_WORKERS=<n>`
 
 For full functional testing setup, environment gating, and mock data conventions, use the single source of truth:
 [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md)

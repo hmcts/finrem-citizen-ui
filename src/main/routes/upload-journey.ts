@@ -290,12 +290,18 @@ export default function setupUploadJourneyRoute(app: Application): void {
     const uploadErrors = req.session.uploadErrors || {};
     delete req.session.uploadErrors;
 
+
+    const contactEmail = req.session.preservedContactEmail 
+      || req.session.caseData?.consentOrderFRCEmail 
+      || 'FRCexample@justice.gov.uk';
+
     res.render(step.template, {
       data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType, documentGroups },
       errors: uploadErrors,
       values: { selectedDocumentTypes, fdrHearing },
       previousStep,
       caseUserName: req.session.caseUserName,
+      contactEmail,
       shouldAutoRename,
       getDocumentRenameFormat,
       shouldCombineIntoPDF,
@@ -357,6 +363,10 @@ export default function setupUploadJourneyRoute(app: Application): void {
             req.session.documents = {};
           }
           req.session.documents.isFinancialDisputeResolution = req.session.DocumentSelection.isFinancialDisputeResolution;
+        }
+
+        if (req.session.caseData?.consentOrderFRCEmail) {
+          req.session.preservedContactEmail = req.session.caseData.consentOrderFRCEmail;
         }
 
         // Submit documents to CCD

@@ -390,6 +390,67 @@ describe('Upload Journey Routes', () => {
       }));
     });
 
+    it('should render confirmation step with expected previous step and preserved contact email', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.Confirmation },
+        session: {
+          preservedContactEmail: 'preserved.contact@justice.gov.uk',
+          caseData: {
+            consentOrderFRCEmail: 'case-data.contact@justice.gov.uk',
+          },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/confirmation', expect.objectContaining({
+        previousStep: UploadStepNames.SendToOtherParty,
+        contactEmail: 'preserved.contact@justice.gov.uk',
+      }));
+    });
+
+    it('should render confirmation step using case-data contact email when preserved email is not present', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.Confirmation },
+        session: {
+          caseData: {
+            consentOrderFRCEmail: 'case-data.contact@justice.gov.uk',
+          },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/confirmation', expect.objectContaining({
+        contactEmail: 'case-data.contact@justice.gov.uk',
+      }));
+    });
+
+    it('should render confirmation step with fallback contact email when no session contact email is present', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.Confirmation },
+        session: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/confirmation', expect.objectContaining({
+        contactEmail: 'FRCexample@justice.gov.uk',
+      }));
+    });
+
     it('should render check-upload with documents that do not have rename formats', () => {
       const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
@@ -964,6 +1025,47 @@ describe('Upload Journey Routes', () => {
       expect(mockLinkDocumentsToCase).toHaveBeenCalledWith(mockReq);
       expect(mockReq.session?.documents?.isFinancialDisputeResolution).toBe(true);
       expect(mockReq.session?.DocumentSelection).toBeUndefined();
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
+    });
+
+    it('should preserve case-data contact email on send-to-other-party submission', async () => {
+      // @ts-ignore - Jest mock typing issue
+      const mockLinkDocumentsToCase = jest.fn().mockResolvedValue(undefined) as jest.Mock;
+      (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
+        LinkDocumentsToCase: mockLinkDocumentsToCase,
+      }));
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: 'send-to-other-party' },
+        session: {
+          caseData: {
+            consentOrderFRCEmail: 'preserved.contact@justice.gov.uk',
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'doc1',
+                value: {
+                  DocumentFileName: 'test.pdf',
+                  DocumentType: 'Chronology',
+                  DocumentLink: { document_url: 'http://dm-store/doc1' },
+                },
+              },
+            ],
+          },
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: { understand: 'yes' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockReq.session?.preservedContactEmail).toBe('preserved.contact@justice.gov.uk');
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
     });
 
