@@ -360,6 +360,9 @@ test.describe('[integration] Check uploaded documents page', () => {
     await checkUploadPage.clickBackAndExpectUploadDocuments();
     await documentUploadPage.clickBack();
 
+    // Wait for document selection page to fully load before removing documents
+    await documentSelectionPage.page.waitForLoadState('networkidle');
+
     // Remove both Mortgage and Other, add Bank instead
     await documentSelectionPage.removeDocumentByLabel('Mortgage statements for family home');
     await documentSelectionPage.page.waitForLoadState('networkidle');
