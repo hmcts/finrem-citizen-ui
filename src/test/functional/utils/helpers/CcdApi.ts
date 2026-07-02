@@ -43,8 +43,10 @@ const shouldLogVerboseRetry = (): boolean => process.env.CCD_VERBOSE_RETRY === '
 //   a replica/index that has not caught up yet.
 // - A short retry window smooths this transient lag without masking persistent failures.
 const CCD_RETRY_CONFIG = {
-  // Total attempts = maxRetries + 1. Default to 2 attempts to fail fast.
-  maxRetries: parseNumberEnv(process.env.CCD_START_EVENT_MAX_RETRIES, 1),
+  // Total attempts = maxRetries + 1.
+  // Default to 2 attempts locally (fast feedback) and 4 attempts in CI
+  // to absorb transient CCD replica lag.
+  maxRetries: parseNumberEnv(process.env.CCD_START_EVENT_MAX_RETRIES, process.env.CI ? 3 : 1),
   initialDelayMs: 2000,
   maxDelayMs: parseNumberEnv(process.env.CCD_START_EVENT_MAX_DELAY_MS, process.env.CI ? 4000 : 10000),
   retryableStatusCodes: [404]  // CaseNotFoundException - case not yet available
