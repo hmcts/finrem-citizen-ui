@@ -10,7 +10,7 @@ import type {
   PreviouslyUploadedDocumentsCaseData,
 } from '../app/document/PreviouslyUploadedDocumentClient';
 import { RouteNames } from '../common-constants';
-import { getCombinedPDFFormat, getDocumentRenameFormat, getRenamePreview,getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../functions/util/documentUtil';
+import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../functions/util/documentUtil';
 import { oidcMiddleware } from '../middleware';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
 
@@ -297,8 +297,8 @@ export default function setupUploadJourneyRoute(app: Application): void {
       caseUserName: req.session.caseUserName,
       shouldAutoRename,
       getDocumentRenameFormat,
-      getRenamePreview,
       shouldCombineIntoPDF,
+      generateRenamedFilename,
       getCombinedPDFFormat,
     });
   });
@@ -336,7 +336,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
           caseUserName: req.session.caseUserName,
           shouldAutoRename,
           getDocumentRenameFormat,
-          getRenamePreview,
+          generateRenamedFilename,
           shouldCombineIntoPDF,
           getCombinedPDFFormat,
         });

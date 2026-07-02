@@ -37,20 +37,6 @@ export function toDocumentTypeKey(documentType: string): string {
 export function shouldAutoRename(documentTypeValue: string): boolean {
   return documentTypeValue in DOCUMENT_RENAME_FORMATS;
 }
-export function getRenamePreview(
-  documentTypeValue: string,
-  caseUserName?: string
-): string {
-  const format = DOCUMENT_RENAME_FORMATS[documentTypeValue];
-
-  if (!format) {
-    return '';
-  }
-
-  const safeUserName = (caseUserName || 'UserName').replace(/\s+/g, '');
-
-  return `${safeUserName}-${format}-DD-MM-YYYY`;
-}
 
 export function getDocumentRenameFormat(documentTypeValue: string): string {
   return DOCUMENT_RENAME_FORMATS[documentTypeValue] || '';
@@ -79,7 +65,7 @@ export function getSelectedDocumentTypesForDisplay(req: Request): SelectedDocume
   }));
 }
 
-export function generateRenamedFilename(documentTypeValue: string, originalFilename: string, caseUserName?: string): string {
+export function generateRenamedFilename(documentTypeValue: string, originalFilename: string, caseUserName?: string, preview=false): string {
   const format = getDocumentRenameFormat(documentTypeValue);
   if (!format) {
     return originalFilename;
@@ -102,5 +88,8 @@ export function generateRenamedFilename(documentTypeValue: string, originalFilen
 
   // Format: UserName-DocumentType-DD-MM-YYYY.ext
   const userName = (caseUserName || 'UserName').replace(/\s+/g, '');
+  if (preview) {
+    return `${userName}-${format}-DD-MM-YYYY`;
+  }
   return `${userName}-${format}-${dateStr}${extension}`;
 }

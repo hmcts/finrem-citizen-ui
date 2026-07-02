@@ -38,7 +38,7 @@
 
          {% if shouldAutoRename(documentType.value) %}
   <p class="govuk-body">
-    When you upload this document, it will automatically be renamed to <strong>{{ getRenamePreview(documentType.value, caseUserName) }}</strong>.
+    When you upload this document, it will automatically be renamed to <strong>{{ generateRenamedFilename(documentType.value, '', caseUserName, true) }}</strong>.
   </p>
 {% endif %}
 

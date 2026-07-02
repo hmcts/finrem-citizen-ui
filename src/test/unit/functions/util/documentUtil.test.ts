@@ -5,7 +5,6 @@ import {
   generateRenamedFilename,
   getDocumentLabel,
   getDocumentRenameFormat,
-  getRenamePreview,
   getSelectedDocumentTypesForDisplay,
   shouldAutoRename,
 } from '../../../../main/functions/util/documentUtil';
@@ -276,30 +275,7 @@ describe('documentUtil', () => {
       expect(result[1].id).toBe('uuid-3');
     });
   });
-  describe('getRenamePreview', () => {
-    it('should generate a preview for FM1', () => {
-      expect(
-        getRenamePreview(
-          'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
-          'Sam Thompson'
-        )
-      ).toBe('SamThompson-FormFM1-DD-MM-YYYY');
-    });
 
-    it('should use UserName when username is not supplied', () => {
-      expect(
-        getRenamePreview(
-          'family-mediation-information-and-assessment-meeting-miam-form-form-fm1'
-        )
-      ).toBe('UserName-FormFM1-DD-MM-YYYY');
-    });
-
-    it('should return empty string for non-renamed documents', () => {
-      expect(
-        getRenamePreview('medical-report', 'Sam Thompson')
-      ).toBe('');
-    });
-  });
   describe('shouldAutoRename', () => {
     it('should return true for all form documents that should be auto-renamed', () => {
       expect(shouldAutoRename('family-mediation-information-and-assessment-meeting-miam-form-form-fm1')).toBe(true);
@@ -409,6 +385,36 @@ describe('documentUtil', () => {
       jest.useRealTimers();
     });
 
+    it('should generate preview filename', () => {
+      const result = generateRenamedFilename(
+        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        '',
+        'Sam Thompson',
+        true
+      );
+
+      expect(result).toBe('SamThompson-FormFM1-DD-MM-YYYY');
+    });
+    it('should generate preview filename with default username', () => {
+      const result = generateRenamedFilename(
+        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        '',
+        undefined,
+        true
+      );
+
+      expect(result).toBe('UserName-FormFM1-DD-MM-YYYY');
+    });
+    it('should return empty string in preview mode for non-renamed documents', () => {
+      const result = generateRenamedFilename(
+        'bank-statements',
+        '',
+        'Sam',
+        true
+      );
+
+      expect(result).toBe('');
+    });
 
     it('should rename FM1', () => {
       const result = generateRenamedFilename(
@@ -420,7 +426,7 @@ describe('documentUtil', () => {
       expect(result).toBe('SamThompson-FormFM1-23-06-2026.pdf');
     });
 
-    it('should rename N260 ', () => {
+    it('should rename N260', () => {
       const result = generateRenamedFilename(
         'statement-of-costs-summary-assessment-form-n260',
         'n260.pdf',
