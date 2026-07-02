@@ -219,7 +219,7 @@ export default function (app: Application): void {
         const returnUrl = req.body.returnUrl || RouteNames.documents;
 
         // Validate uploaded file
-        const validationError = validateUploadedFile(req.files as Express.Multer.File[]);
+        const validationError = await validateUploadedFile(req.files as Express.Multer.File[]);
         if (validationError) {
           return redirectWithError(req, res, next, documentType, returnUrl, validationError);
         }
