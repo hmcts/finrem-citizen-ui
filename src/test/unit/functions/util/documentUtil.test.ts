@@ -1,7 +1,14 @@
 import { Request } from 'express';
 
 import { DOCUMENT_RENAME_FORMATS } from '../../../../main/common-constants';
-import { generateRenamedFilename, getDocumentLabel, getDocumentRenameFormat,getSelectedDocumentTypesForDisplay, shouldAutoRename } from '../../../../main/functions/util/documentUtil';
+import {
+  generateRenamedFilename,
+  getDocumentLabel,
+  getDocumentRenameFormat,
+  getRenamePreview,
+  getSelectedDocumentTypesForDisplay,
+  shouldAutoRename,
+} from '../../../../main/functions/util/documentUtil';
 describe('documentUtil', () => {
   describe('getDocumentLabel', () => {
     it('should return the label for a valid document type', () => {
@@ -269,7 +276,30 @@ describe('documentUtil', () => {
       expect(result[1].id).toBe('uuid-3');
     });
   });
+  describe('getRenamePreview', () => {
+    it('should generate a preview for FM1', () => {
+      expect(
+        getRenamePreview(
+          'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+          'Sam Thompson'
+        )
+      ).toBe('SamThompson-FormFM1-DD-MM-YYYY');
+    });
 
+    it('should use UserName when username is not supplied', () => {
+      expect(
+        getRenamePreview(
+          'family-mediation-information-and-assessment-meeting-miam-form-form-fm1'
+        )
+      ).toBe('UserName-FormFM1-DD-MM-YYYY');
+    });
+
+    it('should return empty string for non-renamed documents', () => {
+      expect(
+        getRenamePreview('medical-report', 'Sam Thompson')
+      ).toBe('');
+    });
+  });
   describe('shouldAutoRename', () => {
     it('should return true for all form documents that should be auto-renamed', () => {
       expect(shouldAutoRename('family-mediation-information-and-assessment-meeting-miam-form-form-fm1')).toBe(true);
