@@ -14,6 +14,13 @@ type UploadScenario = {
   expectedFilename: string;
 };
 
+type RenameScenario = {
+  label: string;
+  searchTerm: string;
+  typeValue: string;
+  renameToken: string;
+};
+
 const uploadScenarios: UploadScenario[] = [
   {
     label: 'docx',
@@ -39,6 +46,40 @@ const uploadScenarios: UploadScenario[] = [
     label: 'xlsx',
     upload: async page => page.chooseFileAndUploadXlsx(),
     expectedFilename: 'testDocument.xlsx',
+  },
+] as const;
+
+const renameScenarios: RenameScenario[] = [
+  {
+    label: 'Chronology',
+    searchTerm: 'chronology',
+    typeValue: 'chronology',
+    renameToken: 'Chronology',
+  },
+  {
+    label: 'Family Mediation Information and Assessment Meeting (MIAM) Form: Form FM1',
+    searchTerm: 'miam',
+    typeValue: 'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+    renameToken: 'FormFM1',
+  },
+  {
+    label: 'Statement of costs (summary assessment): Form N260',
+    searchTerm: 'n260',
+    typeValue: 'statement-of-costs-summary-assessment-form-n260',
+    renameToken: 'N260',
+  },
+  {
+    label: 'Potential borrowing capacity / mortgage capacities',
+    searchTerm: 'mortgage capacities',
+    typeValue: 'potential-borrowing-capacity-mortgage-capacities',
+    renameToken: 'MortgageCapacity',
+  },
+  {
+    label: 'Attachments to Form E',
+    // Autocomplete requires a direct label/alias substring match; otherwise it falls back to "Other document".
+    searchTerm: 'attachments to form e',
+    typeValue: 'attachments-to-form-e',
+    renameToken: 'AttachmentsFormE',
   },
 ] as const;
 
@@ -150,7 +191,7 @@ test.describe('[integration] Document upload page', () => {
     await expect(documentUploadPage.pageHeader).toBeVisible();
 
     // Verify rename instruction text appears for renaming document types
-    const renameInstruction = documentUploadPage.page.getByText(/automatically be renamed to.*-DD-MM-YY/);
+    const renameInstruction = documentUploadPage.page.getByText(/automatically be renamed to.*-DD-MM-YYYY/);
     await expect(renameInstruction).toBeVisible();
 
     // Upload file into Chronology section
@@ -171,6 +212,39 @@ test.describe('[integration] Document upload page', () => {
 
     await runA11yAudit(axeUtils);
   });
+
+  for (const scenario of renameScenarios) {
+    test(`[integration] Upload rename hint and filename format are correct for ${scenario.renameToken} @a11y`, async ({
+      loggedInPage: _loggedInPage,
+      dashboardPage,
+      beforeYouStartPage,
+      confidentialityPage,
+      basePage,
+      fdrPage,
+      documentSelectionPage,
+      documentUploadPage,
+      axeUtils,
+    }) => {
+      await navigateToFdrStep(dashboardPage, beforeYouStartPage, confidentialityPage, basePage);
+      await fdrPage.selectYesAndContinue();
+      await documentSelectionPage.addDocumentBySearchTerm(scenario.searchTerm, scenario.label);
+      await documentSelectionPage.clickContinueAndExpectUploadDocumentsStep();
+
+      const renameInstruction = documentUploadPage.page.getByText(
+        new RegExp(String.raw`automatically be renamed to\s+.*-${scenario.renameToken}-DD-MM-YYYY`)
+      );
+      await expect(renameInstruction).toBeVisible();
+
+      await documentUploadPage.chooseFileAndUploadDocumentByTypeValue(scenario.typeValue);
+
+      const renamedFile = documentUploadPage.uploadedFileLinks.filter({
+        hasText: new RegExp(String.raw`-${scenario.renameToken}-\d{2}-\d{2}-\d{4}\..+`),
+      });
+      await expect(renamedFile).toHaveCount(1);
+
+      await runA11yAudit(axeUtils);
+    });
+  }
 
   test('[integration] Document upload requires at least one uploaded file before continuing @a11y', async ({
     documentUploadPage,
