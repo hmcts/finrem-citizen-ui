@@ -71,7 +71,14 @@ export class BasePage {
       this.copyRightImgLink,
     ]);
 
-    await expect(this.betaBannerFeedbackLink).toHaveAttribute('href', /^https:\/\/www\.smartsurvey\.co\.uk\/s\/CFR_feedback\/\?pageurl=/);
+    await this.verifyBetaBannerFeedbackLinkForCurrentPage();
+  }
+
+  async verifyBetaBannerFeedbackLinkForCurrentPage(): Promise<void> {
+    const expectedSurveyUrl =
+      `https://www.smartsurvey.co.uk/s/CFR_feedback/?pageurl=${encodeURIComponent(this.page.url())}`;
+
+    await expect(this.betaBannerFeedbackLink).toHaveAttribute('href', expectedSurveyUrl);
   }
 
   /**
