@@ -92,14 +92,14 @@ const getConfig = (): ApiConfig => {
   }
 
   const env = getEnvironment();
-  
+
   // Shared services use AAT for both AAT and preview environments
   // Preview apps connect to the same AAT backend services
   const serviceEnv = env === 'preview' ? 'aat' : env;
-  
+
   return {
     idam: {
-      baseUrl: process.env.IDAM_API_URL || `https://idam-api.${serviceEnv}.platform.hmcts.net`,
+      baseUrl: process.env.IDAM_TOKEN_URL || `https://idam-api.${serviceEnv}.platform.hmcts.net`,
       clientId: process.env.IDAM_CLIENT_ID || 'divorce',
       clientSecret: process.env.IDAM_CLIENT_SECRET || ''
     },
@@ -181,10 +181,10 @@ async function getUserToken(): Promise<string> {
   }
 
   // Fallback to environment variables
-  const envToken = process.env.COOKIE_TOKEN || 
+  const envToken = process.env.COOKIE_TOKEN ||
                    process.env.USER_TOKEN ||
                    process.env.IDAM_USER_TOKEN;
-  
+
   if (envToken && envToken !== '__auth__' && envToken.length > 50) {
     tokenCache.set(cacheKey, {
       token: envToken,
@@ -203,10 +203,10 @@ async function getUserToken(): Promise<string> {
 async function getUserId(authToken: string): Promise<string> {
   const config = getConfig();
   const cacheKey = 'default_user';
-  
+
   // UUID format: 8-4-4-4-12 hex characters
   const isValidUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-  
+
   // First check if userId is in cache
   const tokenCache = await readTokenCache();
   const cached = tokenCache.get(cacheKey);
@@ -248,7 +248,7 @@ async function getUserId(authToken: string): Promise<string> {
           Authorization: `Bearer ${authToken}`
         }
       });
-      
+
       const userId = detailsResponse.data.id;
       if (userId && isValidUuid(userId)) {
         if (cached) {
@@ -260,7 +260,7 @@ async function getUserId(authToken: string): Promise<string> {
     } catch {
       // Fall through to /o/userinfo
     }
-    
+
     // Fallback to /o/userinfo - use 'uid' field only (sub is email address)
     const response = await axiosRequest<{ uid: string }>({
       method: 'get',
@@ -269,17 +269,17 @@ async function getUserId(authToken: string): Promise<string> {
         Authorization: `Bearer ${authToken}`
       }
     });
-    
+
     const userId = response.data.uid;
       // eslint-disable-next-line no-console
     console.log(`✓ Got user ID from IDAM: ${userId}`);
-    
+
     // Update cache with userId
     if (cached) {
       cached.userId = userId;
       await writeTokenCache(tokenCache);
     }
-    
+
     return userId;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -296,7 +296,7 @@ async function getServiceToken(): Promise<string> {
 
   // Generate S2S token using TOTP
   const s2sSecret = process.env.FINREM_CASE_ORCHESTRATION_SERVICE_S2S_KEY
-    || process.env.SERVICE_AUTH_SECRET 
+    || process.env.SERVICE_AUTH_SECRET
     || process.env.S2S_SECRET;
   if (!s2sSecret) {
     throw new Error(
@@ -451,7 +451,7 @@ export class IdamApiService {
   constructor() {
     const env = getEnvironment();
     const serviceEnv = env === 'preview' ? 'aat' : env;
-    this.createUserEndpoint = process.env.IDAM_TESTING_SUPPORT_URL || 
+    this.createUserEndpoint = process.env.IDAM_TESTING_SUPPORT_URL ||
       `https://idam-testing-support-api.${serviceEnv}.platform.hmcts.net/test/idam/users`;
   }
 
