@@ -1,4 +1,4 @@
-import type { Application, Request, Response } from 'express';
+import type { Application, NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { LoggerInstance } from 'winston';
 
@@ -10,7 +10,7 @@ import type {
   PreviouslyUploadedDocumentsCaseData,
 } from '../app/document/PreviouslyUploadedDocumentClient';
 import { RouteNames } from '../common-constants';
-import { getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey } from '../functions/util/documentUtil';
+import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../functions/util/documentUtil';
 import { oidcMiddleware } from '../middleware';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
 
@@ -137,6 +137,7 @@ function getDocumentGroupsForCheckPage(req: Request): { groupKey: string; label:
 }
 
 export default function setupUploadJourneyRoute(app: Application): void {
+  // POST /upload/document-type-selection/add - Add a document type to selection
   app.post(`${RouteNames.uploadJourney}/document-type-selection/add`, oidcMiddleware, (req: Request, res: Response) => {
     if (!req.session.DocumentSelection) {
       req.session.DocumentSelection = {};
@@ -160,6 +161,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
     res.json({ success: true, documents: displayDocs });
   });
 
+  // DELETE /upload/document-type-selection/remove/:index - Remove a document type from selection
   app.delete(`${RouteNames.uploadJourney}/document-type-selection/remove/:index`, oidcMiddleware, (req: Request, res: Response) => {
     const documentDetails = req.session.DocumentSelection?.documentDetails || [];
     const indexParam = Array.isArray(req.params.index) ? req.params.index[0] : req.params.index;
@@ -182,10 +184,9 @@ export default function setupUploadJourneyRoute(app: Application): void {
         // removedDocType is already kebab-case from DocumentSelection
         // but uploaded DocumentType is an enum value, so normalize it
         const removedDocTypeKey = toDocumentTypeKey(removedDocType);
-        
-        req.session.documents.documentDetails = 
+                       req.session.documents.documentDetails =
           req.session.documents.documentDetails.filter(doc => {
-            const uploadedDocTypeKey = doc.value?.DocumentType 
+            const uploadedDocTypeKey = doc.value?.DocumentType
               ? toDocumentTypeKey(doc.value.DocumentType)
               : '';
             return uploadedDocTypeKey !== removedDocTypeKey;
@@ -202,7 +203,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
       if (err) {
         return res.status(500).json({ success: false, error: 'Failed to save session' });
       }
-      
+
       // Map to display format for frontend
       const displayDocs = getSelectedDocumentTypesForDisplay(req);
       res.json({ success: true, documents: displayDocs });
@@ -279,88 +280,135 @@ export default function setupUploadJourneyRoute(app: Application): void {
     // Get FDR value from session
     const fdrHearing = req.session.DocumentSelection?.isFinancialDisputeResolution;
 
-    // Get uploaded documents grouped by document type
+    // Get uploaded documents
     const uploadedFilesByType = getUploadedFilesByType(req);
-    const documentGroups = req.params.stepId === 'check-upload' 
+    const documentGroups = req.params.stepId === 'check-upload'
       ? getDocumentGroupsForCheckPage(req)
       : undefined;
 
-    // Get upload errors from session
     const uploadErrors = req.session.uploadErrors || {};
     delete req.session.uploadErrors;
+
+
+    const contactEmail = req.session.preservedContactEmail 
+      || req.session.caseData?.consentOrderFRCEmail 
+      || 'FRCexample@justice.gov.uk';
 
     res.render(step.template, {
       data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType, documentGroups },
       errors: uploadErrors,
       values: { selectedDocumentTypes, fdrHearing },
       previousStep,
-      email: 'FRCexample@justice.gov.uk',
       caseUserName: req.session.caseUserName,
+      contactEmail,
       shouldAutoRename,
       getDocumentRenameFormat,
       shouldCombineIntoPDF,
+      generateRenamedFilename,
       getCombinedPDFFormat,
     });
   });
 
-  app.post(`${RouteNames.uploadJourney}/:stepId`, oidcMiddleware, (req: Request, res: Response) => {
-    const step = uploadSteps[req.params.stepId as UploadStepId];
-    if (!step) {
-      return res.status(404).send('Step not found');
-    }
+  // POST /upload/:stepId - Handle form submission for any upload journey step
+  app.post(`${RouteNames.uploadJourney}/:stepId`, oidcMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const step = uploadSteps[req.params.stepId as UploadStepId];
+      if (!step) {
+        return res.status(404).send('Step not found');
+      }
 
-    const errors = step.validate ? step.validate(req.body, req) : {};
-    if (Object.keys(errors).length > 0) {
-      const previousStep = step.previous ? step.previous() : null;
+      const errors = step.validate ? step.validate(req.body, req) : {};
+      if (Object.keys(errors).length > 0) {
+        const previousStep = step.previous ? step.previous() : null;
 
-      // Map DocumentSelection to display format
-      const selectedDocumentTypes = getSelectedDocumentTypesForDisplay(req);
+        // Map DocumentSelection to display format
+        const selectedDocumentTypes = getSelectedDocumentTypesForDisplay(req);
 
-      const fdrHearing = req.body.fdrHearing
-        ? req.body.fdrHearing === 'true'
-        : undefined;
+        const fdrHearing = req.body.fdrHearing
+          ? req.body.fdrHearing === 'true'
+          : undefined;
 
-      // Get uploaded documents grouped by document type
-      const uploadedFilesByType = getUploadedFilesByType(req);
-      const documentGroups = req.params.stepId === 'check-upload' 
-        ? getDocumentGroupsForCheckPage(req)
-        : undefined;
+        // Get uploaded documents grouped by document type
+        const uploadedFilesByType = getUploadedFilesByType(req);
+        const documentGroups = req.params.stepId === 'check-upload'
+          ? getDocumentGroupsForCheckPage(req)
+          : undefined;
 
-      return res.render(step.template, {
-        data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType, documentGroups },
-        errors,
-        values: { selectedDocumentTypes, fdrHearing, uploadMore: req.body.uploadMore },
-        previousStep,
-        email: 'FRCexample@justice.gov.uk',
-        caseUserName: req.session.caseUserName,
-        shouldAutoRename,
-        getDocumentRenameFormat,
-        shouldCombineIntoPDF,
-        getCombinedPDFFormat,
+        return res.render(step.template, {
+          data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType, documentGroups },
+          errors,
+          values: { selectedDocumentTypes, fdrHearing, uploadMore: req.body.uploadMore, understand: req.body.understand },
+          previousStep,
+          caseUserName: req.session.caseUserName,
+          shouldAutoRename,
+          getDocumentRenameFormat,
+          generateRenamedFilename,
+          shouldCombineIntoPDF,
+          getCombinedPDFFormat,
+        });
+      }
+
+      // Save FDR hearing answer to DocumentSelection
+      if (req.body.fdrHearing) {
+        if (!req.session.DocumentSelection) {
+          req.session.DocumentSelection = {};
+        }
+        req.session.DocumentSelection.isFinancialDisputeResolution = req.body.fdrHearing === 'true';
+      }
+
+      // Handle send-to-other-party submission - send documents to CCD
+      if (req.params.stepId === 'send-to-other-party') {
+        // Transfer FDR flag from DocumentSelection to documents
+        if (req.session.DocumentSelection?.isFinancialDisputeResolution !== undefined) {
+          if (!req.session.documents) {
+            req.session.documents = {};
+          }
+          req.session.documents.isFinancialDisputeResolution = req.session.DocumentSelection.isFinancialDisputeResolution;
+        }
+
+        if (req.session.caseData?.consentOrderFRCEmail) {
+          req.session.preservedContactEmail = req.session.caseData.consentOrderFRCEmail;
+        }
+
+        // Submit documents to CCD
+        const logger: LoggerInstance = console as unknown as LoggerInstance;
+        const documentManagerController = new DocumentManagerController(logger);
+
+        await documentManagerController.LinkDocumentsToCase(req as unknown as AppRequest);
+
+        // Delete DocumentSelection after successful submission
+        delete req.session.DocumentSelection;
+
+        // Save session and redirect to confirmation page
+        await new Promise<void>((resolve, reject) => {
+          req.session.save((err) => {
+            if (err) {
+              return reject(err);
+            }
+            res.redirect(`${RouteNames.uploadJourney}/confirmation`);
+            resolve();
+          });
+        });
+        return;
+      }
+
+      const nextStep = step.next ? step.next(req.body) : null;
+      const redirectUrl = nextStep
+        ? `${RouteNames.uploadJourney}/${nextStep}`
+        : `${RouteNames.uploadJourney}/${req.params.stepId}`;
+
+      req.session.save((err) => {
+        if (err) {
+          return next(err);
+        }
+        res.redirect(redirectUrl);
       });
+    } catch (error) {
+      return next(error);
     }
-
-    // Save FDR hearing answer to DocumentSelection
-    if (req.body.fdrHearing) {
-      if (!req.session.DocumentSelection) {
-        req.session.DocumentSelection = {};
-      }
-      req.session.DocumentSelection.isFinancialDisputeResolution = req.body.fdrHearing === 'true';
-    }
-
-    const nextStep = step.next ? step.next(req.body) : null;
-    const redirectUrl = nextStep
-      ? `${RouteNames.uploadJourney}/${nextStep}`
-      : `${RouteNames.uploadJourney}/${req.params.stepId}`;
-
-    req.session.save((err) => {
-      if (err) {
-        throw err;
-      }
-      res.redirect(redirectUrl);
-    });
   });
 
+  // GET /upload - Redirect to first step of upload journey
   app.get(RouteNames.uploadJourney, oidcMiddleware, (req: Request, res: Response) => {
     res.redirect(`${RouteNames.uploadJourney}/before-you-start`);
   });

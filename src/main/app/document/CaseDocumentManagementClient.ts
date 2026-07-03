@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import config from 'config';
 import { Response } from 'express';
 import FormData from 'form-data';
+import { createReadStream } from 'fs';
 
 import { UrlEndPoints } from '../../common-constants';
 import { generateRenamedFilename, shouldAutoRename, toDocumentTypeKey } from '../../functions/util/documentUtil';
@@ -40,10 +41,10 @@ export class CaseDocumentManagementClient {
     formData.append('jurisdictionId', JURISDICTION);
     formData.append('classification', classification);
 
-    for (const [, file] of Object.entries(files)) {
+    for (const file of getUploadedFiles(files)) {
       // Determine the filename to use when uploading
       let uploadFilename = file.originalname;
-      
+
       // If documentType is provided, check if it should be auto-renamed
       if (documentType) {
         const documentTypeKey = toDocumentTypeKey(documentType);
@@ -51,17 +52,25 @@ export class CaseDocumentManagementClient {
           uploadFilename = generateRenamedFilename(documentTypeKey, file.originalname, caseUserName);
         }
       }
-      
-      formData.append('files', file.buffer, uploadFilename);
+
+      const fileContent = file.path ? createReadStream(file.path) : file.buffer;
+      formData.append('files', fileContent, {
+        filename: uploadFilename,
+        contentType: file.mimetype,
+        knownLength: file.size,
+      });
     }
+
+    const headers = {
+      ...formData.getHeaders(),
+      'Content-Length': await getFormDataLength(formData),
+    };
 
     const response: AxiosResponse<CaseDocumentManagementResponse> = await this.client.post(
       UrlEndPoints.UploadDocument,
       formData,
       {
-        headers: {
-          ...formData.getHeaders()
-        },
+        headers,
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
       }
@@ -117,6 +126,22 @@ export type UploadedFiles =
   }
   | Express.Multer.File[];
 
+function getUploadedFiles(files: UploadedFiles): Express.Multer.File[] {
+  return Array.isArray(files) ? files : Object.values(files).flat();
+}
+
+function getFormDataLength(formData: FormData): Promise<number> {
+  return new Promise((resolve, reject) => {
+    formData.getLength((error, length) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve(length);
+    });
+  });
+}
 
 export enum Classification {
   Private = 'PRIVATE',

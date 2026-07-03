@@ -1,3 +1,7 @@
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+
 import axios, { AxiosInstance } from 'axios';
 import { Response } from 'express';
 import FormData from 'form-data';
@@ -92,7 +96,9 @@ describe('CaseDocumentManagementClient', () => {
       expect.any(String),
       expect.any(FormData),
       expect.objectContaining({
-        headers: expect.any(Object),
+        headers: expect.objectContaining({
+          'Content-Length': expect.any(Number),
+        }),
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
       })
@@ -100,6 +106,86 @@ describe('CaseDocumentManagementClient', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].originalDocumentName).toBe('file.pdf');
+  });
+
+  test('sets content length for disk-backed uploaded files', async () => {
+    mockAxios.post.mockResolvedValue({
+      data: {
+        documents: [],
+      },
+    });
+
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'finrem-cdam-upload-'));
+    const tempFile = path.join(tempDir, 'file.pdf');
+    await fs.writeFile(tempFile, Buffer.from('file'));
+
+    const files: Express.Multer.File[] = [
+      {
+        fieldname: 'files',
+        originalname: 'file.pdf',
+        encoding: '7bit',
+        mimetype: 'application/pdf',
+        size: 4,
+        buffer: Buffer.from([]),
+        stream: Readable.from([]),
+        destination: tempDir,
+        filename: 'file.pdf',
+        path: tempFile,
+      },
+    ];
+
+    try {
+      await client.create({
+        files,
+        classification: Classification.Public,
+      });
+    } finally {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    }
+
+    expect(mockAxios.post).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(FormData),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'Content-Length': expect.any(Number),
+        }),
+      })
+    );
+  });
+
+  test('rejects when multipart content length cannot be calculated', async () => {
+    const getLengthSpy = jest.spyOn(FormData.prototype, 'getLength').mockImplementationOnce(
+      (callback: (error: Error | null, length: number) => void): void => {
+        callback(new Error('Unable to calculate content length'), 0);
+      }
+    );
+
+    const files: Express.Multer.File[] = [
+      {
+        fieldname: 'files',
+        originalname: 'file.pdf',
+        encoding: '7bit',
+        mimetype: 'application/pdf',
+        size: 100,
+        buffer: Buffer.from('file'),
+        stream: Readable.from([]),
+        destination: '',
+        filename: '',
+        path: '',
+      },
+    ];
+
+    try {
+      await expect(client.create({
+        files,
+        classification: Classification.Public,
+      })).rejects.toThrow('Unable to calculate content length');
+
+      expect(mockAxios.post).not.toHaveBeenCalled();
+    } finally {
+      getLengthSpy.mockRestore();
+    }
   });
 
   test('returns empty array when no documents returned', async () => {
@@ -253,7 +339,7 @@ describe('CaseDocumentManagementClient', () => {
 
   describe('file renaming', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] });
       jest.setSystemTime(new Date('2026-06-23T14:00:00.000Z'));
     });
 

@@ -1,5 +1,9 @@
+import { randomUUID } from 'crypto';
 import { Application, Request, Response } from 'express';
+import { promises as fs } from 'fs';
 import multer from 'multer';
+import { tmpdir } from 'os';
+import path from 'path';
 import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../app/auth/user';
@@ -85,7 +89,12 @@ export default function (app: Application): void {
   });
 
   const upload = multer({
-    storage: multer.memoryStorage(),
+    storage: multer.diskStorage({
+      destination: tmpdir(),
+      filename: (_req, file, callback) => {
+        callback(null, `${randomUUID()}${path.extname(file.originalname)}`);
+      },
+    }),
     limits: {
       fileSize: 100 * 1024 * 1024, // 100MB max file size
     },
@@ -105,6 +114,21 @@ export default function (app: Application): void {
       return redirectWithError(req, res, next, documentType, returnUrl, FILE_VALIDATION_ERRORS.TOO_LARGE);
     }
     next();
+  }
+
+  async function cleanupUploadedFiles(files: Express.Multer.File[] | undefined): Promise<void> {
+    await Promise.all((files ?? [])
+      .filter(file => !!file.path)
+      .map(async file => {
+        try {
+          await fs.unlink(file.path);
+        } catch (error) {
+          logger.warn('Failed to remove temporary upload file', {
+            filePath: file.path,
+            error,
+          });
+        }
+      }));
   }
 
   const documentController = new DocumentManagerController(logger);
@@ -195,7 +219,7 @@ export default function (app: Application): void {
         const returnUrl = req.body.returnUrl || RouteNames.documents;
 
         // Validate uploaded file
-        const validationError = validateUploadedFile(req.files as Express.Multer.File[]);
+        const validationError = await validateUploadedFile(req.files as Express.Multer.File[]);
         if (validationError) {
           return redirectWithError(req, res, next, documentType, returnUrl, validationError);
         }
@@ -224,6 +248,8 @@ export default function (app: Application): void {
           return redirectWithError(req, res, next, documentType, returnUrl, FILE_VALIDATION_ERRORS.UPLOAD_FAILED);
         }
 
+        await cleanupUploadedFiles(req.files as Express.Multer.File[]);
+
         // Clear errors on successful upload
         if (req.session.uploadErrors) {
           delete req.session.uploadErrors[documentType];
@@ -239,6 +265,7 @@ export default function (app: Application): void {
           res.redirect(returnUrl);
         });
       } catch (error) {
+        await cleanupUploadedFiles(req.files as Express.Multer.File[]);
         next(error);
       }
     }
@@ -252,6 +279,8 @@ export default function (app: Application): void {
     returnUrl: string,
     errorMessage: string
   ): void {
+    void cleanupUploadedFiles(req.files as Express.Multer.File[]);
+
     // Store error in session
     if (!req.session.uploadErrors) {
       req.session.uploadErrors = {};

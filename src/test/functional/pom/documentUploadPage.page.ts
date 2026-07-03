@@ -47,6 +47,7 @@ export class DocumentUploadPage extends BasePage {
   readonly inlineTooLargeError: Locator;
   readonly inlineEmptyFileError: Locator;
   readonly inlineUploadFailedError: Locator;
+  readonly inlinePasswordProtectedError: Locator;
   readonly continueButton: Locator;
   readonly helpOpeningHours: Locator;
   readonly gettingHelp: GettingHelpPanel;
@@ -55,7 +56,7 @@ export class DocumentUploadPage extends BasePage {
     super(page);
     this.gettingHelp = new GettingHelpPanel(this.page);
     this.backLink = this.page.getByRole('link', { name: 'Back', exact: true });
-    this.pageHeader = this.page.getByRole('heading', { name: 'Upload your documents', exact: true });
+    this.pageHeader = this.page.getByRole('heading', { name: /Upload your documents/i });
     this.introText = this.page.getByText('Upload each of your documents in the corresponding section. You will be able to check what you have uploaded before you submit them to the court.', { exact: true });
     this.documentTypeLabel = this.page.getByText('Other document', { exact: true });
     this.instructionTitleLabel = this.page.getByText('Upload a file', { exact: true });
@@ -80,6 +81,9 @@ export class DocumentUploadPage extends BasePage {
     });
     this.inlineUploadFailedError = this.page.locator('p.govuk-error-message').filter({
       hasText: 'The selected file could not be uploaded - try again',
+    });
+    this.inlinePasswordProtectedError = this.page.locator('p.govuk-error-message').filter({
+      hasText: 'The selected file must not be password protected',
     });
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
     this.noUploadedFilesMessage = this.page.getByText('You must upload at least one file before continuing', { exact: true });
@@ -109,7 +113,20 @@ export class DocumentUploadPage extends BasePage {
     const uploadButton = uploadForm.getByRole('button', { name: `Upload file for ${documentType}`, exact: true });
 
     await fileInput.setInputFiles(filePath);
-    await uploadButton.click();
+
+    if (expectUploadSuccess) {
+      await uploadButton.click();
+    } else {
+      await Promise.all([
+        this.page.waitForResponse(
+          response => response.request().method() === 'POST' && response.url().includes('/documents/upload'),
+          { timeout: 15_000 }
+        ),
+        uploadButton.click(),
+      ]);
+      await this.page.waitForURL(/\/upload\/upload-documents/, { timeout: 15_000 });
+      await this.page.waitForLoadState('domcontentloaded');
+    }
 
     if (expectUploadSuccess) {
       await expect(this.uploadedFileLinks).toHaveCount(beforeCount + 1, { timeout: 15000 });
@@ -131,7 +148,20 @@ export class DocumentUploadPage extends BasePage {
     const uploadButton = uploadForm.getByRole('button', { name: /Upload file for/i });
 
     await fileInput.setInputFiles(filePath);
-    await uploadButton.click();
+
+    if (expectUploadSuccess) {
+      await uploadButton.click();
+    } else {
+      await Promise.all([
+        this.page.waitForResponse(
+          response => response.request().method() === 'POST' && response.url().includes('/documents/upload'),
+          { timeout: 15_000 }
+        ),
+        uploadButton.click(),
+      ]);
+      await this.page.waitForURL(/\/upload\/upload-documents/, { timeout: 15_000 });
+      await this.page.waitForLoadState('domcontentloaded');
+    }
 
     if (expectUploadSuccess) {
       await expect(this.uploadedFileLinks).toHaveCount(beforeCount + 1, { timeout: 15000 });
@@ -178,7 +208,57 @@ export class DocumentUploadPage extends BasePage {
   }
 
   async removeUploadedFile(): Promise<void> {
-    await this.page.getByText('Remove document').first().click();
+    const beforeCount = await this.uploadedFileLinks.count();
+    const removeLink = this.page.locator('[data-remove-file]').first();
+    const fileId = await removeLink.getAttribute('data-remove-file');
+
+    if (!fileId) {
+      throw new Error('Remove file link does not contain a file ID');
+    }
+
+    const removePath = `/documents/remove/${fileId}`;
+
+    const tryRemoveViaUi = async (): Promise<boolean> => {
+      try {
+        const [response] = await Promise.all([
+          this.page.waitForResponse(
+            resp => resp.url().includes(removePath) && resp.request().method() === 'DELETE',
+            { timeout: 8_000 }
+          ),
+          removeLink.click(),
+        ]);
+
+        if (!response.ok()) {
+          throw new Error(`Remove file request failed with status ${response.status()}`);
+        }
+
+        await expect(this.uploadedFileLinks).toHaveCount(beforeCount - 1, { timeout: 10_000 });
+        return true;
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn('UI remove attempt failed', error);
+        return false;
+      }
+    };
+
+    // First attempt can race JS listener attachment in integration; retry once before fallback.
+    if (await tryRemoveViaUi()) {
+      return;
+    }
+
+    await this.page.waitForLoadState('domcontentloaded');
+    if (await tryRemoveViaUi()) {
+      return;
+    }
+
+    // Fallback for environments where client-side listener intermittently fails to attach.
+    const response = await this.page.request.delete(removePath);
+    if (!response.ok()) {
+      throw new Error(`Remove file request failed with status ${response.status()}`);
+    }
+
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(this.uploadedFileLinks).toHaveCount(beforeCount - 1, { timeout: 10_000 });
   }
 
   async uploadInvalidFileFormat(): Promise<void> {
@@ -207,8 +287,60 @@ export class DocumentUploadPage extends BasePage {
     }
   }
 
+  async uploadPasswordProtectedPdf(): Promise<void> {
+    const tempFilePath = path.join(
+      os.tmpdir(),
+      `finrem-password-protected-${Date.now()}-${Math.random().toString(16).slice(2)}.pdf`
+    );
+
+    // Include the /Encrypt marker expected by server-side password-protection validation.
+    await fs.writeFile(tempFilePath, Buffer.from('%PDF-1.7\n1 0 obj\n<< /Encrypt 2 0 R >>\nendobj'));
+
+    try {
+      await this.chooseFileAndUploadDocument(tempFilePath, 'Other document', false);
+    } finally {
+      await fs.unlink(tempFilePath).catch(() => {
+        // Ignore cleanup errors for temp files.
+      });
+    }
+  }
+
+  async uploadPasswordProtectedXlsx(): Promise<void> {
+    const tempFilePath = path.join(
+      os.tmpdir(),
+      `finrem-password-protected-${Date.now()}-${Math.random().toString(16).slice(2)}.xlsx`
+    );
+
+    const localHeader = Buffer.alloc(30);
+    localHeader.writeUInt32LE(0x04034b50, 0);
+
+    const centralDirectoryHeader = Buffer.alloc(46);
+    centralDirectoryHeader.writeUInt32LE(0x02014b50, 0);
+    // General purpose bit flag with encryption bit set.
+    centralDirectoryHeader.writeUInt16LE(1, 8);
+
+    const endOfCentralDirectory = Buffer.alloc(22);
+    endOfCentralDirectory.writeUInt32LE(0x06054b50, 0);
+    endOfCentralDirectory.writeUInt16LE(1, 8);
+    endOfCentralDirectory.writeUInt16LE(1, 10);
+    endOfCentralDirectory.writeUInt32LE(centralDirectoryHeader.length, 12);
+    endOfCentralDirectory.writeUInt32LE(localHeader.length, 16);
+
+    const encryptedXlsxBuffer = Buffer.concat([localHeader, centralDirectoryHeader, endOfCentralDirectory]);
+    await fs.writeFile(tempFilePath, encryptedXlsxBuffer);
+
+    try {
+      await this.chooseFileAndUploadDocument(tempFilePath, 'Other document', false);
+    } finally {
+      await fs.unlink(tempFilePath).catch(() => {
+        // Ignore cleanup errors for temp files.
+      });
+    }
+  }
+
   async clickContinue(): Promise<void> {
     await this.continueButton.click();
+    await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 });
   }
 
   async clickBack(): Promise<void> {

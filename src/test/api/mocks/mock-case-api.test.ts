@@ -12,7 +12,6 @@ describe('[MOCK] Case API endpoints', () => {
 
   beforeAll(async () => {
     const createdAt = new Date().toISOString();
-    const validUntil = getFutureIsoDate(90);
 
     const seededCase: NonNullable<MockCaseApiOptions['seedCases']>[number] = {
       id: seededCaseId,
@@ -26,8 +25,6 @@ describe('[MOCK] Case API endpoints', () => {
             id: 'mock-applicant-access-code',
             value: {
               accessCode: 'APPCODE1',
-              createdAt,
-              validUntil,
               isValid: 'Yes',
             },
           },
@@ -37,8 +34,6 @@ describe('[MOCK] Case API endpoints', () => {
             id: 'mock-respondent-access-code',
             value: {
               accessCode: 'RSPCODE1',
-              createdAt,
-              validUntil,
               isValid: 'Yes',
             },
           },
@@ -85,8 +80,6 @@ describe('[MOCK] Case API endpoints', () => {
   });
 
   test('POST /cases/:caseId/events merges data and updates state for invalidate access code events', async () => {
-    const createdAt = new Date().toISOString();
-    const validUntil = getFutureIsoDate(90);
 
     const res = await request(app)
       .post(`/cases/${seededCaseId}/events`)
@@ -99,8 +92,6 @@ describe('[MOCK] Case API endpoints', () => {
               id: 'mock-applicant-access-code',
               value: {
                 accessCode: 'APPCODE1',
-                createdAt,
-                validUntil,
                 isValid: 'No',
               },
             },
@@ -152,9 +143,3 @@ describe('[MOCK] Case API endpoints', () => {
     });
   });
 });
-
-function getFutureIsoDate(daysFromNow: number): string {
-  const date = new Date();
-  date.setDate(date.getDate() + daysFromNow);
-  return date.toISOString();
-}

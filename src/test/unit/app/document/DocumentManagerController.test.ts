@@ -26,10 +26,6 @@ jest.mock('../../../../main/app/document/PreviouslyUploadedDocumentClient', () =
   })),
 }));
 
-jest.mock('../../../../main/app/auth/user', () => ({
-  getSystemUser: jest.fn().mockResolvedValue({}),
-}));
-
 describe('DocumentManagerController', () => {
   let mockLogger: LoggerInstance;
   let controller: DocumentManagerController;
@@ -118,6 +114,38 @@ describe('DocumentManagerController', () => {
     expect(req.session.documents?.documentDetails?.[0].id).toBe('mock-uuid');
   });
 
+  test('stores OriginalFileName alongside DocumentFileName', async () => {
+    const createMock = jest.fn().mockResolvedValue([
+      {
+        originalDocumentName: 'JohnSmith-BankStatements-24-06-2026.pdf',
+        _links: {
+          self: { href: '/doc/1' },
+          binary: { href: '/doc/1/bin' },
+        },
+      },
+    ]);
+
+    (controller as unknown as {
+      getApiClient: () => { create: typeof createMock };
+    }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
+
+    const req = buildRequest({
+      files: [
+        {
+          buffer: Buffer.from('file'),
+          originalname: 'my-bank-statement.pdf',
+        } as Express.Multer.File,
+      ],
+    });
+
+    await controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never);
+
+    expect(req.session.documents?.documentDetails).toHaveLength(1);
+    const uploadedDoc = req.session.documents?.documentDetails?.[0].value;
+    expect(uploadedDoc?.DocumentFileName).toBe('JohnSmith-BankStatements-24-06-2026.pdf');
+    expect(uploadedDoc?.OriginalFileName).toBe('my-bank-statement.pdf');
+  });
+
   test('appends to existing documents', async () => {
     const createMock = jest.fn().mockResolvedValue([
       {
@@ -195,8 +223,62 @@ describe('DocumentManagerController', () => {
 
     await controller.LinkDocumentsToCase(req);
 
+    expect(getCaseApi).toHaveBeenCalledWith(req.session.user, mockLogger);
     expect(triggerEventMock).toHaveBeenCalled();
     expect(req.session.documents).toBeUndefined();
+  });
+
+  test('uses the session user when creating case API client in LinkDocumentsToCase', async () => {
+    jest.clearAllMocks();
+
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({
+      triggerEvent: triggerEventMock,
+    });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: {
+          documentDetails: [{ id: '1', value: {} }],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(getCaseApi).toHaveBeenCalledWith(userDetails, mockLogger);
+    expect(triggerEventMock).toHaveBeenCalled();
+  });
+
+  test('does not call getSystemUser in LinkDocumentsToCase', async () => {
+    jest.clearAllMocks();
+
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    const { getSystemUser } = require('../../../../main/app/auth/user');
+
+    getCaseApi.mockReturnValue({
+      triggerEvent: triggerEventMock,
+    });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: {
+          documentDetails: [{ id: '1', value: {} }],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(getSystemUser).not.toHaveBeenCalled();
   });
 
   describe('downloadDocument', () => {

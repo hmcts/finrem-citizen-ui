@@ -18,6 +18,7 @@ type MockSession = {
     documentDetails?: { id?: string; value?: { DocumentType?: string } }[];
   };
   documents?: {
+    isFinancialDisputeResolution?: boolean;
     documentDetails?: { 
       id?: string; 
       value?: { 
@@ -121,7 +122,6 @@ describe('Upload Journey Routes', () => {
         errors: {},
         values: { selectedDocumentTypes: [], fdrHearing: undefined },
         previousStep: null,
-        email: 'FRCexample@justice.gov.uk',
       }));
     });
 
@@ -148,7 +148,6 @@ describe('Upload Journey Routes', () => {
         errors: {},
         values: { selectedDocumentTypes: [], fdrHearing: true },
         previousStep: UploadStepNames.Confidentiality,
-        email: 'FRCexample@justice.gov.uk',
       }));
     });
 
@@ -190,7 +189,6 @@ describe('Upload Journey Routes', () => {
           ]),
         }),
         previousStep: UploadStepNames.FDR,
-        email: 'FRCexample@justice.gov.uk',
       }));
     });
 
@@ -389,6 +387,67 @@ describe('Upload Journey Routes', () => {
       expect(mockReq.session?.uploadErrors).toBeUndefined();
       expect(mockRes.render).toHaveBeenCalledWith('upload-journey/upload-documents', expect.objectContaining({
         errors: { someError: 'Error message' },
+      }));
+    });
+
+    it('should render confirmation step with expected previous step and preserved contact email', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.Confirmation },
+        session: {
+          preservedContactEmail: 'preserved.contact@justice.gov.uk',
+          caseData: {
+            consentOrderFRCEmail: 'case-data.contact@justice.gov.uk',
+          },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/confirmation', expect.objectContaining({
+        previousStep: UploadStepNames.SendToOtherParty,
+        contactEmail: 'preserved.contact@justice.gov.uk',
+      }));
+    });
+
+    it('should render confirmation step using case-data contact email when preserved email is not present', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.Confirmation },
+        session: {
+          caseData: {
+            consentOrderFRCEmail: 'case-data.contact@justice.gov.uk',
+          },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/confirmation', expect.objectContaining({
+        contactEmail: 'case-data.contact@justice.gov.uk',
+      }));
+    });
+
+    it('should render confirmation step with fallback contact email when no session contact email is present', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.Confirmation },
+        session: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/confirmation', expect.objectContaining({
+        contactEmail: 'FRCexample@justice.gov.uk',
       }));
     });
 
@@ -907,7 +966,7 @@ describe('Upload Journey Routes', () => {
       uploadSteps[UploadStepNames.CheckUpload].next = originalNext;
     });
 
-    it('should throw error when session save fails', () => {
+    it('should throw error when session save fails', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.BeforeYouStart },
@@ -919,10 +978,239 @@ describe('Upload Journey Routes', () => {
       const mockRes = {
         redirect: jest.fn(),
       } as Partial<Response>;
+      const mockNext = jest.fn();
 
-      expect(() => {
-        handler(mockReq as unknown as Request, mockRes as Response);
-      }).toThrow('Session save failed');
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+      expect(mockNext).toHaveBeenCalledWith(new Error('Session save failed'));
+    });
+
+    it('should submit documents to CCD when send-to-other-party is submitted', async () => {
+      // @ts-ignore - Jest mock typing issue
+      const mockLinkDocumentsToCase = jest.fn().mockResolvedValue(undefined) as jest.Mock;
+      (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
+        LinkDocumentsToCase: mockLinkDocumentsToCase,
+      }));
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: 'send-to-other-party' },
+        session: {
+          DocumentSelection: {
+            isFinancialDisputeResolution: true,
+            documentDetails: [{ id: '1', value: { DocumentType: 'Chronology' } }],
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'doc1',
+                value: {
+                  DocumentFileName: 'test.pdf',
+                  DocumentType: 'Chronology',
+                  DocumentLink: { document_url: 'http://dm-store/doc1' },
+                },
+              },
+            ],
+          },
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: { understand: 'yes' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockLinkDocumentsToCase).toHaveBeenCalledWith(mockReq);
+      expect(mockReq.session?.documents?.isFinancialDisputeResolution).toBe(true);
+      expect(mockReq.session?.DocumentSelection).toBeUndefined();
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
+    });
+
+    it('should preserve case-data contact email on send-to-other-party submission', async () => {
+      // @ts-ignore - Jest mock typing issue
+      const mockLinkDocumentsToCase = jest.fn().mockResolvedValue(undefined) as jest.Mock;
+      (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
+        LinkDocumentsToCase: mockLinkDocumentsToCase,
+      }));
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: 'send-to-other-party' },
+        session: {
+          caseData: {
+            consentOrderFRCEmail: 'preserved.contact@justice.gov.uk',
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'doc1',
+                value: {
+                  DocumentFileName: 'test.pdf',
+                  DocumentType: 'Chronology',
+                  DocumentLink: { document_url: 'http://dm-store/doc1' },
+                },
+              },
+            ],
+          },
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: { understand: 'yes' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockReq.session?.preservedContactEmail).toBe('preserved.contact@justice.gov.uk');
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
+    });
+
+    it('should handle send-to-other-party submission without DocumentSelection', async () => {
+      // @ts-ignore - Jest mock typing issue
+      const mockLinkDocumentsToCase = jest.fn().mockResolvedValue(undefined) as jest.Mock;
+      (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
+        LinkDocumentsToCase: mockLinkDocumentsToCase,
+      }));
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: 'send-to-other-party' },
+        session: {
+          documents: {
+            documentDetails: [
+              {
+                id: 'doc1',
+                value: {
+                  DocumentFileName: 'test.pdf',
+                  DocumentType: 'Chronology',
+                  DocumentLink: { document_url: 'http://dm-store/doc1' },
+                },
+              },
+            ],
+          },
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: { understand: 'yes' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockLinkDocumentsToCase).toHaveBeenCalledWith(mockReq);
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
+    });
+
+    it('should throw error when LinkDocumentsToCase fails', async () => {
+      // @ts-ignore - Jest mock typing issue
+      const mockLinkDocumentsToCase = jest.fn().mockRejectedValue(new Error('CCD submission failed')) as jest.Mock;
+      (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
+        LinkDocumentsToCase: mockLinkDocumentsToCase,
+      }));
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: 'send-to-other-party' },
+        session: {
+          DocumentSelection: {
+            isFinancialDisputeResolution: true,
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'doc1',
+                value: {
+                  DocumentFileName: 'test.pdf',
+                  DocumentType: 'Chronology',
+                  DocumentLink: { document_url: 'http://dm-store/doc1' },
+                },
+              },
+            ],
+          },
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: { understand: 'yes' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+      expect(mockNext).toHaveBeenCalledWith(new Error('CCD submission failed'));
+    });
+
+    it('should create documents object when it does not exist', async () => {
+      // @ts-ignore - Jest mock typing issue
+      const mockLinkDocumentsToCase = jest.fn().mockResolvedValue(undefined) as jest.Mock;
+      (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
+        LinkDocumentsToCase: mockLinkDocumentsToCase,
+      }));
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: 'send-to-other-party' },
+        session: {
+          DocumentSelection: {
+            isFinancialDisputeResolution: true,
+          },
+          // No documents object
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: { understand: 'yes' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockReq.session?.documents).toBeDefined();
+      expect(mockReq.session?.documents?.isFinancialDisputeResolution).toBe(true);
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
+    });
+
+    it('should throw error when session save fails after submission', async () => {
+      // @ts-ignore - Jest mock typing issue
+      const mockLinkDocumentsToCase = jest.fn().mockResolvedValue(undefined) as jest.Mock;
+      (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
+        LinkDocumentsToCase: mockLinkDocumentsToCase,
+      }));
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: 'send-to-other-party' },
+        session: {
+          documents: {
+            documentDetails: [
+              {
+                id: 'doc1',
+                value: {
+                  DocumentFileName: 'test.pdf',
+                  DocumentType: 'Chronology',
+                  DocumentLink: { document_url: 'http://dm-store/doc1' },
+                },
+              },
+            ],
+          },
+          save: jest.fn((callback: (err?: Error) => void) => callback(new Error('Session save failed'))),
+        },
+        body: { understand: 'yes' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+      expect(mockNext).toHaveBeenCalledWith(new Error('Session save failed'));
     });
   });
 

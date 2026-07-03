@@ -232,6 +232,64 @@ describe('Home Routes', () => {
       expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
     });
 
+    it('should reject password protected file', async () => {
+      const homeRoutes = require('../../../main/routes/home').default;
+      homeRoutes(app);
+
+      const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
+      const mockReq = {
+        files: [
+          {
+            originalname: 'test.pdf',
+            size: 1024,
+            buffer: Buffer.from('%PDF-1.7\n1 0 obj\n<< /Encrypt 2 0 R >>\nendobj'),
+          },
+        ],
+        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        session: {
+          save: jest.fn((cb: (err?: Error) => void) => cb()),
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockReq.session?.uploadErrors).toEqual({
+        'form-fm1': 'The selected file must not be password protected',
+      });
+      expect(mockUploadDocumentToEvidenceStore).not.toHaveBeenCalled();
+      expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
+    });
+
+    it('should reject when no file is provided', async () => {
+      const homeRoutes = require('../../../main/routes/home').default;
+      homeRoutes(app);
+
+      const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
+      const mockReq = {
+        files: [],
+        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        session: {
+          save: jest.fn((cb: (err?: Error) => void) => cb()),
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockReq.session?.uploadErrors).toEqual({
+        'form-fm1': 'You must upload at least one file before continuing',
+      });
+      expect(mockUploadDocumentToEvidenceStore).not.toHaveBeenCalled();
+      expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
+    });
+
     it('should use default returnUrl when not provided', async () => {
       const homeRoutes = require('../../../main/routes/home').default;
       homeRoutes(app);
