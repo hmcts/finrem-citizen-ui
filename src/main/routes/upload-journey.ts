@@ -10,7 +10,7 @@ import type {
   PreviouslyUploadedDocumentsCaseData,
 } from '../app/document/PreviouslyUploadedDocumentClient';
 import { RouteNames } from '../common-constants';
-import { getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey } from '../functions/util/documentUtil';
+import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../functions/util/documentUtil';
 import { oidcMiddleware } from '../middleware';
 import { UploadStepId, uploadSteps } from '../upload-journey/config';
 
@@ -184,10 +184,9 @@ export default function setupUploadJourneyRoute(app: Application): void {
         // removedDocType is already kebab-case from DocumentSelection
         // but uploaded DocumentType is an enum value, so normalize it
         const removedDocTypeKey = toDocumentTypeKey(removedDocType);
-        
-        req.session.documents.documentDetails = 
+                       req.session.documents.documentDetails =
           req.session.documents.documentDetails.filter(doc => {
-            const uploadedDocTypeKey = doc.value?.DocumentType 
+            const uploadedDocTypeKey = doc.value?.DocumentType
               ? toDocumentTypeKey(doc.value.DocumentType)
               : '';
             return uploadedDocTypeKey !== removedDocTypeKey;
@@ -204,7 +203,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
       if (err) {
         return res.status(500).json({ success: false, error: 'Failed to save session' });
       }
-      
+
       // Map to display format for frontend
       const displayDocs = getSelectedDocumentTypesForDisplay(req);
       res.json({ success: true, documents: displayDocs });
@@ -283,7 +282,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
 
     // Get uploaded documents
     const uploadedFilesByType = getUploadedFilesByType(req);
-    const documentGroups = req.params.stepId === 'check-upload' 
+    const documentGroups = req.params.stepId === 'check-upload'
       ? getDocumentGroupsForCheckPage(req)
       : undefined;
 
@@ -305,6 +304,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
       shouldAutoRename,
       getDocumentRenameFormat,
       shouldCombineIntoPDF,
+      generateRenamedFilename,
       getCombinedPDFFormat,
     });
   });
@@ -330,7 +330,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
 
         // Get uploaded documents grouped by document type
         const uploadedFilesByType = getUploadedFilesByType(req);
-        const documentGroups = req.params.stepId === 'check-upload' 
+        const documentGroups = req.params.stepId === 'check-upload'
           ? getDocumentGroupsForCheckPage(req)
           : undefined;
 
@@ -342,6 +342,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
           caseUserName: req.session.caseUserName,
           shouldAutoRename,
           getDocumentRenameFormat,
+          generateRenamedFilename,
           shouldCombineIntoPDF,
           getCombinedPDFFormat,
         });
@@ -372,12 +373,12 @@ export default function setupUploadJourneyRoute(app: Application): void {
         // Submit documents to CCD
         const logger: LoggerInstance = console as unknown as LoggerInstance;
         const documentManagerController = new DocumentManagerController(logger);
-        
+
         await documentManagerController.LinkDocumentsToCase(req as unknown as AppRequest);
-        
+
         // Delete DocumentSelection after successful submission
         delete req.session.DocumentSelection;
-        
+
         // Save session and redirect to confirmation page
         await new Promise<void>((resolve, reject) => {
           req.session.save((err) => {

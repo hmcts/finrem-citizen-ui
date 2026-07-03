@@ -52,11 +52,11 @@ export function getCombinedPDFFormat(documentTypeValue: string): string {
 
 export function getSelectedDocumentTypesForDisplay(req: Request): SelectedDocumentTypeDisplay[] {
   const documentDetails = req.session?.DocumentSelection?.documentDetails;
-  
+
   if (!documentDetails || documentDetails.length === 0) {
     return [];
   }
-  
+
   return documentDetails.map((doc: ListValue<Partial<CitizenUploadDocument> | null>, index: number) => ({
     id: doc.id || '',
     label: getDocumentLabel(doc.value?.DocumentType || ''),
@@ -65,14 +65,19 @@ export function getSelectedDocumentTypesForDisplay(req: Request): SelectedDocume
   }));
 }
 
-export function generateRenamedFilename(documentTypeValue: string, originalFilename: string, caseUserName?: string): string {
+export function generateRenamedFilename(documentTypeValue: string, originalFilename: string, caseUserName?: string, preview=false): string {
   const format = getDocumentRenameFormat(documentTypeValue);
   if (!format) {
     return originalFilename;
   }
 
   // Extract file extension
-  const extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+  const lastDotIndex = originalFilename.lastIndexOf('.');
+  //To only allow files to be called with '.' notation, e.g. '.pdf', '.docx', etc
+  const extension = lastDotIndex !== -1
+    ? originalFilename.substring(lastDotIndex)
+    : '';
+
 
   // Generate date string DD-MM-YYYY
   const now = new Date();
@@ -82,6 +87,9 @@ export function generateRenamedFilename(documentTypeValue: string, originalFilen
   const dateStr = `${day}-${month}-${year}`;
 
   // Format: UserName-DocumentType-DD-MM-YYYY.ext
-  const userName = caseUserName || 'UserName';
+  const userName = (caseUserName || 'UserName').replace(/\s+/g, '');
+  if (preview) {
+    return `${userName}-${format}-DD-MM-YYYY`;
+  }
   return `${userName}-${format}-${dateStr}${extension}`;
 }
