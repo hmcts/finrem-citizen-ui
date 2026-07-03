@@ -155,7 +155,7 @@ For most runs, keep one active target block in `.env` and leave `TEST_URL` unset
 Use one-off shell overrides only when needed, for example:
 
 ```bash
-RUNNING_ENV=aat ACCESS_CODE_REAL_INTEGRATION=true yarn test:functional
+RUNNING_ENV=aat yarn test:functional
 ```
 
 ### Required vs Optional `.env` Variables
@@ -170,9 +170,13 @@ Optional (highest precedence for Playwright target URL):
 
 - `TEST_URL` (if set, overrides `RUNNING_ENV` URL resolution)
 
-Optional for real access-code happy-path integration lane:
+Optional for real access-code happy-path integration lane on non-preview/non-AAT targets:
 
 - `ACCESS_CODE_REAL_INTEGRATION=true`
+
+Advanced functional-test integration tuning/logging values are documented in:
+
+- `src/test/functional/specFiles/README.md`
 
 Optional app runtime values:
 

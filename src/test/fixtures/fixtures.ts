@@ -34,6 +34,33 @@ function getConfiguredCcdUrl(): string {
   ).trim();
 }
 
+function isPreviewOrAatTarget(): boolean {
+  const runningEnv = (process.env.RUNNING_ENV || '').toLowerCase();
+  const testUrl = (process.env.TEST_URL || '').toLowerCase();
+
+  return (
+    runningEnv === 'aat'
+    || runningEnv.startsWith('pr-')
+    || testUrl.includes('.preview.platform.hmcts.net')
+    || testUrl.includes('.aat.platform.hmcts.net')
+  );
+}
+
+function shouldUseRealAccessCodeIntegration(): boolean {
+  const explicitToggle = process.env.ACCESS_CODE_REAL_INTEGRATION;
+
+  if (explicitToggle === 'true') {
+    return true;
+  }
+
+  if (explicitToggle === 'false') {
+    // Legacy .env files often set false; do not block preview/AAT by default.
+    return isPreviewOrAatTarget();
+  }
+
+  return isPreviewOrAatTarget();
+}
+
 function isLocalMockCcdUrl(url: string): boolean {
   return /https?:\/\/(localhost|127\.0\.0\.1):4100\b/i.test(url);
 }
@@ -361,11 +388,11 @@ export const test = base.extend<MyFixtures & MockOptions>({
    * Creates a contested case for the access-code journey using a mock-first strategy.
    *
    * Default: mock codes (APPCODE1/RSPCODE1) via /__test/inject-case-session,
-   * which avoids Form C / FR_manageHearings instability and keeps tests deterministic.
+    * which avoids external dependency instability and keeps tests deterministic.
    *
    * Optional real integration mode (happy path only): set
    *   ACCESS_CODE_REAL_INTEGRATION=true
-   * to generate real Form C access codes at hearing time and fetch them from case details.
+    * to generate real access codes via FR_issueApplication and fetch them from case details.
    *
    * Both applicant and respondent access codes are returned so tests can verify
    * each role's happy path without sharing state.
@@ -377,12 +404,13 @@ export const test = base.extend<MyFixtures & MockOptions>({
         return;
       }
 
-      const useRealIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
+      const useRealIntegration = shouldUseRealAccessCodeIntegration();
       const caseData = await ContestedCaseFactory.createCaseForAccessCodeJourney(useRealIntegration);
-      const formattedCaseId = caseData.caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
+      const caseId = String(caseData.caseId);
+      const formattedCaseId = caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
 
       await use({
-        caseId: caseData.caseId,
+        caseId,
         formattedCaseId,
         applicantAccessCode: caseData.applicantCode,
         respondentAccessCode: caseData.respondentCode,
