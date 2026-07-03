@@ -14,6 +14,23 @@ function sanitizeErrorText(value: string): string {
   return value.replace(SENSITIVE_TEXT_PATTERN, '[REDACTED]');
 }
 
+function maskIdentifier(value: string): string {
+  if (!value) {
+    return '[empty]';
+  }
+
+  const atIndex = value.indexOf('@');
+  if (atIndex > 1) {
+    return `${value.slice(0, 2)}***${value.slice(atIndex)}`;
+  }
+
+  if (value.length <= 2) {
+    return '*'.repeat(value.length);
+  }
+
+  return `${value.slice(0, 2)}***`;
+}
+
 // Load .env file handling both 'export KEY=VALUE' and 'KEY=VALUE' formats
 function ensureEnvLoaded(): void {
   const envPath = path.resolve(process.cwd(), '.env');
@@ -107,22 +124,36 @@ export async function getUserToken(username: string, password: string): Promise<
     return cached.token;
   }
 
-  const response = await axiosRequest<{ access_token: string; expires_in: number }>({
-    method: 'post',
-    url: `${config.idamApi}/o/token`,
-    headers: { 
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    data: new URLSearchParams({
-      grant_type: 'password',
-      client_id: config.idam.clientId,
-      client_secret: config.idam.clientSecret,
-      redirect_uri: config.idam.redirectUri,
-      scope: config.idam.scope,
-      username,
-      password,
-    }).toString(),
-  });
+  let response;
+  try {
+    response = await axiosRequest<{ access_token: string; expires_in: number }>({
+      method: 'post',
+      url: `${config.idamApi}/o/token`,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      data: new URLSearchParams({
+        grant_type: 'password',
+        client_id: config.idam.clientId,
+        client_secret: config.idam.clientSecret,
+        redirect_uri: config.idam.redirectUri,
+        scope: config.idam.scope,
+        username,
+        password,
+      }).toString(),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes('/o/token') && message.includes('invalid_grant')) {
+      throw new Error(
+        `[IDAM auth] Resource owner authentication failed for user ${maskIdentifier(username)}. `
+        + 'Check credential env vars for the user role in use (for example USERNAME_CASEWORKER/PASSWORD_CASEWORKER, '
+        + 'PLAYWRIGHT_SOLICITOR_USERNAME/PLAYWRIGHT_SOLICITOR_PSWD, or IDAM_SYSTEM_USERNAME/IDAM_SYSTEM_PASSWORD) '
+        + 'and verify they are valid for AAT.'
+      );
+    }
+    throw error;
+  }
 
   const { access_token, expires_in } = response.data;
 

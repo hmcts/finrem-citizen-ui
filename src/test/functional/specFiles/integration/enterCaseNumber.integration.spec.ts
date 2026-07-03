@@ -1,22 +1,46 @@
 import { expect, test } from '../../../fixtures/fixtures';
 import { expectAuthenticated, runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 
+function shouldRunHappyPathIntegrationSuite(): boolean {
+  const explicitToggle = process.env.ACCESS_CODE_REAL_INTEGRATION;
+  const runningEnv = (process.env.RUNNING_ENV || '').toLowerCase();
+  const testUrl = (process.env.TEST_URL || '').toLowerCase();
+  const isPreviewOrAatTarget =
+    runningEnv === 'aat'
+    || runningEnv.startsWith('pr-')
+    || testUrl.includes('.preview.platform.hmcts.net')
+    || testUrl.includes('.aat.platform.hmcts.net');
+
+  if (explicitToggle === 'true') {
+    return true;
+  }
+
+  if (explicitToggle === 'false') {
+    // Legacy .env files often set false; do not block preview/AAT by default.
+    return isPreviewOrAatTarget;
+  }
+
+  return isPreviewOrAatTarget;
+}
+
 /**
  * INTEGRATION TESTS: Enter Case Number
  * 
  * These tests verify case number happy-path integration logic.
  * Real integration tests create actual CCD cases and verify successful submissions.
  *
- * Runs on: Environments with reachable real CCD dependencies when ACCESS_CODE_REAL_INTEGRATION=true
- * Default: Skipped to keep local/dev runs deterministic and avoid fragile external dependency failures
+ * Runs on: AAT/preview by default (or any target when ACCESS_CODE_REAL_INTEGRATION=true)
+ * Default: Skipped outside preview/AAT unless ACCESS_CODE_REAL_INTEGRATION=true.
+ * ACCESS_CODE_REAL_INTEGRATION=false is treated as legacy local default and
+ * does not disable AAT/preview happy-path runs.
  */
 
-const runIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
+const runIntegration = shouldRunHappyPathIntegrationSuite();
 
 test.describe('[integration-happy-path] Enter Case Number - Happy Path', () => {
   test.skip(
     !runIntegration,
-    'Skipped by default: real CCD case-creation happy-path is opt-in. Set ACCESS_CODE_REAL_INTEGRATION=true to enable in preview/AAT or configured integration environments.'
+    'Skipped outside preview/AAT by default. Set ACCESS_CODE_REAL_INTEGRATION=true to force enable on non-preview/non-AAT targets.'
   );
 
   test.describe.configure({ mode: 'serial' });

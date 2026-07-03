@@ -160,6 +160,38 @@ test.describe('[integration] Check uploaded documents page', () => {
       await checkUploadPage.expectDocumentLinkVisible('testDocument.docx');
       await runA11yAudit(axeUtils);
     });
+
+    test('[integration] Documents uploaded confirmation page shows expected content and layout @a11y', async ({
+      checkUploadPage,
+      axeUtils,
+    }) => {
+      await checkUploadPage.gotoConfirmationPage();
+      await checkUploadPage.verifyConfirmationPageContent();
+      await runA11yAudit(axeUtils);
+    });
+
+    test('[integration] Documents uploaded close and return button takes user to dashboard @a11y', async ({
+      checkUploadPage,
+      axeUtils,
+    }) => {
+      await checkUploadPage.gotoConfirmationPage();
+      await checkUploadPage.verifyConfirmationPageContent();
+      await checkUploadPage.clickCloseAndReturnToAccountAndExpectDashboard();
+      await runA11yAudit(axeUtils);
+    });
+
+    test('[integration] Documents uploaded back navigation returns to previous page and retains uploaded files @a11y', async ({
+      checkUploadPage,
+      axeUtils,
+    }) => {
+      await checkUploadPage.gotoConfirmationPage();
+      await checkUploadPage.verifyConfirmationPageContent();
+      await checkUploadPage.clickBackAndExpectSendToOtherParty();
+      await checkUploadPage.clickBackAndExpectCheckUpload();
+      await checkUploadPage.verifyCheckUploadPageContent();
+      await checkUploadPage.expectDocumentLinkVisible('testDocument.docx');
+      await runA11yAudit(axeUtils);
+    });
   });
 
   test('[integration] Check uploaded documents groups uploaded files by document type and shows file links @a11y', async ({
@@ -190,6 +222,7 @@ test.describe('[integration] Check uploaded documents page', () => {
     await documentUploadPage.chooseFileAndUploadChronologyDocx();
     await documentUploadPage.clickContinue();
 
+    await checkUploadPage.ensureCheckUploadPageLoaded();
     await checkUploadPage.expectDocumentGroupVisible('Bank statements');
     await checkUploadPage.expectDocumentGroupVisible('Chronology');
     await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(2);
@@ -224,6 +257,7 @@ test.describe('[integration] Check uploaded documents page', () => {
     await documentUploadPage.chooseFileAndUploadPayslipDocx();
     await documentUploadPage.clickContinue();
 
+    await checkUploadPage.ensureCheckUploadPageLoaded();
     await expect(checkUploadPage.combineInformation).toBeVisible();
     await expect(checkUploadPage.combinedDocumentName).toContainText('-SupportingFinancialDocuments-DD-MM-YYYY');
     await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(2);
@@ -261,6 +295,7 @@ test.describe('[integration] Check uploaded documents page', () => {
     await documentUploadPage.clickContinue();
 
     // Verify check upload page shows both documents
+    await checkUploadPage.ensureCheckUploadPageLoaded();
     await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(2);
 
     // Go back to document selection
@@ -275,6 +310,7 @@ test.describe('[integration] Check uploaded documents page', () => {
     await documentSelectionPage.clickContinueAndExpectUploadDocumentsStep();
     await documentUploadPage.clickContinue();
 
+    await checkUploadPage.ensureCheckUploadPageLoaded();
     // Remaining selected type (Other) still has its file, so no validation error is expected
     await expect(checkUploadPage.errorSummaryTitle).toHaveCount(0);
     await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(1);
@@ -317,15 +353,21 @@ test.describe('[integration] Check uploaded documents page', () => {
     await documentUploadPage.clickContinue();
 
     // Verify both files on check page
+    await checkUploadPage.ensureCheckUploadPageLoaded();
     await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(2);
 
     // Go back to document selection
     await checkUploadPage.clickBackAndExpectUploadDocuments();
     await documentUploadPage.clickBack();
 
+    // Wait for document selection page to fully load before removing documents
+    await documentSelectionPage.page.waitForLoadState('networkidle');
+
     // Remove both Mortgage and Other, add Bank instead
     await documentSelectionPage.removeDocumentByLabel('Mortgage statements for family home');
+    await documentSelectionPage.page.waitForLoadState('networkidle');
     await documentSelectionPage.removeDocumentByLabel('Other document');
+    await documentSelectionPage.page.waitForLoadState('networkidle');
     await documentSelectionPage.addDocumentBySearchTerm('bank', 'Bank statements');
 
     // Continue to upload page
@@ -338,6 +380,7 @@ test.describe('[integration] Check uploaded documents page', () => {
     await documentUploadPage.clickContinue();
 
     // Prefer user-visible readiness over networkidle
+    await checkUploadPage.ensureCheckUploadPageLoaded();
     await checkUploadPage.verifyCheckUploadPageContent();
     await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(1);
     await checkUploadPage.expectDocumentGroupVisible('Bank statements');

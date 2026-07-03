@@ -1,4 +1,4 @@
-import { test } from '../../../fixtures/fixtures';
+import { expect, test } from '../../../fixtures/fixtures';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
@@ -59,6 +59,7 @@ test.describe('[integration] Document selection page', () => {
     await documentSelectionPage.addDocumentBySearchTerm('bank', 'Bank statements');
 
     await documentSelectionPage.removeDocumentByLabel('Payslips');
+    await documentSelectionPage.page.waitForLoadState('networkidle');
     await documentSelectionPage.expectDocumentsListContains(['Bank statements']);
     await runA11yAudit(axeUtils);
   });
@@ -84,7 +85,11 @@ test.describe('[integration] Document selection page', () => {
     documentSelectionPage,
     axeUtils,
   }) => {
+    await expect(documentSelectionPage.gettingHelp.summary).toContainText(/contact us for help/i);
     await documentSelectionPage.verifyGettingHelpSection();
+    await expect(documentSelectionPage.gettingHelp.callChargesLink).toHaveText(
+      'Find out about call charges (opens in new tab)'
+    );
     await runA11yAudit(axeUtils);
   });
 

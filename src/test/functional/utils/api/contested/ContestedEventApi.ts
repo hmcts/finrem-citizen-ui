@@ -8,11 +8,114 @@ import { ccdApi } from '../../helpers/CcdApi';
  * API helper for progressing contested cases through various CCD events
  */
 export class ContestedEventApi {
-  private static caseType = CaseType.Contested;
+  private static readonly caseType = CaseType.Contested;
+  private static readonly loggedReadFallbackCases = new Set<string>();
+
+  private static readonly applicantAccessCodeFieldCandidates = [
+    'applicantAccessCodes',
+  ] as const;
+
+  private static readonly respondentAccessCodeFieldCandidates = [
+    'respondentAccessCodes',
+  ] as const;
+
+  private static asNonEmptyString(value: unknown): string | undefined {
+    if (typeof value !== 'string') {
+      return undefined;
+    }
+
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }
+
+  private static readAccessCodeFromValue(value: unknown): string | undefined {
+    const direct = this.asNonEmptyString(value);
+    if (direct) {
+      return direct;
+    }
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const nestedCode = this.readAccessCodeFromValue(item);
+        if (nestedCode) {
+          return nestedCode;
+        }
+      }
+      return undefined;
+    }
+
+    if (value && typeof value === 'object') {
+      return this.readAccessCodeFromRecord(value as Record<string, unknown>);
+    }
+
+    return undefined;
+  }
+
+  private static readAccessCodeFromRecord(record: Record<string, unknown>): string | undefined {
+    const known =
+      this.asNonEmptyString(record.accessCode)
+      || this.readAccessCodeFromValue(record.value);
+
+    if (known) {
+      return known;
+    }
+
+    for (const nestedValue of Object.values(record)) {
+      const nestedCode = this.readAccessCodeFromValue(nestedValue);
+      if (nestedCode) {
+        return nestedCode;
+      }
+    }
+
+    return undefined;
+  }
+
+  private static readAccessCodeFromCandidates(
+    payload: Record<string, unknown>,
+    candidateFields: readonly string[]
+  ): string | undefined {
+    for (const field of candidateFields) {
+      const code = this.readAccessCodeFromValue(payload[field]);
+      if (code) {
+        return code;
+      }
+    }
+
+    return undefined;
+  }
+
+  private static readAccessCodeCollectionCount(
+    payload: Record<string, unknown>,
+    candidateFields: readonly string[]
+  ): number {
+    for (const field of candidateFields) {
+      const value = payload[field];
+      if (Array.isArray(value)) {
+        return value.length;
+      }
+    }
+
+    return 0;
+  }
+
+  private static getAccessCodeRelatedKeys(payload: Record<string, unknown>): string[] {
+    return Object.keys(payload).filter(key => /access.?code/i.test(key));
+  }
+
+  private static shouldLogVerboseFallbacks(): boolean {
+    return process.env.CCD_VERBOSE_RETRY === 'true' || !!process.env.CI;
+  }
 
   private static isCaseNotFound404(error: unknown): boolean {
     const message = error instanceof Error ? error.message : String(error);
-    return message.includes('status 404') && message.includes('No case found');
+    return (
+      message.includes('status 404')
+      && (
+        message.includes('No case found')
+        || message.includes('CaseNotFoundException')
+        || message.includes('Cannot find case for given criteria')
+      )
+    );
   }
 
   /**
@@ -36,7 +139,11 @@ export class ContestedEventApi {
   }
 
   /**
-   * System user fallback for CCD visibility issues in CI.
+   * System user fallback for CCD visibility/role propagation issues.
+   *
+   * In AAT and CI, newly created/updated cases can be temporarily inaccessible to
+   * one user while visible to another. Fallback avoids flaky failures while still
+   * surfacing persistent authorization problems.
    */
   private static get systemUser() {
     return {
@@ -79,10 +186,14 @@ export class ContestedEventApi {
         throw error;
       }
 
-      // eslint-disable-next-line no-console
-      console.warn(
-        `[CCD Fallback] Primary user cannot access case ${caseId} for event ${eventId}. Retrying with fallback user.`
-      );
+      // Expected in some lanes: primary actor updates case, fallback actor can still
+      // be needed briefly until cross-user case visibility settles.
+      if (this.shouldLogVerboseFallbacks()) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[CCD Fallback] Primary user cannot access case ${caseId} for event ${eventId}. Retrying with fallback user.`
+        );
+      }
 
       await ccdApi.updateCaseInCcd(
         fallbackCredentials.username,
@@ -237,10 +348,12 @@ export class ContestedEventApi {
         throw error;
       }
 
-      // eslint-disable-next-line no-console
-      console.warn(
-        `[CCD Fallback] Primary user cannot access case ${caseId} for event ${ContestedEvents.createGeneralApplication.ccdCallback}. Retrying with fallback user.`
-      );
+      if (this.shouldLogVerboseFallbacks()) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[CCD Fallback] Primary user cannot access case ${caseId} for event ${ContestedEvents.createGeneralApplication.ccdCallback}. Retrying with fallback user.`
+        );
+      }
 
       response = await ccdApi.updateCaseInCcd(
         fallbackCredentials.username,
@@ -375,13 +488,47 @@ export class ContestedEventApi {
    * Used to retrieve case details including access codes
    */
   static async getCaseData(caseId: string): Promise<Record<string, unknown>> {
-    const caseData = await ccdApi.getCaseData(
-      this.caseworker.username,
-      this.caseworker.password,
-      caseId,
-      this.caseType
-    );
-    return caseData;
+    const hasSystemUser =
+      !!this.systemUser.username
+      && !!this.systemUser.password
+      && this.systemUser.username !== this.caseworker.username;
+
+    const preferSystemUser = !!config.useSystemUserForCaseworkerEvents && hasSystemUser;
+    const primaryCredentials = preferSystemUser ? this.systemUser : this.caseworker;
+    const fallbackCredentials = preferSystemUser ? this.caseworker : this.systemUser;
+
+    try {
+      return await ccdApi.getCaseData(
+        primaryCredentials.username,
+        primaryCredentials.password,
+        caseId,
+        this.caseType
+      );
+    } catch (error) {
+      const canFallback = !!fallbackCredentials.username && !!fallbackCredentials.password;
+
+      if (!canFallback || !this.isCaseNotFound404(error)) {
+        throw error;
+      }
+
+      const alreadyLogged = this.loggedReadFallbackCases.has(caseId);
+      if (!alreadyLogged && this.shouldLogVerboseFallbacks()) {
+        this.loggedReadFallbackCases.add(caseId);
+        // Expected in eventual-consistency windows: read visibility can lag behind
+        // successful writes/events for a short period.
+        // eslint-disable-next-line no-console
+        console.info(
+          `[CCD Fallback] Primary user cannot read case ${caseId}. Retrying case-data read with fallback user.`
+        );
+      }
+
+      return ccdApi.getCaseData(
+        fallbackCredentials.username,
+        fallbackCredentials.password,
+        caseId,
+        this.caseType
+      );
+    }
   }
 
   /**
@@ -398,10 +545,46 @@ export class ContestedEventApi {
     respondentAccessCode?: string;
   }> {
     const caseData = await this.getCaseData(caseId);
+    const casePayload = (caseData.case_data as Record<string, unknown> | undefined) || caseData;
 
     return {
-      applicantAccessCode: (caseData.applicantAccessCodes as { id: string; value: { accessCode: string } }[] | undefined)?.[0]?.value?.accessCode,
-      respondentAccessCode: (caseData.respondentAccessCodes as { id: string; value: { accessCode: string } }[] | undefined)?.[0]?.value?.accessCode,
+      applicantAccessCode: this.readAccessCodeFromCandidates(
+        casePayload,
+        this.applicantAccessCodeFieldCandidates
+      ),
+      respondentAccessCode: this.readAccessCodeFromCandidates(
+        casePayload,
+        this.respondentAccessCodeFieldCandidates
+      ),
+    };
+  }
+
+  /**
+   * Returns non-sensitive diagnostics to confirm whether access-code generation
+   * fields exist and are populated on the case record.
+   */
+  static async getAccessCodeDebugSnapshot(caseId: string): Promise<{
+    applicantCodesCount: number;
+    respondentCodesCount: number;
+    hasApplicantAccessCodeValue: boolean;
+    hasRespondentAccessCodeValue: boolean;
+    caseDataTopLevelKeys: string[];
+    casePayloadKeys: string[];
+    accessCodeRelatedPayloadKeys: string[];
+  }> {
+    const caseData = await this.getCaseData(caseId);
+    const casePayload = (caseData.case_data as Record<string, unknown> | undefined) || caseData;
+    const applicantCode = this.readAccessCodeFromCandidates(casePayload, this.applicantAccessCodeFieldCandidates);
+    const respondentCode = this.readAccessCodeFromCandidates(casePayload, this.respondentAccessCodeFieldCandidates);
+
+    return {
+      applicantCodesCount: this.readAccessCodeCollectionCount(casePayload, this.applicantAccessCodeFieldCandidates),
+      respondentCodesCount: this.readAccessCodeCollectionCount(casePayload, this.respondentAccessCodeFieldCandidates),
+      hasApplicantAccessCodeValue: !!applicantCode,
+      hasRespondentAccessCodeValue: !!respondentCode,
+      caseDataTopLevelKeys: Object.keys(caseData),
+      casePayloadKeys: Object.keys(casePayload),
+      accessCodeRelatedPayloadKeys: this.getAccessCodeRelatedKeys(casePayload),
     };
   }
 
