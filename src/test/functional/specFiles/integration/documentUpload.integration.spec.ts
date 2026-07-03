@@ -21,6 +21,11 @@ type RenameScenario = {
   renameToken: string;
 };
 
+type PasswordProtectedUploadScenario = {
+  label: string;
+  upload: (page: DocumentUploadPage) => Promise<void>;
+};
+
 const uploadScenarios: UploadScenario[] = [
   {
     label: 'docx',
@@ -80,6 +85,17 @@ const renameScenarios: RenameScenario[] = [
     searchTerm: 'attachments to form e',
     typeValue: 'attachments-to-form-e',
     renameToken: 'AttachmentsFormE',
+  },
+] as const;
+
+const passwordProtectedUploadScenarios: PasswordProtectedUploadScenario[] = [
+  {
+    label: 'pdf',
+    upload: async page => page.uploadPasswordProtectedPdf(),
+  },
+  {
+    label: 'xlsx',
+    upload: async page => page.uploadPasswordProtectedXlsx(),
   },
 ] as const;
 
