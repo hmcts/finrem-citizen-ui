@@ -109,11 +109,7 @@ export class DocumentSelectionPage extends BasePage {
     await expect(suggestion).toBeVisible();
     await suggestion.click();
 
-    const addDocumentResponsePromise = this.page.waitForResponse(response => {
-      return response.url().includes('/add-document') || response.url().includes('/document-type-selection');
-    });
     await this.addDocumentButton.click();
-    await addDocumentResponsePromise;
 
     await expect(this.termByLabel(expectedDocumentLabel)).toBeVisible();
     await expect(this.noDocumentsMessage).toBeHidden();
@@ -133,11 +129,7 @@ export class DocumentSelectionPage extends BasePage {
     await expect(suggestion).toBeVisible();
     await suggestion.click();
 
-    const addDocumentResponsePromise = this.page.waitForResponse(response => {
-      return response.url().includes('/add-document') || response.url().includes('/document-type-selection');
-    });
     await this.addDocumentButton.click();
-    await addDocumentResponsePromise;
 
     await expect(this.termByLabel(chronologyLabel)).toBeVisible();
     await expect(this.noDocumentsMessage).toBeHidden();
@@ -159,11 +151,7 @@ export class DocumentSelectionPage extends BasePage {
     await expect(suggestion).toBeVisible();
     await suggestion.click();
 
-    const addDocumentResponsePromise = this.page.waitForResponse(response => {
-      return response.url().includes('/add-document') || response.url().includes('/document-type-selection');
-    });
     await this.addDocumentButton.click();
-    await addDocumentResponsePromise;
 
     await expect(this.termByLabel(otherDocumentLabel)).toBeVisible();
     await expect(this.noDocumentsMessage).toBeHidden();
