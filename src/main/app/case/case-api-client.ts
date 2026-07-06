@@ -3,7 +3,7 @@ import config from 'config';
 import { LoggerInstance } from 'winston';
 
 import { UrlEndPoints } from '../../common-constants';
-import { AppInsights } from '../../modules/appinsights';
+import { trackApiClientExceptionTelemetry } from '../../middleware/global-error-handler';
 import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
 import { UserDetails } from '../controller/AppRequest';
 import { CaseAssignedUserRole, CaseAssignedUserRoles, SearchCaseAssignedUserRolesRequest } from './case-roles';
@@ -26,15 +26,7 @@ export class CaseApiClient {
     } catch (err) {
       const errorMessage = 'Case user roles could not be added.';
       this.logError(err as AxiosError);
-      AppInsights.trackException(
-        err instanceof Error ? err : new Error(errorMessage),
-        {
-          operation: 'addCaseUserRoles',
-          endpoint: UrlEndPoints.CaseUsers,
-          statusCode:
-            (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
-        }
-      );
+      trackApiClientExceptionTelemetry(err, errorMessage);
       throw new Error(errorMessage);
     }
   }
@@ -43,21 +35,11 @@ export class CaseApiClient {
     try {
       const response = await this.server.get<FinremCaseDetails>(UrlEndPoints.CaseId(caseId));
       return response.data.data;
-    } catch (err: unknown) {
+    } catch (err) {
       const errorMessage = 'Case could not be retrieved.';
-      this.logError(err as AxiosError);
+      this.logError(err);
 
-      AppInsights.trackException(
-        err instanceof Error ? err : new Error(errorMessage),
-        {
-          operation: 'getCaseById',
-          caseId,
-          endpoint: UrlEndPoints.CaseId(caseId),
-          statusCode:
-            (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
-        }
-      );
-
+      trackApiClientExceptionTelemetry(err, errorMessage);
       throw new Error(errorMessage);
     }
   }
@@ -80,16 +62,7 @@ export class CaseApiClient {
         return false;
       }
       this.logError(err);
-      AppInsights.trackException(
-        err instanceof Error ? err : new Error(errorMessage),
-        {
-          operation: 'findExistingUserCases',
-          caseType,
-          endpoint: UrlEndPoints.SearchCases(caseType),
-          statusCode:
-            (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
-        }
-      );
+      trackApiClientExceptionTelemetry(err, errorMessage);
       throw new Error(errorMessage);
     }
   }
@@ -101,16 +74,8 @@ export class CaseApiClient {
     } catch (err) {
       this.logError(err);
       const errorMessage = 'Case roles could not be fetched.';
-      AppInsights.trackException(
-        err instanceof Error ? err : new Error(errorMessage),
-        {
-          operation: 'getCaseUserRoles',
-          endpoint: UrlEndPoints.CaseRoles,
-          statusCode:
-            (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
-        }
-      );
-      throw new Error('Case roles could not be fetched.');
+      trackApiClientExceptionTelemetry(err, errorMessage);
+      throw new Error(errorMessage);
     }
   }
 
@@ -145,18 +110,8 @@ export class CaseApiClient {
       }
       this.logError(err);
       const errorMessage = 'Case could not be updated.';
-      AppInsights.trackException(
-        err instanceof Error ? err : new Error(errorMessage),
-        {
-          operation: 'sendEvent',
-          caseId,
-          eventName,
-          endpoint: UrlEndPoints.CaseEventTrigger(caseId, eventName),
-          statusCode:
-            (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
-        }
-      );
-      throw new Error('Case could not be updated.');
+      trackApiClientExceptionTelemetry(err, errorMessage);
+      throw new Error(errorMessage);
     }
   }
 

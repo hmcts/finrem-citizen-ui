@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios';
 import { NextFunction, Request, Response } from 'express';
 
 import { ViewNames } from '../common-constants';
@@ -76,4 +77,20 @@ export function globalErrorHandler(error: unknown, req: Request, res: Response, 
   res.locals.error = process.env.NODE_ENV === 'development' ? normalisedError : {};
   res.status(statusCode);
   res.render(ViewNames.Error);
+}
+
+export function trackApiClientExceptionTelemetry(
+  error: unknown,
+  errorMessage: string
+): void {
+  const axiosError = error as AxiosError;
+
+  AppInsights.trackException(
+    error instanceof Error ? error : new Error(errorMessage),
+    {
+      method: axiosError.config?.method ?? 'unknown',
+      url: axiosError.config?.url ?? 'unknown',
+      statusCode: String(axiosError.response?.status ?? 0),
+    }
+  );
 }

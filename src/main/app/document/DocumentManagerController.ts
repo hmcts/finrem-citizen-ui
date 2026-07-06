@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { v4 as generateUuid } from 'uuid';
 import { LoggerInstance } from 'winston';
 
-import { getSystemUser } from '../auth/user';
+import {getSystemUser} from '../auth/user';
 import { getCaseApi } from '../case/case-api';
 import { CITIZEN_APPLICANT_DOCUMENT, CITIZEN_RESPONDENT_DOCUMENT, EVENT_TYPE } from '../case/case-type';
 import { CaseRole, CitizenUploadDocument, CitizenUploadDocumentType, ListValue, YesOrNo } from '../case/definition';
