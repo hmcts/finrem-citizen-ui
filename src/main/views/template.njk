@@ -24,11 +24,12 @@
 {% endblock %}
 
 {% block beforeContent %}
+  {% set feedbackLinkHtml %}This is a new service – your <a class="govuk-link" href="{{ feedbackSurveyUrl }}" target="_blank" rel="noopener noreferrer" aria-label="provide feedback on this service (opens in a new tab)">feedback</a> will help us to improve it.{% endset %}
   {{ govukPhaseBanner({
     tag: {
       text: "Beta"
     },
-    html: 'This is a new service – your <a class="govuk-link" href="#" aria-label="provide feedback on this service">feedback</a> will help us to improve it.'
+    html: feedbackLinkHtml
   }) }}
 {% endblock %}
 
