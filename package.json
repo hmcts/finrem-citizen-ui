@@ -155,7 +155,7 @@
     "flatted": "^3.4.0",
     "picomatch": "4.0.5",
     "path-to-regexp": "8.4.2",
-    "protobufjs": "8.7.0",
+    "protobufjs": "8.6.5",
     "uuid": "14.0.1",
     "@opentelemetry/sdk-node": "0.220.0",
     "@opentelemetry/exporter-prometheus": "0.220.0",
