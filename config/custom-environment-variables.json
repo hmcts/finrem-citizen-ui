@@ -14,7 +14,9 @@
     "finrem": {
       "finrem-citizen-ui-idam-client-secret": "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET",
       "session-secret": "SESSION_SECRET",
-      "finrem-citizen-ui-redis-connection-string": "REDIS_CONNECTION_STRING"
+      "finrem-citizen-ui-redis-connection-string": "REDIS_CONNECTION_STRING",
+      "GOV-UK-NOTIFICATION-KEY": "GOVUK_NOTIFY_API_KEY",
+      "DOCUMENT-UPLOAD-EMAIL-TEMPLATE-ID": "FINREM_CITIZEN_UI_TEMPLATE_ID"
     }
   },
   "appInsights": {

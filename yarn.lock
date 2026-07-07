@@ -6451,7 +6451,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.18.1":
+"axios@npm:1.18.1, axios@npm:^1.7.2":
   version: 1.18.1
   resolution: "axios@npm:1.18.1"
   dependencies:
@@ -8817,6 +8817,7 @@ __metadata:
     multer: "npm:^2.2.0"
     node-cache: "npm:5.1.2"
     nodemon: "npm:3.1.14"
+    notifications-node-client: "npm:^8.3.2"
     nunjucks: "npm:3.2.4"
     openid-client: "npm:^6.8.2"
     otplib: "npm:13.4.1"
@@ -10885,7 +10886,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonwebtoken@npm:^9.0.0":
+"jsonwebtoken@npm:^9.0.0, jsonwebtoken@npm:^9.0.2":
   version: 9.0.3
   resolution: "jsonwebtoken@npm:9.0.3"
   dependencies:
@@ -11887,6 +11888,16 @@ __metadata:
   version: 3.0.0
   resolution: "normalize-path@npm:3.0.0"
   checksum: 10/88eeb4da891e10b1318c4b2476b6e2ecbeb5ff97d946815ffea7794c31a89017c70d7f34b3c2ebf23ef4e9fc9fb99f7dffe36da22011b5b5c6ffa34f4873ec20
+  languageName: node
+  linkType: hard
+
+"notifications-node-client@npm:^8.3.2":
+  version: 8.4.0
+  resolution: "notifications-node-client@npm:8.4.0"
+  dependencies:
+    axios: "npm:^1.7.2"
+    jsonwebtoken: "npm:^9.0.2"
+  checksum: 10/e6c8125805bce41193b4991ca9f2a21cdc5ecd0545c3e0d9960f64cc653cfd8fbfc5e9385607987ea406a4ca0ac80e0e14ec75c16902406bbca5b1bda0dfb889
   languageName: node
   linkType: hard
 
