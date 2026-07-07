@@ -3,7 +3,7 @@ import type { Application, NextFunction, Request, Response } from 'express';
 
 import { CaseRole } from '../../../main/app/case/definition';
 import { RouteNames, ViewNames } from '../../../main/common-constants';
-import setupDashboardRoute from '../../../main/routes/dashboard';
+import setupDashboardRoute from '../../../main/routes/generalUpload/dashboard';
 
 
 jest.mock('../../../main/functions/util/homePageUtil', () => ({

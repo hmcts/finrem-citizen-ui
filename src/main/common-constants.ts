@@ -43,8 +43,8 @@ export const ViewNames = {
   Error: 'error',
   NotFound: 'not-found',
   TaskListUploadDashboard: 'task-list-upload-dashboard',
-  UploadJourneyBeforeYouStart: 'upload-journey/before-you-start',
-  UploadJourneyConfidentiality: 'upload-journey/confidentiality',
+  GeneralUploadBeforeYouStart: 'generalUpload/before-you-start',
+  GeneralUploadConfidentiality: 'generalUpload/confidentiality',
 };
 
 export const UploadStepNames = {

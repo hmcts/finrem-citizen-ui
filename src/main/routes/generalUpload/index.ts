@@ -2,17 +2,17 @@ import type { Application, NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { LoggerInstance } from 'winston';
 
-import { CaseRole, CitizenUploadDocument, ListValue } from '../app/case/definition';
-import { AppRequest } from '../app/controller/AppRequest';
-import { DocumentManagerController } from '../app/document/DocumentManagerController';
+import { CaseRole, CitizenUploadDocument, ListValue } from '../../app/case/definition';
+import { AppRequest } from '../../app/controller/AppRequest';
+import { DocumentManagerController } from '../../app/document/DocumentManagerController';
 import type {
   PreviouslyUploadedDocument,
   PreviouslyUploadedDocumentsCaseData,
-} from '../app/document/PreviouslyUploadedDocumentClient';
-import { RouteNames } from '../common-constants';
-import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../functions/util/documentUtil';
-import { oidcMiddleware } from '../middleware';
-import { UploadStepId, uploadSteps } from '../upload-journey/config';
+} from '../../app/document/PreviouslyUploadedDocumentClient';
+import { RouteNames } from '../../common-constants';
+import { UploadStepId, uploadSteps } from '../../config/general-upload-config';
+import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../../functions/util/documentUtil';
+import { oidcMiddleware } from '../../middleware';
 
 const previouslyUploadedDocumentsRoute = `${RouteNames.uploadJourney}/previously-uploaded-documents`;
 const documentIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -136,7 +136,7 @@ function getDocumentGroupsForCheckPage(req: Request): { groupKey: string; label:
   return groups;
 }
 
-export default function setupUploadJourneyRoute(app: Application): void {
+export default function setupGeneralUploadRoute(app: Application): void {
   // POST /upload/document-type-selection/add - Add a document type to selection
   app.post(`${RouteNames.uploadJourney}/document-type-selection/add`, oidcMiddleware, (req: Request, res: Response) => {
     if (!req.session.DocumentSelection) {
@@ -257,7 +257,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
           ];
         });
 
-        res.render('upload-journey/previously-uploaded-documents', {
+        res.render('generalUpload/previously-uploaded-documents', {
           documentRows,
         });
       } catch (error) {
