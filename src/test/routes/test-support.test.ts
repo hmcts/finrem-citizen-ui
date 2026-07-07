@@ -5,7 +5,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 
 import { TestRoutes } from '../../main/common-constants';
-import setupTestSupportRoutes from '../../main/routes/test-support';
+import setupTestSupportRoutes from '../../main/routes/generalUpload/test-support';
 
 const buildTestSupportApp = (saveError?: Error) => {
   const testApp = express();

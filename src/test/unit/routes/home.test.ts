@@ -62,7 +62,7 @@ describe('Home Routes', () => {
 
   describe('DELETE /documents/remove/:fileId', () => {
     it('should remove document from session', () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockDelete, RouteNames.documentRemove);
@@ -93,7 +93,7 @@ describe('Home Routes', () => {
     });
 
     it('should handle missing session gracefully', () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockDelete, RouteNames.documentRemove);
@@ -114,7 +114,7 @@ describe('Home Routes', () => {
     });
 
     it('should handle non-existent fileId', () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockDelete, RouteNames.documentRemove);
@@ -158,7 +158,7 @@ describe('Home Routes', () => {
     });
 
     it('should reject invalid file type', async () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
@@ -183,7 +183,7 @@ describe('Home Routes', () => {
     });
 
     it('should reject file over 100MB', async () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
@@ -208,7 +208,7 @@ describe('Home Routes', () => {
     });
 
     it('should reject empty file', async () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
@@ -233,7 +233,7 @@ describe('Home Routes', () => {
     });
 
     it('should reject password protected file', async () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
@@ -265,7 +265,7 @@ describe('Home Routes', () => {
     });
 
     it('should reject when no file is provided', async () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
@@ -291,7 +291,7 @@ describe('Home Routes', () => {
     });
 
     it('should use default returnUrl when not provided', async () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
@@ -315,7 +315,7 @@ describe('Home Routes', () => {
     it('should handle CDAM upload errors', async () => {
       mockUploadDocumentToEvidenceStore.mockRejectedValueOnce(new Error('CDAM API error') as never);
 
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
@@ -342,7 +342,7 @@ describe('Home Routes', () => {
     it('should clear errors on successful upload when multiple errors exist', async () => {
       mockUploadDocumentToEvidenceStore.mockResolvedValueOnce(undefined as never);
 
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
@@ -369,7 +369,7 @@ describe('Home Routes', () => {
     it('should remove uploadErrors object when last error is cleared', async () => {
       mockUploadDocumentToEvidenceStore.mockResolvedValueOnce(undefined as never);
 
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
@@ -396,7 +396,7 @@ describe('Home Routes', () => {
     it('should handle session save errors', async () => {
       mockUploadDocumentToEvidenceStore.mockResolvedValueOnce(undefined as never);
 
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
@@ -419,7 +419,7 @@ describe('Home Routes', () => {
     });
 
     it('should handle multer file size limit errors at validation layer', async () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
@@ -447,7 +447,7 @@ describe('Home Routes', () => {
     it('should handle successful upload without previous errors', async () => {
       mockUploadDocumentToEvidenceStore.mockResolvedValueOnce(undefined as never);
 
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
@@ -473,7 +473,7 @@ describe('Home Routes', () => {
     it('should resolve documentType when sent as an enum value', async () => {
       mockUploadDocumentToEvidenceStore.mockResolvedValueOnce(undefined as never);
 
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
@@ -501,7 +501,7 @@ describe('Home Routes', () => {
     it('should accept file exactly at 100MB limit', async () => {
       mockUploadDocumentToEvidenceStore.mockResolvedValueOnce(undefined as never);
 
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
@@ -525,7 +525,7 @@ describe('Home Routes', () => {
     });
 
     it('should handle Multer LIMIT_FILE_SIZE error in error handler middleware', () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       // Find the error-handling middleware by its arity (4 args: err, req, res, next)
@@ -561,7 +561,7 @@ describe('Home Routes', () => {
     });
 
     it('should handle other Multer errors in error handler middleware', () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const postCalls = (app.post as jest.Mock).mock.calls.filter(
@@ -595,7 +595,7 @@ describe('Home Routes', () => {
     });
 
     it('should pass non-Multer errors to next handler', () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const postCalls = (app.post as jest.Mock).mock.calls.filter(
@@ -621,7 +621,7 @@ describe('Home Routes', () => {
     });
 
     it('should reject oversized uploads via Content-Length pre-check', () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const postCalls = (app.post as jest.Mock).mock.calls.filter(
@@ -653,7 +653,7 @@ describe('Home Routes', () => {
     });
 
     it('should pass through Content-Length pre-check when within limit', () => {
-      const homeRoutes = require('../../../main/routes/home').default;
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const postCalls = (app.post as jest.Mock).mock.calls.filter(

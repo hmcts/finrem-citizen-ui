@@ -4,7 +4,7 @@ import { Application, NextFunction, Request, Response } from 'express';
 import { CaseRole } from '../../../main/app/case/definition';
 import { DocumentManagerController } from '../../../main/app/document/DocumentManagerController';
 import { RouteNames, UploadStepNames } from '../../../main/common-constants';
-import setupUploadJourneyRoute from '../../../main/routes/upload-journey';
+import setupGeneralUploadRoute from '../../../main/routes/generalUpload';
 
 jest.mock('../../../main/app/document/DocumentManagerController', () => ({
   DocumentManagerController: jest.fn().mockImplementation(() => ({
@@ -55,7 +55,7 @@ function getRegisteredHandler(mockFn: jest.Mock, route: string): UploadJourneyHa
   return call[2] as UploadJourneyHandler;
 }
 
-describe('Upload Journey Routes', () => {
+describe('General Upload Routes', () => {
   let app: Application;
   let mockGet: jest.Mock;
   let mockPost: jest.Mock;
@@ -70,7 +70,7 @@ describe('Upload Journey Routes', () => {
       post: mockPost,
       delete: mockDelete,
     } as unknown as Application;
-    setupUploadJourneyRoute(app);
+    setupGeneralUploadRoute(app);
   });
 
   it('should register all routes', () => {
@@ -117,7 +117,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/before-you-start', expect.objectContaining({
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/before-you-start', expect.objectContaining({
         data: { selectedDocumentTypes: [], uploadedFiles: {} },
         errors: {},
         values: { selectedDocumentTypes: [], fdrHearing: undefined },
@@ -143,7 +143,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/fdr', expect.objectContaining({
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/fdr', expect.objectContaining({
         data: { selectedDocumentTypes: [], uploadedFiles: {} },
         errors: {},
         values: { selectedDocumentTypes: [], fdrHearing: true },
@@ -169,7 +169,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection', expect.objectContaining({
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/document-type-selection', expect.objectContaining({
         data: expect.objectContaining({
           selectedDocumentTypes: expect.arrayContaining([
             expect.objectContaining({
@@ -210,7 +210,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection',
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/document-type-selection',
         expect.objectContaining({
           data: expect.objectContaining({
             selectedDocumentTypes: expect.arrayContaining([
@@ -243,7 +243,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/document-type-selection',
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/document-type-selection',
         expect.objectContaining({
           data: expect.objectContaining({
             selectedDocumentTypes: expect.arrayContaining([
@@ -318,7 +318,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/upload-documents', expect.objectContaining({
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/upload-documents', expect.objectContaining({
         data: expect.objectContaining({
           uploadedFiles: {
             'position-statement': [
@@ -362,7 +362,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/check-upload', expect.objectContaining({
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/check-upload', expect.objectContaining({
         data: expect.objectContaining({
           documentGroups: expect.any(Array),
         }),
@@ -385,7 +385,7 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockReq.session?.uploadErrors).toBeUndefined();
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/upload-documents', expect.objectContaining({
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/upload-documents', expect.objectContaining({
         errors: { someError: 'Error message' },
       }));
     });
@@ -407,7 +407,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/confirmation', expect.objectContaining({
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/confirmation', expect.objectContaining({
         previousStep: UploadStepNames.SendToOtherParty,
         contactEmail: 'preserved.contact@justice.gov.uk',
       }));
@@ -429,7 +429,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/confirmation', expect.objectContaining({
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/confirmation', expect.objectContaining({
         contactEmail: 'case-data.contact@justice.gov.uk',
       }));
     });
@@ -446,7 +446,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/confirmation', expect.objectContaining({
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/confirmation', expect.objectContaining({
         contactEmail: 'FRCexample@justice.gov.uk',
       }));
     });
@@ -483,7 +483,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/check-upload', expect.objectContaining({
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/check-upload', expect.objectContaining({
         data: expect.objectContaining({
           documentGroups: expect.arrayContaining([
             expect.objectContaining({
@@ -531,7 +531,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/check-upload', expect.objectContaining({
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/check-upload', expect.objectContaining({
         data: expect.objectContaining({
           uploadedFiles: expect.objectContaining({
             'family-mediation-information-and-assessment-meeting-miam-form-form-fm1': expect.arrayContaining([
@@ -577,7 +577,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/check-upload', expect.objectContaining({
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/check-upload', expect.objectContaining({
         data: expect.objectContaining({
           documentGroups: expect.arrayContaining([
             expect.objectContaining({
@@ -656,7 +656,7 @@ describe('Upload Journey Routes', () => {
     });
 
     it('should handle validation errors', () => {
-      const { uploadSteps } = require('../../../main/upload-journey/config');
+      const { uploadSteps } = require('../../../main/generalUpload/config');
       uploadSteps[UploadStepNames.Confidentiality].validate = () => ({ error: 'Test error' });
 
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
@@ -678,7 +678,7 @@ describe('Upload Journey Routes', () => {
     });
 
     it('should include uploaded files when rendering validation errors', () => {
-      const { uploadSteps } = require('../../../main/upload-journey/config');
+      const { uploadSteps } = require('../../../main/generalUpload/config');
       uploadSteps[UploadStepNames.UploadDocuments].validate = () => ({ error: 'Test error' });
 
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
@@ -714,7 +714,7 @@ describe('Upload Journey Routes', () => {
 
       handler(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.render).toHaveBeenCalledWith('upload-journey/upload-documents', expect.objectContaining({
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/upload-documents', expect.objectContaining({
         data: expect.objectContaining({
           uploadedFiles: {
             'chronology': [
@@ -819,7 +819,7 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith(
-        'upload-journey/document-type-selection',
+        'generalUpload/document-type-selection',
         expect.objectContaining({
           values: expect.objectContaining({
             fdrHearing: false,
@@ -843,7 +843,7 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith(
-        'upload-journey/check-upload',
+        'generalUpload/check-upload',
         expect.objectContaining({
           errors: {
             uploadMore: 'Select yes if you want to upload any other documents',
@@ -926,7 +926,7 @@ describe('Upload Journey Routes', () => {
       handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith(
-        'upload-journey/check-upload',
+        'generalUpload/check-upload',
         expect.objectContaining({
           data: expect.objectContaining({
             documentGroups: expect.any(Array),
@@ -942,7 +942,7 @@ describe('Upload Journey Routes', () => {
     });
 
     it('should redirect to same step when no next step is defined', () => {
-      const { uploadSteps } = require('../../../main/upload-journey/config');
+      const { uploadSteps } = require('../../../main/generalUpload/config');
       const originalNext = uploadSteps[UploadStepNames.CheckUpload].next;
       uploadSteps[UploadStepNames.CheckUpload].next = null;
 
@@ -1216,7 +1216,7 @@ describe('Upload Journey Routes', () => {
 
   describe('GET /upload', () => {
     it('should redirect to first step', () => {
-      setupUploadJourneyRoute(app);
+      setupGeneralUploadRoute(app);
       const handler = getRegisteredHandler(mockGet, RouteNames.uploadJourney);
       const mockRes = { redirect: jest.fn() } as Partial<Response>;
       handler({} as Request, mockRes as Response);
@@ -1569,7 +1569,7 @@ describe('Upload Journey Routes', () => {
         previouslyUploadedDocuments: previouslyUploadedDocumentsMock,
       }));
 
-      setupUploadJourneyRoute(app);
+      setupGeneralUploadRoute(app);
 
       const handler = getRegisteredHandler(
         mockGet,
@@ -1604,7 +1604,7 @@ describe('Upload Journey Routes', () => {
       );
 
       expect(mockRes.render).toHaveBeenCalledWith(
-        'upload-journey/previously-uploaded-documents',
+        'generalUpload/previously-uploaded-documents',
         {
           documentRows: [
             [
@@ -1656,7 +1656,7 @@ describe('Upload Journey Routes', () => {
         previouslyUploadedDocuments: previouslyUploadedDocumentsMock,
       }));
 
-      setupUploadJourneyRoute(app);
+      setupGeneralUploadRoute(app);
 
       const handler = getRegisteredHandler(
         mockGet,
@@ -1729,7 +1729,7 @@ describe('Upload Journey Routes', () => {
           previouslyUploadedDocuments: previouslyUploadedDocumentsMock,
         }));
 
-        setupUploadJourneyRoute(app);
+        setupGeneralUploadRoute(app);
 
         const handler = getRegisteredHandler(
           mockGet,
@@ -1754,7 +1754,7 @@ describe('Upload Journey Routes', () => {
         await handler(mockReq, mockRes, next);
 
         expect(mockRes.render).toHaveBeenCalledWith(
-          'upload-journey/previously-uploaded-documents',
+          'generalUpload/previously-uploaded-documents',
           {
             documentRows: [
               [
@@ -1770,7 +1770,7 @@ describe('Upload Journey Routes', () => {
       }
     );
     it('should call next with error when caseNumber is not in session', async () => {
-      setupUploadJourneyRoute(app);
+      setupGeneralUploadRoute(app);
 
       const handler = getRegisteredHandler(
         mockGet,
@@ -1798,7 +1798,7 @@ describe('Upload Journey Routes', () => {
       );
     });
     it('should call next with error when caseRole is not in session', async () => {
-      setupUploadJourneyRoute(app);
+      setupGeneralUploadRoute(app);
 
       const handler = getRegisteredHandler(
         mockGet,
@@ -1840,7 +1840,7 @@ describe('Upload Journey Routes', () => {
       }));
 
       previouslyUploadedDocumentsMock.mockRejectedValue(error);
-      setupUploadJourneyRoute(app);
+      setupGeneralUploadRoute(app);
 
       const handler = getRegisteredHandler(
         mockGet,
@@ -1895,7 +1895,7 @@ describe('Upload Journey Routes', () => {
         previouslyUploadedDocuments: previouslyUploadedDocumentsMock,
       }));
 
-      setupUploadJourneyRoute(app);
+      setupGeneralUploadRoute(app);
 
       const handler = getRegisteredHandler(
         mockGet,
@@ -1963,7 +1963,7 @@ describe('Upload Journey Routes', () => {
           previouslyUploadedDocuments: previouslyUploadedDocumentsMock,
         }));
 
-        setupUploadJourneyRoute(app);
+        setupGeneralUploadRoute(app);
 
         const handler = getRegisteredHandler(
           mockGet,
@@ -1988,7 +1988,7 @@ describe('Upload Journey Routes', () => {
         await handler(mockReq, mockRes, next);
 
         expect(mockRes.render).toHaveBeenCalledWith(
-          'upload-journey/previously-uploaded-documents',
+          'generalUpload/previously-uploaded-documents',
           {
             documentRows: [
               [

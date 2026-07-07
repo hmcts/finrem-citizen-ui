@@ -1,11 +1,11 @@
 import { UploadStepNames } from '../../../main/common-constants';
-import { uploadSteps } from '../../../main/upload-journey/config';
+import { uploadSteps } from '../../../main/generalUpload/config';
 
-describe('Upload Journey Configuration', () => {
+describe('General Upload Configuration', () => {
   describe(UploadStepNames.PUD, () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.PUD];
-      expect(step.template).toBe('upload-journey/previously-uploaded-documents');
+      expect(step.template).toBe('generalUpload/previously-uploaded-documents');
       expect(step.next!()).toBeNull();
       expect(step.previous!()).toBe('dashboard');
       expect(step.validate).toBeUndefined();
@@ -14,7 +14,7 @@ describe('Upload Journey Configuration', () => {
   describe(UploadStepNames.BeforeYouStart, () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.BeforeYouStart];
-      expect(step.template).toBe('upload-journey/before-you-start');
+      expect(step.template).toBe('generalUpload/before-you-start');
       expect(step.next!()).toBe(UploadStepNames.Confidentiality);
       expect(step.previous!()).toBeNull();
       expect(step.validate).toBeUndefined();
@@ -23,7 +23,7 @@ describe('Upload Journey Configuration', () => {
   describe(UploadStepNames.PUD, () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.PUD];
-      expect(step.template).toBe('upload-journey/previously-uploaded-documents');
+      expect(step.template).toBe('generalUpload/previously-uploaded-documents');
       expect(step.next!()).toBeNull();
       expect(step.previous!()).toBe('dashboard');
       expect(step.validate).toBeUndefined();
@@ -33,7 +33,7 @@ describe('Upload Journey Configuration', () => {
   describe(UploadStepNames.Confidentiality, () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.Confidentiality];
-      expect(step.template).toBe('upload-journey/confidentiality');
+      expect(step.template).toBe('generalUpload/confidentiality');
       expect(step.next!()).toBe(UploadStepNames.FDR);
       expect(step.previous!()).toBe(UploadStepNames.BeforeYouStart);
       expect(step.validate).toBeUndefined();
@@ -43,7 +43,7 @@ describe('Upload Journey Configuration', () => {
   describe(UploadStepNames.FDR, () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.FDR];
-      expect(step.template).toBe('upload-journey/fdr');
+      expect(step.template).toBe('generalUpload/fdr');
       expect(step.next!()).toBe(UploadStepNames.DocumentTypeSelection);
       expect(step.previous!()).toBe(UploadStepNames.Confidentiality);
       expect(step.validate).toBeDefined();
@@ -71,7 +71,7 @@ describe('Upload Journey Configuration', () => {
   describe(UploadStepNames.DocumentTypeSelection, () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.DocumentTypeSelection];
-      expect(step.template).toBe('upload-journey/document-type-selection');
+      expect(step.template).toBe('generalUpload/document-type-selection');
       expect(step.next!()).toBe(UploadStepNames.UploadDocuments);
       expect(step.previous!()).toBe(UploadStepNames.FDR);
       expect(step.validate).toBeDefined();
@@ -174,7 +174,7 @@ describe('Upload Journey Configuration', () => {
   describe(UploadStepNames.UploadDocuments, () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.UploadDocuments];
-      expect(step.template).toBe('upload-journey/upload-documents');
+      expect(step.template).toBe('generalUpload/upload-documents');
       expect(step.next!()).toBe(UploadStepNames.CheckUpload);
       expect(step.previous!()).toBe(UploadStepNames.DocumentTypeSelection);
       expect(step.validate).toBeDefined();
@@ -290,7 +290,7 @@ describe('Upload Journey Configuration', () => {
   describe(UploadStepNames.CheckUpload, () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.CheckUpload];
-      expect(step.template).toBe('upload-journey/check-upload');
+      expect(step.template).toBe('generalUpload/check-upload');
       expect(step.next!({ uploadMore: 'no' })).toBe(UploadStepNames.SendToOtherParty);
       expect(step.previous!()).toBe(UploadStepNames.UploadDocuments);
       expect(step.validate).toBeDefined();
@@ -322,7 +322,7 @@ describe('Upload Journey Configuration', () => {
   describe(UploadStepNames.SendToOtherParty, () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.SendToOtherParty];
-      expect(step.template).toBe('upload-journey/send-to-other-party');
+      expect(step.template).toBe('generalUpload/send-to-other-party');
       expect(step.next!()).toBe(UploadStepNames.Confirmation);
       expect(step.previous!()).toBe(UploadStepNames.CheckUpload);
       expect(step.validate).toBeDefined();
@@ -344,7 +344,7 @@ describe('Upload Journey Configuration', () => {
   describe(UploadStepNames.Confirmation, () => {
     it('should have correct configuration', () => {
       const step = uploadSteps[UploadStepNames.Confirmation];
-      expect(step.template).toBe('upload-journey/confirmation');
+      expect(step.template).toBe('generalUpload/confirmation');
       expect(step.next!()).toBeNull();
       expect(step.previous!()).toBe(UploadStepNames.SendToOtherParty);
       expect(step.validate).toBeUndefined();
