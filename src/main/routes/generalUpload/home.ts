@@ -6,18 +6,18 @@ import { tmpdir } from 'os';
 import path from 'path';
 import { LoggerInstance } from 'winston';
 
-import { getSystemUser } from '../app/auth/user';
-import { getCaseApi } from '../app/case/case-api';
-import { CaseAssignedUserRole } from '../app/case/case-roles';
-import { CASE_TYPE } from '../app/case/case-type';
-import { CaseRole, CitizenUploadDocumentType } from '../app/case/definition';
-import { AppRequest, UserDetails } from '../app/controller/AppRequest';
-import { DocumentManagerController } from '../app/document/DocumentManagerController';
-import { RouteNames, ViewNames } from '../common-constants';
-import { orchestrateHome } from '../functions/util/homePageUtil';
-import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../functions/util/uploadValidation';
-import { oidcMiddleware } from '../middleware';
-import { AppInsights } from '../modules/appinsights';
+import { getSystemUser } from '../../app/auth/user';
+import { getCaseApi } from '../../app/case/case-api';
+import { CaseAssignedUserRole } from '../../app/case/case-roles';
+import { CASE_TYPE } from '../../app/case/case-type';
+import { CaseRole, CitizenUploadDocumentType } from '../../app/case/definition';
+import { AppRequest, UserDetails } from '../../app/controller/AppRequest';
+import { DocumentManagerController } from '../../app/document/DocumentManagerController';
+import { RouteNames, ViewNames } from '../../common-constants';
+import { orchestrateHome } from '../../functions/util/homePageUtil';
+import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../../functions/util/uploadValidation';
+import { oidcMiddleware } from '../../middleware';
+import { AppInsights } from '../../modules/appinsights';
 
 export default function (app: Application): void {
   const logger: LoggerInstance = console as unknown as LoggerInstance;

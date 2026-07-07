@@ -5,7 +5,7 @@ import request from 'supertest';
 import { getSystemUser } from '../../../main/app/auth/user';
 import { getCaseApi } from '../../../main/app/case/case-api';
 import { FinremCaseData } from '../../../main/app/case/definition';
-import setupEnterCaseNumberRoute, { validateCaseNumber } from '../../../main/routes/enter-case-number';
+import setupEnterCaseNumberRoute, { validateCaseNumber } from '../../../main/routes/generalUpload/enter-case-number';
 
 jest.mock('../../../main/middleware', () => ({
   oidcMiddleware: (_req: Request, _res: Response, next: NextFunction) => next(),
