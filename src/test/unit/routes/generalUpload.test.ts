@@ -656,7 +656,7 @@ describe('General Upload Routes', () => {
     });
 
     it('should handle validation errors', () => {
-      const { uploadSteps } = require('../../../main/generalUpload/config');
+      const { uploadSteps } = require('../../../main/config/general-upload-config');
       uploadSteps[UploadStepNames.Confidentiality].validate = () => ({ error: 'Test error' });
 
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
@@ -678,7 +678,7 @@ describe('General Upload Routes', () => {
     });
 
     it('should include uploaded files when rendering validation errors', () => {
-      const { uploadSteps } = require('../../../main/generalUpload/config');
+      const { uploadSteps } = require('../../../main/config/general-upload-config');
       uploadSteps[UploadStepNames.UploadDocuments].validate = () => ({ error: 'Test error' });
 
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
@@ -942,7 +942,7 @@ describe('General Upload Routes', () => {
     });
 
     it('should redirect to same step when no next step is defined', () => {
-      const { uploadSteps } = require('../../../main/generalUpload/config');
+      const { uploadSteps } = require('../../../main/config/general-upload-config');
       const originalNext = uploadSteps[UploadStepNames.CheckUpload].next;
       uploadSteps[UploadStepNames.CheckUpload].next = null;
 

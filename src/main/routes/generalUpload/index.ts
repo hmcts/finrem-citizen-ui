@@ -10,8 +10,8 @@ import type {
   PreviouslyUploadedDocumentsCaseData,
 } from '../../app/document/PreviouslyUploadedDocumentClient';
 import { RouteNames } from '../../common-constants';
+import { UploadStepId, uploadSteps } from '../../config/general-upload-config';
 import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../../functions/util/documentUtil';
-import { UploadStepId, uploadSteps } from '../../generalUpload/config';
 import { oidcMiddleware } from '../../middleware';
 
 const previouslyUploadedDocumentsRoute = `${RouteNames.uploadJourney}/previously-uploaded-documents`;
