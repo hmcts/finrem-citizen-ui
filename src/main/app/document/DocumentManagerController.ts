@@ -1,19 +1,20 @@
 import axios from 'axios';
 import config from 'config';
-import {Response} from 'express';
-import {v4 as generateUuid} from 'uuid';
-import {LoggerInstance} from 'winston';
+import { Response } from 'express';
+import { v4 as generateUuid } from 'uuid';
+import { LoggerInstance } from 'winston';
 
-import {getSystemUser} from '../auth/user';
-import {getCaseApi} from '../case/case-api';
-import {CITIZEN_APPLICANT_DOCUMENT, CITIZEN_RESPONDENT_DOCUMENT, EVENT_TYPE} from '../case/case-type';
+import { loadCaseAndReloadSession } from '../../functions/util/homePageUtil';
+import { getSystemUser } from '../auth/user';
+import { getCaseApi } from '../case/case-api';
+import { CITIZEN_APPLICANT_DOCUMENT, CITIZEN_RESPONDENT_DOCUMENT, EVENT_TYPE } from '../case/case-type';
 import {
   CaseRole, CitizenUploadDocument, CitizenUploadDocumentType,
   ListValue,
   YesOrNo
 } from '../case/definition';
-import type {AppRequest, UserDetails} from '../controller/AppRequest';
-import {sendNotification} from '../notify/govNotify';
+import type { AppRequest, UserDetails } from '../controller/AppRequest';
+import { sendNotification } from '../notify/govNotify';
 import {
   CaseDocumentManagementClient,
   Classification
@@ -22,7 +23,6 @@ import {
   PreviouslyUploadedDocumentClient,
   PreviouslyUploadedDocumentsResponse
 } from './PreviouslyUploadedDocumentClient';
-import {loadCaseAndReloadSession} from "../../functions/util/homePageUtil";
 
 export class DocumentManagerController {
   constructor(private readonly logger: LoggerInstance) {
@@ -117,9 +117,11 @@ export class DocumentManagerController {
     const systemUser = req.session.user as UserDetails;
     const caseworkerUserApi = getCaseApi(systemUser, this.logger);
 
+    const emailTemplateId = config.get<string>('secrets.finrem.DOCUMENT-UPLOAD-EMAIL-TEMPLATE-ID');
     const courtName = req.session.caseData?.consentOrderFRCName;
     const courtEmail = req.session.caseData?.consentOrderFRCEmail;
     const hearingMode = req.session.caseData?.hearings?.[0]?.value?.hearingMode;
+    // use your hmcts email address for testing purpose
     const email = req.session.user!.email;
 
     await caseworkerUserApi.triggerEvent(
@@ -135,16 +137,15 @@ export class DocumentManagerController {
     delete req.session.documents;
 
     // refresh caseData session with uploaded documents
-    req.session.caseData = await loadCaseAndReloadSession(req, req.session.caseNumber, this.logger)
+    req.session.caseData = await loadCaseAndReloadSession(req, req.session.caseNumber, this.logger);
 
     this.logger.info('Document collection sent to CCD', {
       documentCount: updatedDocuments.length,
       isFDR,
     });
 
-    const DOCUMENT_UPLOAD_EMAIL_TEMPLATE_ID = config.get<string>('secrets.finrem.DOCUMENT-UPLOAD-EMAIL-TEMPLATE-ID');
     try {
-      await sendNotification(DOCUMENT_UPLOAD_EMAIL_TEMPLATE_ID, email, {
+      await sendNotification(emailTemplateId, email, {
         caseReferenceNumber: req.session.caseNumber,
         name: req.session.caseUserName,
         uploadTime: this.formatUploadTime(),
@@ -211,14 +212,14 @@ export class DocumentManagerController {
 
   private formatUploadTime(): string {
     const now = new Date();
-    const tz = {timeZone: 'Europe/London'};
+    const tz = { timeZone: 'Europe/London' };
     const time = now.toLocaleTimeString('en-GB', {
       ...tz,
       hour: 'numeric',
       minute: '2-digit',
       hour12: true
     }).replace(' ', '').toLowerCase();
-    const date = now.toLocaleDateString('en-GB', {...tz, day: '2-digit', month: '2-digit', year: 'numeric'});
+    const date = now.toLocaleDateString('en-GB', { ...tz, day: '2-digit', month: '2-digit', year: 'numeric' });
     return `${time} on ${date}`;
   }
 
