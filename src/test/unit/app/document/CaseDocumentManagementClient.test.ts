@@ -467,5 +467,125 @@ describe('CaseDocumentManagementClient', () => {
       expect(result).toHaveLength(1);
       expect(result[0].originalDocumentName).toBe('bank-statement.pdf');
     });
+
+    test('appends counter to duplicate filenames', async () => {
+      mockAxios.post.mockResolvedValue({
+        data: {
+          documents: [
+            {
+              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026-1.pdf',
+              size: 100,
+              mimeType: 'application/pdf',
+              createdOn: '2024-01-01',
+              modifiedOn: '2024-01-01',
+              classification: Classification.Public,
+              _links: {
+                self: { href: '/documents/1' },
+                binary: { href: '/documents/1/binary' },
+                thumbnail: { href: '/documents/1/thumb' },
+              },
+            },
+          ],
+        },
+      });
+
+      const files: Express.Multer.File[] = [
+        {
+          fieldname: 'files',
+          originalname: 'my-document.pdf',
+          encoding: '7bit',
+          mimetype: 'application/pdf',
+          size: 100,
+          buffer: Buffer.from('file'),
+          stream: Readable.from([]),
+          destination: '',
+          filename: '',
+          path: '',
+        },
+      ];
+
+      const result = await client.create({
+        files,
+        classification: Classification.Public,
+        documentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
+        caseUserName: 'JohnSmith',
+        existingFilenames: ['JohnSmith-FormFM1-23-06-2026.pdf'],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026-1.pdf');
+    });
+
+    test('handles multiple files in same upload with duplicate names', async () => {
+      mockAxios.post.mockResolvedValue({
+        data: {
+          documents: [
+            {
+              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026.pdf',
+              _links: {},
+            },
+            {
+              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026-1.pdf',
+              _links: {},
+            },
+            {
+              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026-2.pdf',
+              _links: {},
+            },
+          ],
+        },
+      });
+
+      const files: Express.Multer.File[] = [
+        {
+          fieldname: 'files',
+          originalname: 'file1.pdf',
+          encoding: '7bit',
+          mimetype: 'application/pdf',
+          size: 100,
+          buffer: Buffer.from('file1'),
+          stream: Readable.from([]),
+          destination: '',
+          filename: '',
+          path: '',
+        },
+        {
+          fieldname: 'files',
+          originalname: 'file2.pdf',
+          encoding: '7bit',
+          mimetype: 'application/pdf',
+          size: 100,
+          buffer: Buffer.from('file2'),
+          stream: Readable.from([]),
+          destination: '',
+          filename: '',
+          path: '',
+        },
+        {
+          fieldname: 'files',
+          originalname: 'file3.pdf',
+          encoding: '7bit',
+          mimetype: 'application/pdf',
+          size: 100,
+          buffer: Buffer.from('file3'),
+          stream: Readable.from([]),
+          destination: '',
+          filename: '',
+          path: '',
+        },
+      ];
+
+      const result = await client.create({
+        files,
+        classification: Classification.Public,
+        documentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
+        caseUserName: 'JohnSmith',
+      });
+
+      expect(result).toHaveLength(3);
+      expect(result[0].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026.pdf');
+      expect(result[1].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026-1.pdf');
+      expect(result[2].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026-2.pdf');
+    });
   });
 });

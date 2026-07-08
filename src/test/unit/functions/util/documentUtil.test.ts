@@ -526,5 +526,91 @@ it('should not rename document not in mapping', () => {
       );
       expect(result).toBe('User-FormFM1-05-01-2026.pdf');
     });
+
+    it('should append counter when filename already exists', () => {
+      const existingFilenames = ['SamThompson-FormFM1-23-06-2026.pdf'];
+      
+      const result = generateRenamedFilename(
+        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        'fm1.pdf',
+        'SamThompson',
+        false,
+        existingFilenames
+      );
+
+      expect(result).toBe('SamThompson-FormFM1-23-06-2026-1.pdf');
+    });
+
+    it('should increment counter for multiple duplicates', () => {
+      const existingFilenames = [
+        'SamThompson-FormFM1-23-06-2026.pdf',
+        'SamThompson-FormFM1-23-06-2026-1.pdf',
+        'SamThompson-FormFM1-23-06-2026-2.pdf'
+      ];
+      
+      const result = generateRenamedFilename(
+        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        'fm1.pdf',
+        'SamThompson',
+        false,
+        existingFilenames
+      );
+
+      expect(result).toBe('SamThompson-FormFM1-23-06-2026-3.pdf');
+    });
+
+    it('should not append counter when filename does not exist', () => {
+      const existingFilenames = ['OtherUser-FormFM1-23-06-2026.pdf'];
+      
+      const result = generateRenamedFilename(
+        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        'fm1.pdf',
+        'SamThompson',
+        false,
+        existingFilenames
+      );
+
+      expect(result).toBe('SamThompson-FormFM1-23-06-2026.pdf');
+    });
+
+    it('should handle empty existingFilenames array', () => {
+      const result = generateRenamedFilename(
+        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        'fm1.pdf',
+        'SamThompson',
+        false,
+        []
+      );
+
+      expect(result).toBe('SamThompson-FormFM1-23-06-2026.pdf');
+    });
+
+    it('should append counter with different file extensions', () => {
+      const existingFilenames = ['User-FormH-23-06-2026.docx'];
+      
+      const result = generateRenamedFilename(
+        'estimate-of-costs-incurred-form-h',
+        'costs.docx',
+        'User',
+        false,
+        existingFilenames
+      );
+
+      expect(result).toBe('User-FormH-23-06-2026-1.docx');
+    });
+
+    it('should not affect non-renamed documents with duplicates', () => {
+      const existingFilenames = ['my-bank-statement.pdf'];
+      
+      const result = generateRenamedFilename(
+        'bank-statements',
+        'my-bank-statement.pdf',
+        'JohnSmith',
+        false,
+        existingFilenames
+      );
+
+      expect(result).toBe('my-bank-statement.pdf');
+    });
   });
 });

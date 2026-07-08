@@ -36,11 +36,16 @@ export class DocumentManagerController {
 
         const originalFilenames = (req.files as Express.Multer.File[]).map(file => file.originalname);
 
+        const existingFilenames = (req.session.documents?.documentDetails ?? [])
+            .map(doc => doc.value?.DocumentFileName)
+            .filter((filename): filename is string => !!filename);
+
         const filesCreated = await this.getApiClient(user).create({
             files: req.files,
             classification: Classification.Public,
             documentType,
             caseUserName: req.session.caseUserName,
+            existingFilenames,
         });
 
         const newUploads: ListValue<Partial<CitizenUploadDocument> | null>[] =
