@@ -31,3 +31,5 @@ nodejs:
           alias: app-insights-connection-string
         - finrem-citizen-ui-redis-connection-string
         - session-secret
+        - gov-uk-notification-key
+        - document-upload-email-template-id

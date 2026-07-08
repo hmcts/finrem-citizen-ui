@@ -42,8 +42,8 @@ nodejs:
         - finrem-system-update-password
         - finrem-citizen-ui-idam-client-secret
         - finrem-citizen-s2s-client-secret
-        - GOV-UK-NOTIFICATION-KEY
-        - DOCUMENT-UPLOAD-EMAIL-TEMPLATE-ID
+        - gov-uk-notification-key
+        - document-upload-email-template-id
         - name: app-insights-connection-string
           alias: app-insights-connection-string
 redis:
