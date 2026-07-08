@@ -8,10 +8,10 @@ dotenv.config({ quiet: true });
 
 // Determine if running in CI/pipeline (internal network) or locally (external)
 // Check multiple Jenkins/CI env vars since different CI environments expose different vars
-const isCI = !!process.env.CI 
-  || !!process.env.JENKINS_URL 
-  || !!process.env.BUILD_ID 
-  || !!process.env.JENKINS_HOME;
+const isCI = !!process.env.CI
+ || !!process.env.JENKINS_URL
+ || !!process.env.BUILD_ID
+ || !!process.env.JENKINS_HOME;
 
 // IDAM and S2S always use AAT (no PR-specific instances exist)
 const idamEnv = 'aat';
@@ -47,14 +47,14 @@ const config = {
       : isCI,
 
   // IDAM endpoints - ALWAYS use AAT
-  idamApi: process.env.IDAM_API_URL 
+  idamApi: process.env.IDAM_TOKEN_URL
     || `https://idam-api.${idamEnv}.platform.hmcts.net`,
-  idamWebUrl: process.env.IDAM_WEB_URL 
-    || `https://idam-web-public.${idamEnv}.platform.hmcts.net`,
+  idamWebUrl: process.env.IDAM_WEB_URL
+   || `https://idam-web-public.${idamEnv}.platform.hmcts.net`,
 
   // S2S also uses AAT
-  s2sUrl: process.env.SERVICE_AUTH_PROVIDER_URL 
-    || `http://rpe-service-auth-provider-${idamEnv}.service.core-compute-${idamEnv}.internal`,
+  s2sUrl: process.env.SERVICE_AUTH_PROVIDER_URL
+   || `http://rpe-service-auth-provider-${idamEnv}.service.core-compute-${idamEnv}.internal`,
 
   // Microservice name for S2S - must match the secret loaded via SERVICE_AUTH_SECRET
   microservice: process.env.S2S_MICROSERVICE || 'finrem_citizen_ui',
