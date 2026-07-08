@@ -18,7 +18,7 @@ import setupEnterAccessCodeRoute, {
   retrieveCaseData,
   validateAccessCode,
   validateAccessCodeAgainstCase,
-} from '../../../main/routes/enter-access-code';
+} from '../../../main/routes/generalUpload/enter-access-code';
 
 jest.mock('../../../main/middleware', () => ({
   oidcMiddleware: (_req: Request, _res: Response, next: NextFunction) => next(),

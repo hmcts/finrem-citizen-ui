@@ -66,7 +66,7 @@ export async function assertIntegrationPreflight(): Promise<void> {
  * case number submission -> access code submission -> dashboard.
  * They call invalidateAccessCode() which triggers real CCD events.
  * They require a real contested case created via API and progressed through
-79 * FR_issueApplication (the point where access codes are generated).
+ * FR_issueApplication (the point where access codes are generated).
  * 
  * Runs on: AAT/preview by default (or any target when ACCESS_CODE_REAL_INTEGRATION=true)
  * Requires: Real CCD instance reachable, valid case with real access codes
@@ -77,16 +77,11 @@ export async function assertIntegrationPreflight(): Promise<void> {
 
 // INTEGRATION: Happy-path submission calls invalidateAccessCode(), which triggers
 // a CCD event. These tests require a real case + real access-code integration.
-test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
-  const runAccessCodeIntegration = shouldRunHappyPathIntegrationSuite();
-
-  test.skip(
-    !runAccessCodeIntegration,
-    'Skipped outside preview/AAT by default. Set ACCESS_CODE_REAL_INTEGRATION=true to force enable on non-preview/non-AAT targets.'
-  );
+if (shouldRunHappyPathIntegrationSuite()) {
+  test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
 
   test.beforeAll(async () => {
-    await assertIntegrationPreflight();
+    await assertIntegrationPreflight(); // keeps DNS/resolvability validation
   });
 
   test.beforeEach(async ({
@@ -181,15 +176,11 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
     await dashboardPage.verifyDashboardPageContent();
     await runA11yAudit(axeUtils);
   });
-});
+  });
+}
 
-test.describe('[integration-happy-path] Enter Access Code - Full Journey', () => {
-  const runIntegration = shouldRunHappyPathIntegrationSuite();
-
-  test.skip(
-    !runIntegration,
-    'Skipped outside preview/AAT by default. Set ACCESS_CODE_REAL_INTEGRATION=true to force enable on non-preview/non-AAT targets.'
-  );
+if (shouldRunHappyPathIntegrationSuite()) {
+  test.describe('[integration-happy-path] Enter Access Code - Full Journey', () => {
 
   test.beforeAll(async () => {
     await assertIntegrationPreflight();
@@ -210,4 +201,5 @@ test.describe('[integration-happy-path] Enter Access Code - Full Journey', () =>
     await dashboardPage.verifyDashboardPageContent();
     await runA11yAudit(axeUtils);
   });
-});
+  });
+}

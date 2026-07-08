@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 describe('Upload confirmation view contract tests', () => {
-  const confirmationTemplatePath = path.join(__dirname, '../../../main/views/upload-journey/confirmation.njk');
+  const confirmationTemplatePath = path.join(__dirname, '../../../main/views/generalUpload/confirmation.njk');
   const confirmationTemplate = fs.readFileSync(confirmationTemplatePath, 'utf-8');
 
   it('should include key confirmation content for documents uploaded and what happens next', () => {

@@ -16,7 +16,7 @@ It is located under `specFiles/` for historical reasons, but it covers the full 
 - Fastest feedback for low-level behavior changes.
 
 ### Route tests (`src/test/routes/`)
-- Validate route registration, redirect behavior, health paths, and upload-journey/task-list route behavior.
+- Validate route registration, redirect behavior, health paths, and general upload/task-list route behavior.
 - Focus on application routing contracts and guards.
 
 ### API tests (`src/test/api/`)

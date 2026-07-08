@@ -2,10 +2,10 @@ import 'express-session';
 
 import { Application, Request, Response } from 'express';
 
-import { RouteNames, ViewNames } from '../common-constants';
-import { loadCaseAndReloadSession } from '../functions/util/homePageUtil';
-import { oidcMiddleware } from '../middleware';
-import { AppInsights } from '../modules/appinsights';
+import { RouteNames, ViewNames } from '../../common-constants';
+import { loadCaseAndReloadSession } from '../../functions/util/homePageUtil';
+import { oidcMiddleware } from '../../middleware';
+import { AppInsights } from '../../modules/appinsights';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 

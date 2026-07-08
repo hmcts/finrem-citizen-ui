@@ -1,7 +1,7 @@
 import { Application, Request, Response } from 'express';
 
-import { RouteNames } from '../common-constants';
-import documentTypes from '../models/document-types.json';
+import { RouteNames } from '../../common-constants';
+import documentTypes from '../../models/document-types.json';
 
 interface DocumentType {
   id: number;
