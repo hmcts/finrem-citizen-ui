@@ -2,7 +2,7 @@ import { describe, expect, test } from '@jest/globals';
 import nunjucks from 'nunjucks';
 import path from 'path';
 
-const viewsPath = path.resolve(__dirname, '../../../main/views');
+const viewsPath = path.resolve(process.cwd(), 'src/main/views');
 
 describe('enter-access-code view error rendering', () => {
   const alreadyUsedError =
