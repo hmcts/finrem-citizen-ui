@@ -3,7 +3,7 @@ import type { NextFunction, Request, Response } from 'express';
 import * as nunjucks from 'nunjucks';
 import * as path from 'path';
 
-import { addNunjucksLocals, buildFeedbackSurveyUrl } from '../../../../main/modules/nunjucks';
+import { addNunjucksLocals, buildFeedbackSurveyUrl, getGoogleAnalyticsMeasurementId } from '../../../../main/modules/nunjucks';
 
 function mockReqGet(host: string): Request['get'] {
   return ((name: string): string | string[] | undefined => (name === 'host' ? host : undefined)) as Request['get'];
@@ -72,8 +72,31 @@ describe('buildFeedbackSurveyUrl', () => {
     )}`;
 
     expect(res.locals.feedbackSurveyUrl).toBe(expectedSurveyUrl);
+    expect(res.locals.googleAnalyticsId).toBe(getGoogleAnalyticsMeasurementId());
     expect(res.locals.pagePath).toBe('/test-page');
     expect(nextCalled).toBe(true);
+  });
+
+  it('renders the Google Analytics measurement id in the shared page head when configured', () => {
+    const govukTemplates = path.dirname(require.resolve('govuk-frontend/package.json')) + '/dist';
+    const viewsPath = path.join(__dirname, '../../../../main/views');
+    const env = nunjucks.configure([govukTemplates, viewsPath], { autoescape: true });
+
+    const rendered = env.render('home.njk', {
+      googleAnalyticsId: 'G-1234567890',
+    });
+
+    expect(rendered).toContain('<meta name="google-analytics-id" content="G-1234567890">');
+  });
+
+  it('does not render the Google Analytics meta tag when no measurement id is configured', () => {
+    const govukTemplates = path.dirname(require.resolve('govuk-frontend/package.json')) + '/dist';
+    const viewsPath = path.join(__dirname, '../../../../main/views');
+    const env = nunjucks.configure([govukTemplates, viewsPath], { autoescape: true });
+
+    const rendered = env.render('home.njk');
+
+    expect(rendered).not.toContain('name="google-analytics-id"');
   });
 
   it('renders the survey link in the shared beta banner', () => {

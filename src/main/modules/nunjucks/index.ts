@@ -1,3 +1,4 @@
+import config from 'config';
 import * as express from 'express';
 import * as nunjucks from 'nunjucks';
 import * as path from 'path';
@@ -8,6 +9,12 @@ import { taskListWarningMessage } from '../../functions/task-list/task-list-warn
 import { taskStatus } from '../../functions/task-list/task-status';
 
 const FEEDBACK_SURVEY_BASE_URL = 'https://www.smartsurvey.co.uk/s/CFR_feedback/?pageurl=';
+
+export const getGoogleAnalyticsMeasurementId = (): string => {
+  const measurementId = config.get<string>('googleAnalytics.measurementId');
+
+  return measurementId.trim();
+};
 
 const formatCaseNumber = (caseNumber: string): string => {
   if (!caseNumber) {
@@ -37,6 +44,7 @@ export const buildFeedbackSurveyUrl = (req: express.Request): string =>
 export const addNunjucksLocals: express.RequestHandler = (req, res, next) => {
   res.locals.pagePath = req.path;
   res.locals.feedbackSurveyUrl = buildFeedbackSurveyUrl(req);
+  res.locals.googleAnalyticsId = getGoogleAnalyticsMeasurementId();
   next();
 };
 

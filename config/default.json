@@ -3,6 +3,9 @@
   "appInsights": {
     "connectionString": false
   },
+  "googleAnalytics": {
+    "measurementId": ""
+  },
   "security": {
     "referrerPolicy": "same-origin",
     "hsts": {

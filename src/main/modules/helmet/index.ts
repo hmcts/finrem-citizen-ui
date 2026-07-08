@@ -2,6 +2,7 @@ import * as express from 'express';
 import helmet from 'helmet';
 
 const googleAnalyticsDomain = '*.google-analytics.com';
+const googleTagManagerDomain = 'www.googletagmanager.com';
 const self = "'self'";
 
 /**
@@ -18,6 +19,7 @@ export class Helmet {
     const scriptSrc = [
       self,
       googleAnalyticsDomain,
+      googleTagManagerDomain,
       "'sha256-GUQ5ad8JK5KmEWmROf3LZd9ge94daqNvd8xy9YS1iDw='", // GOV.UK Frontend v6.1.0 inline script
     ];
 
@@ -33,10 +35,10 @@ export class Helmet {
       helmet({
         contentSecurityPolicy: {
           directives: {
-            connectSrc: [self],
+            connectSrc: [self, googleAnalyticsDomain, googleTagManagerDomain],
             defaultSrc: ["'none'"],
             fontSrc: [self, 'data:'],
-            imgSrc: [self, googleAnalyticsDomain],
+            imgSrc: [self, googleAnalyticsDomain, googleTagManagerDomain],
             objectSrc: [self],
             scriptSrc,
             styleSrc: [self],

@@ -20,6 +20,9 @@
   "appInsights": {
     "connectionString": "APPLICATIONINSIGHTS_CONNECTION_STRING"
   },
+  "googleAnalytics": {
+    "measurementId": "GOOGLE_ANALYTICS_ID"
+  },
   "services": {
     "idam": {
       "clientID": "IDAM_CLIENT_ID",

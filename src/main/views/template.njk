@@ -3,6 +3,9 @@
 {% extends "govuk/template.njk" %}
 
 {% block head %}
+  {% if googleAnalyticsId %}
+    <meta name="google-analytics-id" content="{{ googleAnalyticsId }}">
+  {% endif %}
   {% include "webpack/css.njk" %}
 {% endblock %}
 
