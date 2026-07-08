@@ -27,17 +27,12 @@ function shouldRunHappyPathIntegrationSuite(): boolean {
 }
 
 function getRequiredCcdUrl(): string {
-  const ccdDataStoreUrl = process.env.CCD_DATA_STORE_API_URL?.trim();
-  if (ccdDataStoreUrl) {
-    return ccdDataStoreUrl;
+  const ccd = process.env.CCD_URL?.trim() || process.env.CCD_DATA_STORE_API_URL?.trim();
+  if (!ccd) {
+    throw new Error('[integration-preflight] Set CCD_URL (or CCD_DATA_STORE_API_URL fallback)');
   }
 
-  const ccdUrl = process.env.CCD_URL?.trim();
-  if (ccdUrl) {
-    return ccdUrl;
-  }
-
-  throw new Error('[integration-preflight] Missing required env var: set CCD_DATA_STORE_API_URL or CCD_URL');
+  return ccd;
 }
 
 async function assertResolvableUrl(urlValue: string, label: string): Promise<void> {
@@ -56,7 +51,7 @@ async function assertResolvableUrl(urlValue: string, label: string): Promise<voi
 // Call once in fixture before creating CCD case
 export async function assertIntegrationPreflight(): Promise<void> {
   const ccdDataStoreUrl = getRequiredCcdUrl();
-  await assertResolvableUrl(ccdDataStoreUrl, 'CCD data store URL');
+  await assertResolvableUrl(ccdDataStoreUrl, 'CCD URL');
 }
 
 /**
