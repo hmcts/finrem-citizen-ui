@@ -1,4 +1,3 @@
-require('dotenv').config();
 import config from 'config';
 
 const NotifyClient = require('notifications-node-client').NotifyClient;
