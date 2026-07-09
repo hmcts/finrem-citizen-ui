@@ -72,6 +72,8 @@ describe('DocumentManagerController', () => {
   };
 
   beforeEach(() => {
+    jest.clearAllMocks();
+
     mockLogger = {
       info: jest.fn(),
       error: jest.fn(),
@@ -308,6 +310,59 @@ describe('DocumentManagerController', () => {
         name: 'Test Applicant',
       })
     );
+    const triggerOrder = (triggerEventMock as jest.Mock).mock.invocationCallOrder[0];
+    const notifyOrder = (sendNotification as jest.Mock).mock.invocationCallOrder[0];
+    expect(triggerOrder).toBeLessThan(notifyOrder);
+  });
+
+  test('sends one confirmation email when multiple documents are uploaded in one session', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '1234-5678-0123-4567',
+        caseUserName: 'Test Applicant',
+        documents: {
+          documentDetails: [{ id: '1', value: {} }, { id: '2', value: {} }, { id: '3', value: {} }],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(triggerEventMock).toHaveBeenCalled();
+    expect(sendNotification).toHaveBeenCalledTimes(1);
+    expect(sendNotification).toHaveBeenCalledWith(
+      'test-template-id',
+      'test@test.com',
+      expect.objectContaining({
+        caseReferenceNumber: '1234-5678-0123-4567',
+        name: 'Test Applicant',
+      })
+    );
+  });
+
+  test('does not call notifyDocumentUploaded when triggerEvent fails', async () => {
+    const triggerEventMock = jest.fn().mockRejectedValue(new Error('CCD unavailable'));
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '1234-5678-0123-4567',
+        caseUserName: 'Test Applicant',
+        documents: {
+          documentDetails: [{ id: '1', value: {} }],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await expect(controller.LinkDocumentsToCase(req)).rejects.toThrow('CCD unavailable');
+    expect(sendNotification).not.toHaveBeenCalled();
   });
 
   test('logs error when notifyDocumentUploaded fails', async () => {
