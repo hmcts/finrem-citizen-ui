@@ -30,28 +30,32 @@ export class CaseDocumentManagementClient {
     classification,
     documentType,
     caseUserName,
+    existingFilenames = [],
   }: {
     files: UploadedFiles;
     classification: Classification;
     documentType?: string;
     caseUserName?: string;
+    existingFilenames?: string[];
   }): Promise<DocumentManagementFile[]> {
     const formData = new FormData();
     formData.append('caseTypeId', CASE_TYPE);
     formData.append('jurisdictionId', JURISDICTION);
     formData.append('classification', classification);
 
+    const uploadedFilenames: string[] = [...existingFilenames];
+
     for (const file of getUploadedFiles(files)) {
-      // Determine the filename to use when uploading
       let uploadFilename = file.originalname;
 
-      // If documentType is provided, check if it should be auto-renamed
       if (documentType) {
         const documentTypeKey = toDocumentTypeKey(documentType);
         if (shouldAutoRename(documentTypeKey)) {
-          uploadFilename = generateRenamedFilename(documentTypeKey, file.originalname, caseUserName);
+          uploadFilename = generateRenamedFilename(documentTypeKey, file.originalname, caseUserName, false, uploadedFilenames);
         }
       }
+
+      uploadedFilenames.push(uploadFilename);
 
       const fileContent = file.path ? createReadStream(file.path) : file.buffer;
       formData.append('files', fileContent, {
