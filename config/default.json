@@ -53,7 +53,9 @@
     "finrem": {
       "finrem-citizen-ui-idam-client-secret": "AAAAAAAAAAAA",
       "session-secret": "finrem-local-dev-secret",
-      "finrem-citizen-ui-redis-connection-string": "redis://localhost:6379"
+      "finrem-citizen-ui-redis-connection-string": "redis://localhost:6379",
+      "GOV-UK-NOTIFICATION-KEY": "GOVUK_NOTIFY_API_KEY",
+      "DOCUMENT-UPLOAD-EMAIL-TEMPLATE-ID": "FINREM_CITIZEN_UI_TEMPLATE_ID"
     }
   },
   "rateLimitWindowMs": 900000
