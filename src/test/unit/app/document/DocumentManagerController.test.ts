@@ -3,6 +3,7 @@ import { LoggerInstance } from 'winston';
 
 import { CaseRole, YesOrNo } from '../../../../main/app/case/definition';
 import { AppRequest, UserDetails } from '../../../../main/app/controller/AppRequest';
+import { ConvertedUploadedFile, DocumentConversionService } from '../../../../main/app/document/DocumentConversionService';
 import { DocumentManagerController } from '../../../../main/app/document/DocumentManagerController';
 import { PreviouslyUploadedDocumentClient } from '../../../../main/app/document/PreviouslyUploadedDocumentClient';
 import { sendNotification } from '../../../../main/app/notify/govNotify';
@@ -56,6 +57,10 @@ jest.mock('../../../../main/functions/util/homePageUtil', () => ({
 
 describe('DocumentManagerController', () => {
   let mockLogger: LoggerInstance;
+  let mockDocumentConversionService: {
+    convertUploadedFileToPdfIfNotPdf: jest.Mock;
+    cleanupTemporaryConversionFiles: jest.Mock;
+  };
   let controller: DocumentManagerController;
 
   const userDetails: UserDetails = {
@@ -77,9 +82,18 @@ describe('DocumentManagerController', () => {
     mockLogger = {
       info: jest.fn(),
       error: jest.fn(),
+      warn: jest.fn(),
     } as unknown as LoggerInstance;
 
-    controller = new DocumentManagerController(mockLogger);
+    mockDocumentConversionService = {
+      convertUploadedFileToPdfIfNotPdf: jest.fn(),
+      cleanupTemporaryConversionFiles: jest.fn(),
+    };
+
+    controller = new DocumentManagerController(
+      mockLogger,
+      mockDocumentConversionService as unknown as DocumentConversionService
+    );
   });
 
   const buildRequest = (overrides: Partial<AppRequest> = {}): AppRequest =>
@@ -174,6 +188,88 @@ describe('DocumentManagerController', () => {
     const uploadedDoc = req.session.documents?.documentDetails?.[0].value;
     expect(uploadedDoc?.DocumentFileName).toBe('JohnSmith-BankStatements-24-06-2026.pdf');
     expect(uploadedDoc?.OriginalFileName).toBe('my-bank-statement.pdf');
+  });
+
+  test('stores original uploaded filename when file was converted to PDF', async () => {
+    const createMock = jest.fn().mockResolvedValue([
+      {
+        originalDocumentName: 'statement.pdf',
+        _links: {
+          self: { href: '/doc/1' },
+          binary: { href: '/doc/1/bin' },
+        },
+      },
+    ]);
+
+    (controller as unknown as {
+      getApiClient: () => { create: typeof createMock };
+    }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
+
+    const req = buildRequest({
+      files: [
+        {
+          buffer: Buffer.from('converted pdf'),
+          originalname: 'statement.pdf',
+          originalUploadedName: 'statement.docx',
+        } as ConvertedUploadedFile,
+      ],
+    });
+
+    await controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never);
+
+    const uploadedDoc = req.session.documents?.documentDetails?.[0].value;
+    expect(uploadedDoc?.DocumentFileName).toBe('statement.pdf');
+    expect(uploadedDoc?.OriginalFileName).toBe('statement.docx');
+  });
+
+  test('converts request files to PDF before upload', async () => {
+    const sourceFile = {
+      buffer: Buffer.from('source'),
+      originalname: 'statement.xlsx',
+    } as Express.Multer.File;
+    const convertedFile = {
+      ...sourceFile,
+      buffer: Buffer.from('converted'),
+      mimetype: 'application/pdf',
+      originalname: 'statement.pdf',
+      originalUploadedName: 'statement.xlsx',
+    } as ConvertedUploadedFile;
+    mockDocumentConversionService.convertUploadedFileToPdfIfNotPdf.mockResolvedValueOnce(convertedFile);
+
+    const req = buildRequest({ files: [sourceFile] });
+
+    await controller.convertDocumentToPdfIfNotPdf(req);
+
+    expect(mockDocumentConversionService.convertUploadedFileToPdfIfNotPdf).toHaveBeenCalledWith(sourceFile);
+    expect(req.files).toEqual([convertedFile]);
+  });
+
+  test('cleans converted files when conversion fails after a partial conversion', async () => {
+    const firstSourceFile = {
+      buffer: Buffer.from('source 1'),
+      originalname: 'first.docx',
+    } as Express.Multer.File;
+    const secondSourceFile = {
+      buffer: Buffer.from('source 2'),
+      originalname: 'second.docx',
+    } as Express.Multer.File;
+    const convertedFile = {
+      ...firstSourceFile,
+      originalname: 'first.pdf',
+      convertedFilePath: '/tmp/first.pdf',
+    } as ConvertedUploadedFile;
+    const conversionError = new Error('Conversion failed');
+
+    mockDocumentConversionService.convertUploadedFileToPdfIfNotPdf
+      .mockResolvedValueOnce(convertedFile)
+      .mockRejectedValueOnce(conversionError);
+
+    const req = buildRequest({ files: [firstSourceFile, secondSourceFile] });
+
+    await expect(controller.convertDocumentToPdfIfNotPdf(req)).rejects.toThrow(conversionError);
+
+    expect(mockDocumentConversionService.cleanupTemporaryConversionFiles).toHaveBeenCalledWith([convertedFile]);
+    expect(req.files).toEqual([firstSourceFile, secondSourceFile]);
   });
 
   test('appends to existing documents', async () => {
@@ -976,4 +1072,3 @@ describe('DocumentManagerController', () => {
     );
   });
 });
-
