@@ -44,6 +44,12 @@ jest.mock('axios', () => ({
   isAxiosError: jest.fn().mockReturnValue(false),
 }));
 
+jest.mock('../../../../main/modules/appinsights', () => ({
+  AppInsights: {
+    trackException: jest.fn(),
+  },
+}));
+
 jest.mock('../../../../main/functions/util/homePageUtil', () => ({
   loadCaseAndReloadSession: jest.fn().mockResolvedValue({}),
 }));
@@ -323,9 +329,96 @@ describe('DocumentManagerController', () => {
 
     await controller.LinkDocumentsToCase(req);
 
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.error).toHaveBeenCalledWith(
       'Error sending notification',
       expect.any(Error)
+    );
+  });
+
+  test('calls AppInsights.trackException when notification fails', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    jest.mocked(sendNotification).mockRejectedValueOnce(new Error('Notify failed'));
+
+    const { AppInsights } = require('../../../../main/modules/appinsights');
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: {
+          documentDetails: [{ id: '1', value: {} }],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(AppInsights.trackException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        emailTemplateId: 'test-template-id',
+        caseNumber: '123',
+        email: 'test@test.com',
+      })
+    );
+  });
+
+  test('wraps non-Error thrown from notification into Error before tracking', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    jest.mocked(sendNotification).mockRejectedValueOnce('plain string error');
+
+    const { AppInsights } = require('../../../../main/modules/appinsights');
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: { documentDetails: [{ id: '1', value: {} }] },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(AppInsights.trackException).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Failed to send email notification for uploading the documents' }),
+      expect.any(Object)
+    );
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Error sending notification',
+      expect.objectContaining({ message: 'Failed to send email notification for uploading the documents' })
+    );
+  });
+
+  test('logs GOV Notify error with logger.error when axios error occurs', async () => {
+    const axiosMock = require('axios');
+    axiosMock.isAxiosError.mockReturnValueOnce(true);
+
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    const axiosError = { response: { status: 400, data: { message: 'bad request' } } };
+    jest.mocked(sendNotification).mockRejectedValueOnce(axiosError);
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: { documentDetails: [{ id: '1', value: {} }] },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'GOV Notify error',
+      expect.any(String)
     );
   });
 

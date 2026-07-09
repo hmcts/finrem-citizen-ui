@@ -23,6 +23,7 @@ import {
   PreviouslyUploadedDocumentClient,
   PreviouslyUploadedDocumentsResponse
 } from './PreviouslyUploadedDocumentClient';
+import {AppInsights} from "../../modules/appinsights";
 
 export class DocumentManagerController {
   constructor(private readonly logger: LoggerInstance) {
@@ -154,12 +155,25 @@ export class DocumentManagerController {
           : '',
         courtEmail: courtEmail ?? '',
       });
+
       this.logger.info('Notification sent to : ', email);
     } catch (err) {
+      const error = err instanceof Error
+        ? err
+        : new Error('Failed to send email notification for uploading the documents');
+
       if (axios.isAxiosError(err)) {
-        this.logger.info('GOV Notify error', JSON.stringify(err.response?.data, null, 2));
+        this.logger.error('GOV Notify error', JSON.stringify(err.response?.data, null, 2));
       }
-      this.logger.info('Error sending notification', err);
+
+      this.logger.error('Error sending notification', error);
+
+      AppInsights.trackException(error, {
+        emailTemplateId,
+        caseNumber: req.session.caseNumber ?? '',
+        email: email ?? '',
+        notifyStatus: axios.isAxiosError(err) ? String(err.response?.status ?? '') : '',
+      });
     }
   }
 
