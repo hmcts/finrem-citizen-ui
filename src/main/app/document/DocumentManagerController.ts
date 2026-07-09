@@ -5,6 +5,7 @@ import { v4 as generateUuid } from 'uuid';
 import { LoggerInstance } from 'winston';
 
 import { loadCaseAndReloadSession } from '../../functions/util/homePageUtil';
+import { AppInsights } from '../../modules/appinsights';
 import { getSystemUser } from '../auth/user';
 import { getCaseApi } from '../case/case-api';
 import { CITIZEN_APPLICANT_DOCUMENT, CITIZEN_RESPONDENT_DOCUMENT, EVENT_TYPE } from '../case/case-type';
@@ -23,7 +24,6 @@ import {
   PreviouslyUploadedDocumentClient,
   PreviouslyUploadedDocumentsResponse
 } from './PreviouslyUploadedDocumentClient';
-import {AppInsights} from "../../modules/appinsights";
 
 export class DocumentManagerController {
   constructor(private readonly logger: LoggerInstance) {
