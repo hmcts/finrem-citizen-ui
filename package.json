@@ -132,7 +132,7 @@
     "**/*": "prettier --write --ignore-unknown",
     "**/*.{js,ts,mts}": "eslint --fix"
   },
-  "packageManager": "yarn@4.17.1",
+  "packageManager": "yarn@4.17.0",
   "resolutions": {
     "@grpc/grpc-js": "1.14.4",
     "basic-ftp": "6.0.1",
