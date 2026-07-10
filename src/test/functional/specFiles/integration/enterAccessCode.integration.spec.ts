@@ -8,22 +8,24 @@ function shouldRunHappyPathIntegrationSuite(): boolean {
   const explicitToggle = process.env.ACCESS_CODE_REAL_INTEGRATION;
   const runningEnv = (process.env.RUNNING_ENV || '').toLowerCase();
   const testUrl = (process.env.TEST_URL || '').toLowerCase();
-  const isPreviewOrAatTarget =
+  const isPreviewAatOrPerfTarget =
     runningEnv === 'aat'
+    || runningEnv === 'perf'
     || runningEnv.startsWith('pr-')
     || testUrl.includes('.preview.platform.hmcts.net')
-    || testUrl.includes('.aat.platform.hmcts.net');
+    || testUrl.includes('.aat.platform.hmcts.net')
+    || testUrl.includes('.perf.platform.hmcts.net');
 
   if (explicitToggle === 'true') {
     return true;
   }
 
   if (explicitToggle === 'false') {
-    // Legacy .env files often set false; do not block preview/AAT by default.
-    return isPreviewOrAatTarget;
+    // Legacy .env files often set false; do not block preview/AAT/perf by default.
+    return isPreviewAatOrPerfTarget;
   }
 
-  return isPreviewOrAatTarget;
+  return isPreviewAatOrPerfTarget;
 }
 
 function getRequiredCcdUrl(): string {
