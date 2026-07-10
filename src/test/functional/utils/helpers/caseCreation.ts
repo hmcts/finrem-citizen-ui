@@ -85,6 +85,18 @@ const getEnvironment = (): string => {
   return process.env.RUNNING_ENV || 'aat';
 };
 
+const getServiceEnvironment = (env: string): string => {
+  if (env === 'preview') {
+    return 'aat';
+  }
+
+  if (env === 'perf') {
+    return 'perftest';
+  }
+
+  return env;
+};
+
 const getConfig = (): ApiConfig => {
   if (!process.env.IDAM_CLIENT_SECRET) {
     // eslint-disable-next-line no-console
@@ -92,9 +104,7 @@ const getConfig = (): ApiConfig => {
   }
 
   const env = getEnvironment();
-  // Shared services use AAT for both AAT and preview environments
-  // Preview apps connect to the same AAT backend services
-  const serviceEnv = env === 'preview' ? 'aat' : env;
+  const serviceEnv = getServiceEnvironment(env);
   return {
     idam: {
       baseUrl: process.env.IDAM_TOKEN_URL || `https://idam-api.${serviceEnv}.platform.hmcts.net`,
@@ -102,7 +112,9 @@ const getConfig = (): ApiConfig => {
       clientSecret: process.env.IDAM_CLIENT_SECRET || ''
     },
     ccd: {
-      dataStoreApi: 'https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net'
+      dataStoreApi: process.env.CCD_DATA_STORE_API_URL
+        || process.env.CCD_URL
+        || `http://ccd-data-store-api-${serviceEnv}.service.core-compute-${serviceEnv}.internal`
     }
   };
 };
@@ -297,7 +309,7 @@ async function getServiceToken(): Promise<string> {
 
   // Use configured S2S URL or derive from environment
   const env = getEnvironment();
-  const serviceEnv = env === 'preview' ? 'aat' : env;
+  const serviceEnv = getServiceEnvironment(env);
   const s2sUrl = process.env.S2S_URL || `http://rpe-service-auth-provider-${serviceEnv}.service.core-compute-${serviceEnv}.internal`;
   const microservice = 'finrem_case_orchestration';
 
@@ -441,7 +453,7 @@ export class IdamApiService {
 
   constructor() {
     const env = getEnvironment();
-    const serviceEnv = env === 'preview' ? 'aat' : env;
+    const serviceEnv = getServiceEnvironment(env);
     this.createUserEndpoint = process.env.IDAM_TESTING_SUPPORT_URL ||
      `https://idam-testing-support-api.${serviceEnv}.platform.hmcts.net/test/idam/users`;
   }
