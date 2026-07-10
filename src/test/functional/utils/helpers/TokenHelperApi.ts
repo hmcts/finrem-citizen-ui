@@ -55,6 +55,28 @@ ensureEnvLoaded();
 // Cache tokens to avoid repeated API calls
 const tokenCache: Record<string, { token: string; expiry: number }> = {};
 const TOKEN_BUFFER_MS = 60000; // Refresh 1 minute before expiry
+const IDAM_PASSWORD_GRANT_RETRIES = 3;
+const IDAM_PASSWORD_GRANT_RETRY_DELAY_MS = 1000;
+
+const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+
+function isGeneratedCitizenUser(username: string): boolean {
+  return username.toLowerCase().endsWith('@mailinator.com');
+}
+
+function isInvalidGrantError(message: string): boolean {
+  return message.includes('/o/token') && message.includes('invalid_grant');
+}
+
+function buildInvalidGrantMessage(username: string): string {
+  if (isGeneratedCitizenUser(username)) {
+    return `[IDAM auth] Password grant failed for generated citizen user ${maskIdentifier(username)} via ${config.idamApi}. `
+      + 'The user may not have propagated yet, or the IDAM API lane may not match the lane used to create and log in the user.';
+  }
+
+  return `[IDAM auth] Resource owner authentication failed for user ${maskIdentifier(username)} via ${config.idamApi}. `
+    + 'Check the credential env vars for that role and verify they are valid for the active target environment.';
+}
 
 /**
  * Gets a service-to-service (S2S) token for authenticating with HMCTS services
@@ -125,34 +147,47 @@ export async function getUserToken(username: string, password: string): Promise<
   }
 
   let response;
-  try {
-    response = await axiosRequest<{ access_token: string; expires_in: number }>({
-      method: 'post',
-      url: `${config.idamApi}/o/token`,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      data: new URLSearchParams({
-        grant_type: 'password',
-        client_id: config.idam.clientId,
-        client_secret: config.idam.clientSecret,
-        redirect_uri: config.idam.redirectUri,
-        scope: config.idam.scope,
-        username,
-        password,
-      }).toString(),
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (message.includes('/o/token') && message.includes('invalid_grant')) {
-      throw new Error(
-        `[IDAM auth] Resource owner authentication failed for user ${maskIdentifier(username)}. `
-        + 'Check credential env vars for the user role in use (for example USERNAME_CASEWORKER/PASSWORD_CASEWORKER, '
-        + 'PLAYWRIGHT_SOLICITOR_USERNAME/PLAYWRIGHT_SOLICITOR_PSWD, or IDAM_SYSTEM_USERNAME/IDAM_SYSTEM_PASSWORD) '
-        + 'and verify they are valid for AAT.'
-      );
+  for (let attempt = 1; attempt <= IDAM_PASSWORD_GRANT_RETRIES; attempt++) {
+    try {
+      response = await axiosRequest<{ access_token: string; expires_in: number }>({
+        method: 'post',
+        url: `${config.idamApi}/o/token`,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        data: new URLSearchParams({
+          grant_type: 'password',
+          client_id: config.idam.clientId,
+          client_secret: config.idam.clientSecret,
+          redirect_uri: config.idam.redirectUri,
+          scope: config.idam.scope,
+          username,
+          password,
+        }).toString(),
+      });
+      break;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      if (
+        isGeneratedCitizenUser(username)
+        && isInvalidGrantError(message)
+        && attempt < IDAM_PASSWORD_GRANT_RETRIES
+      ) {
+        await sleep(IDAM_PASSWORD_GRANT_RETRY_DELAY_MS * attempt);
+        continue;
+      }
+
+      if (isInvalidGrantError(message)) {
+        throw new Error(buildInvalidGrantMessage(username));
+      }
+
+      throw error;
     }
-    throw error;
+  }
+
+  if (!response) {
+    throw new Error(`[IDAM auth] Failed to acquire token for ${maskIdentifier(username)} via ${config.idamApi}.`);
   }
 
   const { access_token, expires_in } = response.data;
