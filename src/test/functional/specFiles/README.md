@@ -139,12 +139,13 @@ Use when validating real integration behavior.
 Required:
 
 - Reachable CCD (local mock CCD, preview, or AAT)
+- Reachable CCD (local mock CCD, preview, perf, or AAT)
 - No test-support route injection
 
 Default behavior:
 
-- Real happy-path suites run by default on preview/AAT targets.
-- Outside preview/AAT, set ACCESS_CODE_REAL_INTEGRATION=true to enable them.
+- Real happy-path suites run by default on preview/AAT/perf targets.
+- Outside preview/AAT/perf, set ACCESS_CODE_REAL_INTEGRATION=true to enable them.
 
 ## Environment Variables
 
@@ -169,6 +170,7 @@ Root .env target selection must define one active target block:
 
 - local
 - preview
+- perf
 - aat
 
 Set values for:
@@ -178,8 +180,8 @@ Set values for:
 
 Target selection in `.env` sets which environment Playwright and the app point at. It does not enable integration or mock-only behavior by itself.
 
-- Preview/AAT targets run integration happy-path suites by default.
-- For non-preview/non-AAT targets, set `ACCESS_CODE_REAL_INTEGRATION=true` to enable integration happy-path suites.
+- Preview/AAT/perf targets run integration happy-path suites by default.
+- For non-preview/non-AAT/non-perf targets, set `ACCESS_CODE_REAL_INTEGRATION=true` to enable integration happy-path suites.
 - For local mock-only suites, keep `ENABLE_TEST_SUPPORT_ROUTES=true` and the mock API running.
 
 ## Running Tests
@@ -197,15 +199,15 @@ ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 yarn test:functional
 ```
 
-### Preview or AAT flow
+### Preview, Perf, or AAT flow
 
 ```bash
-# Select target in .env first (RUNNING_ENV=pr-xxx or RUNNING_ENV=aat),
+# Select target in .env first (RUNNING_ENV=pr-xxx, RUNNING_ENV=perf, or RUNNING_ENV=aat),
 # or set TEST_URL directly for an explicit deployed target.
 yarn test:functional
 ```
 
-For preview/AAT runs, do not start the app locally with `yarn start:dev`.
+For preview/AAT/perf runs, do not start the app locally with `yarn start:dev`.
 Playwright targets the deployed environment directly when baseURL is non-localhost.
 
 ## Targeted Runs
