@@ -5,6 +5,7 @@ import { CaseRole, YesOrNo } from '../../../../main/app/case/definition';
 import { AppRequest, UserDetails } from '../../../../main/app/controller/AppRequest';
 import { DocumentManagerController } from '../../../../main/app/document/DocumentManagerController';
 import { PreviouslyUploadedDocumentClient } from '../../../../main/app/document/PreviouslyUploadedDocumentClient';
+import { sendNotification } from '../../../../main/app/notify/govNotify';
 
 jest.mock('../../../../main/app/auth/user', () => ({
   getSystemUser: jest.fn().mockResolvedValue({}),
@@ -26,6 +27,33 @@ jest.mock('../../../../main/app/document/PreviouslyUploadedDocumentClient', () =
   })),
 }));
 
+jest.mock('../../../../main/app/notify/govNotify', () => ({
+  sendNotification: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('config', () => ({
+  get: jest.fn((key: string) => {
+    const values: Record<string, string> = {
+      'secrets.finrem.DOCUMENT-UPLOAD-EMAIL-TEMPLATE-ID': 'test-template-id',
+    };
+    return values[key] ?? 'mock-config-value';
+  }),
+}));
+
+jest.mock('axios', () => ({
+  isAxiosError: jest.fn().mockReturnValue(false),
+}));
+
+jest.mock('../../../../main/modules/appinsights', () => ({
+  AppInsights: {
+    trackException: jest.fn(),
+  },
+}));
+
+jest.mock('../../../../main/functions/util/homePageUtil', () => ({
+  loadCaseAndReloadSession: jest.fn().mockResolvedValue({}),
+}));
+
 describe('DocumentManagerController', () => {
   let mockLogger: LoggerInstance;
   let controller: DocumentManagerController;
@@ -44,6 +72,8 @@ describe('DocumentManagerController', () => {
   };
 
   beforeEach(() => {
+    jest.clearAllMocks();
+
     mockLogger = {
       info: jest.fn(),
       error: jest.fn(),
@@ -252,6 +282,199 @@ describe('DocumentManagerController', () => {
 
     expect(getCaseApi).toHaveBeenCalledWith(userDetails, mockLogger);
     expect(triggerEventMock).toHaveBeenCalled();
+  });
+
+  test('calls notifyDocumentUploaded with correct data after triggerEvent', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '1234-5678-0123-4567',
+        caseUserName: 'Test Applicant',
+        documents: {
+          documentDetails: [{ id: '1', value: {} }],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(sendNotification).toHaveBeenCalledWith(
+      'test-template-id',
+      'test@test.com',
+      expect.objectContaining({
+        caseReferenceNumber: '1234-5678-0123-4567',
+        name: 'Test Applicant',
+      })
+    );
+    const triggerOrder = (triggerEventMock as jest.Mock).mock.invocationCallOrder[0];
+    const notifyOrder = (sendNotification as jest.Mock).mock.invocationCallOrder[0];
+    expect(triggerOrder).toBeLessThan(notifyOrder);
+  });
+
+  test('sends one confirmation email when multiple documents are uploaded in one session', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '1234-5678-0123-4567',
+        caseUserName: 'Test Applicant',
+        documents: {
+          documentDetails: [{ id: '1', value: {} }, { id: '2', value: {} }, { id: '3', value: {} }],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(triggerEventMock).toHaveBeenCalled();
+    expect(sendNotification).toHaveBeenCalledTimes(1);
+    expect(sendNotification).toHaveBeenCalledWith(
+      'test-template-id',
+      'test@test.com',
+      expect.objectContaining({
+        caseReferenceNumber: '1234-5678-0123-4567',
+        name: 'Test Applicant',
+      })
+    );
+  });
+
+  test('does not call notifyDocumentUploaded when triggerEvent fails', async () => {
+    const triggerEventMock = jest.fn().mockRejectedValue(new Error('CCD unavailable'));
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '1234-5678-0123-4567',
+        caseUserName: 'Test Applicant',
+        documents: {
+          documentDetails: [{ id: '1', value: {} }],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await expect(controller.LinkDocumentsToCase(req)).rejects.toThrow('CCD unavailable');
+    expect(sendNotification).not.toHaveBeenCalled();
+  });
+
+  test('logs error when notifyDocumentUploaded fails', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    jest.mocked(sendNotification).mockRejectedValueOnce(new Error('Notify failed'));
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: {
+          documentDetails: [{ id: '1', value: {} }],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Error sending notification',
+      expect.any(Error)
+    );
+  });
+
+  test('calls AppInsights.trackException when notification fails', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    jest.mocked(sendNotification).mockRejectedValueOnce(new Error('Notify failed'));
+
+    const { AppInsights } = require('../../../../main/modules/appinsights');
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: {
+          documentDetails: [{ id: '1', value: {} }],
+        },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(AppInsights.trackException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        emailTemplateId: 'test-template-id',
+        caseNumber: '123',
+        email: 'test@test.com',
+      })
+    );
+  });
+
+  test('wraps non-Error thrown from notification into Error before tracking', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    jest.mocked(sendNotification).mockRejectedValueOnce('plain string error');
+
+    const { AppInsights } = require('../../../../main/modules/appinsights');
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: { documentDetails: [{ id: '1', value: {} }] },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(AppInsights.trackException).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Failed to send email notification for uploading the documents' }),
+      expect.any(Object)
+    );
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Error sending notification',
+      expect.objectContaining({ message: 'Failed to send email notification for uploading the documents' })
+    );
+  });
+
+  test('logs GOV Notify error with logger.error when axios error occurs', async () => {
+    const axiosMock = require('axios');
+    axiosMock.isAxiosError.mockReturnValueOnce(true);
+
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    const axiosError = { response: { status: 400, data: { message: 'bad request' } } };
+    jest.mocked(sendNotification).mockRejectedValueOnce(axiosError);
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: { documentDetails: [{ id: '1', value: {} }] },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'GOV Notify error',
+      expect.any(String)
+    );
   });
 
   test('does not call getSystemUser in LinkDocumentsToCase', async () => {
@@ -576,6 +799,135 @@ describe('DocumentManagerController', () => {
       }),
       expect.any(String)
     );
+  });
+
+  test('formats courtName for In_Person hearing mode', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        caseUserName: 'Test Applicant',
+        caseData: {
+          consentOrderFRCName: 'Nottingham FRC',
+          consentOrderFRCEmail: 'frc@justice.gov.uk',
+          hearings: [{ id: '1', value: { hearingMode: 'In_Person' } }],
+        },
+        documents: { documentDetails: [{ id: '1', value: {} }] },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(sendNotification).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      expect.objectContaining({
+        courtName: 'Financial Remedies Court: Nottingham FRC',
+        courtEmail: 'frc@justice.gov.uk',
+      })
+    );
+  });
+
+  test('sends empty courtName for non-In_Person hearing mode', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        caseUserName: 'Test Applicant',
+        caseData: {
+          consentOrderFRCName: 'Nottingham FRC',
+          consentOrderFRCEmail: 'frc@justice.gov.uk',
+          hearings: [{ id: '1', value: { hearingMode: 'Video_Call' } }],
+        },
+        documents: { documentDetails: [{ id: '1', value: {} }] },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(sendNotification).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      expect.objectContaining({ courtName: '', courtEmail: 'frc@justice.gov.uk' })
+    );
+  });
+
+  test('sends empty strings for courtName and courtEmail when caseData fields are absent', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: { documentDetails: [{ id: '1', value: {} }] },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(sendNotification).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      expect.objectContaining({ courtName: '', courtEmail: '' })
+    );
+  });
+
+  test('refreshes caseData via loadCaseAndReloadSession after triggerEvent', async () => {
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    const { loadCaseAndReloadSession } = require('../../../../main/functions/util/homePageUtil');
+    const refreshedData = { citizenApplicantDocument: [{ id: 'new' }] };
+    loadCaseAndReloadSession.mockResolvedValueOnce(refreshedData);
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        documents: { documentDetails: [{ id: '1', value: {} }] },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    expect(loadCaseAndReloadSession).toHaveBeenCalledWith(req, '123', mockLogger);
+    expect(req.session.caseData).toBe(refreshedData);
+  });
+
+  test('formatUploadTime returns time in expected format', async () => {
+    const fixedDate = new Date('2026-03-12T12:37:00Z');
+    jest.spyOn(global, 'Date').mockImplementation(() => fixedDate as unknown as Date);
+
+    const triggerEventMock = jest.fn().mockResolvedValue({});
+    const { getCaseApi } = require('../../../../main/app/case/case-api');
+    getCaseApi.mockReturnValue({ triggerEvent: triggerEventMock });
+
+    const req = buildRequest({
+      session: {
+        user: userDetails,
+        caseNumber: '123',
+        caseUserName: 'Test',
+        documents: { documentDetails: [{ id: '1', value: {} }] },
+      } as unknown as AppRequest['session'],
+    });
+
+    await controller.LinkDocumentsToCase(req);
+
+    const call = (sendNotification as jest.Mock).mock.calls[0][2];
+    expect(call.uploadTime).toMatch(/^\d{1,2}:\d{2}(am|pm) on \d{2}\/\d{2}\/\d{4}$/);
+
+    jest.restoreAllMocks();
   });
 
   test('sets isFDR to YES on each uploaded case document when isFinancialDisputeResolution is true', async () => {
