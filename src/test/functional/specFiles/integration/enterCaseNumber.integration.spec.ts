@@ -5,22 +5,24 @@ function shouldRunHappyPathIntegrationSuite(): boolean {
   const explicitToggle = process.env.ACCESS_CODE_REAL_INTEGRATION;
   const runningEnv = (process.env.RUNNING_ENV || '').toLowerCase();
   const testUrl = (process.env.TEST_URL || '').toLowerCase();
-  const isPreviewOrAatTarget =
+  const isPreviewAatOrPerfTarget =
     runningEnv === 'aat'
+    || runningEnv === 'perf'
     || runningEnv.startsWith('pr-')
     || testUrl.includes('.preview.platform.hmcts.net')
-    || testUrl.includes('.aat.platform.hmcts.net');
+    || testUrl.includes('.aat.platform.hmcts.net')
+    || testUrl.includes('.perf.platform.hmcts.net');
 
   if (explicitToggle === 'true') {
     return true;
   }
 
   if (explicitToggle === 'false') {
-    // Legacy .env files often set false; do not block preview/AAT by default.
-    return isPreviewOrAatTarget;
+    // Legacy .env files often set false; do not block preview/AAT/perf by default.
+    return isPreviewAatOrPerfTarget;
   }
 
-  return isPreviewOrAatTarget;
+  return isPreviewAatOrPerfTarget;
 }
 
 /**
@@ -29,10 +31,10 @@ function shouldRunHappyPathIntegrationSuite(): boolean {
  * These tests verify case number happy-path integration logic.
  * Real integration tests create actual CCD cases and verify successful submissions.
  *
- * Runs on: AAT/preview by default (or any target when ACCESS_CODE_REAL_INTEGRATION=true)
- * Default: Skipped outside preview/AAT unless ACCESS_CODE_REAL_INTEGRATION=true.
+ * Runs on: AAT/preview/perf by default (or any target when ACCESS_CODE_REAL_INTEGRATION=true)
+ * Default: Skipped outside preview/AAT/perf unless ACCESS_CODE_REAL_INTEGRATION=true.
  * ACCESS_CODE_REAL_INTEGRATION=false is treated as legacy local default and
- * does not disable AAT/preview happy-path runs.
+ * does not disable AAT/preview/perf happy-path runs.
  */
 
 const runIntegration = shouldRunHappyPathIntegrationSuite();
@@ -40,7 +42,7 @@ const runIntegration = shouldRunHappyPathIntegrationSuite();
 test.describe('[integration-happy-path] Enter Case Number - Happy Path', () => {
   test.skip(
     !runIntegration,
-    'Skipped outside preview/AAT by default. Set ACCESS_CODE_REAL_INTEGRATION=true to force enable on non-preview/non-AAT targets.'
+    'Skipped outside preview/AAT/perf by default. Set ACCESS_CODE_REAL_INTEGRATION=true to force enable on non-preview/non-AAT/non-perf targets.'
   );
 
   test.describe.configure({ mode: 'serial' });
