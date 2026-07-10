@@ -76,7 +76,7 @@ describe('Autocomplete Route', () => {
         })
       );
       testApp.use((req, _res, next) => {
-        (req.session as any).DocumentSelection = {
+        (req.session as unknown as Record<string, unknown>).DocumentSelection = {
           documentDetails: [
             {
               id: 'uuid-1',
@@ -122,7 +122,7 @@ describe('Autocomplete Route', () => {
         })
       );
       testApp.use((req, _res, next) => {
-        (req.session as any).DocumentSelection = {};
+        (req.session as unknown as Record<string, unknown>).DocumentSelection = {};
         next();
       });
       autocompleteRoute(testApp);
@@ -144,7 +144,7 @@ describe('Autocomplete Route', () => {
         })
       );
       testApp.use((req, _res, next) => {
-        (req.session as any).DocumentSelection = {
+        (req.session as unknown as Record<string, unknown>).DocumentSelection = {
           documentDetails: [
             {
               id: 'uuid-1',
@@ -177,7 +177,7 @@ describe('Autocomplete Route', () => {
         })
       );
       testApp.use((req, _res, next) => {
-        (req.session as any).DocumentSelection = {
+        (req.session as unknown as Record<string, unknown>).DocumentSelection = {
           documentDetails: [
             {
               id: 'uuid-1',
