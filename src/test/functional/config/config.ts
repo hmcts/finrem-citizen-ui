@@ -13,8 +13,25 @@ const isCI = !!process.env.CI
  || !!process.env.BUILD_ID
  || !!process.env.JENKINS_HOME;
 
-// IDAM and S2S always use AAT (no PR-specific instances exist)
-const idamEnv = 'aat';
+function resolveServiceEnv(): string {
+  const explicitEnv = process.env.IDAM_ENV?.trim();
+  if (explicitEnv) {
+    return explicitEnv;
+  }
+
+  const runningEnv = (process.env.RUNNING_ENV || '').trim().toLowerCase();
+  if (runningEnv.startsWith('pr-') || runningEnv === 'preview') {
+    return 'aat';
+  }
+
+  if (runningEnv === 'perf') {
+    return 'perftest';
+  }
+
+  return runningEnv || 'aat';
+}
+
+const serviceEnv = resolveServiceEnv();
 
 // CCD Data Store API URL
 // - In pipeline (CI): use internal AAT URL (accessible from cluster)
@@ -46,15 +63,16 @@ const config = {
       ? process.env.CCD_USE_SYSTEM_USER_FOR_CASEWORKER_EVENTS === 'true'
       : isCI,
 
-  // IDAM endpoints - ALWAYS use AAT
+  // Default IDAM/S2S endpoints follow the selected target environment unless
+  // explicit env vars override them. Preview/PR apps still share AAT services.
   idamApi: process.env.IDAM_TOKEN_URL
-    || `https://idam-api.${idamEnv}.platform.hmcts.net`,
+    || `https://idam-api.${serviceEnv}.platform.hmcts.net`,
   idamWebUrl: process.env.IDAM_WEB_URL
-   || `https://idam-web-public.${idamEnv}.platform.hmcts.net`,
+   || `https://idam-web-public.${serviceEnv}.platform.hmcts.net`,
 
-  // S2S also uses AAT
+  // S2S defaults to the same resolved service environment.
   s2sUrl: process.env.SERVICE_AUTH_PROVIDER_URL
-   || `http://rpe-service-auth-provider-${idamEnv}.service.core-compute-${idamEnv}.internal`,
+   || `http://rpe-service-auth-provider-${serviceEnv}.service.core-compute-${serviceEnv}.internal`,
 
   // Microservice name for S2S - must match the secret loaded via SERVICE_AUTH_SECRET
   microservice: process.env.S2S_MICROSERVICE || 'finrem_citizen_ui',
