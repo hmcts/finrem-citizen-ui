@@ -1,10 +1,10 @@
 import { Application, NextFunction, Request, Response } from 'express';
 
-import { UserDetails } from '../app/controller/AppRequest';
-import { RouteNames, ViewNames } from '../common-constants';
-import { setCaseUserName, setCaseUserRole } from '../functions/util/homePageUtil';
-import { oidcMiddleware } from '../middleware';
-import { requireCaseRole } from '../middleware/require-case-role';
+import { UserDetails } from '../../app/controller/AppRequest';
+import { RouteNames, ViewNames } from '../../common-constants';
+import { setCaseUserName, setCaseUserRole } from '../../functions/util/homePageUtil';
+import { oidcMiddleware } from '../../middleware';
+import { requireCaseRole } from '../../middleware/require-case-role';
 
 export default function setupDashboardRoute(app: Application): void {
   app.get(

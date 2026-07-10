@@ -13,6 +13,10 @@ import {
 import { envTestData } from '../../test_data/EnvTestDataConfig';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const parseNumberEnv = (value: string | undefined, fallback: number): number => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+};
 
 const START_EVENT_RETRY_CONFIG = {
   maxRetries: 3,
@@ -21,12 +25,15 @@ const START_EVENT_RETRY_CONFIG = {
 };
 
 const ACCESS_CODE_RETRY_CONFIG = {
-  caseCreationAttempts: 1,
-  codeFetchAttemptsPerCase: 1,
-  manageHearingsReattemptsPerCase: 0,
-  initialDelayMs: 500,
-  maxDelayMs: 2000,
-  maxTotalRuntimeMs: 15000,
+  caseCreationAttempts: parseNumberEnv(process.env.ACCESS_CODE_CASE_CREATION_ATTEMPTS, 1),
+  // 0 = no attempt cap; poll until maxTotalRuntimeMs deadline is reached.
+  codeFetchAttemptsPerCase: parseNumberEnv(process.env.ACCESS_CODE_FETCH_ATTEMPTS_PER_CASE, 0),
+  manageHearingsReattemptsPerCase: parseNumberEnv(process.env.ACCESS_CODE_MANAGE_HEARINGS_REATTEMPTS, 0),
+  initialDelayMs: parseNumberEnv(process.env.ACCESS_CODE_FETCH_INITIAL_DELAY_MS, 500),
+  maxDelayMs: parseNumberEnv(process.env.ACCESS_CODE_FETCH_MAX_DELAY_MS, 2000),
+  // Allow more time for FR_issueApplication propagation on shared AAT infrastructure.
+  // Access-code fields can appear shortly after event success, not always immediately.
+  maxTotalRuntimeMs: parseNumberEnv(process.env.ACCESS_CODE_MAX_TOTAL_RUNTIME_MS, 30000),
 };
 
 export class ManageHearingsInfraUnavailableError extends Error {
@@ -36,20 +43,63 @@ export class ManageHearingsInfraUnavailableError extends Error {
   }
 }
 
+export class AccessCodeGenerationUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AccessCodeGenerationUnavailableError';
+  }
+}
+
 /**
  * Factory for creating contested cases in various states
  */
 export class ContestedCaseFactory {
-  private static isCaseNotFound404(error: unknown): boolean {
+  private static getCodeFetchAttemptsLabel(): string {
+    return ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase > 0
+      ? String(ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase)
+      : 'timebox';
+  }
+
+  private static isCaseNotFoundError(error: unknown): boolean {
     const message = error instanceof Error ? error.message : String(error);
-    return message.includes('status 404') && message.includes('No case found');
+    return (
+      message.includes('status 404')
+      && (
+        message.includes('No case found')
+        || message.includes('CaseNotFoundException')
+        || message.includes('Cannot find case for given criteria')
+      )
+    );
+  }
+
+  private static async tryFetchAccessCodesOnce(
+    caseId: string,
+    attempt: number
+  ): Promise<{ applicantCode?: string; respondentCode?: string }> {
+    try {
+      const applicantCode = await ContestedEventApi.getApplicantAccessCode(caseId);
+      const respondentCode = await ContestedEventApi.getRespondentAccessCode(caseId);
+      return { applicantCode, respondentCode };
+    } catch (error) {
+      if (!this.isCaseNotFoundError(error)) {
+        throw error;
+      }
+
+      // Transient case-read 404s are expected briefly in CCD after create/update;
+      // continue polling until the timebox expires.
+      // eslint-disable-next-line no-console
+      console.info(
+        `[Factory Poll] Case ${caseId} not yet readable for access codes (attempt ${attempt + 1}/${this.getCodeFetchAttemptsLabel()}).`
+      );
+      return {};
+    }
   }
 
   private static isRetryableError(error: unknown): boolean {
     const message = error instanceof Error ? error.message : String(error);
     // Retry on 404 (case not found), 5xx (server errors), 422 (state condition), timeouts
     return (
-      (message.includes('status 404') && message.includes('No case found')) ||
+      this.isCaseNotFoundError(error) ||
       message.includes('status 5') ||
       (message.includes('status 422') && message.includes('Pre-state condition')) ||
       message.includes('timeout') ||
@@ -123,7 +173,7 @@ export class ContestedCaseFactory {
       .withPayload(derivedPayloadPath);
 
     if (replacements.length) {
-      await builder.addReplacements(...replacements);
+      builder.addReplacements(...replacements);
     }
 
     return builder.create();
@@ -250,14 +300,15 @@ export class ContestedCaseFactory {
 
   /**
    * Create contested case with hearing date scheduled
-   * This is the main method for creating a case ready for citizen to link
+    * This progresses a case to listing with a hearing added.
+    * Access codes are generated at FR_issueApplication.
    */
   static async createContestedCaseWithHearing(): Promise<string> {
     // Must provide issue date for issueApplication event
     const issueDate = DateHelper.getCurrentDate();
     const caseId = await this.createAndProcessFormACaseUpToIssueApplication(false, issueDate);
 
-    // Manage hearings (FR_manageHearings) generates Form C and access codes
+    // Manage hearings event is used here to add a hearing after listing.
     try {
       await this.withCaseworkerStartEventRetry(async () => {
         await ContestedEventApi.caseWorkerPerformsAddAHearing(caseId);
@@ -293,20 +344,27 @@ export class ContestedCaseFactory {
     caseId: string,
     deadlineEpochMs: number
   ): Promise<{ applicantCode: string; respondentCode: string } | undefined> {
-    for (let attempt = 0; attempt < ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase; attempt++) {
-      if (Date.now() >= deadlineEpochMs) {
-        return undefined;
-      }
+    for (
+      let attempt = 0;
+      Date.now() < deadlineEpochMs
+      && (
+        ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase === 0
+        || attempt < ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase
+      );
+      attempt++
+    ) {
 
-      const applicantCode = await ContestedEventApi.getApplicantAccessCode(caseId);
-      const respondentCode = await ContestedEventApi.getRespondentAccessCode(caseId);
+      const { applicantCode, respondentCode } = await this.tryFetchAccessCodesOnce(caseId, attempt);
 
       if (applicantCode && respondentCode) {
         return { applicantCode, respondentCode };
       }
 
       // No point waiting after the last (or only) polling attempt.
-      if (attempt === ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase - 1) {
+      const isLastCappedAttempt =
+        ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase > 0
+        && attempt === ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase - 1;
+      if (isLastCappedAttempt) {
         return undefined;
       }
 
@@ -323,7 +381,7 @@ export class ContestedCaseFactory {
 
       // eslint-disable-next-line no-console
       console.info(
-        `[Factory Poll] Access codes not ready for case ${caseId} (attempt ${attempt + 1}/${ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase}), waiting ${delayMs}ms...`
+        `[Factory Poll] Access codes not ready for case ${caseId} (attempt ${attempt + 1}/${this.getCodeFetchAttemptsLabel()}), waiting ${delayMs}ms...`
       );
       await sleep(delayMs);
     }
@@ -429,6 +487,43 @@ export class ContestedCaseFactory {
     );
   }
 
+  static async createContestedCaseWithIssueApplicationAndAccessCode(): Promise<{
+    caseId: string;
+    applicantCode: string;
+    respondentCode: string;
+  }> {
+    const issueDate = DateHelper.getCurrentDate();
+    const caseId = await this.createAndProcessFormACaseUpToIssueApplication(false, issueDate);
+
+    // Start the timeout budget after FR_issueApplication completes.
+    const startedAtEpochMs = Date.now();
+    const deadlineEpochMs = startedAtEpochMs + ACCESS_CODE_RETRY_CONFIG.maxTotalRuntimeMs;
+
+    const codes = await this.waitForAccessCodes(caseId, deadlineEpochMs);
+    if (!codes) {
+      const elapsedMs = Date.now() - startedAtEpochMs;
+      let debugSnapshotText = 'unavailable';
+
+      try {
+        const debugSnapshot = await ContestedEventApi.getAccessCodeDebugSnapshot(caseId);
+        debugSnapshotText = JSON.stringify(debugSnapshot);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        debugSnapshotText = `snapshot-read-failed:${message}`;
+      }
+
+      throw new AccessCodeGenerationUnavailableError(
+        `Access codes not found after FR_issueApplication. elapsedMs=${elapsedMs}; configuredMaxRuntimeMs=${ACCESS_CODE_RETRY_CONFIG.maxTotalRuntimeMs}; caseId=${caseId}; debugSnapshot=${debugSnapshotText}`
+      );
+    }
+
+    return {
+      caseId,
+      applicantCode: codes.applicantCode,
+      respondentCode: codes.respondentCode,
+    };
+  }
+
   /**
    * Get access codes for a case
    * Usage in tests:
@@ -483,8 +578,8 @@ export class ContestedCaseFactory {
     respondentCode: string;
   }> {
     if (useRealIntegration) {
-      // Real integration path: Form C/access codes are generated via hearing flow (FR_manageHearings).
-      return this.createContestedCaseWithHearingAndAccessCode();
+      // Real integration path: access codes are generated at FR_issueApplication.
+      return this.createContestedCaseWithIssueApplicationAndAccessCode();
     }
 
     // Default path: mock access codes and inject into test session.

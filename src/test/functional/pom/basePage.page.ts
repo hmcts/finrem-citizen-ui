@@ -26,7 +26,7 @@ export class BasePage {
     this.footer = this.page.getByRole('contentinfo');
     this.betaBannerTag = this.page.getByText('Beta', { exact: true });
     this.betaBannerText = this.page.getByText('This is a new service', { exact: false });
-    this.betaBannerFeedbackLink = this.page.getByRole('link', { name: 'provide feedback on this service' });
+    this.betaBannerFeedbackLink = this.page.getByRole('link', { name: /provide feedback on this service/ });
     this.licenceDescription = this.footer.getByText(/All content is available under the/i);
     this.licenceLink = this.footer.getByRole('link', { name: 'Open Government Licence' });
     this.copyRightImgLink = this.footer.getByRole('link', { name: /© Crown copyright/i });
@@ -71,7 +71,14 @@ export class BasePage {
       this.copyRightImgLink,
     ]);
 
-    await expect(this.betaBannerFeedbackLink).toHaveAttribute('href', '#');
+    await this.verifyBetaBannerFeedbackLinkForCurrentPage();
+  }
+
+  async verifyBetaBannerFeedbackLinkForCurrentPage(): Promise<void> {
+    const expectedSurveyUrl =
+      `https://www.smartsurvey.co.uk/s/CFR_feedback/?pageurl=${encodeURIComponent(this.page.url())}`;
+
+    await expect(this.betaBannerFeedbackLink).toHaveAttribute('href', expectedSurveyUrl);
   }
 
   /**

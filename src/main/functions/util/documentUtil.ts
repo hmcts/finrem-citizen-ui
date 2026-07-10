@@ -52,15 +52,49 @@ export function getCombinedPDFFormat(documentTypeValue: string): string {
 
 export function getSelectedDocumentTypesForDisplay(req: Request): SelectedDocumentTypeDisplay[] {
   const documentDetails = req.session?.DocumentSelection?.documentDetails;
-  
+
   if (!documentDetails || documentDetails.length === 0) {
     return [];
   }
-  
+
   return documentDetails.map((doc: ListValue<Partial<CitizenUploadDocument> | null>, index: number) => ({
     id: doc.id || '',
     label: getDocumentLabel(doc.value?.DocumentType || ''),
     value: doc.value?.DocumentType || '',
     order: index,
   }));
+}
+
+export function generateRenamedFilename(documentTypeValue: string, originalFilename: string, caseUserName?: string, preview=false, existingFilenames: string[] = []): string {
+  const format = getDocumentRenameFormat(documentTypeValue);
+  if (!format) {
+    return originalFilename;
+  }
+
+  const lastDotIndex = originalFilename.lastIndexOf('.');
+  const extension = lastDotIndex !== -1
+    ? originalFilename.substring(lastDotIndex)
+    : '';
+
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  const dateStr = `${day}-${month}-${year}`;
+
+  const userName = (caseUserName || 'UserName').replace(/\s+/g, '');
+  if (preview) {
+    return `${userName}-${format}-DD-MM-YYYY`;
+  }
+  
+  let baseFilename = `${userName}-${format}-${dateStr}`;
+  let finalFilename = `${baseFilename}${extension}`;
+  
+  let counter = 1;
+  while (existingFilenames.includes(finalFilename)) {
+    finalFilename = `${baseFilename}-${counter}${extension}`;
+    counter++;
+  }
+  
+  return finalFilename;
 }

@@ -1,13 +1,13 @@
 import { EVENT_TYPE } from 'app/case/case-type';
 import { Application, Request, Response } from 'express';
 
-import { getSystemUser } from '../app/auth/user';
-import { getCaseApi } from '../app/case/case-api';
-import { CaseAssignedUserRole } from '../app/case/case-roles';
-import { AccessCodeCollection, CaseRole, FinremCaseData, YesOrNo } from '../app/case/definition';
-import { UserDetails } from '../app/controller/AppRequest';
-import { CaseUserNames, RouteNames, ViewNames } from '../common-constants';
-import { oidcMiddleware } from '../middleware';
+import { getSystemUser } from '../../app/auth/user';
+import { getCaseApi } from '../../app/case/case-api';
+import { CaseAssignedUserRole } from '../../app/case/case-roles';
+import { AccessCodeCollection, CaseRole, FinremCaseData, YesOrNo } from '../../app/case/definition';
+import { UserDetails } from '../../app/controller/AppRequest';
+import { CaseUserNames, RouteNames, ViewNames } from '../../common-constants';
+import { oidcMiddleware } from '../../middleware';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -60,16 +60,6 @@ export function getMatchingAccessCode(
 export function validateAccessCodeAgainstCase(
   matchingAccessCode: AccessCodeCollection
 ): AccessCodeValidationResult {
-  // Check if access code has expired
-  const validUntilDate = new Date(matchingAccessCode.value.validUntil);
-  const now = new Date();
-
-  if (now > validUntilDate) {
-    return {
-      isValid: false,
-      error: 'The access code you entered has expired. Contact the court to get a new code',
-    };
-  }
 
   // Check if access code has already been used
   if (matchingAccessCode.value.isValid === 'No') {

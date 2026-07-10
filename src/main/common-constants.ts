@@ -43,8 +43,8 @@ export const ViewNames = {
   Error: 'error',
   NotFound: 'not-found',
   TaskListUploadDashboard: 'task-list-upload-dashboard',
-  UploadJourneyBeforeYouStart: 'upload-journey/before-you-start',
-  UploadJourneyConfidentiality: 'upload-journey/confidentiality',
+  GeneralUploadBeforeYouStart: 'generalUpload/before-you-start',
+  GeneralUploadConfidentiality: 'generalUpload/confidentiality',
 };
 
 export const UploadStepNames = {
@@ -81,7 +81,7 @@ export const UrlEndPoints = {
 /**
  * Maps document types that should be auto-renamed to their rename format.
  * Format: UserName-{RenameFormat}-DD-MM-YY
- * 
+ *
  * If a document type is in this object, it will be auto-renamed.
  * If not, it keeps its original filename.
  */
@@ -100,6 +100,7 @@ export const DOCUMENT_RENAME_FORMATS: Record<string, string> = {
   'composite-schedule-of-assets-and-income-form-es2': 'ES2',
   'market-appraisal-or-valuation-of-family-home': 'FamilyHomeValuation',
   'housing-needs-property-particulars': 'Property-Particulars',
+  'potential-borrowing-capacity-mortgage-capacities': 'MortgageCapacity',
   'open-offers': 'OpenOffers',
   'questionnaire-request-for-further-documents': 'Questionnaire',
   'section-25-statement': 's25statement',
@@ -108,12 +109,13 @@ export const DOCUMENT_RENAME_FORMATS: Record<string, string> = {
   'pension-report-expert-report': 'ExpertReports',
   'hearing-bundle': 'bundle',
   'fdr-bundle': 'bundle',
+  'attachments-to-form-e': 'AttachmentsFormE'
 };
 
 /**
  * Maps document types to their combined PDF naming format.
  * Format: UserName-{CombinedFormat}-DD-MM-YY
- * 
+ *
  * Multiple uploaded files of these types will be combined into a single PDF
  * with the specified naming convention when submitted.
  */
@@ -122,7 +124,7 @@ export const DOCUMENT_COMBINED_PDF_FORMATS: Record<string, string> = {
   'attachments-to-form-e': 'AttachmentsFormE',
   'reply-to-questionnaire-supporting-documents': 'ReplyToQuestionnaireSupportingDocuments',
   'reply-to-schedule-of-deficiencies-or-supplemental-questionnaires-supporting-documents': 'ReplyToScheduleOfDeficienciesSupportingDocuments',
-  
+
   // Supporting financial documents (all share the same combined format)
   'bank-statements': 'SupportingFinancialDocuments',
   'payslips': 'SupportingFinancialDocuments',

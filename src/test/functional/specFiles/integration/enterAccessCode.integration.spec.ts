@@ -1,6 +1,58 @@
+import dns from 'node:dns/promises';
+
 import { test } from '../../../fixtures/fixtures';
 import { expectAuthenticated, runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToAccessCodeStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
+
+function shouldRunHappyPathIntegrationSuite(): boolean {
+  const explicitToggle = process.env.ACCESS_CODE_REAL_INTEGRATION;
+  const runningEnv = (process.env.RUNNING_ENV || '').toLowerCase();
+  const testUrl = (process.env.TEST_URL || '').toLowerCase();
+  const isPreviewOrAatTarget =
+    runningEnv === 'aat'
+    || runningEnv.startsWith('pr-')
+    || testUrl.includes('.preview.platform.hmcts.net')
+    || testUrl.includes('.aat.platform.hmcts.net');
+
+  if (explicitToggle === 'true') {
+    return true;
+  }
+
+  if (explicitToggle === 'false') {
+    // Legacy .env files often set false; do not block preview/AAT by default.
+    return isPreviewOrAatTarget;
+  }
+
+  return isPreviewOrAatTarget;
+}
+
+function getRequiredCcdUrl(): string {
+  const ccd = process.env.CCD_URL?.trim() || process.env.CCD_DATA_STORE_API_URL?.trim();
+  if (!ccd) {
+    throw new Error('[integration-preflight] Set CCD_URL (or CCD_DATA_STORE_API_URL fallback)');
+  }
+
+  return ccd;
+}
+
+async function assertResolvableUrl(urlValue: string, label: string): Promise<void> {
+  const host = new URL(urlValue).hostname;
+  try {
+    await dns.lookup(host);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      `[integration-preflight] ${label} host is not resolvable: ${host}. ` +
+      `Check environment URL and network/DNS access. Original error: ${message}`
+    );
+  }
+}
+
+// Call once in fixture before creating CCD case
+export async function assertIntegrationPreflight(): Promise<void> {
+  const ccdDataStoreUrl = getRequiredCcdUrl();
+  await assertResolvableUrl(ccdDataStoreUrl, 'CCD URL');
+}
 
 /**
  * INTEGRATION TESTS: Enter Access Code
@@ -8,23 +60,24 @@ import { navigateToAccessCodeStep } from '../journeyHelpers/uploadJourneyNavigat
  * These tests use the real CCD path only:
  * case number submission -> access code submission -> dashboard.
  * They call invalidateAccessCode() which triggers real CCD events.
- * They require a real contested case created via API with valid access codes.
+ * They require a real contested case created via API and progressed through
+ * FR_issueApplication (the point where access codes are generated).
  * 
- * Runs on: Environments with reachable real CCD dependencies when ACCESS_CODE_REAL_INTEGRATION=true
+ * Runs on: AAT/preview by default (or any target when ACCESS_CODE_REAL_INTEGRATION=true)
  * Requires: Real CCD instance reachable, valid case with real access codes
- * Default: Skipped for now until real-flow implementation is fully enabled
+ * Default: Skipped outside preview/AAT unless ACCESS_CODE_REAL_INTEGRATION=true.
+ * ACCESS_CODE_REAL_INTEGRATION=false is treated as legacy local default and
+ * does not disable AAT/preview happy-path runs.
  */
 
 // INTEGRATION: Happy-path submission calls invalidateAccessCode(), which triggers
 // a CCD event. These tests require a real case + real access-code integration.
-test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
-  const runAccessCodeIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
-  const realCcdFlowImplemented = false;
+if (shouldRunHappyPathIntegrationSuite()) {
+  test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
 
-  test.skip(
-    !runAccessCodeIntegration || !realCcdFlowImplemented,
-    'Skipped for now: real CCD enter-access-code flow is not fully implemented yet. Enable when implementation is complete and ACCESS_CODE_REAL_INTEGRATION=true.'
-  );
+  test.beforeAll(async () => {
+    await assertIntegrationPreflight(); // keeps DNS/resolvability validation
+  });
 
   test.beforeEach(async ({
     loggedInPage,
@@ -118,16 +171,15 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
     await dashboardPage.verifyDashboardPageContent();
     await runA11yAudit(axeUtils);
   });
-});
+  });
+}
 
-test.describe('[integration-happy-path] Enter Access Code - Full Journey', () => {
-  const runIntegration = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
-  const realCcdFlowImplemented = false;
+if (shouldRunHappyPathIntegrationSuite()) {
+  test.describe('[integration-happy-path] Enter Access Code - Full Journey', () => {
 
-  test.skip(
-    !runIntegration || !realCcdFlowImplemented,
-    'Skipped for now: real CCD enter-access-code flow is not fully implemented yet. Enable when implementation is complete and ACCESS_CODE_REAL_INTEGRATION=true.'
-  );
+  test.beforeAll(async () => {
+    await assertIntegrationPreflight();
+  });
 
   test('[integration-happy-path] Citizen can submit applicant access code without pre-injection @integration @a11y', async ({
     loggedInPage,
@@ -144,4 +196,5 @@ test.describe('[integration-happy-path] Enter Access Code - Full Journey', () =>
     await dashboardPage.verifyDashboardPageContent();
     await runA11yAudit(axeUtils);
   });
-});
+  });
+}

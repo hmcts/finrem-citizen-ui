@@ -9,6 +9,8 @@ const URL_PATTERNS = {
   DOCUMENT_TYPE_SELECTION: /\/upload\/document-type-selection/,
   SEND_TO_OTHER_PARTY: /\/upload\/send-to-other-party/,
   UPLOAD_DOCUMENTS: /\/upload\/upload-documents/,
+  CONFIRMATION: /\/upload\/confirmation/,
+  DASHBOARD: /\/dashboard/,
 };
 
 const NAVIGATION_TIMEOUT_MS = 15_000;
@@ -35,6 +37,27 @@ export class CheckUploadPage extends BasePage {
   readonly helpOpeningHours: Locator;
   readonly gettingHelp: GettingHelpPanel;
   readonly sendToOtherPartyHeading: Locator;
+  readonly sendToOtherPartyIntro: Locator;
+  readonly sendToOtherPartyCourtOrderText: Locator;
+  readonly sendToOtherPartyCourtWillNotServeText: Locator;
+  readonly unableToSendDetailsContainer: Locator;
+  readonly unableToSendDetails: Locator;
+  readonly unableToSendDetailsSummary: Locator;
+  readonly unableToSendDetailsParagraphOne: Locator;
+  readonly unableToSendDetailsParagraphTwo: Locator;
+  readonly understandCheckbox: Locator;
+  readonly submitButton: Locator;
+  readonly understandErrorSummaryLink: Locator;
+  readonly understandInlineError: Locator;
+  readonly confirmationHeading: Locator;
+  readonly confirmationPanel: Locator;
+  readonly confirmationWhatHappensNextHeading: Locator;
+  readonly confirmationSavedToCaseText: Locator;
+  readonly confirmationJudgeReviewText: Locator;
+  readonly confirmationViewFromAccountLink: Locator;
+  readonly confirmationReturnLaterText: Locator;
+  readonly confirmationEmailText: Locator;
+  readonly confirmationReturnToAccountButton: Locator;
 
   constructor(readonly page: Page) {
     super(page);
@@ -76,9 +99,70 @@ export class CheckUploadPage extends BasePage {
       name: 'You need to send these documents to the other party',
       exact: true,
     });
+    this.sendToOtherPartyIntro = this.page.getByText(
+      'For full transparency between you and the other party, you need to serve these documents on them, or their solicitor if they have one.',
+      { exact: true }
+    );
+    this.sendToOtherPartyCourtOrderText = this.page.getByText(
+      'Refer to your court order for specific instructions.',
+      { exact: true }
+    );
+    this.sendToOtherPartyCourtWillNotServeText = this.page.getByText(
+      'The court will not normally serve any of the documents you have submitted on the other party for you. Uploading your documents to this online account does not count as serving the other party.',
+      { exact: true }
+    );
+    this.unableToSendDetailsContainer = this.page
+      .locator('details')
+      .filter({ hasText: 'I am not able to send documents to the other party' });
+
+    this.unableToSendDetails = this.unableToSendDetailsContainer;
+    this.unableToSendDetailsSummary = this.unableToSendDetailsContainer.locator('summary');
+    this.unableToSendDetailsParagraphOne = this.unableToSendDetailsContainer.getByText(
+      'You must contact the court as soon as possible if you are not able to send your documents with the other party. This could be because it is unsafe to do so, there is a court order in place preventing contact, or you do not have their contact details.',
+      { exact: true }
+    );
+    this.unableToSendDetailsParagraphTwo = this.unableToSendDetailsContainer.getByText(
+      'If the court has already agreed to send your documents for you, you must email the court to tell them you have uploaded your documents ready for service.',
+      { exact: true }
+    );
+    this.understandCheckbox = this.page.getByRole('checkbox', { name: 'I understand', exact: true });
+    this.submitButton = this.page.getByRole('button', { name: 'Submit', exact: true });
+    this.understandErrorSummaryLink = this.page
+      .getByRole('alert')
+      .getByRole('link', { name: "You must select 'I understand' before continuing" });
+    this.understandInlineError = this.page.getByText("Error: You must select 'I understand' before continuing", {
+      exact: true,
+    });
+    this.confirmationHeading = this.page.getByRole('heading', { name: 'Documents uploaded', exact: true });
+    this.confirmationPanel = this.page.locator('.govuk-panel.govuk-panel--confirmation');
+    this.confirmationWhatHappensNextHeading = this.page.getByRole('heading', { name: 'What happens next', exact: true });
+    this.confirmationSavedToCaseText = this.page.getByText(
+      'Your documents have been uploaded and have been saved to your case',
+      { exact: false }
+    );
+    this.confirmationJudgeReviewText = this.page.getByText(
+      'ready for the judge to review at your hearing',
+      { exact: false }
+    );
+    this.confirmationViewFromAccountLink = this.page.getByRole('link', {
+      name: 'They can be viewed from your account',
+      exact: true,
+    });
+    this.confirmationReturnLaterText = this.page.getByText(
+      'You can come back anytime to upload more documents.',
+      { exact: true }
+    );
+    this.confirmationEmailText = this.page.getByText(
+      'You will receive an email to confirm that the upload was successful.',
+      { exact: true }
+    );
+    this.confirmationReturnToAccountButton = this.page.getByRole('button', {
+      name: 'Close and return to your account',
+      exact: true,
+    });
   }
 
-  private async ensureCheckUploadPageLoaded(): Promise<void> {
+  async ensureCheckUploadPageLoaded(): Promise<void> {
     await expect(this.page).toHaveURL(URL_PATTERNS.CHECK_UPLOAD, {
       timeout: NAVIGATION_TIMEOUT_MS,
     });
@@ -146,6 +230,7 @@ export class CheckUploadPage extends BasePage {
 
   async clickContinue(): Promise<void> {
     await this.continueButton.click();
+    await this.page.waitForLoadState('networkidle', { timeout: 10000 });
   }
 
   async submitWithoutSelectionAndExpectValidationError(): Promise<void> {
@@ -188,9 +273,118 @@ export class CheckUploadPage extends BasePage {
     await expect(this.sendToOtherPartyHeading).toBeVisible();
   }
 
+  async verifySendToOtherPartyPageContent(): Promise<void> {
+    await expect(this.page).toHaveURL(URL_PATTERNS.SEND_TO_OTHER_PARTY, {
+      timeout: NAVIGATION_TIMEOUT_MS,
+    });
+
+    await this.verifyGlobalHeaderAndFooter();
+
+    await this.expectVisible([
+      this.serviceNav,
+      this.navigationLink,
+      this.signOutBtn,
+      this.backLink,
+      this.sendToOtherPartyHeading,
+      this.sendToOtherPartyIntro,
+      this.sendToOtherPartyCourtOrderText,
+      this.sendToOtherPartyCourtWillNotServeText,
+      this.unableToSendDetailsSummary,
+      this.understandCheckbox,
+      this.submitButton,
+      this.gettingHelp.heading,
+      this.gettingHelp.summary,
+    ]);
+
+    await expect(this.understandCheckbox).not.toBeChecked();
+    await expect(this.submitButton).toBeEnabled();
+    await this.expectAttributes([
+      { locator: this.backLink, name: 'href', value: '/upload/check-upload' },
+    ]);
+  }
+
+  async expandUnableToSendGuidanceAndVerifyContent(): Promise<void> {
+    await this.unableToSendDetailsSummary.click();
+    await expect(this.unableToSendDetails).toHaveAttribute('open', '');
+    await this.expectVisible([
+      this.unableToSendDetailsParagraphOne,
+      this.unableToSendDetailsParagraphTwo,
+    ]);
+  }
+
+  async submitWithoutUnderstandingAndExpectValidationError(): Promise<void> {
+    await this.submitButton.click();
+
+    await this.expectVisible([
+      this.errorSummaryTitle,
+      this.understandErrorSummaryLink,
+      this.understandInlineError,
+    ]);
+
+    // Error container presence confirms validation state; aria-invalid may not be set by backend
+    await expect(this.page.locator('.govuk-form-group--error').filter({ has: this.understandCheckbox })).toBeVisible();
+  }
+
+  async acceptUnderstanding(): Promise<void> {
+    await this.understandCheckbox.check();
+    await expect(this.understandCheckbox).toBeChecked();
+  }
+
+  async clickBackAndExpectCheckUpload(): Promise<void> {
+    await this.backLink.click();
+    await expect(this.page).toHaveURL(URL_PATTERNS.CHECK_UPLOAD);
+  }
+
   async clickBackAndExpectUploadDocuments(): Promise<void> {
     await this.backLink.click();
     await expect(this.page).toHaveURL(URL_PATTERNS.UPLOAD_DOCUMENTS);
+  }
+
+  async gotoConfirmationPage(): Promise<void> {
+    await this.page.goto('/upload/confirmation');
+    await expect(this.page).toHaveURL(URL_PATTERNS.CONFIRMATION);
+  }
+
+  async verifyConfirmationPageContent(): Promise<void> {
+    await expect(this.page).toHaveURL(URL_PATTERNS.CONFIRMATION, {
+      timeout: NAVIGATION_TIMEOUT_MS,
+    });
+
+    await this.verifyGlobalHeaderAndFooter();
+
+    await this.expectVisible([
+      this.serviceNav,
+      this.navigationLink,
+      this.signOutBtn,
+      this.backLink,
+      this.confirmationPanel,
+      this.confirmationHeading,
+      this.confirmationWhatHappensNextHeading,
+      this.confirmationSavedToCaseText,
+      this.confirmationJudgeReviewText,
+      this.confirmationViewFromAccountLink,
+      this.confirmationReturnLaterText,
+      this.confirmationEmailText,
+      this.confirmationReturnToAccountButton,
+      this.gettingHelp.heading,
+      this.gettingHelp.summary,
+    ]);
+
+    await this.expectAttributes([
+      { locator: this.backLink, name: 'href', value: '/upload/send-to-other-party' },
+      { locator: this.confirmationViewFromAccountLink, name: 'href', value: '/dashboard' },
+      { locator: this.confirmationReturnToAccountButton, name: 'href', value: '/dashboard' },
+    ]);
+  }
+
+  async clickCloseAndReturnToAccountAndExpectDashboard(): Promise<void> {
+    await this.confirmationReturnToAccountButton.click();
+    await expect(this.page).toHaveURL(URL_PATTERNS.DASHBOARD);
+  }
+
+  async clickBackAndExpectSendToOtherParty(): Promise<void> {
+    await this.backLink.click();
+    await expect(this.page).toHaveURL(URL_PATTERNS.SEND_TO_OTHER_PARTY);
   }
 
   async verifyGettingHelpSection(): Promise<void> {

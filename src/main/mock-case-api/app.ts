@@ -6,8 +6,6 @@ type YesOrNo = 'Yes' | 'No';
 
 interface MockAccessCode {
   accessCode: string;
-  createdAt: string;
-  validUntil: string;
   isValid: YesOrNo;
 }
 
@@ -187,7 +185,6 @@ function createDefaultSeedCase(): MockCaseRecord {
   const applicantAccessCode = process.env.MOCK_APPLICANT_ACCESS_CODE || 'APPCODE1';
   const respondentAccessCode = process.env.MOCK_RESPONDENT_ACCESS_CODE || 'RSPCODE1';
   const createdDate = new Date().toISOString();
-  const validUntil = getFutureIsoDate(90);
 
   return {
     id: caseId,
@@ -201,8 +198,6 @@ function createDefaultSeedCase(): MockCaseRecord {
           id: 'mock-applicant-access-code',
           value: {
             accessCode: applicantAccessCode,
-            createdAt: createdDate,
-            validUntil,
             isValid: 'Yes',
           },
         },
@@ -212,8 +207,6 @@ function createDefaultSeedCase(): MockCaseRecord {
           id: 'mock-respondent-access-code',
           value: {
             accessCode: respondentAccessCode,
-            createdAt: createdDate,
-            validUntil,
             isValid: 'Yes',
           },
         },
@@ -221,12 +214,6 @@ function createDefaultSeedCase(): MockCaseRecord {
       currentUserCaseRole: '[APPLICANT]',
     },
   };
-}
-
-function getFutureIsoDate(daysFromNow: number): string {
-  const date = new Date();
-  date.setDate(date.getDate() + daysFromNow);
-  return date.toISOString();
 }
 
 function resolveStateFromEvent(eventId: string | undefined, fallbackState: string): string {
