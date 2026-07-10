@@ -4,9 +4,33 @@ import { APIRequestContext, request } from '@playwright/test';
 
 import { UserCredentials } from '../../../functional/pom/idamPage.page';
 
-// IDAM environment configuration - defaults to AAT
-const IDAM_ENV = process.env.IDAM_ENV || 'aat';
-const stripTrailingSlash = (url: string): string => url.replace(/\/+$/, '');
+const stripTrailingSlash = (url: string): string => {
+  let normalizedUrl = url;
+  while (normalizedUrl.endsWith('/')) {
+    normalizedUrl = normalizedUrl.slice(0, -1);
+  }
+  return normalizedUrl;
+};
+
+function resolveIdamEnv(): string {
+  const explicitEnv = process.env.IDAM_ENV?.trim();
+  if (explicitEnv) {
+    return explicitEnv;
+  }
+
+  const runningEnv = (process.env.RUNNING_ENV || '').trim().toLowerCase();
+  if (runningEnv.startsWith('pr-') || runningEnv === 'preview') {
+    return 'aat';
+  }
+
+  if (runningEnv === 'perf') {
+    return 'perftest';
+  }
+
+  return runningEnv || 'aat';
+}
+
+const IDAM_ENV = resolveIdamEnv();
 
 const IDAM_WEB_URL = stripTrailingSlash(
   process.env.IDAM_WEB_URL || `https://idam-web-public.${IDAM_ENV}.platform.hmcts.net`
@@ -25,6 +49,12 @@ const IDAM_RETRY_CONFIG = {
   maxRetries: 2,
   initialDelayMs: 1_000,
   maxDelayMs: 4_000,
+};
+
+const PASSWORD_GRANT_READY_CONFIG = {
+  maxAttempts: 8,
+  initialDelayMs: 1_000,
+  maxDelayMs: 5_000,
 };
 
 const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
@@ -46,6 +76,8 @@ export class IdamApiService {
         const accessToken = await this.getAccessToken(apiContext);
         await this.provisionUser(apiContext, accessToken, user, 'Test', 'User');
       }, 'IDAM test user provisioning');
+
+      await this.waitForPasswordGrantReady(apiContext, user);
 
       return user;
     } finally {
@@ -146,6 +178,45 @@ export class IdamApiService {
 
     if (!response.ok()) {
       throw new Error(`User Creation Error: ${response.status()} - ${await response.text()}`);
+    }
+  }
+
+  private async waitForPasswordGrantReady(
+    apiContext: APIRequestContext,
+    user: UserCredentials
+  ): Promise<void> {
+    for (let attempt = 1; attempt <= PASSWORD_GRANT_READY_CONFIG.maxAttempts; attempt++) {
+      const response = await apiContext.post(this.createTokenEndpoint, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        form: {
+          grant_type: 'password',
+          client_id: 'finrem-citizen-ui',
+          client_secret: process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET || '',
+          redirect_uri: 'http://localhost:3100/oauth2/callback',
+          scope: 'openid profile roles',
+          username: user.username,
+          password: user.password,
+        },
+        failOnStatusCode: false,
+      });
+
+      if (response.ok()) {
+        return;
+      }
+
+      const body = await response.text();
+      const isTransientInvalidGrant = body.includes('invalid_grant');
+      if (!isTransientInvalidGrant || attempt === PASSWORD_GRANT_READY_CONFIG.maxAttempts) {
+        throw new Error(
+          `Created citizen user was not ready for password grant. status=${response.status()} body=${body}`
+        );
+      }
+
+      const delayMs = Math.min(
+        PASSWORD_GRANT_READY_CONFIG.initialDelayMs * attempt,
+        PASSWORD_GRANT_READY_CONFIG.maxDelayMs
+      );
+      await sleep(delayMs);
     }
   }
 }
