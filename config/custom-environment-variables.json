@@ -20,8 +20,8 @@
   "appInsights": {
     "connectionString": "APPLICATIONINSIGHTS_CONNECTION_STRING"
   },
-  "googleAnalytics": {
-    "measurementId": "GOOGLE_ANALYTICS_ID"
+  "googleTagManager": {
+    "containerId": "GOOGLE_TAG_MANAGER_ID"
   },
   "services": {
     "idam": {

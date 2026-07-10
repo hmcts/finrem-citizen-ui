@@ -3,7 +3,7 @@ import type { NextFunction, Request, Response } from 'express';
 import * as nunjucks from 'nunjucks';
 import * as path from 'path';
 
-import { addNunjucksLocals, buildFeedbackSurveyUrl, getGoogleAnalyticsMeasurementId } from '../../../../main/modules/nunjucks';
+import { addNunjucksLocals, buildFeedbackSurveyUrl, generateCspNonce, getGoogleTagManagerId } from '../../../../main/modules/nunjucks';
 
 function mockReqGet(host: string): Request['get'] {
   return ((name: string): string | string[] | undefined => (name === 'host' ? host : undefined)) as Request['get'];
@@ -21,6 +21,13 @@ function makeReq(overrides: Partial<Request> = {}): Request {
 }
 
 describe('buildFeedbackSurveyUrl', () => {
+  it('generates a one-time CSP nonce for script tags', () => {
+    const nonce = generateCspNonce();
+
+    expect(nonce).toHaveLength(24);
+    expect(generateCspNonce()).not.toBe(nonce);
+  });
+
   it('uses forwarded headers to build the current page URL for deployed environments', () => {
     const req = makeReq({
       headers: {
@@ -72,31 +79,40 @@ describe('buildFeedbackSurveyUrl', () => {
     )}`;
 
     expect(res.locals.feedbackSurveyUrl).toBe(expectedSurveyUrl);
-    expect(res.locals.googleAnalyticsId).toBe(getGoogleAnalyticsMeasurementId());
+    expect(res.locals.cspNonce).toEqual(expect.any(String));
+    expect(res.locals.googleTagManagerId).toBe(getGoogleTagManagerId());
     expect(res.locals.pagePath).toBe('/test-page');
     expect(nextCalled).toBe(true);
   });
 
-  it('renders the Google Analytics measurement id in the shared page head when configured', () => {
+  it('renders the Google Tag Manager snippets with the CSP nonce when configured', () => {
     const govukTemplates = path.dirname(require.resolve('govuk-frontend/package.json')) + '/dist';
     const viewsPath = path.join(__dirname, '../../../../main/views');
     const env = nunjucks.configure([govukTemplates, viewsPath], { autoescape: true });
 
     const rendered = env.render('home.njk', {
-      googleAnalyticsId: 'G-1234567890',
+      cspNonce: 'nonce-123',
+      googleTagManagerId: 'GTM-N2TBV3X8',
     });
 
-    expect(rendered).toContain('<meta name="google-analytics-id" content="G-1234567890">');
+    expect(rendered).toContain('<meta name="gtm-one-time" content="nonce-123">');
+    expect(rendered).toContain('<script nonce="nonce-123">');
+    expect(rendered).toContain("document.cookie.match(new RegExp('(^| )' + 'cm-user-preferences' + '=([^;]+)'))");
+    expect(rendered).toContain("j.setAttribute('nonce',n.nonce||n.getAttribute('nonce'))");
+    expect(rendered).toContain("})(window,document,'script','dataLayer','GTM-N2TBV3X8');");
+    expect(rendered).toContain('https://www.googletagmanager.com/ns.html?id=GTM-N2TBV3X8');
   });
 
-  it('does not render the Google Analytics meta tag when no measurement id is configured', () => {
+  it('does not render the Google Tag Manager snippets when no container id is configured', () => {
     const govukTemplates = path.dirname(require.resolve('govuk-frontend/package.json')) + '/dist';
     const viewsPath = path.join(__dirname, '../../../../main/views');
     const env = nunjucks.configure([govukTemplates, viewsPath], { autoescape: true });
 
     const rendered = env.render('home.njk');
 
-    expect(rendered).not.toContain('name="google-analytics-id"');
+    expect(rendered).not.toContain('name="gtm-one-time"');
+    expect(rendered).not.toContain('googletagmanager.com/gtm.js');
+    expect(rendered).not.toContain('googletagmanager.com/ns.html');
   });
 
   it('renders the survey link in the shared beta banner', () => {

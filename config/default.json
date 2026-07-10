@@ -3,8 +3,8 @@
   "appInsights": {
     "connectionString": false
   },
-  "googleAnalytics": {
-    "measurementId": ""
+  "googleTagManager": {
+    "containerId": ""
   },
   "security": {
     "referrerPolicy": "same-origin",

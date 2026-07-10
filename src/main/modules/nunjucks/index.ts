@@ -1,4 +1,5 @@
 import config from 'config';
+import { randomBytes } from 'crypto';
 import * as express from 'express';
 import * as nunjucks from 'nunjucks';
 import * as path from 'path';
@@ -10,10 +11,12 @@ import { taskStatus } from '../../functions/task-list/task-status';
 
 const FEEDBACK_SURVEY_BASE_URL = 'https://www.smartsurvey.co.uk/s/CFR_feedback/?pageurl=';
 
-export const getGoogleAnalyticsMeasurementId = (): string => {
-  const measurementId = config.get<string>('googleAnalytics.measurementId');
+export const generateCspNonce = (): string => randomBytes(16).toString('base64');
 
-  return measurementId.trim();
+export const getGoogleTagManagerId = (): string => {
+  const containerId = config.get<string>('googleTagManager.containerId');
+
+  return containerId.trim();
 };
 
 const formatCaseNumber = (caseNumber: string): string => {
@@ -44,7 +47,8 @@ export const buildFeedbackSurveyUrl = (req: express.Request): string =>
 export const addNunjucksLocals: express.RequestHandler = (req, res, next) => {
   res.locals.pagePath = req.path;
   res.locals.feedbackSurveyUrl = buildFeedbackSurveyUrl(req);
-  res.locals.googleAnalyticsId = getGoogleAnalyticsMeasurementId();
+  res.locals.cspNonce = generateCspNonce();
+  res.locals.googleTagManagerId = getGoogleTagManagerId();
   next();
 };
 
