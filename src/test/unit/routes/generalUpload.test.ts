@@ -16,6 +16,7 @@ type MockSession = {
   DocumentSelection?: {
     isFinancialDisputeResolution?: boolean;
     documentDetails?: { id?: string; value?: { DocumentType?: string } }[];
+    documentTypeSelectionReferrer?: string;
   };
   documents?: {
     isFinancialDisputeResolution?: boolean;
@@ -254,6 +255,48 @@ describe('General Upload Routes', () => {
             ]),
             uploadedFiles: {},
           }),
+        })
+      );
+    });
+
+    it('should show FDR as previous step when arriving from FDR', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.DocumentTypeSelection },
+        session: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/document-type-selection',
+        expect.objectContaining({
+          previousStep: UploadStepNames.FDR,
+        })
+      );
+    });
+
+    it('should show check-upload as previous step when arriving from check-upload', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.DocumentTypeSelection },
+        session: {
+          DocumentSelection: {
+            documentTypeSelectionReferrer: 'check-upload',
+          },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/document-type-selection',
+        expect.objectContaining({
+          previousStep: UploadStepNames.CheckUpload,
         })
       );
     });
@@ -874,6 +917,7 @@ describe('General Upload Routes', () => {
 
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
       expect(mockRes.render).not.toHaveBeenCalled();
+      expect(mockReq.session?.DocumentSelection?.documentTypeSelectionReferrer).toBe('check-upload');
     });
 
     it('should redirect to send-to-other-party when user selects no on check-upload', () => {
