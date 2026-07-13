@@ -282,7 +282,7 @@ describe('General Upload Routes', () => {
       );
     });
 
-    it('should show check-upload as previous step when arriving from check-upload', () => {
+    it('should show check-upload as previous step when referrer is set in session', () => {
       const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.DocumentTypeSelection },
@@ -291,8 +291,7 @@ describe('General Upload Routes', () => {
             documentTypeSelectionReferrer: 'check-upload',
           },
         },
-        get: jest.fn((header: string) => header === 'referer' ? '/upload/check-upload' : ''),
-      } as unknown as PartialRequestWithSession;
+      } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
       } as Partial<Response>;
@@ -307,17 +306,16 @@ describe('General Upload Routes', () => {
       expect(mockReq.session?.DocumentSelection?.documentTypeSelectionReferrer).toBe('check-upload');
     });
 
-    it('should clear stale referrer when arriving from FDR page', () => {
+    it('should clear referrer when visiting check-upload page', () => {
       const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
-        params: { stepId: UploadStepNames.DocumentTypeSelection },
+        params: { stepId: UploadStepNames.CheckUpload },
         session: {
           DocumentSelection: {
-            documentTypeSelectionReferrer: 'check-upload', // Stale from previous journey
+            documentTypeSelectionReferrer: 'check-upload',
           },
         },
-        get: jest.fn((header: string) => header === 'referer' ? '/upload/fdr' : ''),
-      } as unknown as PartialRequestWithSession;
+      } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
       } as Partial<Response>;
@@ -325,11 +323,6 @@ describe('General Upload Routes', () => {
       handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockReq.session?.DocumentSelection?.documentTypeSelectionReferrer).toBeUndefined();
-      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/document-type-selection',
-        expect.objectContaining({
-          previousStep: UploadStepNames.FDR,
-        })
-      );
     });
 
     it('should return 404 for invalid step', () => {

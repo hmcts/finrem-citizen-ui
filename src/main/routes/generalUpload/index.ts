@@ -272,11 +272,9 @@ export default function setupGeneralUploadRoute(app: Application): void {
       return res.status(404).send('Step not found');
     }
 
-    if (req.params.stepId === 'document-type-selection') {
-      const referer = req.get('referer') || '';
-      if (!referer.includes('check-upload') && req.session.DocumentSelection?.documentTypeSelectionReferrer) {
-        delete req.session.DocumentSelection.documentTypeSelectionReferrer;
-      }
+    // Clear referrer when visiting check-upload to prevent infinite loop with browser back button
+    if (req.params.stepId === 'check-upload' && req.session.DocumentSelection?.documentTypeSelectionReferrer) {
+      delete req.session.DocumentSelection.documentTypeSelectionReferrer;
     }
 
     const previousStep = step.previous ? step.previous(req) : null;
