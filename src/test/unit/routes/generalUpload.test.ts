@@ -871,6 +871,51 @@ describe('General Upload Routes', () => {
       );
     });
 
+    it('should clear referrer when leaving document-type-selection with valid submission', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.DocumentTypeSelection },
+        session: {
+          DocumentSelection: {
+            documentTypeSelectionReferrer: 'check-upload',
+            documentDetails: [
+              { id: 'uuid-1', value: { DocumentType: 'payslips' } },
+            ],
+          },
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockReq.session?.DocumentSelection?.documentTypeSelectionReferrer).toBeUndefined();
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/upload-documents`);
+    });
+
+    it('should not error when clearing referrer if DocumentSelection does not exist', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.DocumentTypeSelection },
+        session: {
+          // No DocumentSelection
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      // Should render validation error (no documents selected)
+      expect(mockRes.render).toHaveBeenCalled();
+    });
+
     it('should render validation error when uploadMore is missing on check-upload', () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
@@ -918,6 +963,27 @@ describe('General Upload Routes', () => {
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
       expect(mockRes.render).not.toHaveBeenCalled();
       expect(mockReq.session?.DocumentSelection?.documentTypeSelectionReferrer).toBe('check-upload');
+    });
+
+    it('should set referrer when DocumentSelection does not exist in session', () => {
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.CheckUpload },
+        session: {
+          // No DocumentSelection in session
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: { uploadMore: 'yes' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockReq.session?.DocumentSelection).toBeDefined();
+      expect(mockReq.session?.DocumentSelection?.documentTypeSelectionReferrer).toBe('check-upload');
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
     });
 
     it('should redirect to send-to-other-party when user selects no on check-upload', () => {
