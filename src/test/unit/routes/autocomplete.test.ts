@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import express, { Application } from 'express';
+import session from 'express-session';
 import request from 'supertest';
 
 import { PublicRoutes } from '../../../main/common-constants';
@@ -11,6 +12,13 @@ describe('Autocomplete Route', () => {
   beforeEach(() => {
     app = express();
     app.use(express.json());
+    app.use(
+      session({
+        secret: 'test-secret',
+        resave: false,
+        saveUninitialized: true,
+      })
+    );
     autocompleteRoute(app);
   });
 
@@ -55,6 +63,38 @@ describe('Autocomplete Route', () => {
           value: 'other-document',
         },
       ]);
+    });
+
+    it('should exclude already-selected document types from results', async () => {
+      const testApp = express();
+      testApp.use(express.json());
+      testApp.use(
+        session({
+          secret: 'test-secret',
+          resave: false,
+          saveUninitialized: true,
+        })
+      );
+      testApp.use((req, _res, next) => {
+        (req.session as unknown as Record<string, unknown>).DocumentSelection = {
+          documentDetails: [
+            {
+              id: 'uuid-1',
+              value: {
+                DocumentType: 'bank-statements',
+              },
+            },
+          ],
+        };
+        next();
+      });
+      autocompleteRoute(testApp);
+
+      const response = await request(testApp).get(PublicRoutes.autocomplete).query({ q: 'bank' });
+
+      expect(response.status).toBe(200);
+      const bankStatements = response.body.find((doc: { value: string }) => doc.value === 'bank-statements');
+      expect(bankStatements).toBeUndefined();
     });
   });
 });
