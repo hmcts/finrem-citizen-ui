@@ -163,6 +163,7 @@ describe('General Upload Routes', () => {
             ],
           },
         },
+        get: jest.fn(() => ''),
       } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
@@ -204,6 +205,7 @@ describe('General Upload Routes', () => {
             ],
           },
         },
+        get: jest.fn(() => ''),
       } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
@@ -237,6 +239,7 @@ describe('General Upload Routes', () => {
             ],
           },
         },
+        get: jest.fn(() => ''),
       } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
@@ -264,6 +267,7 @@ describe('General Upload Routes', () => {
       const mockReq = {
         params: { stepId: UploadStepNames.DocumentTypeSelection },
         session: {},
+        get: jest.fn(() => ''),
       } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
