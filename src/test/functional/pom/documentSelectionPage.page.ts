@@ -109,7 +109,17 @@ export class DocumentSelectionPage extends BasePage {
     await expect(suggestion).toBeVisible();
     await suggestion.click();
 
-    await this.addDocumentButton.click();
+    // Close the autocomplete popup so it cannot intercept the add-button click.
+    await this.documentTypeInput.press('Escape');
+
+    await Promise.all([
+      this.page.waitForResponse(response => {
+        return response.url().includes('/upload/document-type-selection')
+          && response.request().method() === 'POST'
+          && response.ok();
+      }),
+      this.addDocumentButton.click(),
+    ]);
 
     await expect(this.termByLabel(expectedDocumentLabel)).toBeVisible();
     await expect(this.noDocumentsMessage).toBeHidden();
