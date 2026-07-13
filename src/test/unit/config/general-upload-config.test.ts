@@ -77,6 +77,30 @@ describe('General Upload Configuration', () => {
       expect(step.validate).toBeDefined();
     });
 
+    it('should return FDR as previous step when no referrer in session', () => {
+      const step = uploadSteps[UploadStepNames.DocumentTypeSelection];
+      const mockReq = {
+        session: {}
+      } as unknown as Request;
+
+      // @ts-expect-error - Mocking partial Request for testing
+      expect(step.previous!(mockReq)).toBe(UploadStepNames.FDR);
+    });
+
+    it('should return check-upload as previous step when referrer is set', () => {
+      const step = uploadSteps[UploadStepNames.DocumentTypeSelection];
+      const mockReq = {
+        session: {
+          DocumentSelection: {
+            documentTypeSelectionReferrer: 'check-upload'
+          }
+        }
+      } as unknown as Request;
+
+      // @ts-expect-error - Mocking partial Request for testing
+      expect(step.previous!(mockReq)).toBe(UploadStepNames.CheckUpload);
+    });
+
     it('should return error when no documents in session', () => {
       const step = uploadSteps[UploadStepNames.DocumentTypeSelection];
       const body = {};
