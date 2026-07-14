@@ -65,7 +65,7 @@ export class DocumentSelectionPage extends BasePage {
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
   }
 
-  async verifyDocumentSelectionPageContent(): Promise<void> {
+  async verifyDocumentSelectionPageContent(expectedBackLink: string = '/upload/check-upload'): Promise<void> {
     await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_SELECTION);
     await this.verifyGlobalHeaderAndFooter();
 
@@ -87,7 +87,7 @@ export class DocumentSelectionPage extends BasePage {
     ]);
 
     await this.expectAttributes([
-      { locator: this.backLink, name: 'href', value: '/upload/fdr' },
+      { locator: this.backLink, name: 'href', value: expectedBackLink },
     ]);
   }
 
