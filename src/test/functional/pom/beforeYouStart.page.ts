@@ -1,5 +1,6 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+import { isGatewayErrorContent } from '../utils/helpers/gatewayError';
 import { BasePage } from './basePage.page';
 import { GETTING_HELP_OPENING_HOURS, GettingHelpPanel } from './components/gettingHelpPanel.component';
 
@@ -162,9 +163,31 @@ export class BeforeYouStartPage extends BasePage {
 
   // Click start button and verify navigation to confidentiality page
   async startUploadJourney(): Promise<void> {
-    await Promise.all([
-      this.page.waitForURL(URL_PATTERNS.CONFIDENTIALITY, { timeout: 15_000 }),
-      this.startNowButton.click(),
-    ]);
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      await expect(this.startNowButton).toBeVisible({ timeout: 15_000 });
+      await this.startNowButton.click();
+
+      try {
+        await expect(this.page).toHaveURL(URL_PATTERNS.CONFIDENTIALITY, { timeout: 15_000 });
+        return;
+      } catch (error) {
+        if (URL_PATTERNS.CONFIDENTIALITY.test(this.page.url())) {
+          return;
+        }
+
+        const bodyText = await this.page.locator('body').innerText().catch(() => '');
+        const shouldRetry = attempt === 1 && (
+          isGatewayErrorContent(bodyText) || URL_PATTERNS.BEFORE_YOU_START.test(this.page.url())
+        );
+
+        if (!shouldRetry) {
+          throw error;
+        }
+
+        if (isGatewayErrorContent(bodyText)) {
+          await this.page.reload({ waitUntil: 'domcontentloaded' });
+        }
+      }
+    }
   }
 }

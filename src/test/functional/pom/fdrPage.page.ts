@@ -107,6 +107,11 @@ export class FdrPage extends BasePage {
 
         // AAT can transiently render a gateway page; reload once and retry submit.
         await this.page.reload({ waitUntil: 'domcontentloaded' });
+
+        if (URL_PATTERNS.DOCUMENT_SELECTION.test(this.page.url())) {
+          return;
+        }
+
         await expect(this.page).toHaveURL(URL_PATTERNS.FDR, {
           timeout: NAVIGATION_TIMEOUT_MS,
         });
