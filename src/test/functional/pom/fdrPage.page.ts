@@ -81,6 +81,11 @@ export class FdrPage extends BasePage {
   }
 
   private async selectOptionAndContinue(option: Locator): Promise<void> {
+    // Some integration states can return directly to document selection if FDR was already answered.
+    if (URL_PATTERNS.DOCUMENT_SELECTION.test(this.page.url())) {
+      return;
+    }
+
     for (let attempt = 1; attempt <= 2; attempt += 1) {
       await expect(option).toBeVisible({ timeout: NAVIGATION_TIMEOUT_MS });
       await option.click();
