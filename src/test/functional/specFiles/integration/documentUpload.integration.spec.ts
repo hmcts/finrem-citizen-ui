@@ -74,10 +74,10 @@ const renameScenarios: RenameScenario[] = [
     renameToken: 'N260',
   },
   {
-    label: 'Potential borrowing capacity / mortgage capacities',
-    searchTerm: 'mortgage capacities',
-    typeValue: 'potential-borrowing-capacity-mortgage-capacities',
-    renameToken: 'MortgageCapacity',
+    label: 'Housing needs / property particulars',
+    searchTerm: 'housing needs',
+    typeValue: 'housing-needs-property-particulars',
+    renameToken: 'Property-Particulars',
   },
   {
     label: 'Attachments to Form E',
@@ -378,6 +378,33 @@ test.describe('[integration] Document upload page', () => {
       await runA11yAudit(axeUtils);
     });
   }
+
+  // TODO(BUG): Re-enable once password-protected uploads consistently return
+  // explicit password-protection validation (instead of fallback no-file validation) in integration.
+  test.skip('[integration][BUG] Password-protected upload shows explicit validation and does not add file @a11y', async ({
+    documentUploadPage,
+    axeUtils,
+  }) => {
+    await documentUploadPage.uploadPasswordProtectedPdf();
+    await documentUploadPage.clickContinue();
+
+    await expect(documentUploadPage.errorSummaryTitle).toBeVisible();
+
+    const passwordProtectedSummaryError = documentUploadPage.getErrorSummaryLink(
+      'The selected file must not be password protected'
+    );
+    await expect(passwordProtectedSummaryError).toBeVisible();
+
+    const otherDocumentForm = documentUploadPage.page.locator('[data-upload-form="other-document"]');
+    const passwordProtectedInlineError = otherDocumentForm
+      .locator('p.govuk-error-message')
+      .filter({ hasText: 'The selected file must not be password protected' });
+    await expect(passwordProtectedInlineError).toBeVisible();
+
+    await expect(documentUploadPage.uploadedFileLinks).toHaveCount(0);
+
+    await runA11yAudit(axeUtils);
+  });
 
   test('[integration] Retry upload after validation failure succeeds and clears error @a11y', async ({
     documentUploadPage,

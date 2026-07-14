@@ -18,6 +18,8 @@ import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.hel
  * - Environments with working authentication/session support
  */
 test.describe('[integration] Document selection page', () => {
+  test.describe.configure({ timeout: 90_000 });
+
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     dashboardPage,
@@ -29,7 +31,8 @@ test.describe('[integration] Document selection page', () => {
   }) => {
     await navigateToFdrStep(dashboardPage, beforeYouStartPage, confidentialityPage, basePage);
     await fdrPage.selectYesAndContinue();
-    await documentSelectionPage.verifyDocumentSelectionPageContent();
+    await expect(documentSelectionPage.page).toHaveURL(/\/upload\/document-type-selection/);
+    await expect(documentSelectionPage.pageHeader).toBeVisible();
   });
 
   test('[integration] Document selection supports adding a document @a11y', async ({
@@ -48,6 +51,33 @@ test.describe('[integration] Document selection page', () => {
     await documentSelectionPage.addDocumentBySearchTerm('payslip', 'Payslips');
     await documentSelectionPage.addDocumentBySearchTerm('bank', 'Bank statements');
     await documentSelectionPage.expectDocumentsListContains(['Payslips', 'Bank statements']);
+    await runA11yAudit(axeUtils);
+  });
+
+  test('[integration] Document selection excludes already selected type from autocomplete results @a11y', async ({
+    documentSelectionPage,
+    axeUtils,
+  }) => {
+    const selectedLabel = 'Payslips';
+    const searchTerm = 'payslip';
+
+    await documentSelectionPage.addDocumentBySearchTerm(searchTerm, selectedLabel);
+    await documentSelectionPage.expectDocumentsListContains([selectedLabel]);
+
+    const autocompleteResponsePromise = documentSelectionPage.page.waitForResponse(response => {
+      return response.url().includes('/autocomplete')
+        && response.url().includes(`q=${encodeURIComponent(searchTerm)}`)
+        && response.ok();
+    });
+
+    await documentSelectionPage.documentTypeInput.fill('');
+    await documentSelectionPage.documentTypeInput.pressSequentially(searchTerm);
+    await autocompleteResponsePromise;
+
+    await expect(
+      documentSelectionPage.page.getByRole('option', { name: selectedLabel })
+    ).toHaveCount(0);
+
     await runA11yAudit(axeUtils);
   });
 

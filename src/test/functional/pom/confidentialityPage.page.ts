@@ -1,5 +1,6 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+import { isGatewayErrorContent } from '../utils/helpers/gatewayError';
 import { BasePage } from './basePage.page';
 import { GETTING_HELP_OPENING_HOURS, GettingHelpPanel } from './components/gettingHelpPanel.component';
 
@@ -138,8 +139,41 @@ export class ConfidentialityPage extends BasePage {
 
   // AC7: Click Continue and assert navigation to FDR step
   async clickContinueAndExpectFdrStep(): Promise<void> {
-    await this.continueButton.click();
-    await expect(this.page).toHaveURL(URL_PATTERNS.FDR);
+    if (URL_PATTERNS.FDR.test(this.page.url())) {
+      return;
+    }
+
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        await expect(this.continueButton).toBeVisible({ timeout: 15_000 });
+        await this.continueButton.click();
+        await expect(this.page).toHaveURL(URL_PATTERNS.FDR, { timeout: 15_000 });
+        return;
+      } catch {
+        if (URL_PATTERNS.FDR.test(this.page.url())) {
+          return;
+        }
+
+        const bodyText = await this.page.locator('body').innerText().catch(() => '');
+        const shouldRetry = attempt === 1 && (
+          isGatewayErrorContent(bodyText) || URL_PATTERNS.CONFIDENTIALITY.test(this.page.url())
+        );
+
+        if (!shouldRetry) {
+          throw new Error(
+            `Confidentiality continue did not navigate to FDR. Current URL: ${this.page.url()}`
+          );
+        }
+
+        if (isGatewayErrorContent(bodyText)) {
+          await this.page.reload({ waitUntil: 'domcontentloaded' });
+        }
+      }
+    }
+
+    throw new Error(
+      `Confidentiality continue did not navigate to FDR. Current URL: ${this.page.url()}`
+    );
   }
 
   // Keep panel expansion, so tests do not accidentally toggle it closed

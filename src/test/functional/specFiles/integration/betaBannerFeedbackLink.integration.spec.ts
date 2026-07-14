@@ -71,7 +71,7 @@ test.describe('[integration-happy-path] Beta banner feedback link across journey
     await fdrPage.verifyBetaBannerFeedbackLinkForCurrentPage();
 
     await fdrPage.selectYesAndContinue();
-    await documentSelectionPage.verifyDocumentSelectionPageContent();
+    await documentSelectionPage.verifyDocumentSelectionPageContent('/upload/fdr');
     await documentSelectionPage.verifyBetaBannerFeedbackLinkForCurrentPage();
 
     await documentSelectionPage.addOtherDocumentAndContinue();

@@ -9,7 +9,7 @@ export type UploadStep = {
   template: string;
   validate?: (body: Record<string, unknown>, req?: Request) => Record<string, string>;
   next?: (body?: Record<string, unknown>) => UploadStepId | null;
-  previous?: () => UploadStepId | null;
+  previous?: (req?: Request) => UploadStepId | null;
 };
 
 export const uploadSteps: Record<UploadStepId, UploadStep> = {
@@ -58,7 +58,10 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
       return errors;
     },
     next: () => UploadStepNames.UploadDocuments,
-    previous: () => UploadStepNames.FDR,
+    previous: (req?: Request) => {
+      const referrer = req?.session?.DocumentSelection?.documentTypeSelectionReferrer;
+      return referrer || UploadStepNames.FDR;
+    },
   },
 
   [UploadStepNames.UploadDocuments]: {

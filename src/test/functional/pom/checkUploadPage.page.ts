@@ -253,6 +253,12 @@ export class CheckUploadPage extends BasePage {
 
       try {
         await expect(this.page).toHaveURL(expectedUrl, { timeout: NAVIGATION_TIMEOUT_MS });
+
+        const bodyText = await this.page.locator('body').innerText().catch(() => '');
+        if (attempt === 1 && isGatewayErrorContent(bodyText)) {
+          throw new Error('Gateway error content rendered on target route');
+        }
+
         return;
       } catch (error) {
         const bodyText = await this.page.locator('body').innerText().catch(() => '');
