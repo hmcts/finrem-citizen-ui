@@ -108,6 +108,8 @@ class DocumentTypeSelectionManager {
     const autocompleteInput = document.querySelector(DocumentTypeSelectionManager.SELECTORS.AUTOCOMPLETE_INPUT) as HTMLInputElement;
     if (autocompleteInput) {
       autocompleteInput.value = '';
+      const closeEvent = new Event('autocomplete:close', { bubbles: true });
+      autocompleteInput.dispatchEvent(closeEvent);
       autocompleteInput.blur();
     }
   }

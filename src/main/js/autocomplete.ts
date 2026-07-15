@@ -96,6 +96,8 @@ function initAutocomplete(): void {
     });
 
     const input = container.querySelector(`#${config.inputId}`) as HTMLInputElement;
+    const menu = container.querySelector(`#${config.inputId}__listbox`) as HTMLElement;
+    
     if (input) {
       input.addEventListener('focus', () => {
         if (suppressNextFocus) {
@@ -108,10 +110,11 @@ function initAutocomplete(): void {
         }
       });
 
-      input.addEventListener('blur', () => {
-        if (input.value === '') {
-          suppressNextFocus = true;
+      input.addEventListener('autocomplete:close', () => {
+        if (menu) {
+          menu.style.display = 'none';
         }
+        suppressNextFocus = true;
       });
     }
   });
