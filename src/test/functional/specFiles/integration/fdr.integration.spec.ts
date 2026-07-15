@@ -52,7 +52,7 @@ test.describe('[integration] FDR page', () => {
     axeUtils,
   }) => {
     await fdrPage.selectYesAndContinue();
-    await documentSelectionPage.verifyDocumentSelectionPageContent();
+    await documentSelectionPage.verifyDocumentSelectionPageContent('/upload/fdr');
     await runA11yAudit(axeUtils);
   });
 

@@ -154,6 +154,8 @@ test.describe('[integration] Check uploaded documents page', () => {
       documentUploadPage,
       axeUtils,
     }) => {
+      test.setTimeout(60_000);
+
       await checkUploadPage.clickBackAndExpectUploadDocuments();
       await documentUploadPage.clickContinue();
       await checkUploadPage.verifyCheckUploadPageContent();

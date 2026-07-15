@@ -3055,6 +3055,7 @@ export interface CitizenUploadDocument extends HasCaseDocument {
 export interface UserDocumentSelection {
   isFinancialDisputeResolution?: boolean;
   documentDetails?: ListValue<Partial<CitizenUploadDocument> | null>[];
+  documentTypeSelectionReferrer?: string;
 }
 
 export interface ChangedRepresentative {
