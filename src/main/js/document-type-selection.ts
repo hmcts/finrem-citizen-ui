@@ -108,6 +108,7 @@ class DocumentTypeSelectionManager {
     const autocompleteInput = document.querySelector(DocumentTypeSelectionManager.SELECTORS.AUTOCOMPLETE_INPUT) as HTMLInputElement;
     if (autocompleteInput) {
       autocompleteInput.value = '';
+      autocompleteInput.blur();
     }
   }
 
