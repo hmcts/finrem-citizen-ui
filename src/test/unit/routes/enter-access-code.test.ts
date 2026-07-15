@@ -18,7 +18,7 @@ import setupEnterAccessCodeRoute, {
   retrieveCaseData,
   validateAccessCode,
   validateAccessCodeAgainstCase,
-} from '../../../main/routes/enter-access-code';
+} from '../../../main/routes/generalUpload/enter-access-code';
 
 jest.mock('../../../main/middleware', () => ({
   oidcMiddleware: (_req: Request, _res: Response, next: NextFunction) => next(),
@@ -348,7 +348,11 @@ describe('POST /enter-access-code route handler', () => {
     const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
       .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
     expect(res.status).toBe(200);
-    expect(res.body.locals.errors.accessCode).toContain('already been used');
+    expect(res.body.view).toBe('enter-access-code');
+    expect(res.body.locals.errors.accessCode).toBe(
+      'The access code you entered has already been used, you should contact the court.'
+    );
+    expect(res.body.locals.accessCode).toBe('APPCODE1');
   });
 
   it('redirects to dashboard on successful access code submission', async () => {

@@ -12,7 +12,7 @@ nodejs:
     # AAT IDAM endpoints
     IDAM_WEB_URL: https://hmcts-access.aat.platform.hmcts.net/login
     IDAM_END_SESSION_URL: https://hmcts-access.aat.platform.hmcts.net/o/endSession
-    IDAM_API_URL: https://idam-api.aat.platform.hmcts.net/o/token
+    IDAM_TOKEN_URL: https://idam-api.aat.platform.hmcts.net/o/token
     SESSION_STORE: redis
 
   # Don't modify below here
@@ -32,3 +32,7 @@ nodejs:
           alias: app-insights-connection-string
         - finrem-citizen-ui-redis-connection-string
         - session-secret
+        - name: gov-uk-notification-key
+          alias: GOVUK_NOTIFY_API_KEY
+        - name: document-upload-email-template-id
+          alias: FINREM_CITIZEN_UI_TEMPLATE_ID

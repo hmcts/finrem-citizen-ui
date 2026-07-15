@@ -65,7 +65,7 @@ export class DocumentSelectionPage extends BasePage {
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
   }
 
-  async verifyDocumentSelectionPageContent(): Promise<void> {
+  async verifyDocumentSelectionPageContent(expectedBackLink: string = '/upload/check-upload'): Promise<void> {
     await expect(this.page).toHaveURL(URL_PATTERNS.DOCUMENT_SELECTION);
     await this.verifyGlobalHeaderAndFooter();
 
@@ -87,7 +87,7 @@ export class DocumentSelectionPage extends BasePage {
     ]);
 
     await this.expectAttributes([
-      { locator: this.backLink, name: 'href', value: '/upload/fdr' },
+      { locator: this.backLink, name: 'href', value: expectedBackLink },
     ]);
   }
 
@@ -109,32 +109,25 @@ export class DocumentSelectionPage extends BasePage {
     await expect(suggestion).toBeVisible();
     await suggestion.click();
 
-    await this.addDocumentButton.click();
+    // Close the autocomplete popup so it cannot intercept the add-button click.
+    await this.documentTypeInput.press('Escape');
+
+    await Promise.all([
+      this.page.waitForResponse(response => {
+        return response.url().includes('/upload/document-type-selection')
+          && response.request().method() === 'POST'
+          && response.ok();
+      }),
+      this.addDocumentButton.click(),
+    ]);
 
     await expect(this.termByLabel(expectedDocumentLabel)).toBeVisible();
     await expect(this.noDocumentsMessage).toBeHidden();
   }
 
   async addChronologyAndContinue(): Promise<void> {
-    const chronologyLabel = 'Chronology';
-    const autocompleteResponsePromise = this.page.waitForResponse(response => {
-      return response.url().includes('/autocomplete')
-        && response.url().includes('q=chronology')
-        && response.ok();
-    });
-    await this.documentTypeInput.fill('chronology');
-    await autocompleteResponsePromise;
-
-    const suggestion = this.page.getByRole('option', { name: chronologyLabel });
-    await expect(suggestion).toBeVisible();
-    await suggestion.click();
-
-    await this.addDocumentButton.click();
-
-    await expect(this.termByLabel(chronologyLabel)).toBeVisible();
-    await expect(this.noDocumentsMessage).toBeHidden();
-
-    await this.continueButton.click();
+    await this.addDocumentBySearchTerm('chronology', 'Chronology');
+    await this.clickContinueAndExpectUploadDocumentsStep();
   }
 
   async addOtherDocumentAndContinue(): Promise<void> {

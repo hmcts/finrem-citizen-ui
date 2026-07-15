@@ -1,7 +1,7 @@
 import { Application, Request, Response } from 'express';
 
-import { RouteNames } from '../common-constants';
-import documentTypes from '../models/document-types.json';
+import { RouteNames } from '../../common-constants';
+import documentTypes from '../../models/document-types.json';
 
 interface DocumentType {
   id: number;
@@ -14,7 +14,7 @@ const typedDocumentTypes: DocumentType[] = documentTypes as DocumentType[];
 
 function searchDocumentTypes(query: string): DocumentType[] {
   if (!query || query.trim().length === 0) {
-    return [];
+    return typedDocumentTypes;
   }
 
   const searchTerm = query.toLowerCase().trim();
@@ -38,8 +38,17 @@ export default (app: Application): void => {
     const query = req.query.q as string || '';
     const results = searchDocumentTypes(query);
 
+    const selectedDocumentTypes = req.session?.DocumentSelection?.documentDetails || [];
+    const selectedValues = new Set<string>(
+      selectedDocumentTypes
+        .map(doc => doc.value?.DocumentType as string | undefined)
+        .filter((value): value is string => !!value)
+    );
+
+    const availableResults = results.filter(docType => !selectedValues.has(docType.value));
+
     res.json(
-      results.map(docType => ({
+      availableResults.map(docType => ({
         id: docType.id,
         label: docType.label,
         value: docType.value,

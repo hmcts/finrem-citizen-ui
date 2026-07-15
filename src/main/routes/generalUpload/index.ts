@@ -2,17 +2,17 @@ import type { Application, NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { LoggerInstance } from 'winston';
 
-import { CaseRole, CitizenUploadDocument, ListValue } from '../app/case/definition';
-import { AppRequest } from '../app/controller/AppRequest';
-import { DocumentManagerController } from '../app/document/DocumentManagerController';
+import { CaseRole, CitizenUploadDocument, ListValue } from '../../app/case/definition';
+import { AppRequest } from '../../app/controller/AppRequest';
+import { DocumentManagerController } from '../../app/document/DocumentManagerController';
 import type {
   PreviouslyUploadedDocument,
   PreviouslyUploadedDocumentsCaseData,
-} from '../app/document/PreviouslyUploadedDocumentClient';
-import { RouteNames } from '../common-constants';
-import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../functions/util/documentUtil';
-import { oidcMiddleware } from '../middleware';
-import { UploadStepId, uploadSteps } from '../upload-journey/config';
+} from '../../app/document/PreviouslyUploadedDocumentClient';
+import { RouteNames } from '../../common-constants';
+import { UploadStepId, uploadSteps } from '../../config/general-upload-config';
+import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../../functions/util/documentUtil';
+import { oidcMiddleware } from '../../middleware';
 
 const previouslyUploadedDocumentsRoute = `${RouteNames.uploadJourney}/previously-uploaded-documents`;
 const documentIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -136,7 +136,7 @@ function getDocumentGroupsForCheckPage(req: Request): { groupKey: string; label:
   return groups;
 }
 
-export default function setupUploadJourneyRoute(app: Application): void {
+export default function setupGeneralUploadRoute(app: Application): void {
   // POST /upload/document-type-selection/add - Add a document type to selection
   app.post(`${RouteNames.uploadJourney}/document-type-selection/add`, oidcMiddleware, (req: Request, res: Response) => {
     if (!req.session.DocumentSelection) {
@@ -257,7 +257,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
           ];
         });
 
-        res.render('upload-journey/previously-uploaded-documents', {
+        res.render('generalUpload/previously-uploaded-documents', {
           documentRows,
         });
       } catch (error) {
@@ -272,7 +272,12 @@ export default function setupUploadJourneyRoute(app: Application): void {
       return res.status(404).send('Step not found');
     }
 
-    const previousStep = step.previous ? step.previous() : null;
+    // Clear referrer when visiting check-upload to prevent infinite loop with browser back button
+    if (req.params.stepId === 'check-upload' && req.session.DocumentSelection?.documentTypeSelectionReferrer) {
+      delete req.session.DocumentSelection.documentTypeSelectionReferrer;
+    }
+
+    const previousStep = step.previous ? step.previous(req) : null;
 
     // Map DocumentSelection to display format
     const selectedDocumentTypes = getSelectedDocumentTypesForDisplay(req);
@@ -290,8 +295,8 @@ export default function setupUploadJourneyRoute(app: Application): void {
     delete req.session.uploadErrors;
 
 
-    const contactEmail = req.session.preservedContactEmail 
-      || req.session.caseData?.consentOrderFRCEmail 
+    const contactEmail = req.session.preservedContactEmail
+      || req.session.caseData?.consentOrderFRCEmail
       || 'FRCexample@justice.gov.uk';
 
     res.render(step.template, {
@@ -319,7 +324,7 @@ export default function setupUploadJourneyRoute(app: Application): void {
 
       const errors = step.validate ? step.validate(req.body, req) : {};
       if (Object.keys(errors).length > 0) {
-        const previousStep = step.previous ? step.previous() : null;
+        const previousStep = step.previous ? step.previous(req) : null;
 
         // Map DocumentSelection to display format
         const selectedDocumentTypes = getSelectedDocumentTypesForDisplay(req);
@@ -354,6 +359,21 @@ export default function setupUploadJourneyRoute(app: Application): void {
           req.session.DocumentSelection = {};
         }
         req.session.DocumentSelection.isFinancialDisputeResolution = req.body.fdrHearing === 'true';
+      }
+
+      // Set referrer when navigating from check-upload to document-type-selection
+      if (req.params.stepId === 'check-upload' && req.body.uploadMore === 'yes') {
+        if (!req.session.DocumentSelection) {
+          req.session.DocumentSelection = {};
+        }
+        req.session.DocumentSelection.documentTypeSelectionReferrer = 'check-upload';
+      }
+
+      // Clear referrer when leaving document-type-selection
+      if (req.params.stepId === 'document-type-selection') {
+        if (req.session.DocumentSelection) {
+          delete req.session.DocumentSelection.documentTypeSelectionReferrer;
+        }
       }
 
       // Handle send-to-other-party submission - send documents to CCD

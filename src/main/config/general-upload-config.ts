@@ -9,31 +9,31 @@ export type UploadStep = {
   template: string;
   validate?: (body: Record<string, unknown>, req?: Request) => Record<string, string>;
   next?: (body?: Record<string, unknown>) => UploadStepId | null;
-  previous?: () => UploadStepId | null;
+  previous?: (req?: Request) => UploadStepId | null;
 };
 
 export const uploadSteps: Record<UploadStepId, UploadStep> = {
 
   [UploadStepNames.BeforeYouStart]: {
-    template: 'upload-journey/before-you-start',
+    template: 'generalUpload/before-you-start',
     next: () => UploadStepNames.Confidentiality,
     previous: () => null,
   },
 
   [UploadStepNames.PUD]: {
-    template: 'upload-journey/previously-uploaded-documents',
+    template: 'generalUpload/previously-uploaded-documents',
     next: () => null,
     previous: () => ViewNames.Dashboard,
   },
 
   [UploadStepNames.Confidentiality]: {
-    template: 'upload-journey/confidentiality',
+    template: 'generalUpload/confidentiality',
     next: () => UploadStepNames.FDR,
     previous: () => UploadStepNames.BeforeYouStart,
   },
 
   [UploadStepNames.FDR]: {
-    template: 'upload-journey/fdr',
+    template: 'generalUpload/fdr',
     validate: (body: Record<string, unknown>) => {
       const errors: Record<string, string> = {};
       if (!body.fdrHearing) {
@@ -46,7 +46,7 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
   },
 
   [UploadStepNames.DocumentTypeSelection]: {
-    template: 'upload-journey/document-type-selection',
+    template: 'generalUpload/document-type-selection',
     validate: (body: Record<string, unknown>, req?: Request) => {
       const errors: Record<string, string> = {};
 
@@ -58,11 +58,14 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
       return errors;
     },
     next: () => UploadStepNames.UploadDocuments,
-    previous: () => UploadStepNames.FDR,
+    previous: (req?: Request) => {
+      const referrer = req?.session?.DocumentSelection?.documentTypeSelectionReferrer;
+      return referrer || UploadStepNames.FDR;
+    },
   },
 
   [UploadStepNames.UploadDocuments]: {
-    template: 'upload-journey/upload-documents',
+    template: 'generalUpload/upload-documents',
     validate: (body: Record<string, unknown>, req?: Request) => {
       const errors: Record<string, string> = {};
 
@@ -93,7 +96,7 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
   },
 
   [UploadStepNames.CheckUpload]: {
-    template: 'upload-journey/check-upload',
+    template: 'generalUpload/check-upload',
     validate: (body: Record<string, unknown>) => {
       const errors: Record<string, string> = {};
       if (!body.uploadMore) {
@@ -111,7 +114,7 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
   },
 
   [UploadStepNames.SendToOtherParty]: {
-    template: 'upload-journey/send-to-other-party',
+    template: 'generalUpload/send-to-other-party',
     validate: (body: Record<string, unknown>) => {
       const errors: Record<string, string> = {};
       if (body.understand !== 'yes') {
@@ -124,7 +127,7 @@ export const uploadSteps: Record<UploadStepId, UploadStep> = {
   },
 
   [UploadStepNames.Confirmation]: {
-    template: 'upload-journey/confirmation',
+    template: 'generalUpload/confirmation',
     next: () => null,
     previous: () => UploadStepNames.SendToOtherParty,
   }

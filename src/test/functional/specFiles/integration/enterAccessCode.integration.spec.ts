@@ -27,17 +27,12 @@ function shouldRunHappyPathIntegrationSuite(): boolean {
 }
 
 function getRequiredCcdUrl(): string {
-  const ccdDataStoreUrl = process.env.CCD_DATA_STORE_API_URL?.trim();
-  if (ccdDataStoreUrl) {
-    return ccdDataStoreUrl;
+  const ccd = process.env.CCD_URL?.trim() || process.env.CCD_DATA_STORE_API_URL?.trim();
+  if (!ccd) {
+    throw new Error('[integration-preflight] Set CCD_URL (or CCD_DATA_STORE_API_URL fallback)');
   }
 
-  const ccdUrl = process.env.CCD_URL?.trim();
-  if (ccdUrl) {
-    return ccdUrl;
-  }
-
-  throw new Error('[integration-preflight] Missing required env var: set CCD_DATA_STORE_API_URL or CCD_URL');
+  return ccd;
 }
 
 async function assertResolvableUrl(urlValue: string, label: string): Promise<void> {
@@ -56,7 +51,7 @@ async function assertResolvableUrl(urlValue: string, label: string): Promise<voi
 // Call once in fixture before creating CCD case
 export async function assertIntegrationPreflight(): Promise<void> {
   const ccdDataStoreUrl = getRequiredCcdUrl();
-  await assertResolvableUrl(ccdDataStoreUrl, 'CCD data store URL');
+  await assertResolvableUrl(ccdDataStoreUrl, 'CCD URL');
 }
 
 /**
@@ -66,7 +61,7 @@ export async function assertIntegrationPreflight(): Promise<void> {
  * case number submission -> access code submission -> dashboard.
  * They call invalidateAccessCode() which triggers real CCD events.
  * They require a real contested case created via API and progressed through
-79 * FR_issueApplication (the point where access codes are generated).
+ * FR_issueApplication (the point where access codes are generated).
  * 
  * Runs on: AAT/preview by default (or any target when ACCESS_CODE_REAL_INTEGRATION=true)
  * Requires: Real CCD instance reachable, valid case with real access codes
@@ -77,16 +72,11 @@ export async function assertIntegrationPreflight(): Promise<void> {
 
 // INTEGRATION: Happy-path submission calls invalidateAccessCode(), which triggers
 // a CCD event. These tests require a real case + real access-code integration.
-test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
-  const runAccessCodeIntegration = shouldRunHappyPathIntegrationSuite();
-
-  test.skip(
-    !runAccessCodeIntegration,
-    'Skipped outside preview/AAT by default. Set ACCESS_CODE_REAL_INTEGRATION=true to force enable on non-preview/non-AAT targets.'
-  );
+if (shouldRunHappyPathIntegrationSuite()) {
+  test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
 
   test.beforeAll(async () => {
-    await assertIntegrationPreflight();
+    await assertIntegrationPreflight(); // keeps DNS/resolvability validation
   });
 
   test.beforeEach(async ({
@@ -181,15 +171,11 @@ test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
     await dashboardPage.verifyDashboardPageContent();
     await runA11yAudit(axeUtils);
   });
-});
+  });
+}
 
-test.describe('[integration-happy-path] Enter Access Code - Full Journey', () => {
-  const runIntegration = shouldRunHappyPathIntegrationSuite();
-
-  test.skip(
-    !runIntegration,
-    'Skipped outside preview/AAT by default. Set ACCESS_CODE_REAL_INTEGRATION=true to force enable on non-preview/non-AAT targets.'
-  );
+if (shouldRunHappyPathIntegrationSuite()) {
+  test.describe('[integration-happy-path] Enter Access Code - Full Journey', () => {
 
   test.beforeAll(async () => {
     await assertIntegrationPreflight();
@@ -210,4 +196,5 @@ test.describe('[integration-happy-path] Enter Access Code - Full Journey', () =>
     await dashboardPage.verifyDashboardPageContent();
     await runA11yAudit(axeUtils);
   });
-});
+  });
+}
