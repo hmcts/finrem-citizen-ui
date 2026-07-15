@@ -15,10 +15,9 @@ export default function setupDashboardRoute(app: Application): void {
     async (req: Request, _res: Response, next: NextFunction) => {
       await setCaseUserRole(req.session);
       setCaseUserName(req.session);
-      console.log('Session ID:', req.sessionID);
       next();
     },
-    requireCaseRole,  // ✅ NOW runs AFTER role is set
+    requireCaseRole,  // runs AFTER role is set
     async (req: Request, res: Response) => {
       const user = req.session.user as UserDetails | undefined;
 
