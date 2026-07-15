@@ -90,6 +90,7 @@ function initAutocomplete(): void {
       source: createSourceFunction(config.apiUrl, resultsMap),
       onConfirm: createConfirmHandler(element, config.eventName, resultsMap),
       showNoOptionsFound: true,
+      showAllValues: true,
       minLength: 0,
     });
   });
