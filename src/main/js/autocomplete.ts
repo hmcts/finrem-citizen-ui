@@ -93,6 +93,16 @@ function initAutocomplete(): void {
       showAllValues: true,
       minLength: 0,
     });
+
+    const input = container.querySelector(`#${config.inputId}`) as HTMLInputElement;
+    if (input) {
+      input.addEventListener('focus', () => {
+        if (input.value === '') {
+          const event = new Event('input', { bubbles: true });
+          input.dispatchEvent(event);
+        }
+      });
+    }
   });
 }
 
