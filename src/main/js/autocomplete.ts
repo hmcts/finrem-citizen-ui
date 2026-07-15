@@ -108,6 +108,9 @@ function initAutocomplete(): void {
           const event = new Event('input', { bubbles: true });
           input.dispatchEvent(event);
         }
+        if (menu) {
+          menu.style.display = '';
+        }
       });
 
       input.addEventListener('autocomplete:close', () => {
@@ -115,6 +118,9 @@ function initAutocomplete(): void {
           menu.style.display = 'none';
         }
         suppressNextFocus = true;
+        setTimeout(() => {
+          suppressNextFocus = false;
+        }, 100);
       });
     }
   });
