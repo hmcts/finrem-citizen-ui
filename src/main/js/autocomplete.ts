@@ -75,6 +75,7 @@ function initAutocomplete(): void {
   const autocompleteElements = document.querySelectorAll('[data-autocomplete]');
 
   autocompleteElements.forEach(element => {
+    let suppressNextFocus = false;
     const container = element.querySelector('[id$="-container"]') as HTMLElement;
     if (!container) {
       return;
@@ -97,9 +98,19 @@ function initAutocomplete(): void {
     const input = container.querySelector(`#${config.inputId}`) as HTMLInputElement;
     if (input) {
       input.addEventListener('focus', () => {
+        if (suppressNextFocus) {
+          suppressNextFocus = false;
+          return;
+        }
         if (input.value === '') {
           const event = new Event('input', { bubbles: true });
           input.dispatchEvent(event);
+        }
+      });
+
+      input.addEventListener('blur', () => {
+        if (input.value === '') {
+          suppressNextFocus = true;
         }
       });
     }
