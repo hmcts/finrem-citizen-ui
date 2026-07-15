@@ -15,46 +15,36 @@ function nonProdOnly(req: Request, res: Response, next: NextFunction) {
 }
 
 function buildSafeConfig(): Record<string, unknown> {
-  const safeConfig: Record<string, unknown> = {};
-  const sensitiveKeys = ['secrets', 'systemPassword', 'clientSecret', 'secret'];
+  const urls: Record<string, unknown> = {};
   
-  const allKeys = Object.keys(config.util.toObject());
+  if (config.has('services')) {
+    const services = config.get<Record<string, unknown>>('services');
+    urls.services = extractUrls(services);
+  }
   
-  for (const key of allKeys) {
-    if (sensitiveKeys.includes(key)) {
-      continue;
-    }
-    
-    if (config.has(key)) {
-      const value = config.get(key);
-      
-      if (key === 'services') {
-        safeConfig[key] = filterSensitiveKeys(value as Record<string, unknown>, sensitiveKeys);
-      } else {
-        safeConfig[key] = value;
+  if (config.has('oidc')) {
+    const oidc = config.get<Record<string, unknown>>('oidc');
+    urls.oidc = extractUrls(oidc);
+  }
+  
+  return urls;
+}
+
+function extractUrls(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === 'string' && (key.toLowerCase().includes('url') || key.toLowerCase() === 'issuer')) {
+      result[key] = value;
+    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      const nested = extractUrls(value as Record<string, unknown>);
+      if (Object.keys(nested).length > 0) {
+        result[key] = nested;
       }
     }
   }
   
-  return safeConfig;
-}
-
-function filterSensitiveKeys(obj: Record<string, unknown>, sensitiveKeys: string[]): Record<string, unknown> {
-  const filtered: Record<string, unknown> = {};
-  
-  for (const [key, value] of Object.entries(obj)) {
-    if (sensitiveKeys.includes(key)) {
-      continue;
-    }
-    
-    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      filtered[key] = filterSensitiveKeys(value as Record<string, unknown>, sensitiveKeys);
-    } else {
-      filtered[key] = value;
-    }
-  }
-  
-  return filtered;
+  return result;
 }
 
 export default function setupConfigRoute(app: Application): void {

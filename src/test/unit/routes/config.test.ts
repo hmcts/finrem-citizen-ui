@@ -185,15 +185,16 @@ describe('config route', () => {
       expect(response.headers['content-type']).toMatch(/json/);
     });
 
-    test('includes non-sensitive config values', async () => {
+    test('only includes URL-related config values', async () => {
       const response = await request(app).get('/config');
 
-      expect(response.body).toHaveProperty('useCSRFProtection', true);
-      expect(response.body).toHaveProperty('rateLimitWindowMs', 900000);
-      expect(response.body).toHaveProperty('appInsights');
-      expect(response.body).toHaveProperty('security');
+      expect(response.body).toHaveProperty('services');
       expect(response.body).toHaveProperty('oidc');
-      expect(response.body).toHaveProperty('session');
+      expect(response.body).not.toHaveProperty('useCSRFProtection');
+      expect(response.body).not.toHaveProperty('rateLimitWindowMs');
+      expect(response.body).not.toHaveProperty('appInsights');
+      expect(response.body).not.toHaveProperty('security');
+      expect(response.body).not.toHaveProperty('session');
     });
 
     test('excludes secrets section from response', async () => {
@@ -211,26 +212,26 @@ describe('config route', () => {
       expect(response.body).not.toHaveProperty('secrets');
     });
 
-    test('excludes systemPassword from services config', async () => {
+    test('excludes systemPassword and systemUsername from services config', async () => {
       const response = await request(app).get('/config');
 
       expect(response.body.services.idam.systemPassword).toBeUndefined();
-      expect(response.body.services.idam.systemUsername).toBe('test_user');
+      expect(response.body.services.idam.systemUsername).toBeUndefined();
     });
 
-    test('excludes clientSecret from services config', async () => {
+    test('excludes clientSecret and clientID from services config', async () => {
       const response = await request(app).get('/config');
 
       expect(response.body.services.idam.clientSecret).toBeUndefined();
-      expect(response.body.services.idam.clientID).toBe('finrem-citizen-ui');
+      expect(response.body.services.idam.clientID).toBeUndefined();
     });
 
-    test('excludes secret from authProvider config', async () => {
+    test('excludes secret and microservice from authProvider config', async () => {
       const response = await request(app).get('/config');
 
       expect(response.body.services.authProvider.secret).toBeUndefined();
+      expect(response.body.services.authProvider.microservice).toBeUndefined();
       expect(response.body.services.authProvider.url).toBe('http://auth-provider.test');
-      expect(response.body.services.authProvider.microservice).toBe('finrem_citizen_ui');
     });
 
     test('includes non-sensitive service URLs', async () => {
@@ -241,26 +242,21 @@ describe('config route', () => {
       expect(response.body.services.idam.tokenURL).toBe('https://idam-api.test/o/token');
     });
 
-    test('includes OIDC configuration', async () => {
+    test('includes only URL fields from OIDC configuration', async () => {
       const response = await request(app).get('/config');
 
       expect(response.body.oidc).toEqual({
         issuer: 'https://idam.test/o',
-        clientId: 'finrem-citizen-ui',
         callbackUrl: 'http://localhost:3100/oauth2/callback',
-        scope: 'openid profile roles',
       });
+      expect(response.body.oidc.clientId).toBeUndefined();
+      expect(response.body.oidc.scope).toBeUndefined();
     });
 
-    test('includes session configuration', async () => {
+    test('excludes session configuration', async () => {
       const response = await request(app).get('/config');
 
-      expect(response.body.session).toEqual({
-        cookieName: 'finrem_session',
-        prefix: 'finrem-session',
-        store: 'in-memory',
-        ttlInSeconds: 5400,
-      });
+      expect(response.body.session).toBeUndefined();
     });
   });
 });
