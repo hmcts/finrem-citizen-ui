@@ -114,22 +114,23 @@ export class DocumentUploadPage extends BasePage {
 
     await fileInput.setInputFiles(filePath);
 
-    if (expectUploadSuccess) {
-      await uploadButton.click();
-    } else {
-      await Promise.all([
-        this.page.waitForResponse(
-          response => response.request().method() === 'POST' && response.url().includes('/documents/upload'),
-          { timeout: 15_000 }
-        ),
-        uploadButton.click(),
-      ]);
+    const uploadResponsePromise = this.page.waitForResponse(
+      response => response.request().method() === 'POST' && response.url().includes('/documents/upload'),
+      { timeout: 20_000 }
+    );
+
+    await Promise.all([
+      uploadResponsePromise,
+      uploadButton.click(),
+    ]);
+
+    if (!expectUploadSuccess) {
       await this.page.waitForURL(/\/upload\/upload-documents/, { timeout: 15_000 });
       await this.page.waitForLoadState('domcontentloaded');
     }
 
     if (expectUploadSuccess) {
-      await expect(this.uploadedFileLinks).toHaveCount(beforeCount + 1, { timeout: 15000 });
+      await expect(this.uploadedFileLinks).toHaveCount(beforeCount + 1, { timeout: 30_000 });
       await expect(this.inlineUploadFailedError).toHaveCount(0);
     } else {
       await expect(this.uploadedFileLinks).toHaveCount(beforeCount);
@@ -149,22 +150,23 @@ export class DocumentUploadPage extends BasePage {
 
     await fileInput.setInputFiles(filePath);
 
-    if (expectUploadSuccess) {
-      await uploadButton.click();
-    } else {
-      await Promise.all([
-        this.page.waitForResponse(
-          response => response.request().method() === 'POST' && response.url().includes('/documents/upload'),
-          { timeout: 15_000 }
-        ),
-        uploadButton.click(),
-      ]);
+    const uploadResponsePromise = this.page.waitForResponse(
+      response => response.request().method() === 'POST' && response.url().includes('/documents/upload'),
+      { timeout: 20_000 }
+    );
+
+    await Promise.all([
+      uploadResponsePromise,
+      uploadButton.click(),
+    ]);
+
+    if (!expectUploadSuccess) {
       await this.page.waitForURL(/\/upload\/upload-documents/, { timeout: 15_000 });
       await this.page.waitForLoadState('domcontentloaded');
     }
 
     if (expectUploadSuccess) {
-      await expect(this.uploadedFileLinks).toHaveCount(beforeCount + 1, { timeout: 15000 });
+      await expect(this.uploadedFileLinks).toHaveCount(beforeCount + 1, { timeout: 30_000 });
       await expect(this.inlineUploadFailedError).toHaveCount(0);
     } else {
       await expect(this.uploadedFileLinks).toHaveCount(beforeCount);
@@ -220,23 +222,14 @@ export class DocumentUploadPage extends BasePage {
 
     const tryRemoveViaUi = async (): Promise<boolean> => {
       try {
-        const [response] = await Promise.all([
-          this.page.waitForResponse(
-            resp => resp.url().includes(removePath) && resp.request().method() === 'DELETE',
-            { timeout: 8_000 }
-          ),
-          removeLink.click(),
-        ]);
-
-        if (!response.ok()) {
-          throw new Error(`Remove file request failed with status ${response.status()}`);
-        }
-
+        const currentRemoveLink = this.page.locator('[data-remove-file]').first();
+        await expect(currentRemoveLink).toBeVisible({ timeout: 5_000 });
+        await currentRemoveLink.click();
         await expect(this.uploadedFileLinks).toHaveCount(beforeCount - 1, { timeout: 10_000 });
         return true;
       } catch (error) {
         // eslint-disable-next-line no-console
-        console.warn('UI remove attempt failed', error);
+        console.warn(`UI remove attempt failed for ${removePath}`, error);
         return false;
       }
     };
@@ -251,14 +244,7 @@ export class DocumentUploadPage extends BasePage {
       return;
     }
 
-    // Fallback for environments where client-side listener intermittently fails to attach.
-    const response = await this.page.request.delete(removePath);
-    if (!response.ok()) {
-      throw new Error(`Remove file request failed with status ${response.status()}`);
-    }
-
-    await this.page.reload({ waitUntil: 'domcontentloaded' });
-    await expect(this.uploadedFileLinks).toHaveCount(beforeCount - 1, { timeout: 10_000 });
+    throw new Error(`Unable to remove uploaded file via UI after retry for ${removePath}`);
   }
 
   async uploadInvalidFileFormat(): Promise<void> {

@@ -272,7 +272,12 @@ export default function setupGeneralUploadRoute(app: Application): void {
       return res.status(404).send('Step not found');
     }
 
-    const previousStep = step.previous ? step.previous() : null;
+    // Clear referrer when visiting check-upload to prevent infinite loop with browser back button
+    if (req.params.stepId === 'check-upload' && req.session.DocumentSelection?.documentTypeSelectionReferrer) {
+      delete req.session.DocumentSelection.documentTypeSelectionReferrer;
+    }
+
+    const previousStep = step.previous ? step.previous(req) : null;
 
     // Map DocumentSelection to display format
     const selectedDocumentTypes = getSelectedDocumentTypesForDisplay(req);
@@ -319,7 +324,7 @@ export default function setupGeneralUploadRoute(app: Application): void {
 
       const errors = step.validate ? step.validate(req.body, req) : {};
       if (Object.keys(errors).length > 0) {
-        const previousStep = step.previous ? step.previous() : null;
+        const previousStep = step.previous ? step.previous(req) : null;
 
         // Map DocumentSelection to display format
         const selectedDocumentTypes = getSelectedDocumentTypesForDisplay(req);
@@ -354,6 +359,21 @@ export default function setupGeneralUploadRoute(app: Application): void {
           req.session.DocumentSelection = {};
         }
         req.session.DocumentSelection.isFinancialDisputeResolution = req.body.fdrHearing === 'true';
+      }
+
+      // Set referrer when navigating from check-upload to document-type-selection
+      if (req.params.stepId === 'check-upload' && req.body.uploadMore === 'yes') {
+        if (!req.session.DocumentSelection) {
+          req.session.DocumentSelection = {};
+        }
+        req.session.DocumentSelection.documentTypeSelectionReferrer = 'check-upload';
+      }
+
+      // Clear referrer when leaving document-type-selection
+      if (req.params.stepId === 'document-type-selection') {
+        if (req.session.DocumentSelection) {
+          delete req.session.DocumentSelection.documentTypeSelectionReferrer;
+        }
       }
 
       // Handle send-to-other-party submission - send documents to CCD
