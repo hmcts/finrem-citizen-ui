@@ -17,6 +17,9 @@ test.describe('[integration] Check uploaded documents page', () => {
   test.describe('[integration] Check uploaded documents page with uploaded other document', () => {
     test.beforeEach(async ({
       loggedInPage: _loggedInPage,
+      enterCaseNumberPage,
+      enterAccessCodePage,
+      contestedCaseWithHearing,
       dashboardPage,
       beforeYouStartPage,
       confidentialityPage,
@@ -26,6 +29,11 @@ test.describe('[integration] Check uploaded documents page', () => {
       documentUploadPage,
       checkUploadPage,
     }) => {
+      // Establish real integration session state first
+      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+
+      // Continue existing journey 
       await navigateToCheckUploadWithOtherDocument({
         dashboardPage,
         beforeYouStartPage,
@@ -198,6 +206,9 @@ test.describe('[integration] Check uploaded documents page', () => {
 
   test('[integration] Check uploaded documents groups uploaded files by document type and shows file links @a11y', async ({
     loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    enterAccessCodePage,
+    contestedCaseWithHearing,
     dashboardPage,
     beforeYouStartPage,
     confidentialityPage,
@@ -208,6 +219,9 @@ test.describe('[integration] Check uploaded documents page', () => {
     checkUploadPage,
     axeUtils,
   }) => {
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+
     await navigateToUploadDocumentsStep(
       dashboardPage,
       beforeYouStartPage,
@@ -233,6 +247,9 @@ test.describe('[integration] Check uploaded documents page', () => {
 
   test('[integration] Check uploaded documents shows combined document guidance and name for combined document types @a11y', async ({
     loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    enterAccessCodePage,
+    contestedCaseWithHearing,
     dashboardPage,
     beforeYouStartPage,
     confidentialityPage,
@@ -243,6 +260,9 @@ test.describe('[integration] Check uploaded documents page', () => {
     checkUploadPage,
     axeUtils,
   }) => {
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+
     await navigateToUploadDocumentsStep(
       dashboardPage,
       beforeYouStartPage,
@@ -268,6 +288,9 @@ test.describe('[integration] Check uploaded documents page', () => {
 
   test('[integration] Removing a document type deletes its uploaded files @a11y', async ({
     loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    enterAccessCodePage,
+    contestedCaseWithHearing,
     dashboardPage,
     beforeYouStartPage,
     confidentialityPage,
@@ -278,6 +301,9 @@ test.describe('[integration] Check uploaded documents page', () => {
     checkUploadPage,
     axeUtils,
   }) => {
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+
     await navigateToUploadDocumentsStep(
       dashboardPage,
       beforeYouStartPage,
@@ -326,6 +352,9 @@ test.describe('[integration] Check uploaded documents page', () => {
 
   test('[integration] Changing document types removes uploads for removed types and keeps new Bank upload @a11y', async ({
     loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    enterAccessCodePage,
+    contestedCaseWithHearing,
     dashboardPage,
     beforeYouStartPage,
     confidentialityPage,
@@ -336,6 +365,9 @@ test.describe('[integration] Check uploaded documents page', () => {
     checkUploadPage,
     axeUtils,
   }) => {
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+
     await navigateToUploadDocumentsStep(
       dashboardPage,
       beforeYouStartPage,

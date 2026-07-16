@@ -21,7 +21,10 @@ import { AppInsights } from '../../modules/appinsights';
 
 export default function (app: Application): void {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
-  app.get(RouteNames.basePath, oidcMiddleware, async (req, res) => {
+  app.get(RouteNames.basePath, oidcMiddleware, async (req, res, next) => {
+    if (req.originalUrl === RouteNames.dashboard) {
+      return next();
+    }
     const user = req.session.user as UserDetails;
     const result = await orchestrateHome(user, logger);
     if (result.caseData) {

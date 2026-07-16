@@ -6,7 +6,7 @@ import { LoggerInstance } from 'winston';
 import { getSystemUser } from '../../../../main/app/auth/user';
 import { getCaseApi } from '../../../../main/app/case/case-api';
 import { CASE_TYPE } from '../../../../main/app/case/case-type';
-import { CaseType } from '../../../../main/app/case/definition';
+import { CaseRole, CaseType } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { CaseUserNames, RouteNames } from '../../../../main/common-constants';
 import * as homePageUtil from '../../../../main/functions/util/homePageUtil';
@@ -365,7 +365,7 @@ describe('setCaseUserName', () => {
       caseNumber: 'CASE123',
       user: {
         id: 'user-1',
-        caseRole: '[APPLICANT]',
+        caseRole: CaseRole.APPLICANT,
       },
       caseData: {
         applicantFlags: {
@@ -388,7 +388,7 @@ describe('setCaseUserName', () => {
       caseNumber: 'CASE123',
       user: {
         id: 'user-1',
-        caseRole: '[RESPONDENT]',
+        caseRole: CaseRole.RESPONDENT,
       },
       caseData: {
         respondentFlags: {
@@ -411,7 +411,7 @@ describe('setCaseUserName', () => {
       caseNumber: 'CASE123',
       user: {
         id: 'user-1',
-        caseRole: '[APPLICANT]',
+        caseRole: CaseRole.APPLICANT,
       },
       caseData: {
         applicantFlags: {},
@@ -432,7 +432,7 @@ describe('setCaseUserName', () => {
       caseNumber: 'CASE123',
       user: {
         id: 'user-1',
-        caseRole: '[RESPONDENT]',
+        caseRole: CaseRole.RESPONDENT,
       },
       caseData: {
         respondentFlags: {},
@@ -453,7 +453,7 @@ describe('setCaseUserName', () => {
       caseNumber: 'CASE123',
       user: {
         id: 'user-1',
-        caseRole: '[APPLICANT]',
+        caseRole: CaseRole.APPLICANT,
       },
       caseData: {
         applicantFlags: {
@@ -477,7 +477,7 @@ describe('setCaseUserName', () => {
       caseNumber: 'CASE123',
       user: {
         id: 'user-1',
-        caseRole: '[APPLICANT]',
+        caseRole: CaseRole.APPLICANT,
       },
     } as unknown as SessionData;
 
@@ -499,6 +499,32 @@ describe('setCaseUserName', () => {
       caseData: {
         applicantFlags: {
           partyName: 'John Smith',
+        },
+      },
+    } as unknown as SessionData;
+
+    homePageUtil.setCaseUserName(session);
+
+    const typedSession = session as unknown as {
+      caseUserName?: string;
+    };
+
+    expect(typedSession.caseUserName).toBeUndefined();
+  });
+
+  test('does not set caseUserName when caseRole is not applicant or respondent', () => {
+    const session = {
+      caseNumber: 'CASE123',
+      user: {
+        id: 'user-1',
+        caseRole: 'UNKNOWN_ROLE',
+      },
+      caseData: {
+        applicantFlags: {
+          partyName: 'John Smith',
+        },
+        respondentFlags: {
+          partyName: 'Jane Doe',
         },
       },
     } as unknown as SessionData;

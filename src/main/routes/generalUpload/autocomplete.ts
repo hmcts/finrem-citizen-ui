@@ -14,7 +14,7 @@ const typedDocumentTypes: DocumentType[] = documentTypes as DocumentType[];
 
 function searchDocumentTypes(query: string): DocumentType[] {
   if (!query || query.trim().length === 0) {
-    return [];
+    return typedDocumentTypes;
   }
 
   const searchTerm = query.toLowerCase().trim();

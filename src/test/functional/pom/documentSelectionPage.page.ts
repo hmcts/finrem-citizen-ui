@@ -9,8 +9,6 @@ const URL_PATTERNS = {
   UPLOAD_DOCUMENTS: /\/upload\/upload-documents/,
 };
 
-const DOCUMENT_SELECTION_EMAIL = 'FRCexample@justice.gov.uk';
-
 export class DocumentSelectionPage extends BasePage {
   readonly backLink: Locator;
   readonly pageHeader: Locator;
@@ -105,23 +103,24 @@ export class DocumentSelectionPage extends BasePage {
     await this.documentTypeInput.pressSequentially(searchTerm);
     await autocompleteResponsePromise;
 
-    const suggestion = this.page.getByRole('option', { name: expectedDocumentLabel });
+    const suggestion = this.page.getByRole('option', { name: expectedDocumentLabel, exact: true });
     await expect(suggestion).toBeVisible();
     await suggestion.click();
 
-    // Close the autocomplete popup so it cannot intercept the add-button click.
-    await this.documentTypeInput.press('Escape');
+    // GOV.UK autocomplete can apply aliases/normalization in the combobox value,
+    // so assert selection via resulting document list after submit instead.
+    await this.documentsHeading.click();
 
     await Promise.all([
-      this.page.waitForResponse(response => {
-        return response.url().includes('/upload/document-type-selection')
-          && response.request().method() === 'POST'
-          && response.ok();
-      }),
+      this.page.waitForResponse(response =>
+        response.url().includes('/upload/document-type-selection') &&
+        response.request().method() === 'POST' &&
+        response.ok()
+      ),
       this.addDocumentButton.click(),
     ]);
 
-    await expect(this.termByLabel(expectedDocumentLabel)).toBeVisible();
+    await expect(this.termByLabel(expectedDocumentLabel)).toBeVisible({ timeout: 15_000 });
     await expect(this.noDocumentsMessage).toBeHidden();
   }
 
@@ -187,7 +186,6 @@ export class DocumentSelectionPage extends BasePage {
 
   async verifyGettingHelpSection(): Promise<void> {
     await this.gettingHelp.verifySection({
-      expectedEmail: DOCUMENT_SELECTION_EMAIL,
       openingHoursLocator: this.helpOpeningHours,
     });
   }

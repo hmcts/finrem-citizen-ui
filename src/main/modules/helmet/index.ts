@@ -37,6 +37,7 @@ export class Helmet {
             defaultSrc: ["'none'"],
             fontSrc: [self, 'data:'],
             imgSrc: [self, googleAnalyticsDomain],
+            manifestSrc: [self],
             objectSrc: [self],
             scriptSrc,
             styleSrc: [self],

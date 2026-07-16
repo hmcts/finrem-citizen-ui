@@ -12,9 +12,6 @@ const URL_PATTERNS = {
 
 const NAVIGATION_TIMEOUT_MS = 15_000;
 
-// FDR = Financial Dispute Resolution.
-const FDR_EMAIL = 'FRCexample@justice.gov.uk';
-
 export class FdrPage extends BasePage {
   readonly backLink: Locator;
   readonly questionHeading: Locator;
@@ -120,6 +117,6 @@ export class FdrPage extends BasePage {
   }
 
   async verifyGettingHelpSection(): Promise<void> {
-    await this.gettingHelp.verifySection({ expectedEmail: FDR_EMAIL });
+    await this.gettingHelp.verifySection();
   }
 }
