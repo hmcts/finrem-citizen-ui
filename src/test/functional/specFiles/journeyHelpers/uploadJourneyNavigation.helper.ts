@@ -15,7 +15,17 @@ export async function navigateToDashboardStep(
   basePage: BasePage
 ): Promise<void> {
   await dashboardPage.navigateToDashboard();
+
+  // Keep shared shell check
   await basePage.verifyGlobalHeaderAndFooter();
+
+  // Fail fast with a clear cause if backend/session routing returned error page
+  await expect(
+    dashboardPage.page.getByRole('heading', { name: 'Sorry, there is a problem with the service' })
+  ).toHaveCount(0);
+
+  // Assert page-specific readiness before any click
+  await dashboardPage.verifyDashboardPageContent();
 }
 
 export async function navigateToConfidentialityStep(
