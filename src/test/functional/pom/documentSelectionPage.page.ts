@@ -9,8 +9,6 @@ const URL_PATTERNS = {
   UPLOAD_DOCUMENTS: /\/upload\/upload-documents/,
 };
 
-const DOCUMENT_SELECTION_EMAIL = 'FRCexample@justice.gov.uk';
-
 export class DocumentSelectionPage extends BasePage {
   readonly backLink: Locator;
   readonly pageHeader: Locator;
@@ -187,7 +185,6 @@ export class DocumentSelectionPage extends BasePage {
 
   async verifyGettingHelpSection(): Promise<void> {
     await this.gettingHelp.verifySection({
-      expectedEmail: DOCUMENT_SELECTION_EMAIL,
       openingHoursLocator: this.helpOpeningHours,
     });
   }
