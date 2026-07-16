@@ -44,8 +44,8 @@ withPipeline(type, product, component) {
   env.PREVIEW_FUNCTIONAL_TESTS_COMMAND = "yarn test:functional:ci"
   env.PREVIEW_FUNCTIONAL_TEST_COMMAND = "yarn test:functional:ci"
   env.PLAYWRIGHT_CI_SHARDED = "true"
-  env.PLAYWRIGHT_SHARD_TOTAL = "10"
-  env.PLAYWRIGHT_INSTALL_IN_SCRIPT = "false"
+  env.PLAYWRIGHT_SHARD_TOTAL = "4"
+  env.PLAYWRIGHT_INSTALL_IN_SCRIPT = "true"
   
   loadVaultSecrets(secrets)
 

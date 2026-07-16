@@ -191,7 +191,7 @@ This model keeps prerequisites explicit in test signatures and avoids hidden glo
   - true: test-support endpoints enabled (local mock flow)
   - false: test-support endpoints disabled (preview/AAT default)
 - PLAYWRIGHT_SHARD_TOTAL:
-   - default `10` in Jenkins
+   - default `4` in Jenkins
    - controls number of functional shards for `yarn test:functional:ci`
 - PLAYWRIGHT_CI_SHARDED:
    - set automatically by `yarn test:functional:ci`

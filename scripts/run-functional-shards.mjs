@@ -1,9 +1,9 @@
-import { cp, mkdir, readdir, rm } from 'node:fs/promises';
+import { cp, mkdir, rm } from 'node:fs/promises';
 import { execFileSync, spawn } from 'node:child_process';
 import path from 'node:path';
 import os from 'node:os';
 
-const shardTotal = Number.parseInt(process.env.PLAYWRIGHT_SHARD_TOTAL || '10', 10);
+const shardTotal = Number.parseInt(process.env.PLAYWRIGHT_SHARD_TOTAL || '4', 10);
 const retryCount = Number.parseInt(process.env.PLAYWRIGHT_RETRIES || '2', 10);
 const resultsRoot = process.env.TEST_RESULTS_DIR || 'functional-output';
 const blobReportsRoot = path.join(resultsRoot, 'all-blob-reports');
@@ -22,8 +22,6 @@ const buildChildEnv = overrides => ({
 if (!Number.isFinite(shardTotal) || shardTotal < 1) {
   throw new Error(`Invalid PLAYWRIGHT_SHARD_TOTAL value: ${process.env.PLAYWRIGHT_SHARD_TOTAL}`);
 }
-
-console.log(`Running functional sharding with ${shardTotal} shards and ${retryCount} retries.`);
 
 // Clean up previous runs
 await rm(resultsRoot, { recursive: true, force: true });
@@ -88,14 +86,9 @@ await mkdir(blobReportsRoot, { recursive: true });
 for (const result of shardResults) {
   const shardBlobReportDir = path.join(result.shardResultsDir, 'blob-report');
   try {
-    const blobEntries = await readdir(shardBlobReportDir);
-    for (const entry of blobEntries) {
-      await cp(
-        path.join(shardBlobReportDir, entry),
-        path.join(blobReportsRoot, `shard-${result.shardIndex}-${entry}`),
-        { recursive: true }
-      );
-    }
+    await cp(shardBlobReportDir, path.join(blobReportsRoot, `shard-${result.shardIndex}`), {
+      recursive: true,
+    });
   } catch (err) {
     // Only swallow the error if the folder actually doesn't exist (expected for failed runs)
     if (err.code !== 'ENOENT') {
@@ -104,27 +97,20 @@ for (const result of shardResults) {
   }
 }
 
-const mergedInputEntries = await readdir(blobReportsRoot);
-if (mergedInputEntries.length === 0) {
-  console.warn(`No shard blob reports found under ${blobReportsRoot}; skipping report merge.`);
-} else {
-  console.log(`Merging ${mergedInputEntries.length} blob report file(s) from ${blobReportsRoot}.`);
-
-  // Merge reports
-  try {
-    execFileSync(
-      yarnCmd,
-      ['playwright', 'merge-reports', '--reporter', 'html', blobReportsRoot],
-      {
-        stdio: 'inherit',
-        env: buildChildEnv(),
-        shell: isWindows,
-      }
-    );
-  } catch (error) {
-    if (!shardFailed) {
-      throw error;
+// Merge reports
+try {
+  execFileSync(
+    yarnCmd,
+    ['playwright', 'merge-reports', '--reporter', 'html', blobReportsRoot],
+    {
+      stdio: 'inherit',
+      env: buildChildEnv(),
+      shell: isWindows,
     }
+  );
+} catch (error) {
+  if (!shardFailed) {
+    throw error;
   }
 }
 
