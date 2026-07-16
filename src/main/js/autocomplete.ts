@@ -99,6 +99,9 @@ function initAutocomplete(): void {
     
     if (input) {
       input.addEventListener('focus', () => {
+        if (menu && menu.style.display === 'none') {
+          menu.style.display = '';
+        }
         if (input.value === '') {
           const event = new Event('input', { bubbles: true });
           input.dispatchEvent(event);
