@@ -8,6 +8,7 @@ dotenv.config({ quiet: true });
 
 // 1. Determine Target URL and Results Directory
 const resultsDir = process.env.TEST_RESULTS_DIR || 'functional-output';
+const isShardedCi = process.env.PLAYWRIGHT_CI_SHARDED === 'true';
 
 const getBaseUrl = (): string => {
   if (process.env.TEST_URL) {
@@ -62,7 +63,9 @@ export default defineConfig({
 
   reporter: [
     ...((CommonConfig.recommended.reporter as ReporterDescription[]) || []),
-    ['html', { outputFolder: `${resultsDir}/functional-test-report` }],
+    ...(isShardedCi
+      ? [['blob', { outputDir: `${resultsDir}/blob-report` }]]
+      : [['html', { outputFolder: `${resultsDir}/functional-test-report` }]]),
     ['junit', { outputFile: `${resultsDir}/functional-test-result.xml` }],
   ] as ReporterDescription[],
 
