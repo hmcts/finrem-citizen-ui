@@ -25,7 +25,7 @@
     "test:smoke": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --config jest.smoke.config.js",
     "test:functional:install-deps": "yarn playwright install --with-deps",
     "test:functional": "node scripts/run-functional-shards.mjs",
-    "test:functional:ci": "PLAYWRIGHT_CI_SHARDED=true PLAYWRIGHT_SHARD_TOTAL=${PLAYWRIGHT_SHARD_TOTAL:-4} node scripts/run-functional-shards.mjs",
+    "test:functional:ci": "PLAYWRIGHT_CI_SHARDED=true PLAYWRIGHT_SHARD_TOTAL=${PLAYWRIGHT_SHARD_TOTAL:-10} node scripts/run-functional-shards.mjs",
     "test:functional:quick": "PLAYWRIGHT_RETRIES=0 PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-6} playwright test --config playwright.config.mts --project chromium",
     "test:fullfunctional": "PLAYWRIGHT_CI_SHARDED=${PLAYWRIGHT_CI_SHARDED:-true} yarn test:functional",
     "test:functional:allBrowsers": "playwright test --config playwright.config.mts --retries=${PLAYWRIGHT_RETRIES:-3}",
