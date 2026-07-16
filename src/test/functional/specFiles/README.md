@@ -9,6 +9,8 @@ It is located under `specFiles/` for historical reasons, but it covers the full 
 - **Master build runs**: https://build.hmcts.net/job/HMCTS_d_to_i/job/finrem-citizen-ui/job/master/
 - **Preview (PR) build runs**: https://build.hmcts.net/job/HMCTS_d_to_i/job/finrem-citizen-ui/job/PR-437/ (replace 437 with your PR number)
 
+Functional runs in Jenkins are sharded by default to reduce runtime. Shards run in parallel, emit per-shard JUnit files under `functional-output/shard-*`, and merge Playwright blob reports into a single HTML report under `playwright-report/`.
+
 ## What Is Tested In This Repo
 
 ### Unit tests (`src/test/unit/`)
@@ -140,11 +142,38 @@ Required:
 
 - Reachable CCD (local mock CCD, preview, or AAT)
 - No test-support route injection
+- Successful IDAM authentication for the citizen test user (via shared fixtures)
 
 Default behavior:
 
 - Real happy-path suites run by default on preview/AAT targets.
 - Outside preview/AAT, set ACCESS_CODE_REAL_INTEGRATION=true to enable them.
+
+## Fixture And Prerequisite Loading
+
+Functional specs use shared fixtures from `src/test/fixtures/fixtures.ts`.
+Fixtures are lazy-loaded by dependency, meaning setup runs only when a test requests a fixture in its parameters.
+
+Core prerequisite fixtures:
+
+- `loggedInPage`
+   - Creates a citizen user via IDAM API fixture dependencies.
+   - Executes login and lands on `/enter-case-number`.
+- `contestedCaseForCaseNumber`
+   - Provisions case-number prerequisites for enter-case-number happy-path tests.
+   - Uses seeded values on local mock CCD URL; creates a real contested case on integration targets.
+- `contestedCaseWithHearing`
+   - Provisions access-code journey prerequisites.
+   - On preview/AAT (or when `ACCESS_CODE_REAL_INTEGRATION=true` on non-preview targets), creates/loads a real case path and returns real applicant/respondent codes.
+   - On local mock CCD URL, returns deterministic seeded values.
+
+Example fixture dependency flow in real integration happy-path suites:
+
+- Test requests `loggedInPage` and `contestedCaseWithHearing`.
+- Fixtures create/authenticate user + provision case prerequisites.
+- Test executes UI path using those preloaded values.
+
+This model keeps prerequisites explicit in test signatures and avoids hidden global setup.
 
 ## Environment Variables
 
@@ -161,6 +190,16 @@ Default behavior:
 - ENABLE_TEST_SUPPORT_ROUTES:
   - true: test-support endpoints enabled (local mock flow)
   - false: test-support endpoints disabled (preview/AAT default)
+- PLAYWRIGHT_SHARD_TOTAL:
+   - default `4` in Jenkins
+   - controls number of functional shards for `yarn test:functional:ci`
+- PLAYWRIGHT_CI_SHARDED:
+   - set automatically by `yarn test:functional:ci`
+   - switches Playwright reporter from HTML to blob per shard (for post-run merge)
+- PLAYWRIGHT_INSTALL_IN_SCRIPT:
+   - controls whether `yarn test:functional:ci` runs `playwright install --with-deps chromium` before sharding
+   - `true`: install inside shard runner (container-friendly default)
+   - `false`: skip install in shard runner (use when browser binaries are pre-provisioned in CI image)
 - CCD logging controls:
    - CCD_LOG_PROGRESS=true enables create/update progress logs (default: quiet)
    - CCD_VERBOSE_RETRY=true enables verbose retry/fallback logs (default: quiet locally, summarized in CI)
@@ -235,6 +274,7 @@ Commands are defined in [../../../../package.json](../../../../package.json).
 |---|---|---|---|---|
 | yarn test:functional:install-deps | Yes | Yes | Yes | Installs Playwright browser dependencies for first-time setup or runner refresh |
 | yarn test:functional | Yes | Yes | Yes | Main functional run on Chromium; includes @a11y-tagged tests |
+| yarn test:functional:ci | No | No | Yes | CI-focused sharded Chromium run with merged reporting output |
 | yarn test:functional:quick | Yes | Yes | Yes | Chromium-only fast run with retries disabled and no Playwright install step |
 | yarn test:functional:allBrowsers | Yes | Yes | Yes | Cross-browser functional run (Chromium, Firefox, WebKit) |
 | yarn test:functional:pr | Yes | Yes | Yes | PR-tagged Chromium-only functional tests using the same tuned worker/retry defaults as main Chromium runs |
@@ -259,6 +299,25 @@ Current effective defaults:
 - `PLAYWRIGHT_RETRIES`: default `3` for `yarn test:functional:allBrowsers` (script flag)
 - `PLAYWRIGHT_RETRIES=0` for `yarn test:functional:quick`
 - `yarn test:functional:headed:slowmo`: fixed `--workers=1`
+- `yarn test:functional:ci`: default `PLAYWRIGHT_SHARD_TOTAL=4` in Jenkins
+
+### CI Sharding And Reporting
+
+Jenkins uses `yarn test:functional:ci` for functional runs.
+
+What this command does:
+
+- launches Chromium Playwright shards in parallel (`--shard=x/y`)
+- optionally installs Chromium browser dependencies once before shard execution (controlled by `PLAYWRIGHT_INSTALL_IN_SCRIPT`)
+- writes per-shard JUnit files to `functional-output/shard-*/functional-test-result.xml`
+- writes per-shard blob reports to `functional-output/shard-*/blob-report/`
+- merges blob reports into a single HTML report in `playwright-report/`
+
+Manual sharded run example:
+
+```bash
+PLAYWRIGHT_SHARD_TOTAL=4 yarn test:functional:ci
+```
 
 Notes:
 

@@ -46,8 +46,12 @@ withNightlyPipeline(type, product, component) {
   // test:coverage executes unit + route tests via jest.config roots.
   env.UNIT_TESTS_COMMAND = "yarn test:coverage && yarn lint && yarn test:api"
   env.FUNCTIONAL_TESTS_COMMAND = "yarn test:functional:ci"
+  env.FUNCTIONAL_TEST_COMMAND = "yarn test:functional:ci"
   env.FULL_FUNCTIONAL_TESTS_COMMAND = "yarn test:functional:ci"
   env.FULL_FUNCTIONAL_TEST_COMMAND = "yarn test:functional:ci"
+  env.PREVIEW_FUNCTIONAL_TESTS_COMMAND = "yarn test:functional:ci"
+  env.PREVIEW_FUNCTIONAL_TEST_COMMAND = "yarn test:functional:ci"
+  env.PLAYWRIGHT_CI_SHARDED = "true"
   env.PLAYWRIGHT_SHARD_TOTAL = "4"
   env.PLAYWRIGHT_INSTALL_IN_SCRIPT = "true"
   env.RUNNING_ENV = "aat"

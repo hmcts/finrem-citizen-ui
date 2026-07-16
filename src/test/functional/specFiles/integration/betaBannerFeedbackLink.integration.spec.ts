@@ -25,6 +25,13 @@ function shouldRunHappyPathIntegrationSuite(): boolean {
 
 const runIntegration = shouldRunHappyPathIntegrationSuite();
 
+/**
+ * INTEGRATION HAPPY PATH: Beta banner feedback link
+ *
+ * Prerequisites are fixture-driven:
+ * - loggedInPage provides authenticated user/session state
+ * - contestedCaseWithHearing provides case id and access code values used to traverse the journey
+ */
 test.describe('[integration-happy-path] Beta banner feedback link across journey pages', () => {
   test.skip(
     !runIntegration,

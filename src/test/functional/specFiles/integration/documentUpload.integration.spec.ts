@@ -385,7 +385,7 @@ test.describe('[integration] Document upload page', () => {
     });
   }
 
-  // TODO(BUG): Re-enable once password-protected uploads consistently return
+  // NOTE(BUG): Re-enable once password-protected uploads consistently return
   // explicit password-protection validation (instead of fallback no-file validation) in integration.
   test.skip('[integration][BUG] Password-protected upload shows explicit validation and does not add file @a11y', async ({
     documentUploadPage,

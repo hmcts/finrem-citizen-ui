@@ -1,17 +1,21 @@
 import { cp, mkdir, rm } from 'node:fs/promises';
 import { execFileSync, spawn } from 'node:child_process';
 import path from 'node:path';
+import os from 'node:os';
 
 const shardTotal = Number.parseInt(process.env.PLAYWRIGHT_SHARD_TOTAL || '4', 10);
 const retryCount = Number.parseInt(process.env.PLAYWRIGHT_RETRIES || '2', 10);
 const resultsRoot = process.env.TEST_RESULTS_DIR || 'functional-output';
 const blobReportsRoot = path.join(resultsRoot, 'all-blob-reports');
 const installInScript = (process.env.PLAYWRIGHT_INSTALL_IN_SCRIPT || 'true') === 'true';
-const fixedPath = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
 
+// Determine if we are running on Windows to handle the Yarn executable properly
+const isWindows = os.platform() === 'win32';
+const yarnCmd = isWindows ? 'yarn.cmd' : 'yarn';
+
+// Instead of wiping out the PATH, we inherit the system's PATH to keep node/nvm intact
 const buildChildEnv = overrides => ({
   ...process.env,
-  PATH: fixedPath,
   ...overrides,
 });
 
@@ -19,14 +23,16 @@ if (!Number.isFinite(shardTotal) || shardTotal < 1) {
   throw new Error(`Invalid PLAYWRIGHT_SHARD_TOTAL value: ${process.env.PLAYWRIGHT_SHARD_TOTAL}`);
 }
 
+// Clean up previous runs
 await rm(resultsRoot, { recursive: true, force: true });
 await rm('playwright-report', { recursive: true, force: true });
 await mkdir(resultsRoot, { recursive: true });
 
 if (installInScript) {
-  execFileSync('yarn', ['playwright', 'install', '--with-deps', 'chromium'], {
+  execFileSync(yarnCmd, ['playwright', 'install', '--with-deps', 'chromium'], {
     stdio: 'inherit',
     env: buildChildEnv(),
+    shell: isWindows, // Critical for Windows support
   });
 }
 
@@ -41,7 +47,7 @@ const runShard = shardIndex => new Promise(resolve => {
   };
 
   const child = spawn(
-    'yarn',
+    yarnCmd,
     [
       'playwright',
       'test',
@@ -55,6 +61,7 @@ const runShard = shardIndex => new Promise(resolve => {
     {
       env: shardEnv,
       stdio: 'inherit',
+      shell: isWindows, // Critical for Windows support
     }
   );
 
@@ -63,6 +70,7 @@ const runShard = shardIndex => new Promise(resolve => {
   });
 });
 
+// Run shards
 const shardRuns = [];
 for (let shardIndex = 1; shardIndex <= shardTotal; shardIndex += 1) {
   shardRuns.push(runShard(shardIndex));
@@ -71,6 +79,7 @@ for (let shardIndex = 1; shardIndex <= shardTotal; shardIndex += 1) {
 const shardResults = await Promise.all(shardRuns);
 const shardFailed = shardResults.some(result => result.code !== 0);
 
+// Set up blob reports directory
 await rm(blobReportsRoot, { recursive: true, force: true });
 await mkdir(blobReportsRoot, { recursive: true });
 
@@ -80,18 +89,23 @@ for (const result of shardResults) {
     await cp(shardBlobReportDir, path.join(blobReportsRoot, `shard-${result.shardIndex}`), {
       recursive: true,
     });
-  } catch {
-    // Some failed shards may not emit a blob report; merge whatever is available.
+  } catch (err) {
+    // Only swallow the error if the folder actually doesn't exist (expected for failed runs)
+    if (err.code !== 'ENOENT') {
+      console.warn(`Failed to copy blob report for shard ${result.shardIndex}:`, err.message);
+    }
   }
 }
 
+// Merge reports
 try {
   execFileSync(
-    'yarn',
+    yarnCmd,
     ['playwright', 'merge-reports', '--reporter', 'html', blobReportsRoot],
     {
       stdio: 'inherit',
       env: buildChildEnv(),
+      shell: isWindows,
     }
   );
 } catch (error) {

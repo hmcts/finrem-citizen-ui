@@ -25,9 +25,10 @@ function shouldRunHappyPathIntegrationSuite(): boolean {
 
 /**
  * INTEGRATION TESTS: Enter Case Number
- * 
- * These tests verify case number happy-path integration logic.
- * Real integration tests create actual CCD cases and verify successful submissions.
+ *
+ * These tests verify the case-number happy path using the shared fixtures.
+ * `contestedCaseForCaseNumber` provisions case prerequisites and
+ * `loggedInPage` provisions an authenticated citizen session.
  *
  * Runs on: AAT/preview by default (or any target when ACCESS_CODE_REAL_INTEGRATION=true)
  * Default: Skipped outside preview/AAT unless ACCESS_CODE_REAL_INTEGRATION=true.

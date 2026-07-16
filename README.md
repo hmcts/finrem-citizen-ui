@@ -30,6 +30,13 @@ This root README keeps only a brief testing summary. The specFiles guide is auth
 - **Master build runs**: https://build.hmcts.net/job/HMCTS_d_to_i/job/finrem-citizen-ui/job/master/
 - **Preview (PR) build runs**: https://build.hmcts.net/job/HMCTS_d_to_i/job/finrem-citizen-ui/job/PR-437/ (replace 437 with your PR number)
 
+Functional CI runs are sharded for faster execution.
+
+- CI command: `yarn test:functional:ci`
+- Default shard count: `PLAYWRIGHT_SHARD_TOTAL=4`
+- Per-shard JUnit XML output: `functional-output/shard-*/functional-test-result.xml`
+- Merged HTML report output: `playwright-report/`
+
 ## Core Citizen Workflow
 
 At a high level, the user flow is:
@@ -180,6 +187,14 @@ Use `yarn test:functional:quick` when you want the same local target but faster 
 - no `playwright install --with-deps` step
 - `PLAYWRIGHT_RETRIES=0`
 - `PLAYWRIGHT_WORKERS=6` by default, override with `PLAYWRIGHT_WORKERS=<n>`
+
+CI sharded run (used by Jenkins):
+
+```bash
+PLAYWRIGHT_SHARD_TOTAL=4 yarn test:functional:ci
+```
+
+This command runs Chromium functional tests across shards in parallel, then merges Playwright blob reports into a single HTML report.
 
 For full functional testing setup, environment gating, and mock data conventions, use the single source of truth:
 [src/test/functional/specFiles/README.md](src/test/functional/specFiles/README.md)

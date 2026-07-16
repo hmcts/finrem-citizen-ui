@@ -6,12 +6,13 @@ import { expectAuthenticated, runA11yAudit } from '../journeyHelpers/specAsserti
 
 /**
  * MOCK-ONLY TESTS: Persistent Session After Re-login
- * 
+ *
  * These tests verify that authenticated sessions persist across re-login,
  * multiple tabs, and navigation within the same session.
- * 
- * Runs on: Local environment (when ACCESS_CODE_REAL_INTEGRATION=true)
- * Does NOT run on: Preview, AAT as mock tests
+ *
+ * Runs on: Local mock test-support setup only (`useMockTestSupport: true`).
+ * Additional suite gate: ACCESS_CODE_REAL_INTEGRATION=true (explicit opt-in).
+ * Does NOT run on: Preview/AAT where mock test-support routes are unavailable.
  */
 
 interface CaseWithHearing {
@@ -36,10 +37,8 @@ async function navigateToLinkedDashboard(
   await dashboardPage.verifyDashboardPageContent();
 }
 
-// MOCK: All tests in this describe use the contestedCaseWithHearing fixture with hardcoded
-// access codes (APPCODE1 / RSPCODE1) injected via /__test/inject-case-session.
-// No Form C or FR_manageHearings hearing flow is required.
-// To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
+// MOCK: This suite uses deterministic case/session injection for stability.
+// ACCESS_CODE_REAL_INTEGRATION=true remains as an explicit opt-in gate for this local suite.
 const runRealIntegrationAccessCodeTests = process.env.ACCESS_CODE_REAL_INTEGRATION === 'true';
 
 test.describe('[local-integration] Persistent Session After Re-login', () => {

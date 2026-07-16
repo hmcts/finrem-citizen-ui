@@ -12,6 +12,11 @@ import {
  * content/layout, grouped uploaded files, combined-document guidance,
  * branching decisions, validation, getting-help details, back navigation,
  * and accessibility assertions.
+ *
+ * Setup:
+ * - Uses authenticated `loggedInPage` fixture.
+ * - Links case context via case number + access code using `contestedCaseWithHearing`.
+ * - Navigates through upload journey helpers to reach check-upload states.
  */
 test.describe('[integration] Check uploaded documents page', () => {
   test.describe('[integration] Check uploaded documents page with uploaded other document', () => {
@@ -33,7 +38,7 @@ test.describe('[integration] Check uploaded documents page', () => {
       await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
       await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
 
-      // Continue existing journey 
+      // Continue existing journey.
       await navigateToCheckUploadWithOtherDocument({
         dashboardPage,
         beforeYouStartPage,

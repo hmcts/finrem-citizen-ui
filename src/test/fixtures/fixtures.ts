@@ -385,17 +385,16 @@ export const test = base.extend<MyFixtures & MockOptions>({
   ],
 
   /**
-   * Creates a contested case for the access-code journey using a mock-first strategy.
-   *
-   * Default: mock codes (APPCODE1/RSPCODE1) via /__test/inject-case-session,
-    * which avoids external dependency instability and keeps tests deterministic.
-   *
-   * Optional real integration mode (happy path only): set
-   *   ACCESS_CODE_REAL_INTEGRATION=true
-    * to generate real access codes via FR_issueApplication and fetch them from case details.
-   *
-   * Both applicant and respondent access codes are returned so tests can verify
-   * each role's happy path without sharing state.
+    * Creates case prerequisites for the access-code journey and returns both role codes.
+    *
+    * Behavior by environment:
+    * - Local mock CCD URL: returns deterministic seeded mock values.
+    * - Preview/AAT targets: generates real codes via CCD integration.
+    * - Non-preview/non-AAT targets: generates real codes only when
+    *   ACCESS_CODE_REAL_INTEGRATION=true; otherwise uses deterministic codes.
+    *
+    * This keeps happy-path integration realistic on deployed environments while
+    * preserving deterministic local behavior.
    */
   contestedCaseWithHearing: [
     async ({}, use) => {

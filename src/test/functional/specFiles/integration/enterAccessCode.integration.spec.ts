@@ -56,15 +56,19 @@ export async function assertIntegrationPreflight(): Promise<void> {
 
 /**
  * INTEGRATION TESTS: Enter Access Code
- * 
- * These tests use the real CCD path only:
+ *
+ * These tests validate the end-to-end access-code happy path:
  * case number submission -> access code submission -> dashboard.
- * They call invalidateAccessCode() which triggers real CCD events.
- * They require a real contested case created via API and progressed through
- * FR_issueApplication (the point where access codes are generated).
- * 
+ *
+ * Prerequisites are provisioned via fixtures:
+ * - `loggedInPage`: authenticates the citizen and lands on /enter-case-number
+ * - `contestedCaseWithHearing`: creates/loads the case and provides access codes
+ *
+ * On preview/AAT (and when ACCESS_CODE_REAL_INTEGRATION=true on non-preview targets),
+ * access codes are generated through real CCD integration.
+ *
  * Runs on: AAT/preview by default (or any target when ACCESS_CODE_REAL_INTEGRATION=true)
- * Requires: Real CCD instance reachable, valid case with real access codes
+ * Requires: Reachable CCD and a valid contested case fixture setup
  * Default: Skipped outside preview/AAT unless ACCESS_CODE_REAL_INTEGRATION=true.
  * ACCESS_CODE_REAL_INTEGRATION=false is treated as legacy local default and
  * does not disable AAT/preview happy-path runs.
@@ -93,8 +97,7 @@ if (shouldRunHappyPathIntegrationSuite()) {
   });
 
   /**
-   * Citizen successfully enters valid applicant access code and views case.
-  * [integration-happy-path] Requires real CCD-backed invalidation flow.
+   * Citizen enters a valid applicant access code and reaches dashboard.
    */
   test('[integration-happy-path] Citizen can enter valid applicant access code and view case summary @a11y', async ({
     loggedInPage,
@@ -112,8 +115,7 @@ if (shouldRunHappyPathIntegrationSuite()) {
   });
 
   /**
-   * Verify whitespace is trimmed from access code.
-  * [integration-happy-path] Requires real CCD-backed invalidation flow.
+   * Leading/trailing whitespace is trimmed from access code input.
    */
   test('[integration-happy-path] Success: Access code with leading/trailing whitespace is accepted @a11y', async ({
     loggedInPage,
@@ -131,8 +133,7 @@ if (shouldRunHappyPathIntegrationSuite()) {
   });
 
   /**
-   * Citizen successfully enters valid respondent access code and views case.
-  * [integration-happy-path] Requires real CCD-backed invalidation flow.
+   * Citizen enters a valid respondent access code and reaches dashboard.
    */
   test('[integration-happy-path] Citizen can enter valid respondent access code and view case summary @a11y', async ({
     loggedInPage,
@@ -150,8 +151,7 @@ if (shouldRunHappyPathIntegrationSuite()) {
   });
 
   /**
-   * Access codes are case-insensitive.
-  * [integration-happy-path] Requires real CCD-backed invalidation flow.
+   * Access code submission is case-insensitive.
    */
   test('[integration-happy-path] Access code submission is case-insensitive @a11y', async ({
     loggedInPage,
