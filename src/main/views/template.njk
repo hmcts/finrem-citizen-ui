@@ -3,6 +3,32 @@
 {% extends "govuk/template.njk" %}
 
 {% block head %}
+  {% if googleTagManagerId %}
+    <meta name="gtm-one-time" content="{{ cspNonce }}">
+    <script nonce="{{ cspNonce }}">
+      window.dataLayer = window.dataLayer || [];
+      const userPreferenceCookie = document.cookie.match(new RegExp('(^| )' + 'cm-user-preferences' + '=([^;]+)'));
+
+      if (userPreferenceCookie) {
+        try {
+          const cookiePreferences = JSON.parse(decodeURIComponent(userPreferenceCookie[2]));
+          window.dataLayer.push({ event: 'Cookie Preferences', cookiePreferences });
+        } catch (error) {
+          window.dataLayer.push({ event: 'Cookie Preferences', cookiePreferences: {} });
+        }
+      }
+    </script>
+    <!-- Google Tag Manager -->
+    <script nonce="{{ cspNonce }}">
+      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;var n=d.querySelector('[nonce]');
+      n&&j.setAttribute('nonce',n.nonce||n.getAttribute('nonce'));f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','{{ googleTagManagerId }}');
+    </script>
+    <!-- End Google Tag Manager -->
+  {% endif %}
   {% include "webpack/css.njk" %}
 {% endblock %}
 
@@ -31,6 +57,14 @@
     },
     html: feedbackLinkHtml
   }) }}
+{% endblock %}
+
+{% block bodyStart %}
+  {% if googleTagManagerId %}
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ googleTagManagerId }}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+  {% endif %}
 {% endblock %}
 
 {% block bodyEnd %}

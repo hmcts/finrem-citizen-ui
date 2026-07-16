@@ -22,6 +22,9 @@
   "appInsights": {
     "connectionString": "APPLICATIONINSIGHTS_CONNECTION_STRING"
   },
+  "googleTagManager": {
+    "containerId": "GOOGLE_TAG_MANAGER_ID"
+  },
   "services": {
     "idam": {
       "clientID": "IDAM_CLIENT_ID",

@@ -43,6 +43,7 @@ nodejs:
     SESSION_STORE: 'redis'
     SECURE_COOKIE: 'true'
     RATE_LIMIT_WINDOW_MS: 900000
+    GOOGLE_TAG_MANAGER_ID: 'GTM-N2TBV3X8'
 
 redis:
   enabled: false

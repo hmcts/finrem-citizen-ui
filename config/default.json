@@ -3,6 +3,9 @@
   "appInsights": {
     "connectionString": false
   },
+  "googleTagManager": {
+    "containerId": ""
+  },
   "security": {
     "referrerPolicy": "same-origin",
     "hsts": {
