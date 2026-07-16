@@ -1,0 +1,105 @@
+import { cp, mkdir, rm } from 'node:fs/promises';
+import { execFileSync, spawn } from 'node:child_process';
+import path from 'node:path';
+
+const shardTotal = Number.parseInt(process.env.PLAYWRIGHT_SHARD_TOTAL || '4', 10);
+const retryCount = Number.parseInt(process.env.PLAYWRIGHT_RETRIES || '2', 10);
+const resultsRoot = process.env.TEST_RESULTS_DIR || 'functional-output';
+const blobReportsRoot = path.join(resultsRoot, 'all-blob-reports');
+const installInScript = (process.env.PLAYWRIGHT_INSTALL_IN_SCRIPT || 'true') === 'true';
+const fixedPath = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
+
+const buildChildEnv = overrides => ({
+  ...process.env,
+  PATH: fixedPath,
+  ...overrides,
+});
+
+if (!Number.isFinite(shardTotal) || shardTotal < 1) {
+  throw new Error(`Invalid PLAYWRIGHT_SHARD_TOTAL value: ${process.env.PLAYWRIGHT_SHARD_TOTAL}`);
+}
+
+await rm(resultsRoot, { recursive: true, force: true });
+await rm('playwright-report', { recursive: true, force: true });
+await mkdir(resultsRoot, { recursive: true });
+
+if (installInScript) {
+  execFileSync('yarn', ['playwright', 'install', '--with-deps', 'chromium'], {
+    stdio: 'inherit',
+    env: buildChildEnv(),
+  });
+}
+
+const runShard = shardIndex => new Promise(resolve => {
+  const shardResultsDir = path.join(resultsRoot, `shard-${shardIndex}`);
+  const shardEnv = {
+    ...buildChildEnv(),
+    PLAYWRIGHT_CI_SHARDED: 'true',
+    PLAYWRIGHT_WORKERS: process.env.PLAYWRIGHT_WORKERS || '1',
+    PLAYWRIGHT_RETRIES: String(retryCount),
+    TEST_RESULTS_DIR: shardResultsDir,
+  };
+
+  const child = spawn(
+    'yarn',
+    [
+      'playwright',
+      'test',
+      '--config',
+      'playwright.config.mts',
+      '--project',
+      'chromium',
+      `--shard=${shardIndex}/${shardTotal}`,
+      `--retries=${retryCount}`,
+    ],
+    {
+      env: shardEnv,
+      stdio: 'inherit',
+    }
+  );
+
+  child.on('close', code => {
+    resolve({ code, shardIndex, shardResultsDir });
+  });
+});
+
+const shardRuns = [];
+for (let shardIndex = 1; shardIndex <= shardTotal; shardIndex += 1) {
+  shardRuns.push(runShard(shardIndex));
+}
+
+const shardResults = await Promise.all(shardRuns);
+const shardFailed = shardResults.some(result => result.code !== 0);
+
+await rm(blobReportsRoot, { recursive: true, force: true });
+await mkdir(blobReportsRoot, { recursive: true });
+
+for (const result of shardResults) {
+  const shardBlobReportDir = path.join(result.shardResultsDir, 'blob-report');
+  try {
+    await cp(shardBlobReportDir, path.join(blobReportsRoot, `shard-${result.shardIndex}`), {
+      recursive: true,
+    });
+  } catch {
+    // Some failed shards may not emit a blob report; merge whatever is available.
+  }
+}
+
+try {
+  execFileSync(
+    'yarn',
+    ['playwright', 'merge-reports', '--reporter', 'html', blobReportsRoot],
+    {
+      stdio: 'inherit',
+      env: buildChildEnv(),
+    }
+  );
+} catch (error) {
+  if (!shardFailed) {
+    throw error;
+  }
+}
+
+if (shardFailed) {
+  process.exitCode = 1;
+}
