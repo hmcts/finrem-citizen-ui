@@ -90,8 +90,30 @@ function initAutocomplete(): void {
       source: createSourceFunction(config.apiUrl, resultsMap),
       onConfirm: createConfirmHandler(element, config.eventName, resultsMap),
       showNoOptionsFound: true,
+      showAllValues: true,
       minLength: 0,
     });
+
+    const input = container.querySelector(`#${config.inputId}`) as HTMLInputElement;
+    const menu = container.querySelector(`#${config.inputId}__listbox`) as HTMLElement;
+    
+    if (input) {
+      input.addEventListener('focus', () => {
+        if (menu && menu.style.display === 'none') {
+          menu.style.display = '';
+        }
+        if (input.value === '') {
+          const event = new Event('input', { bubbles: true });
+          input.dispatchEvent(event);
+        }
+      });
+
+      input.addEventListener('autocomplete:close', () => {
+        if (menu) {
+          menu.style.display = 'none';
+        }
+      });
+    }
   });
 }
 
