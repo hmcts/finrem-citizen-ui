@@ -22,6 +22,9 @@ test.describe('[integration] Document selection page', () => {
 
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    enterAccessCodePage,
+    contestedCaseWithHearing,
     dashboardPage,
     beforeYouStartPage,
     confidentialityPage,
@@ -29,6 +32,9 @@ test.describe('[integration] Document selection page', () => {
     fdrPage,
     documentSelectionPage,
   }) => {
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+
     await navigateToFdrStep(dashboardPage, beforeYouStartPage, confidentialityPage, basePage);
     await fdrPage.selectYesAndContinue();
     await expect(documentSelectionPage.page).toHaveURL(/\/upload\/document-type-selection/);
