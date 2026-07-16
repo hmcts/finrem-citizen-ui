@@ -133,6 +133,35 @@ describe('document-type-selection', () => {
       expect(autocomplete.value).toBe('');
     });
 
+    it('should close autocomplete options after adding', async () => {
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ documents: [{ id: 1, label: 'Test', value: 'test' }] }),
+      } as Response);
+
+      initDocumentTypeSelection();
+
+      const autocomplete = document.querySelector('#document-type') as HTMLInputElement;
+      autocomplete.value = 'test';
+
+      const blurSpy = jest.spyOn(autocomplete, 'blur');
+      const closeHandler = jest.fn();
+      autocomplete.addEventListener('autocomplete:close', closeHandler);
+
+      const event = new CustomEvent('document:selected', {
+        detail: { id: 1, label: 'Test', value: 'test' },
+      });
+      document.dispatchEvent(event);
+
+      const button = document.querySelector('[data-add-document-type]') as HTMLButtonElement;
+      button.click();
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(closeHandler).toHaveBeenCalledTimes(1);
+      expect(blurSpy).toHaveBeenCalledTimes(1);
+    });
+
     it('should handle missing autocomplete input gracefully', async () => {
       document.body.innerHTML = `
         <div data-document-type-selection>
