@@ -45,6 +45,11 @@ def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 withNightlyPipeline(type, product, component) {
   // test:coverage executes unit + route tests via jest.config roots.
   env.UNIT_TESTS_COMMAND = "yarn test:coverage && yarn lint && yarn test:api"
+  env.FUNCTIONAL_TESTS_COMMAND = "yarn test:functional:ci"
+  env.FULL_FUNCTIONAL_TESTS_COMMAND = "yarn test:functional:ci"
+  env.FULL_FUNCTIONAL_TEST_COMMAND = "yarn test:functional:ci"
+  env.PLAYWRIGHT_SHARD_TOTAL = "4"
+  env.PLAYWRIGHT_INSTALL_IN_SCRIPT = "true"
   env.RUNNING_ENV = "aat"
   env.TEST_URL = params.URL_TO_TEST
   env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl
@@ -62,14 +67,13 @@ withNightlyPipeline(type, product, component) {
 
   before('fullFunctionalTest') {
     sh 'rm -rf smoke-output functional-output a11y-output'
-    yarnBuilder.yarn('playwright install --with-deps chromium')
   }
 
   enableFullFunctionalTest(200)
 
   afterAlways('fullFunctionalTest') {
-    junit testResults: 'functional-output/functional-test-result.xml', allowEmptyResults: true
-    archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
+    junit testResults: 'functional-output/**/functional-test-result.xml', allowEmptyResults: true
+    archiveArtifacts artifacts: 'functional-output/**,playwright-report/**', allowEmptyArchive: true
   }
 
   enableSlackNotifications('#finrem-dev')
