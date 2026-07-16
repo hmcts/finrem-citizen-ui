@@ -2,12 +2,17 @@ import { cp, mkdir, rm } from 'node:fs/promises';
 import { execFileSync, spawn } from 'node:child_process';
 import path from 'node:path';
 import os from 'node:os';
+import { globSync } from 'glob';
 
-const shardTotal = Number.parseInt(process.env.PLAYWRIGHT_SHARD_TOTAL || '4', 10);
+const shardTotal = Number.parseInt(process.env.PLAYWRIGHT_SHARD_TOTAL || '8', 10);
 const retryCount = Number.parseInt(process.env.PLAYWRIGHT_RETRIES || '2', 10);
 const resultsRoot = process.env.TEST_RESULTS_DIR || 'functional-output';
 const blobReportsRoot = path.join(resultsRoot, 'all-blob-reports');
 const installInScript = (process.env.PLAYWRIGHT_INSTALL_IN_SCRIPT || 'true') === 'true';
+
+console.log(
+  `[functional-ci] shardTotal=${shardTotal} retryCount=${retryCount} installInScript=${installInScript}`
+);
 
 // Determine if we are running on Windows to handle the Yarn executable properly
 const isWindows = os.platform() === 'win32';
@@ -86,9 +91,18 @@ await mkdir(blobReportsRoot, { recursive: true });
 for (const result of shardResults) {
   const shardBlobReportDir = path.join(result.shardResultsDir, 'blob-report');
   try {
-    await cp(shardBlobReportDir, path.join(blobReportsRoot, `shard-${result.shardIndex}`), {
-      recursive: true,
+    const blobFiles = globSync('**/*', {
+      cwd: shardBlobReportDir,
+      nodir: true,
+      absolute: false,
     });
+
+    for (const relativeFile of blobFiles) {
+      const sourcePath = path.join(shardBlobReportDir, relativeFile);
+      const targetFileName = `shard-${result.shardIndex}-${path.basename(relativeFile)}`;
+      const targetPath = path.join(blobReportsRoot, targetFileName);
+      await cp(sourcePath, targetPath, { recursive: false });
+    }
   } catch (err) {
     // Only swallow the error if the folder actually doesn't exist (expected for failed runs)
     if (err.code !== 'ENOENT') {
@@ -97,17 +111,29 @@ for (const result of shardResults) {
   }
 }
 
+const mergedInputFiles = globSync('**/*', {
+  cwd: blobReportsRoot,
+  nodir: true,
+  absolute: false,
+});
+
+if (mergedInputFiles.length === 0) {
+  console.warn(`[functional-ci] No blob files found under ${blobReportsRoot}; skipping report merge.`);
+}
+
 // Merge reports
 try {
-  execFileSync(
-    yarnCmd,
-    ['playwright', 'merge-reports', '--reporter', 'html', blobReportsRoot],
-    {
-      stdio: 'inherit',
-      env: buildChildEnv(),
-      shell: isWindows,
-    }
-  );
+  if (mergedInputFiles.length > 0) {
+    execFileSync(
+      yarnCmd,
+      ['playwright', 'merge-reports', '--reporter', 'html', blobReportsRoot],
+      {
+        stdio: 'inherit',
+        env: buildChildEnv(),
+        shell: isWindows,
+      }
+    );
+  }
 } catch (error) {
   if (!shardFailed) {
     throw error;

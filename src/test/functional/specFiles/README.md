@@ -191,7 +191,7 @@ This model keeps prerequisites explicit in test signatures and avoids hidden glo
   - true: test-support endpoints enabled (local mock flow)
   - false: test-support endpoints disabled (preview/AAT default)
 - PLAYWRIGHT_SHARD_TOTAL:
-   - default `4` in Jenkins
+   - default `8` in Jenkins
    - controls number of functional shards for `yarn test:functional:ci`
 - PLAYWRIGHT_CI_SHARDED:
    - set automatically by `yarn test:functional:ci`
@@ -299,7 +299,7 @@ Current effective defaults:
 - `PLAYWRIGHT_RETRIES`: default `3` for `yarn test:functional:allBrowsers` (script flag)
 - `PLAYWRIGHT_RETRIES=0` for `yarn test:functional:quick`
 - `yarn test:functional:headed:slowmo`: fixed `--workers=1`
-- `yarn test:functional:ci`: default `PLAYWRIGHT_SHARD_TOTAL=4` in Jenkins
+- `yarn test:functional:ci`: default `PLAYWRIGHT_SHARD_TOTAL=8` in Jenkins
 
 ### CI Sharding And Reporting
 
@@ -316,7 +316,7 @@ What this command does:
 Manual sharded run example:
 
 ```bash
-PLAYWRIGHT_SHARD_TOTAL=4 yarn test:functional:ci
+PLAYWRIGHT_SHARD_TOTAL=8 yarn test:functional:ci
 ```
 
 Notes:
