@@ -12,7 +12,18 @@ import { navigateToConfidentialityStep } from '../journeyHelpers/uploadJourneyNa
  */
 
 test.describe('[integration] Confidentiality page', () => {
-  test.beforeEach(async ({ loggedInPage: _loggedInPage, dashboardPage, beforeYouStartPage, basePage }) => {
+  test.beforeEach(async ({
+    loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    enterAccessCodePage,
+    contestedCaseWithHearing,
+    dashboardPage,
+    beforeYouStartPage,
+    basePage,
+  }) => {
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+
     await navigateToConfidentialityStep(dashboardPage, beforeYouStartPage, basePage);
   });
  
