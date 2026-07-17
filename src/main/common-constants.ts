@@ -3,6 +3,7 @@ export const PublicRoutes = {
   autocomplete: '/autocomplete',
   basePath: '/',
   callbackUrl: '/oauth2/callback',
+  config: '/config',
   health: '/health',
   info: '/info',
   login: '/login',
