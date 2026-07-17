@@ -24,6 +24,18 @@ const buildChildEnv = overrides => ({
   ...overrides,
 });
 
+const canLaunchChromium = async () => {
+  try {
+    const { chromium } = await import('@playwright/test');
+    const browser = await chromium.launch({ headless: true });
+    await browser.close();
+    return true;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return !message.includes("Executable doesn't exist");
+  }
+};
+
 if (!Number.isFinite(shardTotal) || shardTotal < 1) {
   throw new Error(`Invalid PLAYWRIGHT_SHARD_TOTAL value: ${process.env.PLAYWRIGHT_SHARD_TOTAL}`);
 }
@@ -39,6 +51,18 @@ if (installInScript) {
     env: buildChildEnv(),
     shell: isWindows, // Critical for Windows support
   });
+} else {
+  const chromiumAvailable = await canLaunchChromium();
+  if (!chromiumAvailable) {
+    console.warn(
+      '[functional-ci] Chromium binary not found while PLAYWRIGHT_INSTALL_IN_SCRIPT=false. Installing chromium fallback...'
+    );
+    execFileSync(yarnCmd, ['playwright', 'install', 'chromium'], {
+      stdio: 'inherit',
+      env: buildChildEnv(),
+      shell: isWindows,
+    });
+  }
 }
 
 const runShard = shardIndex => new Promise(resolve => {
