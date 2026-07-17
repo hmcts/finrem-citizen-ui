@@ -7,7 +7,7 @@ export const FILE_VALIDATION_ERRORS = {
   EMPTY: 'The selected file is empty',
   UPLOAD_FAILED: 'The selected file could not be uploaded - try again',
   NO_FILE: 'You must upload at least one file before continuing',
-  PASSWORD_PROTECTED: 'The selected file must not be password protected',
+  PASSWORD_PROTECTED: 'The selected file is password protected',
 } as const;
 
 const ALLOWED_FILE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.pdf', '.docx', '.xlsx'];

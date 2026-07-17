@@ -36,7 +36,7 @@ describe('uploadValidation', () => {
       expect(FILE_VALIDATION_ERRORS.EMPTY).toBe('The selected file is empty');
       expect(FILE_VALIDATION_ERRORS.UPLOAD_FAILED).toBe('The selected file could not be uploaded - try again');
       expect(FILE_VALIDATION_ERRORS.NO_FILE).toBe('You must upload at least one file before continuing');
-      expect(FILE_VALIDATION_ERRORS.PASSWORD_PROTECTED).toBe('The selected file must not be password protected');
+      expect(FILE_VALIDATION_ERRORS.PASSWORD_PROTECTED).toBe('The selected file is password protected');
     });
   });
 

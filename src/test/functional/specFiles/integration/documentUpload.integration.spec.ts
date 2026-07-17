@@ -343,7 +343,7 @@ test.describe('[integration] Document upload page', () => {
       await documentUploadPage.clickContinue();
 
       const passwordProtectedError = documentUploadPage.getErrorSummaryLink(
-        'The selected file must not be password protected'
+        'The selected file is password protected'
       );
       const noFileError = documentUploadPage.getErrorSummaryLink('You must upload at least one file before continuing');
       await expect(documentUploadPage.errorSummaryTitle).toBeVisible();
@@ -391,14 +391,14 @@ test.describe('[integration] Document upload page', () => {
     await expect(documentUploadPage.errorSummaryTitle).toBeVisible();
 
     const passwordProtectedSummaryError = documentUploadPage.getErrorSummaryLink(
-      'The selected file must not be password protected'
+      'The selected file is password protected'
     );
     await expect(passwordProtectedSummaryError).toBeVisible();
 
     const otherDocumentForm = documentUploadPage.page.locator('[data-upload-form="other-document"]');
     const passwordProtectedInlineError = otherDocumentForm
       .locator('p.govuk-error-message')
-      .filter({ hasText: 'The selected file must not be password protected' });
+      .filter({ hasText: 'The selected file is password protected' });
     await expect(passwordProtectedInlineError).toBeVisible();
 
     await expect(documentUploadPage.uploadedFileLinks).toHaveCount(0);

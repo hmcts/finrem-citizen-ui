@@ -83,7 +83,7 @@ export class DocumentUploadPage extends BasePage {
       hasText: 'The selected file could not be uploaded - try again',
     });
     this.inlinePasswordProtectedError = this.page.locator('p.govuk-error-message').filter({
-      hasText: 'The selected file must not be password protected',
+      hasText: 'The selected file is password protected',
     });
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });
     this.noUploadedFilesMessage = this.page.getByText('You must upload at least one file before continuing', { exact: true });
