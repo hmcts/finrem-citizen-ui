@@ -6,7 +6,7 @@
     "node": ">=22.22.0"
   },
   "scripts": {
-    "start": "NODE_ENV=production ts-node -r tsconfig-paths/register src/main/server.ts",
+    "start": "ts-node -r tsconfig-paths/register src/main/server.ts",
     "start:dev": "nodemon --config nodemon.json",
     "start:mock-case-api": "ts-node -r dotenv/config src/main/mock-case-api/server.ts",
     "lint": "eslint .",
