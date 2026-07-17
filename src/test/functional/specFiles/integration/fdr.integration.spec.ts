@@ -22,11 +22,17 @@ test.describe('[integration] FDR page', () => {
 
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    enterAccessCodePage,
+    contestedCaseWithHearing,
     dashboardPage,
     beforeYouStartPage,
     confidentialityPage,
     basePage,
   }) => {
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+
     await navigateToFdrStep(dashboardPage, beforeYouStartPage, confidentialityPage, basePage);
   });
 

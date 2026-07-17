@@ -15,8 +15,6 @@ const URL_PATTERNS = {
 
 const NAVIGATION_TIMEOUT_MS = 15_000;
 
-const CHECK_UPLOAD_EMAIL = 'FRCexample@justice.gov.uk';
-
 export class CheckUploadPage extends BasePage {
   readonly backLink: Locator;
   readonly pageHeader: Locator;
@@ -395,7 +393,6 @@ export class CheckUploadPage extends BasePage {
 
   async verifyGettingHelpSection(): Promise<void> {
     await this.gettingHelp.verifySection({
-      expectedEmail: CHECK_UPLOAD_EMAIL,
       openingHoursLocator: this.helpOpeningHours,
     });
   }

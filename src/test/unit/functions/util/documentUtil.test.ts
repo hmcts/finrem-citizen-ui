@@ -3,10 +3,11 @@ import { Request } from 'express';
 import { DOCUMENT_RENAME_FORMATS } from '../../../../main/common-constants';
 import {
   generateRenamedFilename,
+getCombinedPDFFormat,
   getDocumentLabel,
   getDocumentRenameFormat,
   getSelectedDocumentTypesForDisplay,
-  shouldAutoRename,
+  shouldAutoRename,shouldCombineIntoPDF,
 } from '../../../../main/functions/util/documentUtil';
 describe('documentUtil', () => {
   describe('getDocumentLabel', () => {
@@ -529,7 +530,7 @@ it('should not rename document not in mapping', () => {
 
     it('should append counter when filename already exists', () => {
       const existingFilenames = ['SamThompson-FormFM1-23-06-2026.pdf'];
-      
+
       const result = generateRenamedFilename(
         'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
         'fm1.pdf',
@@ -547,7 +548,7 @@ it('should not rename document not in mapping', () => {
         'SamThompson-FormFM1-23-06-2026-1.pdf',
         'SamThompson-FormFM1-23-06-2026-2.pdf'
       ];
-      
+
       const result = generateRenamedFilename(
         'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
         'fm1.pdf',
@@ -561,7 +562,7 @@ it('should not rename document not in mapping', () => {
 
     it('should not append counter when filename does not exist', () => {
       const existingFilenames = ['OtherUser-FormFM1-23-06-2026.pdf'];
-      
+
       const result = generateRenamedFilename(
         'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
         'fm1.pdf',
@@ -587,7 +588,7 @@ it('should not rename document not in mapping', () => {
 
     it('should append counter with different file extensions', () => {
       const existingFilenames = ['User-FormH-23-06-2026.docx'];
-      
+
       const result = generateRenamedFilename(
         'estimate-of-costs-incurred-form-h',
         'costs.docx',
@@ -601,7 +602,7 @@ it('should not rename document not in mapping', () => {
 
     it('should not affect non-renamed documents with duplicates', () => {
       const existingFilenames = ['my-bank-statement.pdf'];
-      
+
       const result = generateRenamedFilename(
         'bank-statements',
         'my-bank-statement.pdf',
@@ -611,6 +612,34 @@ it('should not rename document not in mapping', () => {
       );
 
       expect(result).toBe('my-bank-statement.pdf');
+    });
+  });
+
+  describe('shouldCombineIntoPDF', () => {
+    it('should return true for documents that should be combined into a PDF', () => {
+      expect(shouldCombineIntoPDF('updating-disclosure')).toBe(true);
+      expect(shouldCombineIntoPDF('attachments-to-form-e')).toBe(true);
+      expect(shouldCombineIntoPDF('bank-statements')).toBe(true);
+    });
+
+    it('should return false for documents that should not be combined into a PDF', () => {
+      expect(shouldCombineIntoPDF('position-statement')).toBe(false);
+      expect(shouldCombineIntoPDF('unknown-type')).toBe(false);
+      expect(shouldCombineIntoPDF('')).toBe(false);
+    });
+  });
+
+  describe('getCombinedPDFFormat', () => {
+    it('should return the correct combined PDF format', () => {
+      expect(getCombinedPDFFormat('updating-disclosure')).toBe('UpdatingDisclosure');
+      expect(getCombinedPDFFormat('attachments-to-form-e')).toBe('AttachmentsFormE');
+      expect(getCombinedPDFFormat('bank-statements')).toBe('SupportingFinancialDocuments');
+    });
+
+    it('should return empty string when the document type is not combined into a PDF', () => {
+      expect(getCombinedPDFFormat('position-statement')).toBe('');
+      expect(getCombinedPDFFormat('unknown-type')).toBe('');
+      expect(getCombinedPDFFormat('')).toBe('');
     });
   });
 });

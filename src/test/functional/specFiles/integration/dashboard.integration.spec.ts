@@ -14,9 +14,15 @@ import { navigateToDashboardStep } from '../journeyHelpers/uploadJourneyNavigati
 test.describe('[integration] Dashboard upload journey', () => {
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    enterAccessCodePage,
+    contestedCaseWithHearing,
     dashboardPage,
     basePage,
   }) => {
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+
     // Ensure logged-in session and navigate to dashboard for each test
     await navigateToDashboardStep(dashboardPage, basePage);
   });
