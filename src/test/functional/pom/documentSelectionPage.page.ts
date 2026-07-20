@@ -130,7 +130,7 @@ export class DocumentSelectionPage extends BasePage {
   }
 
   async addOtherDocumentAndContinue(): Promise<void> {
-    await this.addDocumentBySearchTerm('other', 'Other document');
+    await this.addDocumentBySearchTerm('other document', 'Other document');
     await this.continueButton.click();
   }
 
