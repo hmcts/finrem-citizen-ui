@@ -25,11 +25,13 @@ export default function health(app: Application): void {
   const isRedisSessionStore = getSessionStoreType() === SESSION_STORE_REDIS;
   const caseServiceHealthUrl = `${config.get<string>('services.case.url').replace(/\/$/, '')}/health`;
   const orchestrationServiceHealthUrl = `${config.get<string>('services.orchestrationService.url').replace(/\/$/, '')}/health`;
+  const documentToPdfServiceHealthUrl = `${config.get<string>('services.documentToPdfService.url').replace(/\/$/, '')}/health`;
 
   const healthCheckConfig = {
     checks: {
       ccd: healthcheck.web(caseServiceHealthUrl),
       orchestrationService: healthcheck.web(orchestrationServiceHealthUrl),
+      documentToPdfService: healthcheck.web(documentToPdfServiceHealthUrl),
       redis: healthcheck.raw(async () => {
         if (!isRedisSessionStore) {
           return healthcheck.up();

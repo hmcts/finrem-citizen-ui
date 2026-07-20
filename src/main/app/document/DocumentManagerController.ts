@@ -20,6 +20,7 @@ import {
   CaseDocumentManagementClient,
   Classification
 } from './CaseDocumentManagementClient';
+import { DocumentToPdfClient } from './DocumentToPdfClient';
 import {
   PreviouslyUploadedDocumentClient,
   PreviouslyUploadedDocumentsResponse
@@ -69,6 +70,30 @@ export class DocumentManagerController {
         },
       }));
 
+    const pdfClient = new DocumentToPdfClient(user);
+    const cdamClient = this.getApiClient(user);
+    const convertedUploads = await Promise.all(
+      newUploads.map(async upload => {
+        const documentUrl = upload.value?.DocumentLink?.document_url ?? '';
+        const documentId = documentUrl.split('/').pop()!;
+        const pdfBuffer = await pdfClient.convert(documentId);
+        const pdfFilename = (upload.value?.DocumentFileName ?? 'document').replace(/\.[^.]+$/, '.pdf');
+        const cdamPdfFile = await cdamClient.uploadPdf(pdfBuffer, pdfFilename);
+        return {
+          ...upload,
+          value: {
+            ...upload.value,
+            DocumentFileName: cdamPdfFile.originalDocumentName,
+            DocumentLink: {
+              document_url: cdamPdfFile._links.self.href,
+              document_filename: cdamPdfFile.originalDocumentName,
+              document_binary_url: cdamPdfFile._links.binary.href,
+            },
+          },
+        };
+      })
+    );
+
     req.session.documents ??= {
       documentDetails: [],
       isFinancialDisputeResolution: false,
@@ -76,7 +101,7 @@ export class DocumentManagerController {
 
     req.session.documents.documentDetails = [
       ...(req.session.documents.documentDetails ?? []),
-      ...newUploads,
+      ...convertedUploads,
     ];
 
     this.logger.info('Documents stored in session', {

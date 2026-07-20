@@ -37,6 +37,8 @@ nodejs:
     CCD_URL: 'http://ccd-data-store-api-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal'
     CASE_DOCUMENT_MANAGEMENT_URL: 'http://ccd-case-document-am-api-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal'
     ORCHESTRATION_SERVICE_URL: 'http://finrem-cos-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal'
+    DOCUMENT_TO_PDF_SERVICE_URL: 'http://dg-docassembly-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal'
+
     IDAM_CLIENT_ID: 'finrem-citizen-ui'
     IDAM_END_SESSION_URL: 'https://hmcts-access.{{ .Values.global.environment }}.platform.hmcts.net/o/endSession'
     REDIS_EXPIRE_IN_DAYS: 180

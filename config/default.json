@@ -34,6 +34,9 @@
     },
     "orchestrationService": {
       "url": "http://finrem-cos-aat.service.core-compute-aat.internal"
+    },
+    "documentToPdfService": {
+      "url": "http://dg-docassembly-aat.service.core-compute-aat.internal"
     }
   },
   "oidc": {

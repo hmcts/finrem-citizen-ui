@@ -83,6 +83,35 @@ export class CaseDocumentManagementClient {
     return response.data?.documents || [];
   }
 
+  async uploadPdf(pdfBuffer: Buffer, filename: string): Promise<DocumentManagementFile> {
+    const formData = new FormData();
+    formData.append('caseTypeId', CASE_TYPE);
+    formData.append('jurisdictionId', JURISDICTION);
+    formData.append('classification', Classification.Public);
+    formData.append('files', pdfBuffer, {
+      filename,
+      contentType: 'application/pdf',
+      knownLength: pdfBuffer.length,
+    });
+
+    const headers = {
+      ...formData.getHeaders(),
+      'Content-Length': await getFormDataLength(formData),
+    };
+
+    const response: AxiosResponse<CaseDocumentManagementResponse> = await this.client.post(
+      UrlEndPoints.UploadDocument,
+      formData,
+      { headers, maxContentLength: Infinity, maxBodyLength: Infinity }
+    );
+
+    const document = response.data?.documents?.[0];
+    if (!document) {
+      throw new Error(`Failed to upload PDF ${filename} to CDAM`);
+    }
+    return document;
+  }
+
   async getDocument(res: Response, documentId: string): Promise<void> {
     const response = await this.client.get(
       UrlEndPoints.GetDocument(documentId),
