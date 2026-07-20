@@ -11,29 +11,105 @@ It is located under `specFiles/` for historical reasons, but it covers the full 
 
 ## What Is Tested In This Repo
 
+### Which test should I add for a given type of change?
+
+| Change type | Primary test to add | Secondary checks |
+|---|---|---|
+| Pure business logic or utility function | Unit test in `src/test/unit/` | Route/API tests only if route contract changes |
+| New/changed route guard, redirect, validation branch | Route test in `src/test/routes/` | Unit test for helper logic used by route |
+| Endpoint contract or workflow orchestration | API test in `src/test/api/` | Route test if rendered page or redirect changes |
+| Browser journey behavior (content, interaction, navigation) | Functional test in `src/test/functional/specFiles/` | Add/update POM methods first, then use them in specs |
+| Route availability/redirect sanity for deployments | Smoke test in `src/test/smoke/smoke.ts` | None unless behavior expands beyond smoke intent |
+| UI copy/layout/content with user impact | Functional test + `@a11y` assertion | Add route test if server-side validation/redirect also changed |
+
+### Which commands should I run before pushing?
+
+Minimum high-confidence gate:
+
+```bash
+yarn qacichecks
+```
+
+If iterating quickly, use this order:
+
+```bash
+yarn test
+yarn test:routes
+yarn test:api
+yarn test:functional
+```
+
+### Which tests give confidence in auth, CCD linking, and document journeys?
+
+- Auth/session wiring confidence: integration functional specs plus API token/setup helpers.
+- CCD linking/access-code confidence: integration suites in `enterAccessCode.integration.spec.ts` with polling controls.
+- Document journey confidence: integration suites around selection/upload/check-upload/send-to-other-party and related route tests.
+
+### How do I debug failing Playwright tests quickly?
+
+```bash
+yarn test:functional:headed:slowmo -- src/test/functional/specFiles/integration/<file>.integration.spec.ts
+```
+
+Then narrow by test title:
+
+```bash
+yarn test:functional:headed:slowmo -- src/test/functional/specFiles/integration/<file>.integration.spec.ts --grep "<test title fragment>"
+```
+
+## Overall Testing Strategy
+
+- Use a pyramid approach: many fast unit/route/API checks, fewer browser integration tests, and minimal smoke checks.
+- Keep functional specs focused on journey orchestration; keep locator and interaction detail inside POMs.
+- Prefer deterministic local mock tests for UI behavior and integration tests for real environment confidence.
+- Treat accessibility assertions as part of normal functional test quality, not a separate optional pass.
+
 ### Unit tests (`src/test/unit/`)
 - Validate business logic, middleware, modules, scripts, views, and utility functions.
 - Fastest feedback for low-level behavior changes.
+- Default command: `yarn test` (runs `yarn test:unit` outside CI).
+- Coverage enforcement is set in `jest.config.js` with global thresholds at 85% for statements, branches, functions, and lines.
 
 ### Route tests (`src/test/routes/`)
 - Validate route registration, redirect behavior, health paths, and general upload/task-list route behavior.
 - Focus on application routing contracts and guards.
+- Typical proof points:
+   - route protection/auth redirects
+   - validation errors and continuation flow
+   - expected rendered page/view model wiring
 
 ### API tests (`src/test/api/`)
 - Validate endpoint behavior and multi-step API workflows using Jest + Supertest.
 - Includes endpoint-level, workflow-level, and mock API coverage.
+- Command: `yarn test:api`.
+- Mocked vs real:
+   - API tests execute against the app/test harness process and helper-level stubs/mocks.
+   - Functional integration tests provide cross-service confidence against selected deployed targets.
 
 ### Smoke tests (`src/test/smoke/`)
 - Validate service readiness and core route availability.
 - Minimal confidence checks for environment health.
+- Command: `yarn test:smoke`.
+- Smoke tests prove route/service availability and expected redirect behavior for protected routes.
+- Smoke tests do not prove end-to-end business workflows, CCD data mutations, or full browser journey correctness.
 
 ### Functional tests (`src/test/functional/`)
 - Validate browser-based user journeys with Playwright.
 - Includes mock and integration lanes, POM-based interactions, shared fixtures, and journey helpers.
+- Command: `yarn test:functional`.
+- Structure:
+   - specs under `specFiles/mock` and `specFiles/integration`
+   - page logic under `pom/`
+   - shared orchestration in `specFiles/journeyHelpers/`
+   - reusable API/setup helpers under `utils/helpers/` and `utils/factories/`
 
 ### Accessibility coverage
 - Validated in functional runs via `@hmcts/playwright-common` (`AxeUtils`) plus accessibility-tree proxy assertions.
 - Focused accessibility-only runs use `test:playwright:a11y:*` scripts.
+- Expected when UI changes:
+   - keep or add `@a11y` coverage on affected journeys
+   - run relevant functional spec(s) and verify no axe regressions
+   - run broader a11y scripts when shared templates/layouts are changed
 
 ## Scope
 
@@ -74,6 +150,20 @@ Use this split in practice:
 - `src/test/unit/`, `src/test/routes/`, and `src/test/api/` for fast Jest-based feedback.
 - `src/test/functional/` for browser journeys, shared fixtures, helpers, factories, and accessibility coverage.
 - `src/test/smoke/` for minimal deployment-confidence checks.
+
+## QA Checks And Common Commands
+
+These are the commands most developers should use in day-to-day change validation:
+
+- `yarn test`: unit tests (outside CI) for quick logic confidence.
+- `yarn test:routes`: route contracts (protection, redirects, validation navigation).
+- `yarn test:api`: API-level endpoint/workflow coverage.
+- `yarn test:functional`: Playwright Chromium journey coverage (includes `@a11y` tests present in the selected set).
+- `yarn qacichecks`: best single pre-push gate (build, lint, unit, routes, API, coverage, functional).
+
+Optional comprehensive browser gate:
+
+- `yarn qacichecks:allBrowsers`
 
 ## `src/test/functional/utils` Overview
 
@@ -181,6 +271,56 @@ Target selection in `.env` sets which environment Playwright and the app point a
 - Preview/AAT targets run integration happy-path suites by default.
 - For non-preview/non-AAT targets, set `ACCESS_CODE_REAL_INTEGRATION=true` to enable integration happy-path suites.
 - For local mock-only suites, keep `ENABLE_TEST_SUPPORT_ROUTES=true` and the mock API running.
+
+## How Playwright Selects The Target Environment
+
+The selection order is:
+
+1. `TEST_URL` if set
+2. `RUNNING_ENV` if `TEST_URL` is empty
+3. default fallback: `aat`
+
+Examples:
+
+- `RUNNING_ENV=local` and no `TEST_URL` points to localhost flow.
+- `RUNNING_ENV=pr-423` and no `TEST_URL` points to preview URL pattern.
+- `RUNNING_ENV=aat` and no `TEST_URL` points to AAT URL pattern.
+
+Reference implementation is in `playwright.config.mts` (`getBaseUrl()`).
+
+## Local vs Preview vs AAT Execution
+
+- Local:
+   - Run app and mock CCD API locally.
+   - Use mock suites for deterministic UI behavior.
+- Preview:
+   - Target deployed PR environment.
+   - Integration happy-path suites enabled by default.
+- AAT:
+   - Target deployed AAT environment.
+   - Integration happy-path suites enabled by default.
+
+Important: preview/AAT functional runs should not start a local app server.
+
+## Use Of Mock CCD API In Local Tests
+
+Mock CCD API is used to make local functional tests deterministic and fast.
+
+- Start mock API: `yarn start:mock-case-api`
+- Start app with support routes: `ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev`
+- Run tests: `yarn test:functional`
+
+Mock-only suites should use test-support route patterns described in this guide and avoid integration-only data setup paths.
+
+## Access-Code Polling And Eventual Consistency Risks
+
+Real integration flows can observe short CCD propagation delays after case creation/events.
+
+- Symptom: access code not immediately present after `FR_issueApplication`.
+- Mitigation: increase polling window and keep diagnostics enabled when debugging.
+- Tuning variables are documented in this guide under Environment Variables.
+
+When investigating this class of issue, avoid overfitting sleeps; prefer bounded polling and targeted retries.
 
 ## Running Tests
 
@@ -359,6 +499,27 @@ await axeUtils.audit(DEFAULT_AXE_OPTIONS);
 
 ## Troubleshooting
 
+## Known Flaky Patterns And Debug Approach
+
+There are no permanently accepted flaky tests; failures should be treated as defects until resolved.
+
+Most common transient patterns:
+
+- external auth/setup failures (IDAM/S2S credentials, token setup)
+- environment readiness/network DNS issues
+- CCD eventual consistency delays in integration scenarios
+- brittle selectors or timing races in browser interactions
+
+Recommended debug sequence:
+
+1. Confirm target/env variables are coherent for one environment only.
+2. Re-run single failing spec in headed slowmo mode.
+3. Re-run with `--grep` narrowed to one failing test.
+4. Enable CCD diagnostics (`CCD_LOG_PROGRESS=true`, optionally `CCD_VERBOSE_RETRY=true`).
+5. Inspect Playwright trace on first retry before changing waits/selectors.
+
+If failure is setup/auth (for example 401 from S2S lease), fix environment/credentials first; do not add UI retries.
+
 ### Missing test-support route errors
 
 Cause:
@@ -420,6 +581,41 @@ yarn test:functional -- src/test/functional/specFiles/integration/enterAccessCod
 Debug confirmation:
 
 - On failure, the error now includes a non-sensitive `debugSnapshot` showing counts/flags for `applicantAccessCodes` and `respondentAccessCodes` so you can confirm whether codes were generated.
+
+## PR Evidence Expectations
+
+For test-impacting PRs, include:
+
+1. What changed in tests and why (brief summary).
+2. Commands run and pass/fail outcome.
+3. If a failure remains, why (for example environment issue) and evidence.
+4. For UI changes, mention functional/a11y coverage added or updated.
+5. For route/validation changes, mention route/unit assertions updated.
+
+Minimum expected command evidence for most code changes:
+
+- `yarn test`
+- `yarn test:routes`
+- `yarn test:api`
+- `yarn test:functional`
+
+For broad or risky changes, prefer `yarn qacichecks` output evidence.
+
+## Current Coverage Gaps (Living List)
+
+- Cross-environment dependency failures (IDAM/S2S/CCD) can obscure product-regression signals in integration runs.
+- Some integration journeys still rely on shared-environment timing and can surface eventual-consistency noise.
+- API health behavior can vary by environment readiness, requiring careful assertion intent (service health vs dependency health).
+
+Keep this section updated when new blind spots are identified.
+
+## Contractor Recommendations To Strengthen The Suite
+
+1. Add explicit preflight checks for critical env/auth prerequisites before long integration suites.
+2. Continue replacing brittle selectors with role-first user-facing locators in POMs.
+3. Expand reusable journey helpers where setup/assertion flows repeat across 2+ specs.
+4. Keep smoke route list aligned with upload step constants to avoid drift.
+5. Track flaky-failure categories with lightweight metrics from CI to prioritize stabilization work.
 
 ## Maintenance Notes
 
