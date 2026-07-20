@@ -65,7 +65,7 @@ export class DocumentUploadPage extends BasePage {
     this.chooseFileButton = this.page.getByRole('button', { name: /^(Choose file|Upload a file)$/ });
     this.noFileSelectedMessage = this.page.getByText('No file chosen', { exact: true });
     this.uploadFileButton = this.page.getByRole('button', { name: 'Upload file' });
-    this.uploadedFileLinks = this.page.getByRole('list').locator('a.govuk-link:not([data-remove-file])');
+    this.uploadedFileLinks = this.page.locator('[data-uploaded-files] a.govuk-link:not([data-remove-file])');
     this.filesListHeader = this.page.getByRole('heading', { name: 'Uploaded files', exact: true });
     this.filesListDefaultMessage = this.page.getByText('No files uploaded yet.', { exact: true });
     this.errorSummaryTitle = this.page.getByRole('heading', { name: 'There is a problem' });
@@ -224,7 +224,14 @@ export class DocumentUploadPage extends BasePage {
       try {
         const currentRemoveLink = this.page.locator('[data-remove-file]').first();
         await expect(currentRemoveLink).toBeVisible({ timeout: 5_000 });
-        await currentRemoveLink.click();
+        await Promise.all([
+          this.page.waitForResponse(response =>
+            response.url().includes(`/documents/remove/${fileId}`) &&
+            response.request().method() === 'DELETE' &&
+            response.ok()
+          ),
+          currentRemoveLink.click(),
+        ]);
         await expect(this.uploadedFileLinks).toHaveCount(beforeCount - 1, { timeout: 10_000 });
         return true;
       } catch (error) {
@@ -263,57 +270,6 @@ export class DocumentUploadPage extends BasePage {
 
     await fs.writeFile(tempFilePath, Buffer.from('%PDF-1.7\n'));
     await fs.truncate(tempFilePath, sizeBytes);
-
-    try {
-      await this.chooseFileAndUploadDocument(tempFilePath, 'Other document', false);
-    } finally {
-      await fs.unlink(tempFilePath).catch(() => {
-        // Ignore cleanup errors for temp files.
-      });
-    }
-  }
-
-  async uploadPasswordProtectedPdf(): Promise<void> {
-    const tempFilePath = path.join(
-      os.tmpdir(),
-      `finrem-password-protected-${Date.now()}-${Math.random().toString(16).slice(2)}.pdf`
-    );
-
-    // Include the /Encrypt marker expected by server-side password-protection validation.
-    await fs.writeFile(tempFilePath, Buffer.from('%PDF-1.7\n1 0 obj\n<< /Encrypt 2 0 R >>\nendobj'));
-
-    try {
-      await this.chooseFileAndUploadDocument(tempFilePath, 'Other document', false);
-    } finally {
-      await fs.unlink(tempFilePath).catch(() => {
-        // Ignore cleanup errors for temp files.
-      });
-    }
-  }
-
-  async uploadPasswordProtectedXlsx(): Promise<void> {
-    const tempFilePath = path.join(
-      os.tmpdir(),
-      `finrem-password-protected-${Date.now()}-${Math.random().toString(16).slice(2)}.xlsx`
-    );
-
-    const localHeader = Buffer.alloc(30);
-    localHeader.writeUInt32LE(0x04034b50, 0);
-
-    const centralDirectoryHeader = Buffer.alloc(46);
-    centralDirectoryHeader.writeUInt32LE(0x02014b50, 0);
-    // General purpose bit flag with encryption bit set.
-    centralDirectoryHeader.writeUInt16LE(1, 8);
-
-    const endOfCentralDirectory = Buffer.alloc(22);
-    endOfCentralDirectory.writeUInt32LE(0x06054b50, 0);
-    endOfCentralDirectory.writeUInt16LE(1, 8);
-    endOfCentralDirectory.writeUInt16LE(1, 10);
-    endOfCentralDirectory.writeUInt32LE(centralDirectoryHeader.length, 12);
-    endOfCentralDirectory.writeUInt32LE(localHeader.length, 16);
-
-    const encryptedXlsxBuffer = Buffer.concat([localHeader, centralDirectoryHeader, endOfCentralDirectory]);
-    await fs.writeFile(tempFilePath, encryptedXlsxBuffer);
 
     try {
       await this.chooseFileAndUploadDocument(tempFilePath, 'Other document', false);

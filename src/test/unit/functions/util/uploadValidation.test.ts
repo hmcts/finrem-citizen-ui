@@ -137,6 +137,18 @@ describe('uploadValidation', () => {
       expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.INVALID_TYPE);
     });
 
+    it('should check file type before password-protection detection', async () => {
+      const files = [
+        {
+          originalname: 'document.txt',
+          size: 1024,
+          buffer: Buffer.from('%PDF-1.7\n1 0 obj\n<< /Encrypt 2 0 R >>\nendobj'),
+        } as Express.Multer.File,
+      ];
+
+      expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.INVALID_TYPE);
+    });
+
     it('should return TOO_LARGE error for files over 100MB', async () => {
       const files = [
         {
@@ -195,6 +207,34 @@ describe('uploadValidation', () => {
       expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.PASSWORD_PROTECTED);
     });
 
+    it('should return PASSWORD_PROTECTED error for encrypted Office compound files read from disk', async () => {
+      const tempDirectory = await mkdtemp(join(tmpdir(), 'upload-validation-'));
+      const filePath = join(tempDirectory, 'encrypted.docx');
+
+      try {
+        await writeFile(
+          filePath,
+          Buffer.concat([
+            Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]),
+            Buffer.from('EncryptedPackage', 'utf16le'),
+            Buffer.from('EncryptionInfo', 'utf16le'),
+          ])
+        );
+
+        const files = [
+          {
+            originalname: 'encrypted.docx',
+            size: 1024,
+            path: filePath,
+          } as Express.Multer.File,
+        ];
+
+        expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.PASSWORD_PROTECTED);
+      } finally {
+        await rm(tempDirectory, { recursive: true, force: true });
+      }
+    });
+
     it('should return PASSWORD_PROTECTED error for encrypted OOXML ZIP entries', async () => {
       const files = [
         {
@@ -243,6 +283,19 @@ describe('uploadValidation', () => {
         { originalname: 'valid.pdf', size: 1024, buffer: Buffer.from('test') } as Express.Multer.File,
         { originalname: 'invalid.txt', size: 1024, buffer: Buffer.from('test') } as Express.Multer.File,
       ];
+      expect(await validateUploadedFile(files)).toBeNull();
+    });
+
+    it('should validate only the first file even if a later file is password protected', async () => {
+      const files = [
+        { originalname: 'valid.pdf', size: 1024, buffer: Buffer.from('test') } as Express.Multer.File,
+        {
+          originalname: 'encrypted.pdf',
+          size: 1024,
+          buffer: Buffer.from('%PDF-1.7\n1 0 obj\n<< /Encrypt 2 0 R >>\nendobj'),
+        } as Express.Multer.File,
+      ];
+
       expect(await validateUploadedFile(files)).toBeNull();
     });
 
