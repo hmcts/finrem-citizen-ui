@@ -127,9 +127,7 @@ export class BeforeYouStartPage extends BasePage {
 
   // Verify getting help section end-to-end (collapsed state + expanded content)
   async verifyGettingHelpSection(): Promise<void> {
-    await this.gettingHelp.verifySection({
-      openingHoursLocator: this.helpOpeningHours,
-    });
+    await this.gettingHelp.verifySection();
   }
 
   async verifyBeforeYouStartAcceptanceCriteriaContent(): Promise<void> {

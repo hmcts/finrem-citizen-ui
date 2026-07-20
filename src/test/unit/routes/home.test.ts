@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 import { Application, Request, Response } from 'express';
 
 import { CitizenUploadDocumentType } from '../../../main/app/case/definition';
-import { RouteNames } from '../../../main/common-constants';
+import { RouteNames, ViewNames } from '../../../main/common-constants';
 
 // Mock the DocumentManagerController
 const mockUploadDocumentToEvidenceStore = jest.fn();
@@ -14,7 +14,14 @@ jest.mock('../../../main/app/document/DocumentManagerController', () => ({
 
 type MockSession = {
   documents?: {
-    documentDetails?: { id?: string; value?: { DocumentType?: string; DocumentFileName?: string } }[];
+    documentDetails?: {
+      id?: string;
+      value?: {
+        DocumentType?: string;
+        DocumentFileName?: string;
+        DocumentLink?: { document_url?: string };
+      };
+    }[];
     isFinancialDisputeResolution?: boolean;
   };
   [key: string]: unknown;
@@ -141,6 +148,87 @@ describe('Home Routes', () => {
         fileId: 'non-existent',
         remainingCount: 2,
       });
+    });
+  });
+
+  describe('GET /documents', () => {
+    it('should render the document page with empty defaults when no documents are in session', () => {
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
+      homeRoutes(app);
+
+      const handler = getRegisteredHandler(app.get as jest.Mock, RouteNames.documents);
+      const mockReq = {
+        session: {},
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith(ViewNames.Document, {
+        documentTypes: expect.any(Array),
+        documentCount: 0,
+        isFDR: false,
+        documents: [],
+      });
+    });
+
+    it('should render uploaded documents with extracted document ids', () => {
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
+      homeRoutes(app);
+
+      const handler = getRegisteredHandler(app.get as jest.Mock, RouteNames.documents);
+      const mockReq = {
+        session: {
+          documents: {
+            isFinancialDisputeResolution: true,
+            documentDetails: [
+              {
+                id: 'file-123',
+                value: {
+                  DocumentType: 'bank-statements',
+                  DocumentFileName: 'bank.pdf',
+                  DocumentLink: {
+                    document_url: 'http://dm-store/documents/document-123',
+                  },
+                },
+              },
+              {
+                id: 'file-456',
+                value: {
+                  DocumentType: 'position-statement',
+                  DocumentFileName: 'position.pdf',
+                },
+              },
+            ],
+          },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        ViewNames.Document,
+        expect.objectContaining({
+          documentTypes: expect.any(Array),
+          documentCount: 2,
+          isFDR: true,
+          documents: [
+            expect.objectContaining({
+              id: 'file-123',
+              extractedDocumentId: 'document-123',
+            }),
+            expect.objectContaining({
+              id: 'file-456',
+              extractedDocumentId: '',
+            }),
+          ],
+        })
+      );
     });
   });
 
@@ -423,7 +511,7 @@ describe('Home Routes', () => {
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
-      
+
       const mockReq = {
         files: [{ originalname: 'huge.pdf', size: 101 * 1024 * 1024 }],
         body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
@@ -538,18 +626,18 @@ describe('Home Routes', () => {
 
       const multer = require('multer');
       const multerError = new multer.MulterError('LIMIT_FILE_SIZE', 'file');
-      
+
       const mockReq = {
         body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
       } as PartialRequestWithSession;
-      
+
       const mockRes = {
         redirect: jest.fn(),
       } as Partial<Response>;
-      
+
       const mockNext = jest.fn();
 
       errorHandler(multerError, mockReq as unknown as Request, mockRes as Response, mockNext);
@@ -573,18 +661,18 @@ describe('Home Routes', () => {
 
       const multer = require('multer');
       const multerError = new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'file');
-      
+
       const mockReq = {
         body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
       } as PartialRequestWithSession;
-      
+
       const mockRes = {
         redirect: jest.fn(),
       } as Partial<Response>;
-      
+
       const mockNext = jest.fn();
 
       errorHandler(multerError, mockReq as unknown as Request, mockRes as Response, mockNext);
@@ -606,12 +694,12 @@ describe('Home Routes', () => {
       ) as (err: Error, req: Request, res: Response, next: (error?: Error) => void) => void;
 
       const genericError = new Error('Some other error');
-      
+
       const mockReq = {
         body: { documentType: 'form-fm1' },
         session: {},
       } as PartialRequestWithSession;
-      
+
       const mockRes = {} as Partial<Response>;
       const mockNext = jest.fn();
 

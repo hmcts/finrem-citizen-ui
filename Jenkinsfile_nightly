@@ -43,7 +43,8 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
 withNightlyPipeline(type, product, component) {
-  env.UNIT_TESTS_COMMAND = "yarn test:unit && yarn test:coverage && yarn lint && yarn test:routes && yarn test:api"
+  // test:coverage executes unit + route tests via jest.config roots.
+  env.UNIT_TESTS_COMMAND = "yarn test:coverage && yarn lint && yarn test:api"
   env.RUNNING_ENV = "aat"
   env.TEST_URL = params.URL_TO_TEST
   env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl

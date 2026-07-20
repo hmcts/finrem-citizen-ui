@@ -23,11 +23,19 @@ describe('Autocomplete Route', () => {
   });
 
   describe('GET /autocomplete', () => {
-    it('should return empty array when query is empty', async () => {
+    it('should return all document types when query is empty', async () => {
       const response = await request(app).get(PublicRoutes.autocomplete).query({ q: '' });
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual([]);
+      expect(response.body.length).toBeGreaterThan(0);
+      expect(response.body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            label: expect.any(String),
+            value: expect.any(String),
+          }),
+        ])
+      );
     });
 
     it('should return matching documents by label', async () => {

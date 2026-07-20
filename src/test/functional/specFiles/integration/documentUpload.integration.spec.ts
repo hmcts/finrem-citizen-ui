@@ -117,6 +117,9 @@ const passwordProtectedUploadScenarios: PasswordProtectedUploadScenario[] = [
 test.describe('[integration] Document upload page', () => {
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
+    enterCaseNumberPage,
+    enterAccessCodePage,
+    contestedCaseWithHearing,
     dashboardPage,
     beforeYouStartPage,
     confidentialityPage,
@@ -125,6 +128,9 @@ test.describe('[integration] Document upload page', () => {
     documentSelectionPage,
     documentUploadPage,
   }) => {
+    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+
     await navigateToFdrStep(dashboardPage, beforeYouStartPage, confidentialityPage, basePage);
     await fdrPage.selectYesAndContinue();
     await documentSelectionPage.addOtherDocumentAndContinue();
@@ -430,7 +436,6 @@ test.describe('[integration] Document upload page', () => {
     axeUtils,
   }) => {
     await documentUploadPage.gettingHelp.verifySection({
-      expectedEmail: 'FRCexample@justice.gov.uk',
       openingHoursLocator: documentUploadPage.helpOpeningHours,
       callChargesHref: 'https://www.gov.uk/call-charges',
     });

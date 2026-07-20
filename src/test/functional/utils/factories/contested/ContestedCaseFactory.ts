@@ -360,7 +360,6 @@ export class ContestedCaseFactory {
         return { applicantCode, respondentCode };
       }
 
-      // No point waiting after the last (or only) polling attempt.
       const isLastCappedAttempt =
         ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase > 0
         && attempt === ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase - 1;
@@ -614,7 +613,24 @@ export class ContestedCaseFactory {
       await ContestedEventApi.caseWorkerHWFDecisionMade(caseId);
     });
 
-    await ContestedEventApi.caseWorkerIssueApplication(caseId, true, issueDate);
+    try {
+      await ContestedEventApi.caseWorkerIssueApplication(caseId, true, issueDate);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const isAlreadyIssuedError =
+        message.includes('Pre-state condition is not valid')
+        && message.includes('applicationIssued')
+        && message.includes('FR_issueApplication');
+
+      if (!isAlreadyIssuedError) {
+        throw error;
+      }
+
+      // FR_issueApplication is already applied for this case; proceed with the issued case.
+      // eslint-disable-next-line no-console
+      console.warn(`FR_issueApplication already applied for case ${caseId}; proceeding with existing issued state`);
+    }
+
     return caseId;
   }
 

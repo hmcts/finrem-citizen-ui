@@ -6,7 +6,7 @@
     "node": ">=22.22.0"
   },
   "scripts": {
-    "start": "NODE_ENV=production ts-node -r tsconfig-paths/register src/main/server.ts",
+    "start": "ts-node -r tsconfig-paths/register src/main/server.ts",
     "start:dev": "nodemon --config nodemon.json",
     "start:mock-case-api": "ts-node -r dotenv/config src/main/mock-case-api/server.ts",
     "lint": "eslint .",
@@ -24,7 +24,7 @@
     "test:playwright:a11y:all-browsers": "sh -c 'TEST_RESULTS_DIR=a11y-output PLAYWRIGHT_HTML_OUTPUT_DIR=a11y-output/axe-report PLAYWRIGHT_HTML_OPEN=never playwright test --config playwright.config.mts --workers=${PLAYWRIGHT_A11Y_ALL_BROWSERS_WORKERS:-4} --retries=${PLAYWRIGHT_A11Y_RETRIES:-1} --grep @a11y --reporter=html; code=$?; yarn playwright show-report a11y-output/axe-report; exit $code'",
     "test:smoke": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --config jest.smoke.config.js",
     "test:functional:install-deps": "yarn playwright install --with-deps",
-    "test:functional": "yarn playwright install --with-deps && playwright test --config playwright.config.mts --project chromium --retries=${PLAYWRIGHT_RETRIES:-2}",
+    "test:functional": "yarn playwright install --with-deps chromium && playwright test --config playwright.config.mts --project chromium --retries=${PLAYWRIGHT_RETRIES:-2}",
     "test:functional:quick": "PLAYWRIGHT_RETRIES=0 PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-6} playwright test --config playwright.config.mts --project chromium",
     "test:fullfunctional": "yarn test:functional",
     "test:functional:allBrowsers": "playwright test --config playwright.config.mts --retries=${PLAYWRIGHT_RETRIES:-3}",
