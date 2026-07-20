@@ -48,7 +48,7 @@ export class DocumentSelectionPage extends BasePage {
     this.addDocumentButton = this.page.getByRole('button', { name: 'Add document' });
     this.documentsHeading = this.page.getByRole('heading', { name: 'Documents', exact: true });
     this.noDocumentsMessage = this.page.getByText('No documents added yet.', { exact: true });
-    this.documentList = this.page.locator('[data-document-types-list]').getByRole('term');
+    this.documentList = this.page.locator('[data-document-types-list] dt');
     this.errorSummaryTitle = this.page.getByRole('heading', { name: 'There is a problem' });
     this.errorSummaryLink = this.page
       .getByRole('alert')
@@ -130,24 +130,7 @@ export class DocumentSelectionPage extends BasePage {
   }
 
   async addOtherDocumentAndContinue(): Promise<void> {
-    const otherDocumentLabel = 'Other document';
-    const autocompleteResponsePromise = this.page.waitForResponse(response => {
-      return response.url().includes('/autocomplete')
-        && response.url().includes('q=other%20document')
-        && response.ok();
-    });
-    await this.documentTypeInput.fill('other document');
-    await autocompleteResponsePromise;
-
-    const suggestion = this.page.getByRole('option', { name: otherDocumentLabel });
-    await expect(suggestion).toBeVisible();
-    await suggestion.click();
-
-    await this.addDocumentButton.click();
-
-    await expect(this.termByLabel(otherDocumentLabel)).toBeVisible();
-    await expect(this.noDocumentsMessage).toBeHidden();
-
+    await this.addDocumentBySearchTerm('other document', 'Other document');
     await this.continueButton.click();
   }
 
@@ -191,7 +174,7 @@ export class DocumentSelectionPage extends BasePage {
   }
 
   private termByLabel(label: string): Locator {
-    return this.page.locator('[data-document-types-list]').getByRole('term').filter({ hasText: label });
+    return this.page.locator('[data-document-types-list] dt').filter({ hasText: label });
   }
 
   async clickBackAndExpectFdr(): Promise<void> {

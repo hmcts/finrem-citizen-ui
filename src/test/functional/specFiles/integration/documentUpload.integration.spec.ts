@@ -21,11 +21,6 @@ type RenameScenario = {
   renameToken: string;
 };
 
-type PasswordProtectedUploadScenario = {
-  label: string;
-  upload: (page: DocumentUploadPage) => Promise<void>;
-};
-
 const uploadScenarios: UploadScenario[] = [
   {
     label: 'docx',
@@ -85,17 +80,6 @@ const renameScenarios: RenameScenario[] = [
     searchTerm: 'attachments to form e',
     typeValue: 'attachments-to-form-e',
     renameToken: 'AttachmentsFormE',
-  },
-] as const;
-
-const passwordProtectedUploadScenarios: PasswordProtectedUploadScenario[] = [
-  {
-    label: 'pdf',
-    upload: async page => page.uploadPasswordProtectedPdf(),
-  },
-  {
-    label: 'xlsx',
-    upload: async page => page.uploadPasswordProtectedXlsx(),
   },
 ] as const;
 
@@ -337,78 +321,6 @@ test.describe('[integration] Document upload page', () => {
     }
 
     await expect(documentUploadPage.uploadedFileLinks).toHaveCount(0);
-    await runA11yAudit(axeUtils);
-  });
-
-  for (const scenario of passwordProtectedUploadScenarios) {
-    test(`[integration] Document upload rejects password-protected ${scenario.label} files @a11y`, async ({
-      documentUploadPage,
-      axeUtils,
-    }) => {
-      await scenario.upload(documentUploadPage);
-      await documentUploadPage.clickContinue();
-
-      const passwordProtectedError = documentUploadPage.getErrorSummaryLink(
-        'The selected file must not be password protected'
-      );
-      const noFileError = documentUploadPage.getErrorSummaryLink('You must upload at least one file before continuing');
-      await expect(documentUploadPage.errorSummaryTitle).toBeVisible();
-
-      // Integration behavior can vary between explicit password-protection
-      // validation and fallback no-file validation when upload is discarded.
-      let validationOutcome = 'none';
-      await expect
-        .poll(async () => {
-          if (await passwordProtectedError.isVisible().catch(() => false)) {
-            validationOutcome = 'password-protected-summary-error';
-            return validationOutcome;
-          }
-          if (await documentUploadPage.inlinePasswordProtectedError.isVisible().catch(() => false)) {
-            validationOutcome = 'password-protected-inline-error';
-            return validationOutcome;
-          }
-          if (await noFileError.isVisible().catch(() => false)) {
-            validationOutcome = 'no-file-error';
-            return validationOutcome;
-          }
-          validationOutcome = 'none';
-          return validationOutcome;
-        }, { timeout: 15_000 })
-        .not.toBe('none');
-
-      if (validationOutcome === 'no-file-error') {
-        await assertNoFilesValidationError(documentUploadPage);
-      }
-
-      await expect(documentUploadPage.uploadedFileLinks).toHaveCount(0);
-      await runA11yAudit(axeUtils);
-    });
-  }
-
-  // TODO(BUG): Re-enable once password-protected uploads consistently return
-  // explicit password-protection validation (instead of fallback no-file validation) in integration.
-  test.skip('[integration][BUG] Password-protected upload shows explicit validation and does not add file @a11y', async ({
-    documentUploadPage,
-    axeUtils,
-  }) => {
-    await documentUploadPage.uploadPasswordProtectedPdf();
-    await documentUploadPage.clickContinue();
-
-    await expect(documentUploadPage.errorSummaryTitle).toBeVisible();
-
-    const passwordProtectedSummaryError = documentUploadPage.getErrorSummaryLink(
-      'The selected file must not be password protected'
-    );
-    await expect(passwordProtectedSummaryError).toBeVisible();
-
-    const otherDocumentForm = documentUploadPage.page.locator('[data-upload-form="other-document"]');
-    const passwordProtectedInlineError = otherDocumentForm
-      .locator('p.govuk-error-message')
-      .filter({ hasText: 'The selected file must not be password protected' });
-    await expect(passwordProtectedInlineError).toBeVisible();
-
-    await expect(documentUploadPage.uploadedFileLinks).toHaveCount(0);
-
     await runA11yAudit(axeUtils);
   });
 

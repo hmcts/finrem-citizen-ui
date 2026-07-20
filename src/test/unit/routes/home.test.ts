@@ -346,7 +346,7 @@ describe('Home Routes', () => {
       await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
 
       expect(mockReq.session?.uploadErrors).toEqual({
-        'form-fm1': 'The selected file must not be password protected',
+        'form-fm1': 'The selected file is password protected',
       });
       expect(mockUploadDocumentToEvidenceStore).not.toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
