@@ -1,4 +1,5 @@
 import { expect, test } from '../../../fixtures/fixtures';
+import { shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationTarget.helper';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import {
   navigateToCheckUploadWithOtherDocument,
@@ -13,28 +14,14 @@ import {
  * branching decisions, validation, getting-help details, back navigation,
  * and accessibility assertions.
  */
-test.describe('[integration] Check uploaded documents page', () => {
-  test.describe('[integration] Check uploaded documents page with uploaded other document', () => {
-    test.beforeEach(async ({
-      loggedInPage: _loggedInPage,
-      enterCaseNumberPage,
-      enterAccessCodePage,
-      contestedCaseWithHearing,
-      dashboardPage,
-      beforeYouStartPage,
-      confidentialityPage,
-      basePage,
-      fdrPage,
-      documentSelectionPage,
-      documentUploadPage,
-      checkUploadPage,
-    }) => {
-      // Establish real integration session state first
-      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
-
-      // Continue existing journey 
-      await navigateToCheckUploadWithOtherDocument({
+if (shouldRunRealCcdIntegrationSuite()) {
+  test.describe('[integration] Check uploaded documents page', () => {
+    test.describe('[integration] Check uploaded documents page with uploaded other document', () => {
+      test.beforeEach(async ({
+        loggedInPage: _loggedInPage,
+        enterCaseNumberPage,
+        enterAccessCodePage,
+        contestedCaseWithHearing,
         dashboardPage,
         beforeYouStartPage,
         confidentialityPage,
@@ -43,8 +30,23 @@ test.describe('[integration] Check uploaded documents page', () => {
         documentSelectionPage,
         documentUploadPage,
         checkUploadPage,
+      }) => {
+        // Establish real integration session state first
+        await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+        await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+
+        // Continue existing journey
+        await navigateToCheckUploadWithOtherDocument({
+          dashboardPage,
+          beforeYouStartPage,
+          confidentialityPage,
+          basePage,
+          fdrPage,
+          documentSelectionPage,
+          documentUploadPage,
+          checkUploadPage,
+        });
       });
-    });
 
     test('[integration] Check uploaded documents page displays expected content and layout @a11y', async ({
       checkUploadPage,
@@ -423,3 +425,5 @@ test.describe('[integration] Check uploaded documents page', () => {
   });
 
 });
+
+}

@@ -1,4 +1,5 @@
 import { test } from '../../../fixtures/fixtures';
+import { shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationTarget.helper';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToDashboardStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
@@ -11,7 +12,8 @@ import { navigateToDashboardStep } from '../journeyHelpers/uploadJourneyNavigati
  * Runs on: Environments with working authentication/session support
  */
 
-test.describe('[integration] Dashboard upload journey', () => {
+if (shouldRunRealCcdIntegrationSuite()) {
+  test.describe('[integration] Dashboard upload journey', () => {
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
@@ -88,4 +90,5 @@ test.describe('[integration] Dashboard upload journey', () => {
     await confidentialityPage.verifyConfidentialityPageContent();
     await runA11yAudit(axeUtils);
   });
-});
+  });
+}

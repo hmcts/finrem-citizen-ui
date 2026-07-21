@@ -1,30 +1,9 @@
 import dns from 'node:dns/promises';
 
 import { test } from '../../../fixtures/fixtures';
+import { shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationTarget.helper';
 import { expectAuthenticated, runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToAccessCodeStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
-
-function shouldRunHappyPathIntegrationSuite(): boolean {
-  const explicitToggle = process.env.ACCESS_CODE_REAL_INTEGRATION;
-  const runningEnv = (process.env.RUNNING_ENV || '').toLowerCase();
-  const testUrl = (process.env.TEST_URL || '').toLowerCase();
-  const isPreviewOrAatTarget =
-    runningEnv === 'aat'
-    || runningEnv.startsWith('pr-')
-    || testUrl.includes('.preview.platform.hmcts.net')
-    || testUrl.includes('.aat.platform.hmcts.net');
-
-  if (explicitToggle === 'true') {
-    return true;
-  }
-
-  if (explicitToggle === 'false') {
-    // Legacy .env files often set false; do not block preview/AAT by default.
-    return isPreviewOrAatTarget;
-  }
-
-  return isPreviewOrAatTarget;
-}
 
 function getRequiredCcdUrl(): string {
   const ccd = process.env.CCD_URL?.trim() || process.env.CCD_DATA_STORE_API_URL?.trim();
@@ -72,7 +51,7 @@ export async function assertIntegrationPreflight(): Promise<void> {
 
 // INTEGRATION: Happy-path submission calls invalidateAccessCode(), which triggers
 // a CCD event. These tests require a real case + real access-code integration.
-if (shouldRunHappyPathIntegrationSuite()) {
+if (shouldRunRealCcdIntegrationSuite()) {
   test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
 
   test.beforeAll(async () => {
@@ -174,7 +153,7 @@ if (shouldRunHappyPathIntegrationSuite()) {
   });
 }
 
-if (shouldRunHappyPathIntegrationSuite()) {
+if (shouldRunRealCcdIntegrationSuite()) {
   test.describe('[integration-happy-path] Enter Access Code - Full Journey', () => {
 
   test.beforeAll(async () => {

@@ -1,5 +1,6 @@
 import { expect, test } from '../../../fixtures/fixtures';
 import type { DocumentUploadPage } from '../../pom/documentUploadPage.page';
+import { shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationTarget.helper';
 import {
   assertNoFilesValidationError,
   assertUploadedFileVisible,
@@ -98,7 +99,8 @@ const renameScenarios: RenameScenario[] = [
  * Runs on:
  * - Environments with working authentication/session support
  */
-test.describe('[integration] Document upload page', () => {
+if (shouldRunRealCcdIntegrationSuite()) {
+  test.describe('[integration] Document upload page', () => {
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
@@ -367,4 +369,5 @@ test.describe('[integration] Document upload page', () => {
     await runA11yAudit(axeUtils);
   });
 
-});
+  });
+}

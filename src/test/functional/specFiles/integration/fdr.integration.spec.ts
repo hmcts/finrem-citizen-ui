@@ -1,4 +1,5 @@
 import { test } from '../../../fixtures/fixtures';
+import { shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationTarget.helper';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
@@ -16,9 +17,10 @@ import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.hel
  * Runs on:
  * - Environments with working authentication/session support
  */
-test.describe('[integration] FDR page', () => {
-  // Run serially to avoid concurrent logins overwhelming the AAT pod.
-  test.describe.configure({ mode: 'serial' });
+if (shouldRunRealCcdIntegrationSuite()) {
+  test.describe('[integration] FDR page', () => {
+    // Run serially to avoid concurrent logins overwhelming the AAT pod.
+    test.describe.configure({ mode: 'serial' });
 
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
@@ -69,4 +71,5 @@ test.describe('[integration] FDR page', () => {
     await fdrPage.verifyGettingHelpSection();
     await runA11yAudit(axeUtils);
   });
-});
+  });
+}

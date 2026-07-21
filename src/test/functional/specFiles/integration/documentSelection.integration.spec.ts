@@ -1,4 +1,5 @@
 import { expect, test } from '../../../fixtures/fixtures';
+import { shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationTarget.helper';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
@@ -17,8 +18,9 @@ import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.hel
  * Runs on:
  * - Environments with working authentication/session support
  */
-test.describe('[integration] Document selection page', () => {
-  test.describe.configure({ timeout: 90_000 });
+if (shouldRunRealCcdIntegrationSuite()) {
+  test.describe('[integration] Document selection page', () => {
+    test.describe.configure({ timeout: 90_000 });
 
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
@@ -139,4 +141,5 @@ test.describe('[integration] Document selection page', () => {
     await documentSelectionPage.expectDocumentsListContains(['Payslips']);
     await runA11yAudit(axeUtils);
   });
-});
+  });
+}
