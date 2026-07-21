@@ -1,330 +1,302 @@
-# Test Guide (Single Source Of Truth)
+# Test Guide
 
-This file is the single source of truth for test execution guidance and test logic conventions in this repository.
-It is located under `specFiles/` for historical reasons, but it covers the full test operating model in `src/test` (unit, routes, API, smoke, and functional).
+This guide explains how testing works in this repo and what to run before opening or approving a PR.
+It sits under `specFiles/`, but it covers the whole test setup in `src/test`.
 
-## Jenkins Builds
+## Contents
+
+- [0. Jenkins Builds](#0-jenkins-builds)
+- [1. Overall testing strategy for the service](#1-overall-testing-strategy-for-the-service)
+- [2. Unit tests](#2-unit-tests)
+- [3. Route tests](#3-route-tests)
+- [4. API tests](#4-api-tests)
+- [5. Functional tests](#5-functional-tests)
+- [6. Smoke tests](#6-smoke-tests)
+- [7. Accessibility testing](#7-accessibility-testing)
+- [8. QA scripts and commonly used commands](#8-qa-scripts-and-commonly-used-commands)
+- [9. How Playwright selects the target environment](#9-how-playwright-selects-the-target-environment)
+- [10. Local vs preview vs AAT test execution](#10-local-vs-preview-vs-aat-test-execution)
+- [11. Use of mock CCD API in local tests](#11-use-of-mock-ccd-api-in-local-tests)
+- [12. Access-code polling and eventual consistency risks](#12-access-code-polling-and-eventual-consistency-risks)
+- [13. Known flaky tests and how to debug them](#13-known-flaky-tests-and-how-to-debug-them)
+- [14. What test evidence should be expected in a PR](#14-what-test-evidence-should-be-expected-in-a-pr)
+- [15. Gaps in current test coverage](#15-gaps-in-current-test-coverage)
+- [16. Contractor recommendations for strengthening the test suite](#16-contractor-recommendations-for-strengthening-the-test-suite)
+- [17. Which test should I add for a given type of change?](#17-which-test-should-i-add-for-a-given-type-of-change)
+- [18. Which commands should I run before pushing?](#18-which-commands-should-i-run-before-pushing)
+- [19. How do I debug failing Playwright tests?](#19-how-do-i-debug-failing-playwright-tests)
+- [20. Which tests give confidence in auth, CCD linking and document journeys?](#20-which-tests-give-confidence-in-auth-ccd-linking-and-document-journeys)
+- [21. Where is coverage weak today?](#21-where-is-coverage-weak-today)
+- [22. src/test overview](#22-srctest-overview)
+- [23. Fixtures and how they work](#23-fixtures-and-how-they-work)
+- [Appendix A. Environment variables used in testing](#appendix-a-environment-variables-used-in-testing)
+- [Appendix B. Script reference highlights](#appendix-b-script-reference-highlights)
+- [Maintenance notes](#maintenance-notes)
+
+## 0. Jenkins Builds
 
 - **Nightly runs**: https://build.hmcts.net/job/HMCTS_d_to_i_Nightly/job/finrem-citizen-ui/job/master/
 - **Master build runs**: https://build.hmcts.net/job/HMCTS_d_to_i/job/finrem-citizen-ui/job/master/
 - **Preview (PR) build runs**: https://build.hmcts.net/job/HMCTS_d_to_i/job/finrem-citizen-ui/job/PR-437/ (replace 437 with your PR number)
 
-## What Is Tested In This Repo
+## 1. Overall testing strategy for the service
 
-### Which test should I add for a given type of change?
+- Use a test pyramid: fast unit/route/API checks, fewer browser integration tests, and a small smoke suite.
+- Keep functional specs focused on journey flow, and keep locator and interaction detail in POMs.
+- Use local mock tests for predictable UI checks, then integration tests for real-environment behaviour.
+- Treat accessibility checks as part of normal UI quality checks.
 
-| Change type | Primary test to add | Secondary checks |
-|---|---|---|
-| Pure business logic or utility function | Unit test in `src/test/unit/` | Route/API tests only if route contract changes |
-| New/changed route guard, redirect, validation branch | Route test in `src/test/routes/` | Unit test for helper logic used by route |
-| Endpoint contract or workflow orchestration | API test in `src/test/api/` | Route test if rendered page or redirect changes |
-| Browser journey behavior (content, interaction, navigation) | Functional test in `src/test/functional/specFiles/` | Add/update POM methods first, then use them in specs |
-| Route availability/redirect sanity for deployments | Smoke test in `src/test/smoke/smoke.ts` | None unless behavior expands beyond smoke intent |
-| UI copy/layout/content with user impact | Functional test + `@a11y` assertion | Add route test if server-side validation/redirect also changed |
+Test layers:
 
-### Which commands should I run before pushing?
+- `src/test/unit/` for low-level logic correctness.
+- `src/test/routes/` for route protection/redirect/validation contracts.
+- `src/test/api/` for endpoint and workflow contracts.
+- `src/test/functional/` for browser user journeys.
+- `src/test/smoke/` for deployment readiness and route availability.
 
-Minimum high-confidence gate:
+## 2. Unit tests
+
+- Location: `src/test/unit/`.
+- Coverage focus: business logic, middleware, modules, scripts, views, and utility functions.
+- Fastest feedback loop for low-level changes.
+- Default command: `yarn test` (runs `yarn test:unit` outside CI).
+- Coverage enforcement in `jest.config.js`:
+  - statements: 85
+  - branches: 85
+  - functions: 85
+  - lines: 85
+
+## 3. Route tests
+
+- Location: `src/test/routes/`.
+- What they prove:
+  - route protection and authentication redirects
+  - route-level validation and continuation flow
+  - expected route contract behavior
+- Command: `yarn test:routes`.
+
+## 4. API tests
+
+- Location: `src/test/api/`.
+- What they prove:
+  - public/protected endpoint contracts
+  - status and header behavior
+  - auth and workflow route behavior
+  - mock-case-api contract tests
+- Command: `yarn test:api`.
+- Mocked vs real:
+  - API tests run against app/test harness behaviour via Jest + Supertest.
+  - Cross-service confidence mostly comes from Playwright integration suites.
+
+## 5. Functional tests
+
+- Location: `src/test/functional/`.
+- Command: `yarn test:functional`.
+- Folder structure:
+
+```text
+src/test/functional/
+├── specFiles/
+│   ├── mock/
+│   ├── integration/
+│   └── journeyHelpers/
+├── pom/
+├── utils/
+└── config/
+```
+
+- Fixtures and shared behaviour are centralized in [23. Fixtures and how they work](#23-fixtures-and-how-they-work).
+- The broader `src/test` split is covered in [22. src/test overview](#22-srctest-overview).
+- Journey orchestration belongs in specs/helpers; locator/interaction detail belongs in POM classes.
+
+Scope split:
+
+- `mock`: local-only, deterministic tests using test-support routes.
+- `integration`: cross-environment tests that exercise real API flows.
+
+Mock lane guardrails:
+
+- run mock CCD API on `http://localhost:4100`
+- start app with `ENABLE_TEST_SUPPORT_ROUTES=true`
+- use `test.use({ useMockTestSupport: true })`
+- use `injectCaseSession()` only in mock scenarios
+
+Integration lane guardrails:
+
+- use a reachable CCD target (local mock CCD, preview, or AAT)
+- do not use test-support route injection
+- integration happy-path suites run by default on preview/AAT
+- outside preview/AAT, set `ACCESS_CODE_REAL_INTEGRATION=true`
+
+Functional support utilities overview:
+
+| Path | Purpose |
+|---|---|
+| `src/test/functional/utils/api/` | Journey-specific API clients (for example contested-case events). |
+| `src/test/functional/utils/factories/` | Higher-level case/data factories for reusable setup flows. |
+| `src/test/functional/utils/helpers/` | Shared helpers for HTTP calls, tokens, case creation, assertions, and POM assertions. |
+| `src/test/functional/utils/test_data/` | Environment-aware payload/test-data shaping utilities. |
+
+Top-level utility files:
+
+| File | Purpose |
+|---|---|
+| `src/test/functional/utils/CaseDataBuilder.ts` | Builder-style helper for assembling case data payloads. |
+| `src/test/functional/utils/DateHelper.ts` | Stable date/time utilities for tests. |
+| `src/test/functional/utils/PayloadMutator.ts` | Reusable payload replacement rules/functions. |
+
+## 6. Smoke tests
+
+- Location: `src/test/smoke/smoke.ts`.
+- Command: `yarn test:smoke`.
+- What they prove:
+  - basic service readiness
+  - key route availability
+  - expected protected-route redirects
+- What smoke does not prove:
+  - full business workflow correctness
+  - CCD mutation correctness
+  - complete browser journey correctness
+
+## 7. Accessibility testing
+
+- Accessibility is built into functional testing.
+- Use `@a11y` in test names where accessibility is asserted.
+- Implementation:
+  - `AxeUtils` from `@hmcts/playwright-common`
+  - `runA11yAudit(...)` helper pattern
+  - accessibility-tree assertion via `ariaSnapshot()`
+- Core call pattern:
+
+```typescript
+await axeUtils.audit(DEFAULT_AXE_OPTIONS);
+```
+
+- Targeted a11y scripts:
+  - `yarn test:playwright:a11y:chrome`
+  - `yarn test:playwright:a11y:all-browsers`
+
+Additional conventions:
+
+- Keep accessibility assertions in functional UI tests unless explicitly out of scope.
+- Rule tags target WCAG 2.0/2.1/2.2 level A/AA via playwright-common defaults.
+- `runA11yAudit(...)` should run `axeUtils.audit(DEFAULT_AXE_OPTIONS)` and perform the accessibility-tree assertion (`ariaSnapshot()`).
+- Auto a11y audit via shared fixtures should stay enabled unless there is a documented reason to opt out.
+
+Labeling conventions used in specs:
+
+- `[mock]`: local mock-only suites
+- `[integration]`: integration suites
+- `[integration-happy-path]`: real integration happy-path scenarios
+
+## 8. QA scripts and commonly used commands
+
+Core commands:
+
+- `yarn test`
+- `yarn test:routes`
+- `yarn test:api`
+- `yarn test:functional`
+- `yarn qacichecks`
+
+Best single pre-push check:
 
 ```bash
 yarn qacichecks
 ```
 
-If iterating quickly, use this order:
+Script matrix:
+
+| Script | Local | Local mock flow | Preview/AAT | Purpose |
+|---|---|---|---|---|
+| `yarn test:functional:install-deps` | Yes | Yes | Yes | Installs Playwright browser dependencies |
+| `yarn test:functional` | Yes | Yes | Yes | Main Chromium functional run |
+| `yarn test:functional:quick` | Yes | Yes | Yes | Fast Chromium run with retries disabled |
+| `yarn test:functional:allBrowsers` | Yes | Yes | Yes | Chromium + Firefox + WebKit |
+| `yarn test:functional:pr` | Yes | Yes | Yes | PR-tagged Chromium run |
+| `yarn test:functional:headed:slowmo` | Yes | Yes | Yes | Interactive headed debugging |
+| `yarn test:functional:allBrowsers:ui` | Yes | Yes | Yes | Playwright UI mode |
+| `yarn test:playwright:a11y:chrome` | Yes | Yes | Yes | Accessibility-tagged Chromium run |
+| `yarn test:playwright:a11y:all-browsers` | Yes | Yes | Yes | Accessibility-tagged all-browser run |
+| `yarn qacichecks` | Yes | Yes | Yes | Build + lint + unit + routes + API + coverage + functional |
+| `yarn qacichecks:allBrowsers` | Yes | Yes | Yes | Same as qacichecks with all-browser functional coverage |
+
+Worker/retry defaults and overrides:
+
+- `PLAYWRIGHT_WORKERS`: default `4` when unset (`playwright.config.mts`)
+- `PLAYWRIGHT_RETRIES`: default `2` for `test:functional` and `test:functional:pr`
+- `PLAYWRIGHT_RETRIES`: default `3` for `test:functional:allBrowsers`
+- `PLAYWRIGHT_RETRIES=0` for `test:functional:quick`
+- `test:functional:headed:slowmo` runs with `--workers=1`
+
+Useful override examples:
 
 ```bash
-yarn test
-yarn test:routes
-yarn test:api
-yarn test:functional
+# Smaller CI agent
+PLAYWRIGHT_WORKERS=3 PLAYWRIGHT_RETRIES=2 yarn test:functional
+
+# Faster local feedback
+PLAYWRIGHT_WORKERS=6 PLAYWRIGHT_RETRIES=2 yarn test:functional
+
+# Benchmark run without retries
+PLAYWRIGHT_RETRIES=0 yarn test:functional
+
+# Verbose CCD diagnostics for integration investigations
+CCD_LOG_PROGRESS=true CCD_VERBOSE_RETRY=true yarn test:functional -- src/test/functional/specFiles/integration/enterAccessCode.integration.spec.ts
 ```
 
-### Which tests give confidence in auth, CCD linking, and document journeys?
+Suggested run order before push:
 
-- Auth/session wiring confidence: integration functional specs plus API token/setup helpers.
-- CCD linking/access-code confidence: integration suites in `enterAccessCode.integration.spec.ts` with polling controls.
-- Document journey confidence: integration suites around selection/upload/check-upload/send-to-other-party and related route tests.
+1. `yarn test:functional`
+2. `yarn test:playwright:a11y:chrome` (or all-browsers a11y when needed)
+3. `yarn test:functional:headed:slowmo` for investigation if needed
+4. `yarn qacichecks` as final gate
 
-### How do I debug failing Playwright tests quickly?
+## 9. How Playwright selects the target environment
 
-```bash
-yarn test:functional:headed:slowmo -- src/test/functional/specFiles/integration/<file>.integration.spec.ts
-```
-
-Then narrow by test title:
-
-```bash
-yarn test:functional:headed:slowmo -- src/test/functional/specFiles/integration/<file>.integration.spec.ts --grep "<test title fragment>"
-```
-
-## Overall Testing Strategy
-
-- Use a pyramid approach: many fast unit/route/API checks, fewer browser integration tests, and minimal smoke checks.
-- Keep functional specs focused on journey orchestration; keep locator and interaction detail inside POMs.
-- Prefer deterministic local mock tests for UI behavior and integration tests for real environment confidence.
-- Treat accessibility assertions as part of normal functional test quality, not a separate optional pass.
-
-### Unit tests (`src/test/unit/`)
-- Validate business logic, middleware, modules, scripts, views, and utility functions.
-- Fastest feedback for low-level behavior changes.
-- Default command: `yarn test` (runs `yarn test:unit` outside CI).
-- Coverage enforcement is set in `jest.config.js` with global thresholds at 85% for statements, branches, functions, and lines.
-
-### Route tests (`src/test/routes/`)
-- Validate route registration, redirect behavior, health paths, and general upload/task-list route behavior.
-- Focus on application routing contracts and guards.
-- Typical proof points:
-   - route protection/auth redirects
-   - validation errors and continuation flow
-   - expected rendered page/view model wiring
-
-### API tests (`src/test/api/`)
-- Validate endpoint behavior and multi-step API workflows using Jest + Supertest.
-- Includes endpoint-level, workflow-level, and mock API coverage.
-- Command: `yarn test:api`.
-- Mocked vs real:
-   - API tests execute against the app/test harness process and helper-level stubs/mocks.
-   - Functional integration tests provide cross-service confidence against selected deployed targets.
-
-### Smoke tests (`src/test/smoke/`)
-- Validate service readiness and core route availability.
-- Minimal confidence checks for environment health.
-- Command: `yarn test:smoke`.
-- Smoke tests prove route/service availability and expected redirect behavior for protected routes.
-- Smoke tests do not prove end-to-end business workflows, CCD data mutations, or full browser journey correctness.
-
-### Functional tests (`src/test/functional/`)
-- Validate browser-based user journeys with Playwright.
-- Includes mock and integration lanes, POM-based interactions, shared fixtures, and journey helpers.
-- Command: `yarn test:functional`.
-- Structure:
-   - specs under `specFiles/mock` and `specFiles/integration`
-   - page logic under `pom/`
-   - shared orchestration in `specFiles/journeyHelpers/`
-   - reusable API/setup helpers under `utils/helpers/` and `utils/factories/`
-
-### Accessibility coverage
-- Validated in functional runs via `@hmcts/playwright-common` (`AxeUtils`) plus accessibility-tree proxy assertions.
-- Focused accessibility-only runs use `test:playwright:a11y:*` scripts.
-- Expected when UI changes:
-   - keep or add `@a11y` coverage on affected journeys
-   - run relevant functional spec(s) and verify no axe regressions
-   - run broader a11y scripts when shared templates/layouts are changed
-
-## Scope
-
-Functional tests are split into:
-
-- mock: Local-only tests that use mock infrastructure and test-support routes.
-- integration: Cross-environment tests (local, preview, AAT) that use real API flows.
-
-Folder layout:
-
-```text
-specFiles/
-├── mock/
-├── integration/
-├── journeyHelpers/
-└── README.md
-```
-
-## `src/test` Overview
-
-This guide also covers how the wider `src/test` tree supports functional testing:
-
-| Path | Purpose |
-|---|---|
-| `src/test/api/` | API-level Jest and Supertest coverage, split into `endpoints/`, `workflows/`, and `mocks/`. Useful alongside functional runs when validating backend-facing flows. |
-| `src/test/functional/specFiles/` | Playwright spec files, split into `mock/` and `integration/`, with `journeyHelpers/` for shared orchestration. |
-| `src/test/functional/pom/` | Page Object Models and shared page components used by Playwright journeys. |
-| `src/test/functional/utils/` | Functional support code including helpers, factories, API utilities, payload builders, and reusable test-data generation. |
-| `src/test/fixtures/fixtures.ts` | Shared Playwright fixtures for login/session setup and automatic accessibility auditing. |
-| `src/test/routes/` | Jest route checks for entry points, redirects, health, task-list upload flow, and test-support routes. |
-| `src/test/smoke/` | Minimal smoke coverage for route and service readiness. |
-| `src/test/unit/` | Unit-level Jest coverage for modules, middleware, route handlers, scripts, upload journey logic, views, and utility functions. |
-| `src/test/data/` | Shared static test data used across test suites. |
-| `src/test/config.ts` | Shared test configuration defaults for target URL, headless mode, and timing values. |
-
-Use this split in practice:
-
-- `src/test/unit/`, `src/test/routes/`, and `src/test/api/` for fast Jest-based feedback.
-- `src/test/functional/` for browser journeys, shared fixtures, helpers, factories, and accessibility coverage.
-- `src/test/smoke/` for minimal deployment-confidence checks.
-
-## QA Checks And Common Commands
-
-These are the commands most developers should use in day-to-day change validation:
-
-- `yarn test`: unit tests (outside CI) for quick logic confidence.
-- `yarn test:routes`: route contracts (protection, redirects, validation navigation).
-- `yarn test:api`: API-level endpoint/workflow coverage.
-- `yarn test:functional`: Playwright Chromium journey coverage (includes `@a11y` tests present in the selected set).
-- `yarn qacichecks`: best single pre-push gate (build, lint, unit, routes, API, coverage, functional).
-
-Optional comprehensive browser gate:
-
-- `yarn qacichecks:allBrowsers`
-
-## `src/test/functional/utils` Overview
-
-This area contains reusable functional-test logic for API setup, case creation, assertions, and test payload shaping.
-
-### Folder Structure
-
-| Path | Purpose |
-|---|---|
-| `src/test/functional/utils/api/` | API clients for journey-specific backend operations (for example contested-case event calls). |
-| `src/test/functional/utils/factories/` | Higher-level test-data/case factories that compose API calls into reusable setup flows. |
-| `src/test/functional/utils/helpers/` | Shared helper functions for HTTP calls, token handling, case creation, assertions, and POM assertion helpers. |
-| `src/test/functional/utils/test_data/` | Test-data configuration and payload transformation utilities (including JSON payload templates). |
-
-### Top-Level Utility Files
-
-| File | Purpose |
-|---|---|
-| `src/test/functional/utils/CaseDataBuilder.ts` | Builder-style helper for assembling case data payloads used by functional setup flows. |
-| `src/test/functional/utils/DateHelper.ts` | Centralized date/time helper utilities for stable test date values. |
-| `src/test/functional/utils/PayloadMutator.ts` | Reusable payload replacement rules/functions used to tailor JSON payloads for scenarios. |
-
-### Helpers (File-by-File)
-
-| File | Purpose |
-|---|---|
-| `src/test/functional/utils/helpers/ApiHelper.ts` | Axios wrapper helpers (`apiGet`, `apiPost`) with retry/error handling for test API calls. |
-| `src/test/functional/utils/helpers/CcdApi.ts` | CCD API client wrapper for case/event interactions used in functional setup and workflows. |
-| `src/test/functional/utils/helpers/TokenHelperApi.ts` | Service/user token acquisition and token-cache management helpers. |
-| `src/test/functional/utils/helpers/caseCreation.ts` | Creates/configures cases for tests and contains case-creation orchestration logic. |
-| `src/test/functional/utils/helpers/idamCreateUser.ts` | IDAM test-user creation helpers for functional authentication setup. |
-| `src/test/functional/utils/helpers/assertionHelpers.ts` | Generic assertion helper factory used across functional tests/fixtures. |
-| `src/test/functional/utils/helpers/pomAssertions.ts` | Reusable POM assertion helpers (visibility, attributes, validation errors). |
-| `src/test/functional/utils/helpers/testData.ts` | Shared test-data factories/constants (including common error message values). |
-
-### Factories And Test Data (File-by-File)
-
-| File | Purpose |
-|---|---|
-| `src/test/functional/utils/factories/contested/ContestedCaseFactory.ts` | Factory for creating/preparing contested cases, including hearing setup paths. |
-| `src/test/functional/utils/api/contested/ContestedEventApi.ts` | API helper for contested-case event execution used by contested factory/setup logic. |
-| `src/test/functional/utils/test_data/EnvTestDataConfig.ts` | Environment-aware test-data configuration values used by payload setup. |
-| `src/test/functional/utils/test_data/JsonEnvValReplacer.ts` | Replaces placeholder values in JSON payload templates using environment/test config. |
-| `src/test/functional/utils/test_data/payloads/contested/*.json` | Raw contested-case payload templates used as base inputs for factory/setup flows. |
-
-## Rules By Test Type
-
-### Mock tests
-
-Use when validating UI behavior with deterministic, injected session data.
-
-Required:
-
-- Mock CCD API running on http://localhost:4100
-- App started with ENABLE_TEST_SUPPORT_ROUTES=true
-- test.use({ useMockTestSupport: true }) when using test-support routes
-- injectCaseSession() only in mock tests
-
-### Integration tests
-
-Use when validating real integration behavior.
-
-Required:
-
-- Reachable CCD (local mock CCD, preview, or AAT)
-- No test-support route injection
-
-Default behavior:
-
-- Real happy-path suites run by default on preview/AAT targets.
-- Outside preview/AAT, set ACCESS_CODE_REAL_INTEGRATION=true to enable them.
-
-## Environment Variables
-
-- ACCESS_CODE_REAL_INTEGRATION:
-   - true: integration-happy-path suites enabled for any target
-   - false: treated as local default; preview/AAT still run integration-happy-path suites
-- Access-code polling tuning (real integration happy-path):
-   - ACCESS_CODE_MAX_TOTAL_RUNTIME_MS (default: 30000)
-   - ACCESS_CODE_FETCH_ATTEMPTS_PER_CASE (default: 0, meaning timebox-until-deadline)
-   - ACCESS_CODE_FETCH_INITIAL_DELAY_MS (default: 500)
-   - ACCESS_CODE_FETCH_MAX_DELAY_MS (default: 2000)
-   - ACCESS_CODE_CASE_CREATION_ATTEMPTS (default: 1)
-   - ACCESS_CODE_MANAGE_HEARINGS_REATTEMPTS (default: 0)
-- ENABLE_TEST_SUPPORT_ROUTES:
-  - true: test-support endpoints enabled (local mock flow)
-  - false: test-support endpoints disabled (preview/AAT default)
-- CCD logging controls:
-   - CCD_LOG_PROGRESS=true enables create/update progress logs (default: quiet)
-   - CCD_VERBOSE_RETRY=true enables verbose retry/fallback logs (default: quiet locally, summarized in CI)
-
-Root .env target selection must define one active target block:
-
-- local
-- preview
-- aat
-
-Set values for:
-
-- CCD_URL
-- CCD_DATA_STORE_API_URL
-
-Target selection in `.env` sets which environment Playwright and the app point at. It does not enable integration or mock-only behavior by itself.
-
-- Preview/AAT targets run integration happy-path suites by default.
-- For non-preview/non-AAT targets, set `ACCESS_CODE_REAL_INTEGRATION=true` to enable integration happy-path suites.
-- For local mock-only suites, keep `ENABLE_TEST_SUPPORT_ROUTES=true` and the mock API running.
-
-## How Playwright Selects The Target Environment
-
-The selection order is:
+Resolution order in `playwright.config.mts` (`getBaseUrl()`):
 
 1. `TEST_URL` if set
 2. `RUNNING_ENV` if `TEST_URL` is empty
 3. default fallback: `aat`
 
-Examples:
+How URLs are resolved:
 
-- `RUNNING_ENV=local` and no `TEST_URL` points to localhost flow.
-- `RUNNING_ENV=pr-423` and no `TEST_URL` points to preview URL pattern.
-- `RUNNING_ENV=aat` and no `TEST_URL` points to AAT URL pattern.
+- `RUNNING_ENV=pr-xxx` maps to the preview URL pattern
+- other env values resolve to `https://finrem-citizen-ui.<env>.platform.hmcts.net`
 
-Reference implementation is in `playwright.config.mts` (`getBaseUrl()`).
+## 10. Local vs preview vs AAT test execution
 
-## Local vs Preview vs AAT Execution
+Local:
 
-- Local:
-   - Run app and mock CCD API locally.
-   - Use mock suites for deterministic UI behavior.
-- Preview:
-   - Target deployed PR environment.
-   - Integration happy-path suites enabled by default.
-- AAT:
-   - Target deployed AAT environment.
-   - Integration happy-path suites enabled by default.
+- run mock API + local app
+- run local mock suites and local-target integration when needed
 
-Important: preview/AAT functional runs should not start a local app server.
+Preview:
 
-## Use Of Mock CCD API In Local Tests
+- target the deployed PR environment
+- integration happy-path suites enabled by default
 
-Mock CCD API is used to make local functional tests deterministic and fast.
+AAT:
 
-- Start mock API: `yarn start:mock-case-api`
-- Start app with support routes: `ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev`
-- Run tests: `yarn test:functional`
+- target the deployed AAT environment
+- integration happy-path suites enabled by default
 
-Mock-only suites should use test-support route patterns described in this guide and avoid integration-only data setup paths.
+Important:
 
-## Access-Code Polling And Eventual Consistency Risks
+- For preview/AAT functional runs, do not start local app server.
 
-Real integration flows can observe short CCD propagation delays after case creation/events.
+Preview/AAT run command:
 
-- Symptom: access code not immediately present after `FR_issueApplication`.
-- Mitigation: increase polling window and keep diagnostics enabled when debugging.
-- Tuning variables are documented in this guide under Environment Variables.
+```bash
+# Select target in .env (RUNNING_ENV=pr-xxx or RUNNING_ENV=aat)
+# or set TEST_URL directly.
+yarn test:functional
+```
 
-When investigating this class of issue, avoid overfitting sleeps; prefer bounded polling and targeted retries.
+## 11. Use of mock CCD API in local tests
 
-## Running Tests
-
-### Local mock flow
+Typical local mock flow:
 
 ```bash
 # Terminal 1
@@ -337,196 +309,104 @@ ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 yarn test:functional
 ```
 
-### Preview or AAT flow
+Mock test rules:
+
+- mock suites use local test-support routes
+- use `test.use({ useMockTestSupport: true })`
+- use `injectCaseSession()` only for mock scenarios
+
+Targeted runs:
 
 ```bash
-# Select target in .env first (RUNNING_ENV=pr-xxx or RUNNING_ENV=aat),
-# or set TEST_URL directly for an explicit deployed target.
-yarn test:functional
-```
-
-For preview/AAT runs, do not start the app locally with `yarn start:dev`.
-Playwright targets the deployed environment directly when baseURL is non-localhost.
-
-## Targeted Runs
-
-```bash
-# Mock folder only
+# Mock only
 yarn test:functional -- src/test/functional/specFiles/mock/
 
-# Integration folder only
+# Integration only
 yarn test:functional -- src/test/functional/specFiles/integration/
 
 # Tag filtering
 yarn test:functional -- --grep "\[mock\]"
 yarn test:functional -- --grep "\[integration\]"
-
-# Single spec
-yarn test:functional -- src/test/functional/specFiles/integration/fdr.integration.spec.ts
 ```
 
-## Script Reference
+## 12. Access-code polling and eventual consistency risks
 
-Commands are defined in [../../../../package.json](../../../../package.json).
+In real integration runs, CCD data can take a short time to appear after case creation and event progression.
 
-### Script Matrix By Environment
+Symptoms:
 
-| Script | Local | Local mock flow | Preview/AAT | Purpose |
-|---|---|---|---|---|
-| yarn test:functional:install-deps | Yes | Yes | Yes | Installs Playwright browser dependencies for first-time setup or runner refresh |
-| yarn test:functional | Yes | Yes | Yes | Main functional run on Chromium; includes @a11y-tagged tests |
-| yarn test:functional:quick | Yes | Yes | Yes | Chromium-only fast run with retries disabled and no Playwright install step |
-| yarn test:functional:allBrowsers | Yes | Yes | Yes | Cross-browser functional run (Chromium, Firefox, WebKit) |
-| yarn test:functional:pr | Yes | Yes | Yes | PR-tagged Chromium-only functional tests using the same tuned worker/retry defaults as main Chromium runs |
-| yarn test:functional:headed:slowmo | Yes | Yes | Yes | Interactive debugging with headed Chromium + Playwright inspector against the selected target |
-| yarn test:functional:allBrowsers:ui | Yes | Yes | Yes | Playwright UI mode for interactive debugging against the selected target |
-| yarn test:playwright:a11y:chrome | Yes | Yes | Yes | Accessibility-tagged tests on Chromium |
-| yarn test:playwright:a11y:all-browsers | Yes | Yes | Yes | Accessibility-tagged tests on all browsers + report |
-| yarn qacichecks | Yes | Yes | Yes | Broadest single-script QA gate: build, lint, unit, route, API, coverage, and functional tests on Chromium |
-| yarn qacichecks:allBrowsers | Yes | Yes | Yes | Broad QA gate with cross-browser functional coverage (Chromium, Firefox, WebKit) |
+- access codes not immediately visible after `FR_issueApplication`
+- transient 404/5xx during event token lookup or case reads
 
-`Local` means `.env` target selection points to `local`.
-`Local mock flow` means local target plus mock API + `ENABLE_TEST_SUPPORT_ROUTES=true` for mock-suite behavior.
+Mitigations:
 
-### Worker Strategy (Speed + Stability)
+- bounded retries and polling (do not add unbounded sleeps)
+- configurable access-code polling environment variables
+- optional verbose CCD retry logs for diagnosis
 
-Worker/retry behavior is controlled by script flags plus Playwright config defaults.
+Key tuning variables:
 
-Current effective defaults:
+- `ACCESS_CODE_MAX_TOTAL_RUNTIME_MS`
+- `ACCESS_CODE_FETCH_ATTEMPTS_PER_CASE`
+- `ACCESS_CODE_FETCH_INITIAL_DELAY_MS`
+- `ACCESS_CODE_FETCH_MAX_DELAY_MS`
+- `ACCESS_CODE_CASE_CREATION_ATTEMPTS`
+- `ACCESS_CODE_MANAGE_HEARINGS_REATTEMPTS`
 
-- `PLAYWRIGHT_WORKERS`: default `4` when unset (from `playwright.config.mts`)
-- `PLAYWRIGHT_RETRIES`: default `2` for `yarn test:functional` and `yarn test:functional:pr` (script flag)
-- `PLAYWRIGHT_RETRIES`: default `3` for `yarn test:functional:allBrowsers` (script flag)
-- `PLAYWRIGHT_RETRIES=0` for `yarn test:functional:quick`
-- `yarn test:functional:headed:slowmo`: fixed `--workers=1`
+Related environment controls:
 
-Notes:
+- `ACCESS_CODE_REAL_INTEGRATION`
+  - `true`: enable integration happy-path suites for any target
+  - `false`: treated as local default; preview/AAT still run integration happy-path suites
+- `ENABLE_TEST_SUPPORT_ROUTES`
+  - `true`: enables local test-support endpoints
+  - `false`: test-support endpoints disabled (preview/AAT default)
+- `CCD_LOG_PROGRESS=true`: create/update progress logs
+- `CCD_VERBOSE_RETRY=true`: verbose retry/fallback logs
 
-- Integration tests can emit transient CCD retry/fallback behavior in AAT/preview; this is expected when eventual consistency settles within retry windows.
-- Override workers/retries per run when needed for agent size or debugging.
+Where this is implemented:
 
-When to override defaults:
+- `src/test/functional/utils/factories/contested/ContestedCaseFactory.ts`
+  - `ACCESS_CODE_RETRY_CONFIG`: reads and applies the `ACCESS_CODE_*` env settings.
+  - `waitForAccessCodes(...)`: bounded polling with exponential backoff + jitter.
+  - `createContestedCaseWithIssueApplicationAndAccessCode(...)`: issue-application path used by integration flows; throws a diagnostic error with `debugSnapshot` if codes do not appear in time.
+  - `createContestedCaseWithHearingAndAccessCode(...)`: retries case creation and optional reattempts before failing.
+- `src/test/functional/utils/helpers/CcdApi.ts`
+  - start-event token retry for transient CCD "not found" and related eventual-consistency timing.
+- `src/test/functional/utils/helpers/ApiHelper.ts`
+  - transient 5xx (`502/503/504`) request retry wrapper used by functional API helpers.
 
-- If CI is resource-constrained or shows flake spikes, lower workers temporarily.
-- If local hardware is stronger and stable, increase workers for faster feedback.
-- `PLAYWRIGHT_WORKERS` controls worker count used by Playwright config.
-- For strict performance benchmarking, use `PLAYWRIGHT_RETRIES=0`.
+## 13. Known flaky tests and how to debug them
 
-Override examples:
+Policy:
+
+- No permanently accepted flakes; instability should be treated as defects.
+
+Common transient causes:
+
+- environment auth/setup failures (IDAM/S2S)
+- DNS/network readiness issues
+- CCD eventual consistency lag
+- browser timing issues
+
+Debug sequence:
+
+1. Confirm one coherent target env (`TEST_URL`/`RUNNING_ENV`/CCD URLs).
+2. Run single failing spec in headed slowmo mode.
+3. Narrow to single test via `--grep`.
+4. Enable CCD diagnostics (`CCD_LOG_PROGRESS=true`, optional `CCD_VERBOSE_RETRY=true`).
+5. Inspect Playwright trace before modifying waits/selectors.
+
+Useful commands:
 
 ```bash
-# Constrain Chromium run for a smaller CI agent
-PLAYWRIGHT_WORKERS=3 PLAYWRIGHT_RETRIES=2 yarn test:functional
-
-# Increase parallelism for local feedback
-PLAYWRIGHT_WORKERS=6 PLAYWRIGHT_RETRIES=2 yarn test:functional
-
-# Pure speed benchmark with retries disabled
-PLAYWRIGHT_RETRIES=0 yarn test:functional
-
-# Enable verbose CCD diagnostics when investigating integration flake
-CCD_LOG_PROGRESS=true CCD_VERBOSE_RETRY=true yarn test:functional -- src/test/functional/specFiles/integration/enterAccessCode.integration.spec.ts
+yarn test:functional:headed:slowmo -- src/test/functional/specFiles/integration/<file>.integration.spec.ts
+yarn test:functional:headed:slowmo -- src/test/functional/specFiles/integration/<file>.integration.spec.ts --grep "<title fragment>"
 ```
 
-### Best Practice Run Order
+Troubleshooting quick checks:
 
-Use this sequence for reliable feedback before pushing:
-
-1. Fast local confidence:
-   - yarn test:functional - Chromium only
-2. Isolated accessibility-only pass (when you only want @a11y coverage):
-   - yarn test:playwright:a11y:chrome - Chromium only
-   - optionally yarn test:playwright:a11y:all-browsers - Chromium, Firefox, and WebKit
-3. Debug any failures interactively:
-   - yarn test:functional:headed:slowmo - Chromium only
-   - optionally yarn test:functional:allBrowsers:ui - interactive Playwright UI with browser selection in the runner
-4. Final pre-push gate:
-   - yarn qacichecks - best single script to run before push because it combines build, lint, unit tests, route tests, API tests, coverage, and the Chromium functional run
-
-If you are only running one script before pushing code, use `yarn qacichecks`.
-
-### Debugging In Slowmo (Single File / Single Test)
-
-Use `yarn test:functional:headed:slowmo` when you want interactive debugging with `PWDEBUG=1` and a 250ms slowmo delay (`PLAYWRIGHT_SLOWMO_MS=250`).
-
-Run one spec file:
-
-```bash
-yarn test:functional:headed:slowmo -- src/test/functional/specFiles/integration/fdr.integration.spec.ts
-```
-
-Run one specific test by title (or partial title):
-
-```bash
-yarn test:functional:headed:slowmo -- src/test/functional/specFiles/integration/fdr.integration.spec.ts --grep "[integration] Continue from FDR"
-```
-
-Run one tagged test subset (for example `@a11y`):
-
-```bash
-yarn test:functional:headed:slowmo -- --grep "@a11y"
-```
-
-## Accessibility Conventions
-
-- Functional UI behavior should include accessibility coverage unless explicitly out of scope.
-- Add @a11y in test names when accessibility is asserted.
-- WCAG coverage: automated checks target WCAG 2.0, 2.1, and 2.2 at Level A and AA via axe rule tags from playwright-common defaults (wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22a, wcag22aa).
-- Implementation in this repo uses @hmcts/playwright-common as follows:
-  - src/test/fixtures/fixtures.ts creates AxeUtils from @hmcts/playwright-common.
-  - src/test/functional/specFiles/journeyHelpers/specAssertions.helper.ts runs axeUtils.audit(DEFAULT_AXE_OPTIONS).
-  - DEFAULT_AXE_OPTIONS currently disables only target-size (WCAG 2.5.8) due to GOV.UK Frontend component behavior.
-- Use in tests/helpers:
-
-```typescript
-await axeUtils.audit(DEFAULT_AXE_OPTIONS);
-```
-
-- `runA11yAudit(...)` behavior (in `journeyHelpers/specAssertions.helper.ts`):
-   - Runs `axeUtils.audit(DEFAULT_AXE_OPTIONS)` to execute WCAG rule checks.
-   - Resolves which Playwright `page` to inspect (`explicitPage` when provided, otherwise AxeUtils page).
-   - Captures `ariaSnapshot()` from `main` (or `body` fallback) as an accessibility-tree assertion.
-   - Asserts the snapshot exists with `expect(ariaSnapshot).toBeTruthy()` as a screen-reader proxy guard.
-   - Sets `A11Y_AUDIT_MARKER` to avoid duplicate audits for the same page state.
-
-- Auto accessibility audit runs via fixtures and should remain enabled unless there is a documented reason to opt out.
-
-## Labeling Conventions
-
-- [mock]: local mock-only suites
-- [integration]: integration suites
-- [integration-happy-path]: real integration happy-path scenarios
-
-## Troubleshooting
-
-## Known Flaky Patterns And Debug Approach
-
-There are no permanently accepted flaky tests; failures should be treated as defects until resolved.
-
-Most common transient patterns:
-
-- external auth/setup failures (IDAM/S2S credentials, token setup)
-- environment readiness/network DNS issues
-- CCD eventual consistency delays in integration scenarios
-- brittle selectors or timing races in browser interactions
-
-Recommended debug sequence:
-
-1. Confirm target/env variables are coherent for one environment only.
-2. Re-run single failing spec in headed slowmo mode.
-3. Re-run with `--grep` narrowed to one failing test.
-4. Enable CCD diagnostics (`CCD_LOG_PROGRESS=true`, optionally `CCD_VERBOSE_RETRY=true`).
-5. Inspect Playwright trace on first retry before changing waits/selectors.
-
-If failure is setup/auth (for example 401 from S2S lease), fix environment/credentials first; do not add UI retries.
-
-### Missing test-support route errors
-
-Cause:
-
-- Mock API not running, or ENABLE_TEST_SUPPORT_ROUTES not set
-
-Fix:
+Missing test-support route:
 
 ```bash
 yarn start:mock-case-api
@@ -534,91 +414,269 @@ ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 yarn test:functional -- src/test/functional/specFiles/mock/
 ```
 
-### Integration suites skipped
-
-Cause:
-
-- Running outside preview/AAT target without enabling real integration happy-path mode
-
-Fix:
+Integration suites skipped outside preview/AAT:
 
 ```bash
 export ACCESS_CODE_REAL_INTEGRATION=true
 yarn test:functional -- src/test/functional/specFiles/integration/
 ```
 
-### CCD not reachable
-
-Cause:
-
-- Incorrect CCD_URL or CCD_DATA_STORE_API_URL
-
-Fix:
+CCD target not reachable:
 
 ```bash
 echo $CCD_URL
 echo $CCD_DATA_STORE_API_URL
 ```
 
-### Access codes not found after FR_issueApplication
-
-Cause:
-
-- CCD eventually-consistent read path has not yet surfaced generated access-code fields, or the target case record was updated but access-code collections are still empty.
-
-Fix:
+Access codes not visible after issue application:
 
 ```bash
-# Increase polling window for shared AAT load
 export ACCESS_CODE_MAX_TOTAL_RUNTIME_MS=45000
-
-# Optional: keep polling timeboxed (0 = no hard attempt cap)
 export ACCESS_CODE_FETCH_ATTEMPTS_PER_CASE=0
-
 yarn test:functional -- src/test/functional/specFiles/integration/enterAccessCode.integration.spec.ts
 ```
 
-Debug confirmation:
+## 14. What test evidence should be expected in a PR
 
-- On failure, the error now includes a non-sensitive `debugSnapshot` showing counts/flags for `applicantAccessCodes` and `respondentAccessCodes` so you can confirm whether codes were generated.
+For test-impacting PRs include:
 
-## PR Evidence Expectations
+1. What changed and why.
+2. Commands run and outcomes.
+3. Evidence for any remaining failures and reason.
+4. UI change coverage (`functional` + `@a11y`).
+5. Route/validation assertion updates where relevant.
 
-For test-impacting PRs, include:
-
-1. What changed in tests and why (brief summary).
-2. Commands run and pass/fail outcome.
-3. If a failure remains, why (for example environment issue) and evidence.
-4. For UI changes, mention functional/a11y coverage added or updated.
-5. For route/validation changes, mention route/unit assertions updated.
-
-Minimum expected command evidence for most code changes:
+Minimum expected command evidence for most changes:
 
 - `yarn test`
 - `yarn test:routes`
 - `yarn test:api`
 - `yarn test:functional`
 
-For broad or risky changes, prefer `yarn qacichecks` output evidence.
+For broad/risky changes:
 
-## Current Coverage Gaps (Living List)
+- `yarn qacichecks`
 
-- Cross-environment dependency failures (IDAM/S2S/CCD) can obscure product-regression signals in integration runs.
-- Some integration journeys still rely on shared-environment timing and can surface eventual-consistency noise.
-- API health behavior can vary by environment readiness, requiring careful assertion intent (service health vs dependency health).
+## 15. Gaps in current test coverage
 
-Keep this section updated when new blind spots are identified.
+Current gaps to keep in mind:
 
-## Contractor Recommendations To Strengthen The Suite
+- Cross-environment dependency issues (IDAM/S2S/CCD) can obscure product regressions.
+- Some integration journeys remain sensitive to shared-env timing and eventual consistency.
+- Smoke tests are intentionally shallow and do not prove full workflow behavior.
 
-1. Add explicit preflight checks for critical env/auth prerequisites before long integration suites.
-2. Continue replacing brittle selectors with role-first user-facing locators in POMs.
-3. Expand reusable journey helpers where setup/assertion flows repeat across 2+ specs.
-4. Keep smoke route list aligned with upload step constants to avoid drift.
-5. Track flaky-failure categories with lightweight metrics from CI to prioritize stabilization work.
+Where this currently shows up:
 
-## Maintenance Notes
+- `src/test/smoke/smoke.ts`
+  - smoke now stays aligned to shared route/upload-step constants, but still focuses on route reachability and redirects rather than full user journeys.
+- `src/test/api/workflows/`
+  - most checks are contract/redirect focused; authenticated happy-path depth is still limited.
+- `src/test/routes/task-list-upload.ts`
+  - now asserts unauthenticated redirect to login; further depth could include authenticated render assertions if we add stable session setup in route tests.
 
-- Keep this guide concise and focused on conventions and run commands.
-- Keep spec-level implementation details inside spec files and helper modules.
-- If scripts change in package.json, update this file in the same PR.
+Useful expansions to prioritize:
+
+1. Add a small authenticated API happy-path set for key flows (case number and access code success path).
+2. Add authenticated route-level assertions for key protected pages where we currently only validate unauthenticated redirects.
+3. Keep smoke lean, but add one or two high-value “critical path” assertions so breakages are caught earlier.
+4. Expand cross-browser checks for a small tagged subset of high-risk journeys (rather than the whole suite every run).
+
+## 16. Contractor recommendations for strengthening the test suite
+
+1. Add stronger preflight checks for env/auth prerequisites before long integration runs.
+  - Where: `src/test/fixtures/fixtures.ts` and `src/test/functional/specFiles/journeyHelpers/`.
+  - What to implement: fail fast when required env values are missing or when CCD/IDAM targets are not coherent for the selected run.
+2. Continue replacing brittle selectors with role-first, user-facing locators in POMs.
+  - Where: `src/test/functional/pom/`.
+  - What to implement: prefer `getByRole()`, `getByLabel()`, and text-based locators over CSS class or positional selectors.
+3. Expand shared journey helpers when setup/assertion flows repeat across suites.
+  - Where: `src/test/functional/specFiles/journeyHelpers/` and shared helper modules under `src/test/functional/utils/helpers/`.
+  - What to implement: move repeated login, navigation, and assertion flows into reusable helpers instead of duplicating them in specs.
+4. Add a small authenticated API happy-path lane for case-number and access-code success paths.
+  - Where: `src/test/api/workflows/`.
+  - What to implement: add a couple of success-path workflow tests that verify authenticated route/session behaviour, not just redirects and failure cases.
+5. Track and categorize flaky failure causes from CI to prioritize stabilization.
+  - Where: CI outputs, failure logs, and the README troubleshooting section.
+  - What to implement: group failures by auth/setup, DNS/network, CCD timing, or browser timing so the highest-impact fixes are obvious.
+
+## 17. Which test should I add for a given type of change?
+
+| Change type | Primary test to add | Secondary checks |
+|---|---|---|
+| Pure business logic or utility function | Unit test in `src/test/unit/` | Route/API tests only if route contract changes |
+| New/changed route guard, redirect, validation branch | Route test in `src/test/routes/` | Unit test for route helper logic |
+| Endpoint contract or workflow orchestration | API test in `src/test/api/` | Route test if redirect/render contract changes |
+| Browser journey behavior (content, interaction, navigation) | Functional test in `src/test/functional/specFiles/` | Add/update POM methods and helper flows first |
+| Route availability/redirect sanity for deployments | Smoke test in `src/test/smoke/smoke.ts` | No extra checks unless scope broadens |
+| UI copy/layout/content with user impact | Functional test + `@a11y` assertion | Route test if server-side validation/redirect changed |
+
+## 18. Which commands should I run before pushing?
+
+Fast progression when iterating:
+
+```bash
+yarn test
+yarn test:routes
+yarn test:api
+yarn test:functional
+```
+
+Single comprehensive gate before push:
+
+```bash
+yarn qacichecks
+```
+
+## 19. How do I debug failing Playwright tests?
+
+1. Re-run only the failing spec file.
+2. Re-run only the failing test title (`--grep`).
+3. Use headed slowmo (`PWDEBUG=1`) to inspect each transition.
+4. Enable CCD diagnostic logging when failures involve case setup/linking.
+5. Check trace, screenshots, and HTML report before changing test timing.
+
+Additional targeted runs:
+
+```bash
+# Mock only
+yarn test:functional -- src/test/functional/specFiles/mock/
+
+# Integration only
+yarn test:functional -- src/test/functional/specFiles/integration/
+
+# Tag filtering
+yarn test:functional -- --grep "\[mock\]"
+yarn test:functional -- --grep "\[integration\]"
+```
+
+## 20. Which tests give confidence in auth, CCD linking and document journeys?
+
+Auth confidence:
+
+- route protection/redirect tests (`src/test/routes/`)
+- API auth workflow contracts (`src/test/api/workflows/`)
+- functional integration login and session fixtures
+
+CCD linking/access-code confidence:
+
+- integration functional suites around enter-case-number and enter-access-code
+- helper/factory retry and polling behavior in functional utils
+
+Document journey confidence:
+
+- integration suites for before-you-start, confidentiality, FDR, document selection, upload, and check-upload flows
+
+## 21. Where is coverage weak today?
+
+- The biggest weakness is environment-dependent integration stability rather than missing basic unit/route coverage.
+- Local mock coverage is strong, but real-environment variance can still create noise.
+- Continue improving authenticated API happy-path coverage and targeted cross-browser confidence where useful.
+
+## 22. `src/test` overview
+
+The `src/test` tree is split by test intent, not by technical implementation detail. That keeps the feedback loop clear: unit and route checks stay small, API checks prove server contracts, functional tests cover real journeys, and smoke tests stay shallow and fast.
+
+How the tree fits together:
+
+- `src/test/unit/` holds fast, isolated checks for logic, middleware, helpers, and small rendering or data-shaping behaviour.
+- `src/test/routes/` checks route protection, redirects, validation, and route-level contracts without driving a browser.
+- `src/test/api/` checks server-facing endpoints and workflow behaviour with Jest and Supertest.
+- `src/test/functional/` holds Playwright journeys, page objects, helpers, and environment-specific setup.
+- `src/test/smoke/` holds the smallest set of checks needed to confirm the service is up and the main routes respond.
+- `src/test/fixtures/fixtures.ts` is the fixture hub for functional tests. It wires together browser pages, auth sessions, created cases, and shared audit helpers.
+- `src/test/data/` stores shared static inputs when a scenario needs fixed test data rather than factory-generated data.
+- `src/test/config.ts` contains shared test defaults such as URL and timing settings.
+
+Practical rule of thumb:
+
+- If the behaviour is pure code, start in `src/test/unit/`.
+- If the behaviour is a route contract, start in `src/test/routes/`.
+- If the behaviour is an endpoint or workflow contract, start in `src/test/api/`.
+- If the behaviour depends on a browser, page state, or user journey, start in `src/test/functional/`.
+- If the behaviour is only about availability or redirect sanity, start in `src/test/smoke/`.
+
+## 23. Fixtures and how they work
+
+Functional fixtures are defined in [src/test/fixtures/fixtures.ts](src/test/fixtures/fixtures.ts) with `test.extend(...)`. That means every Playwright spec that imports the shared `test` gets the same fixture contract and the same setup/teardown behaviour.
+
+Fixture lifecycle:
+
+- Option fixtures are declared first, such as `useMockTestSupport` and `useAutoA11yAudit`.
+- Auto fixtures then read those options and decide whether to enforce mock-only rules or run accessibility checks after each test.
+- Regular fixtures create reusable objects such as page objects, API helpers, authenticated sessions, and created case data.
+- Playwright tears fixtures down automatically after each test or worker scope ends.
+
+The main fixture groups are:
+
+- `idamApiService`: creates and cleans up IDAM users.
+- `citizenUser`: creates a fresh citizen user for the current test.
+- `idamPage`: wraps the Playwright page for IDAM login flow steps.
+- `loggedInPage`: performs the full OIDC login flow, waits for authentication, and lands the test on `/enter-case-number`.
+- `enterCaseNumberPage`, `enterAccessCodePage`, `beforeYouStartPage`, `confidentialityPage`, `fdrPage`, `documentSelectionPage`, `documentUploadPage`, `checkUploadPage`, `dashboardPage`, `basePage`: page objects that keep selectors and interactions out of the specs.
+- `contestedCaseForCaseNumber`: creates a real contested case for case-number linking tests.
+- `contestedCaseWithHearing`: creates a contested case with access codes, using mock codes locally and real access-code generation only when the environment supports it.
+- `axeUtils`: provides the Axe wrapper used by accessibility checks.
+- `assertionHelpers`: shared assertion utilities for functional tests.
+
+Mock and accessibility controls:
+
+- `useMockTestSupport` is a test option. When it is set to `true`, the `mockTestSupport` auto fixture verifies that the test-support route exists and that the CCD target is local mock CCD.
+- `useAutoA11yAudit` is a test option. When it is left at the default `true`, the `autoA11yAudit` fixture runs the accessibility audit after the test unless the spec already ran one itself.
+- `runA11yAudit(...)` is the shared helper path that performs the Axe audit and the accessibility-tree assertion.
+
+Why this matters:
+
+- Specs stay short because they consume fixtures instead of rebuilding login, case creation, or page-object setup each time.
+- Mock suites remain deterministic because the fixture layer can enforce the local test-support route.
+- Integration suites stay realistic because the same fixture layer can switch to real IDAM and CCD flows when the target environment supports them.
+- Accessibility coverage stays consistent because the fixture layer can apply the same audit pattern across the suite.
+
+Common usage pattern in specs:
+
+```typescript
+test('example', async ({ loggedInPage, contestedCaseWithHearing, enterCaseNumberPage }) => {
+  await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+  expect(loggedInPage.authStatus).toBe('success');
+});
+```
+
+## Appendix A. Environment variables used in testing
+
+- `ACCESS_CODE_REAL_INTEGRATION`
+- `ENABLE_TEST_SUPPORT_ROUTES`
+- `TEST_URL`
+- `RUNNING_ENV`
+- `CCD_URL`
+- `CCD_DATA_STORE_API_URL`
+- `ACCESS_CODE_MAX_TOTAL_RUNTIME_MS`
+- `ACCESS_CODE_FETCH_ATTEMPTS_PER_CASE`
+- `ACCESS_CODE_FETCH_INITIAL_DELAY_MS`
+- `ACCESS_CODE_FETCH_MAX_DELAY_MS`
+- `ACCESS_CODE_CASE_CREATION_ATTEMPTS`
+- `ACCESS_CODE_MANAGE_HEARINGS_REATTEMPTS`
+- `CCD_LOG_PROGRESS`
+- `CCD_VERBOSE_RETRY`
+- `PLAYWRIGHT_WORKERS`
+- `PLAYWRIGHT_RETRIES`
+
+## Appendix B. Script reference highlights
+
+Commands are defined in `package.json`.
+
+- `yarn test:functional:install-deps`
+- `yarn test:functional`
+- `yarn test:functional:quick`
+- `yarn test:functional:allBrowsers`
+- `yarn test:functional:pr`
+- `yarn test:functional:headed:slowmo`
+- `yarn test:functional:allBrowsers:ui`
+- `yarn test:playwright:a11y:chrome`
+- `yarn test:playwright:a11y:all-browsers`
+- `yarn qacichecks`
+- `yarn qacichecks:allBrowsers`
+
+## Maintenance notes
+
+- Keep this guide practical and easy to scan.
+- Keep spec-level implementation detail inside specs/helpers/POMs.
+- If scripts or env gates change, update this file in the same PR.
