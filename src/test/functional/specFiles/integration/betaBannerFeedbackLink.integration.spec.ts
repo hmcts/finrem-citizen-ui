@@ -1,35 +1,9 @@
 import { expect, test } from '../../../fixtures/fixtures';
+import { shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationTarget.helper';
 import { expectAuthenticated, runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 
-function shouldRunHappyPathIntegrationSuite(): boolean {
-  const explicitToggle = process.env.ACCESS_CODE_REAL_INTEGRATION;
-  const runningEnv = (process.env.RUNNING_ENV || '').toLowerCase();
-  const testUrl = (process.env.TEST_URL || '').toLowerCase();
-  const isPreviewOrAatTarget =
-    runningEnv === 'aat'
-    || runningEnv.startsWith('pr-')
-    || testUrl.includes('.preview.platform.hmcts.net')
-    || testUrl.includes('.aat.platform.hmcts.net');
-
-  if (explicitToggle === 'true') {
-    return true;
-  }
-
-  if (explicitToggle === 'false') {
-    // Legacy .env files often set false; do not block preview/AAT by default.
-    return isPreviewOrAatTarget;
-  }
-
-  return isPreviewOrAatTarget;
-}
-
-const runIntegration = shouldRunHappyPathIntegrationSuite();
-
-test.describe('[integration-happy-path] Beta banner feedback link across journey pages', () => {
-  test.skip(
-    !runIntegration,
-    'Skipped outside preview/AAT by default. Set ACCESS_CODE_REAL_INTEGRATION=true to force enable on non-preview/non-AAT targets.'
-  );
+if (shouldRunRealCcdIntegrationSuite()) {
+  test.describe('[integration-happy-path] Beta banner feedback link across journey pages', () => {
 
   test('[integration-happy-path] Beta banner feedback link uses SmartSurvey URL with current page on each journey step @a11y', async ({
     loggedInPage,
@@ -85,4 +59,5 @@ test.describe('[integration-happy-path] Beta banner feedback link across journey
 
     await runA11yAudit(axeUtils);
   });
-});
+  });
+}
