@@ -1,4 +1,5 @@
 import { test } from '../../../fixtures/fixtures';
+import { shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationTarget.helper';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToConfidentialityStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
@@ -11,21 +12,22 @@ import { navigateToConfidentialityStep } from '../journeyHelpers/uploadJourneyNa
  * Runs on: Environments with working authentication flow
  */
 
-test.describe('[integration] Confidentiality page', () => {
-  test.beforeEach(async ({
-    loggedInPage: _loggedInPage,
-    enterCaseNumberPage,
-    enterAccessCodePage,
-    contestedCaseWithHearing,
-    dashboardPage,
-    beforeYouStartPage,
-    basePage,
-  }) => {
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+if (shouldRunRealCcdIntegrationSuite()) {
+  test.describe('[integration] Confidentiality page', () => {
+    test.beforeEach(async ({
+      loggedInPage: _loggedInPage,
+      enterCaseNumberPage,
+      enterAccessCodePage,
+      contestedCaseWithHearing,
+      dashboardPage,
+      beforeYouStartPage,
+      basePage,
+    }) => {
+      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
 
-    await navigateToConfidentialityStep(dashboardPage, beforeYouStartPage, basePage);
-  });
+      await navigateToConfidentialityStep(dashboardPage, beforeYouStartPage, basePage);
+    });
  
   // AC1: Page renders with correct URL and key layout elements
   test('[integration] Confidentiality page content is visible and accessible @a11y', async ({
@@ -101,4 +103,5 @@ test.describe('[integration] Confidentiality page', () => {
     await confidentialityPage.verifyGettingHelpSection();
     await runA11yAudit(axeUtils);
   });
-});
+  });
+}
