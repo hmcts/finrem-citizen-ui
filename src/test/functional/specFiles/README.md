@@ -19,6 +19,7 @@ It sits under `specFiles/`, but it covers the whole test setup in `src/test`.
 - [11. Use of mock CCD API in local tests](#11-use-of-mock-ccd-api-in-local-tests)
 - [12. Access-code polling and eventual consistency risks](#12-access-code-polling-and-eventual-consistency-risks)
 - [13. Known flaky tests and how to debug them](#13-known-flaky-tests-and-how-to-debug-them)
+- [13.1 Known environment issues: perftest and ITHC](#131-known-environment-issues-perftest-and-ithc)
 - [14. What test evidence should be expected in a PR](#14-what-test-evidence-should-be-expected-in-a-pr)
 - [15. Gaps in current test coverage](#15-gaps-in-current-test-coverage)
 - [16. Contractor recommendations for strengthening the test suite](#16-contractor-recommendations-for-strengthening-the-test-suite)
@@ -389,6 +390,64 @@ Common transient causes:
 - CCD eventual consistency lag
 - browser timing issues
 
+## 13.1 Known environment issues: perftest and ITHC
+
+These are recurring environment issues that can prevent integration suites from executing reliably on perftest/ITHC even when test code is unchanged.
+
+Issue A: `invalid_grant` for solicitor/caseworker users
+
+- Symptom:
+  - test setup fails before journey assertions
+  - IDAM `/o/token` returns `{"error":"invalid_grant","error_description":"Resource owner authentication failed"}`
+- Why it happens:
+  - the configured user exists in Key Vault metadata but the account is missing, disabled, locked, or has a stale password in that target environment
+  - perftest/ITHC do not always contain the same seeded mailinator user set as AAT/preview
+- Impact:
+  - contested case creation and solicitor event flows fail early
+  - many integration specs appear as "not executing" because fixture setup aborts first
+- What to confirm:
+  1. `PLAYWRIGHT_SOLICITOR_USERNAME` and `PLAYWRIGHT_SOLICITOR_PSWD` authenticate successfully against target IDAM
+  2. `USERNAME_CASEWORKER` and `PASSWORD_CASEWORKER` (or system-user fallback) authenticate successfully
+  3. those users have the required roles for CCD events in that environment
+
+Issue B: CCD endpoint reachability and topology mismatch
+
+- Symptom:
+  - `ENOTFOUND` / connection errors for CCD/S2S internal hostnames
+  - start-event or case-read requests fail before test steps begin
+- Why it happens:
+  - local runs may use internal service URLs (`*.service.core-compute-<env>.internal`) that are unreachable without the correct network path
+  - mixed target variables (for example perftest `RUNNING_ENV` with non-perftest CCD URL) route traffic to the wrong backend
+- Impact:
+  - integration setup fails, often reported as generic API errors
+- What to confirm:
+  1. `RUNNING_ENV`, `TEST_URL`, `IDAM_*`, `CCD_DATA_STORE_API_URL`, and `SERVICE_AUTH_PROVIDER_URL` all point to the same target
+  2. the machine/agent can resolve and reach those endpoints
+
+Issue C: S2S token generation failures
+
+- Symptom:
+  - lease/token calls to service-auth provider fail
+  - downstream CCD calls fail with authorization errors
+- Why it happens:
+  - incorrect secret value or secret/client mismatch for the configured microservice
+- What to confirm:
+  1. `SERVICE_AUTH_SECRET` (or fallback secret) matches the configured microservice
+  2. `S2S_MICROSERVICE=finrem_citizen_ui` for this test path
+
+Current suite behavior and gating notes
+
+- Real CCD-backed integration suites are enabled by default on preview/AAT/perftest/ITHC.
+- Demo is intentionally hard-skipped for real CCD-backed integration suites.
+- If perftest/ITHC credentials or network prerequisites are not met, tests fail during setup rather than UI assertions.
+
+Recommended preflight for perftest/ITHC before full run
+
+1. Verify environment coherence (`RUNNING_ENV`, `TEST_URL`, IDAM, CCD, S2S URLs).
+2. Verify password-grant token retrieval for solicitor, caseworker (or fallback), and system user.
+3. Run one narrow integration spec first.
+4. Run full functional suite only after those checks pass.
+
 Debug sequence:
 
 1. Confirm one coherent target env (`TEST_URL`/`RUNNING_ENV`/CCD URLs).
@@ -414,7 +473,7 @@ ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 yarn test:functional -- src/test/functional/specFiles/mock/
 ```
 
-Integration suites skipped outside preview/AAT:
+Integration suites skipped outside preview/AAT/perftest/ITHC:
 
 ```bash
 export ACCESS_CODE_REAL_INTEGRATION=true
