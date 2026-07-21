@@ -3,11 +3,44 @@ import { shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationT
 import { expectAuthenticated, runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 
 if (shouldRunRealCcdIntegrationSuite()) {
+  const isLocalMockCcd = /https?:\/\/(localhost|127\.0\.0\.1):4100\b/i.test(
+    (process.env.CCD_URL || process.env.CCD_DATA_STORE_API_URL || '').trim()
+  );
+
   test.describe('[integration-happy-path] Beta banner feedback link across journey pages', () => {
+    if (isLocalMockCcd) {
+      test.use({ useMockTestSupport: true });
+    }
+
+    test.beforeEach(async ({
+      loggedInPage,
+      basePage,
+      enterCaseNumberPage,
+      enterAccessCodePage,
+      contestedCaseWithHearing,
+    }) => {
+      expectAuthenticated(loggedInPage);
+
+      await enterCaseNumberPage.verifyCaseNumberPageContent();
+      await enterCaseNumberPage.verifyBetaBannerFeedbackLinkForCurrentPage();
+      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+      await enterAccessCodePage.verifyAccessCodePageContent();
+      await enterAccessCodePage.verifyBetaBannerFeedbackLinkForCurrentPage();
+
+      // Local mock mode reseeds at the enter-access-code stage to keep single-use codes deterministic.
+      if (isLocalMockCcd) {
+        await basePage.injectCaseSession(
+          contestedCaseWithHearing.caseId,
+          contestedCaseWithHearing.applicantAccessCode,
+          contestedCaseWithHearing.respondentAccessCode
+        );
+        await enterAccessCodePage.verifyAccessCodePageContent();
+        await enterAccessCodePage.verifyBetaBannerFeedbackLinkForCurrentPage();
+      }
+    });
 
   test('[integration-happy-path] Beta banner feedback link uses SmartSurvey URL with current page on each journey step @a11y', async ({
     loggedInPage,
-    enterCaseNumberPage,
     enterAccessCodePage,
     dashboardPage,
     beforeYouStartPage,
@@ -20,13 +53,6 @@ if (shouldRunRealCcdIntegrationSuite()) {
     axeUtils,
   }) => {
     expectAuthenticated(loggedInPage);
-
-    await enterCaseNumberPage.verifyCaseNumberPageContent();
-    await enterCaseNumberPage.verifyBetaBannerFeedbackLinkForCurrentPage();
-
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-    await enterAccessCodePage.verifyAccessCodePageContent();
-    await enterAccessCodePage.verifyBetaBannerFeedbackLinkForCurrentPage();
 
     await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
     await dashboardPage.verifyDashboardPageContent();

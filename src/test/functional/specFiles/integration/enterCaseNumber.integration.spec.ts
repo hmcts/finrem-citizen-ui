@@ -8,10 +8,10 @@ import { expectAuthenticated, runA11yAudit } from '../journeyHelpers/specAsserti
  * These tests verify case number happy-path integration logic.
  * Real integration tests create actual CCD cases and verify successful submissions.
  *
- * Runs on: AAT/preview by default (or any target when ACCESS_CODE_REAL_INTEGRATION=true)
- * Default: Skipped outside preview/AAT unless ACCESS_CODE_REAL_INTEGRATION=true.
+ * Runs on: preview/AAT/perftest/ITHC by default, plus local when mock CCD is configured.
+ * Default: skipped on demo; local runs require CCD_URL/CCD_DATA_STORE_API_URL -> http://localhost:4100.
  * ACCESS_CODE_REAL_INTEGRATION=false is treated as legacy local default and
- * does not disable AAT/preview happy-path runs.
+ * does not disable known real-CCD targets.
  */
 
 if (shouldRunRealCcdIntegrationSuite()) {

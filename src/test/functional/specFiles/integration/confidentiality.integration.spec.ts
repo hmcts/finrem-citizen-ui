@@ -1,5 +1,8 @@
 import { test } from '../../../fixtures/fixtures';
-import { shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationTarget.helper';
+import {
+  isLocalMockCcdConfigured,
+  shouldRunRealCcdIntegrationSuite,
+} from '../journeyHelpers/integrationTarget.helper';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToConfidentialityStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
@@ -13,7 +16,13 @@ import { navigateToConfidentialityStep } from '../journeyHelpers/uploadJourneyNa
  */
 
 if (shouldRunRealCcdIntegrationSuite()) {
+  const isLocalMockCcd = isLocalMockCcdConfigured();
+
   test.describe('[integration] Confidentiality page', () => {
+    if (isLocalMockCcd) {
+      test.use({ useMockTestSupport: true });
+    }
+
     test.beforeEach(async ({
       loggedInPage: _loggedInPage,
       enterCaseNumberPage,
@@ -23,8 +32,17 @@ if (shouldRunRealCcdIntegrationSuite()) {
       beforeYouStartPage,
       basePage,
     }) => {
-      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+      // Local mock mode needs deterministic reseed so one-time code invalidation does not leak between tests.
+      if (isLocalMockCcd) {
+        await basePage.injectCaseSession(
+          contestedCaseWithHearing.caseId,
+          contestedCaseWithHearing.applicantAccessCode,
+          contestedCaseWithHearing.respondentAccessCode
+        );
+      } else {
+        await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+        await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+      }
 
       await navigateToConfidentialityStep(dashboardPage, beforeYouStartPage, basePage);
     });

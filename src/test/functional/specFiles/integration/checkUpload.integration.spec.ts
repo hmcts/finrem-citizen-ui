@@ -1,5 +1,8 @@
 import { expect, test } from '../../../fixtures/fixtures';
-import { shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationTarget.helper';
+import {
+  isLocalMockCcdConfigured,
+  shouldRunRealCcdIntegrationSuite,
+} from '../journeyHelpers/integrationTarget.helper';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import {
   navigateToCheckUploadWithOtherDocument,
@@ -15,7 +18,13 @@ import {
  * and accessibility assertions.
  */
 if (shouldRunRealCcdIntegrationSuite()) {
+  const isLocalMockCcd = isLocalMockCcdConfigured();
+
   test.describe('[integration] Check uploaded documents page', () => {
+    if (isLocalMockCcd) {
+      test.use({ useMockTestSupport: true });
+    }
+
     test.describe('[integration] Check uploaded documents page with uploaded other document', () => {
       test.beforeEach(async ({
         loggedInPage: _loggedInPage,
@@ -31,9 +40,18 @@ if (shouldRunRealCcdIntegrationSuite()) {
         documentUploadPage,
         checkUploadPage,
       }) => {
-        // Establish real integration session state first
-        await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-        await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+        // Local mock mode needs deterministic reseed so one-time code invalidation does not leak between tests.
+        if (isLocalMockCcd) {
+          await basePage.injectCaseSession(
+            contestedCaseWithHearing.caseId,
+            contestedCaseWithHearing.applicantAccessCode,
+            contestedCaseWithHearing.respondentAccessCode
+          );
+        } else {
+          // Establish real integration session state first
+          await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+          await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+        }
 
         // Continue existing journey
         await navigateToCheckUploadWithOtherDocument({
@@ -221,8 +239,16 @@ if (shouldRunRealCcdIntegrationSuite()) {
     checkUploadPage,
     axeUtils,
   }) => {
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    if (isLocalMockCcd) {
+      await basePage.injectCaseSession(
+        contestedCaseWithHearing.caseId,
+        contestedCaseWithHearing.applicantAccessCode,
+        contestedCaseWithHearing.respondentAccessCode
+      );
+    } else {
+      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    }
 
     await navigateToUploadDocumentsStep(
       dashboardPage,
@@ -262,8 +288,16 @@ if (shouldRunRealCcdIntegrationSuite()) {
     checkUploadPage,
     axeUtils,
   }) => {
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    if (isLocalMockCcd) {
+      await basePage.injectCaseSession(
+        contestedCaseWithHearing.caseId,
+        contestedCaseWithHearing.applicantAccessCode,
+        contestedCaseWithHearing.respondentAccessCode
+      );
+    } else {
+      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    }
 
     await navigateToUploadDocumentsStep(
       dashboardPage,
@@ -303,8 +337,16 @@ if (shouldRunRealCcdIntegrationSuite()) {
     checkUploadPage,
     axeUtils,
   }) => {
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    if (isLocalMockCcd) {
+      await basePage.injectCaseSession(
+        contestedCaseWithHearing.caseId,
+        contestedCaseWithHearing.applicantAccessCode,
+        contestedCaseWithHearing.respondentAccessCode
+      );
+    } else {
+      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    }
 
     await navigateToUploadDocumentsStep(
       dashboardPage,
@@ -367,8 +409,16 @@ if (shouldRunRealCcdIntegrationSuite()) {
     checkUploadPage,
     axeUtils,
   }) => {
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    if (isLocalMockCcd) {
+      await basePage.injectCaseSession(
+        contestedCaseWithHearing.caseId,
+        contestedCaseWithHearing.applicantAccessCode,
+        contestedCaseWithHearing.respondentAccessCode
+      );
+    } else {
+      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    }
 
     await navigateToUploadDocumentsStep(
       dashboardPage,
