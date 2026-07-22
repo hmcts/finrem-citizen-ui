@@ -2,6 +2,8 @@ import { AxeUtils } from '@hmcts/playwright-common';
 import { expect, test as base } from '@playwright/test';
 import dotenv from 'dotenv';
 
+import { CaseType } from '../functional/config/case-data';
+import functionalTestConfig from '../functional/config/config';
 import { BasePage } from '../functional/pom/basePage.page';
 import { BeforeYouStartPage } from '../functional/pom/beforeYouStart.page';
 import { CheckUploadPage } from '../functional/pom/checkUploadPage.page';
@@ -22,6 +24,7 @@ import {
   AssertionHelpers,
   createAssertionHelpers,
 } from '../functional/utils/helpers/assertionHelpers';
+import { ccdApi } from '../functional/utils/helpers/CcdApi';
 import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
 
 dotenv.config({ quiet: true });
@@ -74,6 +77,59 @@ function getMockSeedCase(): CreatedCaseWithAccessCodes {
     applicantAccessCode: process.env.MOCK_APPLICANT_ACCESS_CODE || 'APPCODE1',
     respondentAccessCode: process.env.MOCK_RESPONDENT_ACCESS_CODE || 'RSPCODE1',
   };
+}
+
+function shouldDeleteCreatedCcdCases(): boolean {
+  return process.env.DELETE_CREATED_CCD_CASES === 'true';
+}
+
+async function cleanupCreatedContestedCase(caseId: string): Promise<void> {
+  if (!shouldDeleteCreatedCcdCases()) {
+    return;
+  }
+
+  if (isLocalMockCcdUrl(getConfiguredCcdUrl())) {
+    return;
+  }
+
+  const credentialsInPriorityOrder = [
+    functionalTestConfig.caseworker,
+    functionalTestConfig.systemUser,
+    functionalTestConfig.solicitor,
+  ];
+
+  const attemptedUsers: string[] = [];
+  let lastError: unknown;
+
+  for (const credentials of credentialsInPriorityOrder) {
+    const username = credentials.username?.trim();
+    const password = credentials.password?.trim();
+
+    if (!username || !password) {
+      continue;
+    }
+
+    attemptedUsers.push(username);
+
+    try {
+      await ccdApi.deleteCaseInCcd(
+        username,
+        password,
+        caseId,
+        CaseType.Contested
+      );
+      return;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  const attempted = attemptedUsers.length ? attemptedUsers.join(', ') : 'none';
+  const details = lastError instanceof Error ? lastError.message : String(lastError);
+  // eslint-disable-next-line no-console
+  console.warn(
+    `Failed to delete CCD case ${caseId}. Attempted users: ${attempted}. Error: ${details}`
+  );
 }
 
 
@@ -379,7 +435,11 @@ export const test = base.extend<MyFixtures & MockOptions>({
         await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)
       );
       const formattedCaseId = caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
-      await use({ caseId, formattedCaseId });
+      try {
+        await use({ caseId, formattedCaseId });
+      } finally {
+        await cleanupCreatedContestedCase(caseId);
+      }
     },
     { timeout: 240 * 1000 }
   ],
@@ -409,12 +469,16 @@ export const test = base.extend<MyFixtures & MockOptions>({
       const caseId = String(caseData.caseId);
       const formattedCaseId = caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
 
-      await use({
-        caseId,
-        formattedCaseId,
-        applicantAccessCode: caseData.applicantCode,
-        respondentAccessCode: caseData.respondentCode,
-      });
+      try {
+        await use({
+          caseId,
+          formattedCaseId,
+          applicantAccessCode: caseData.applicantCode,
+          respondentAccessCode: caseData.respondentCode,
+        });
+      } finally {
+        await cleanupCreatedContestedCase(caseId);
+      }
     },
     { timeout: 240 * 1000 }
   ],
