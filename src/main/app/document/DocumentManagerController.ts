@@ -61,6 +61,7 @@ export class DocumentManagerController {
           DocumentFileName: file.originalDocumentName,
           OriginalFileName: originalFilenames[index],
           DocumentType: documentType,
+          generalDocumentUploadDateTime: new Date().toISOString(),
           DocumentLink: {
             document_url: file._links.self.href,
             document_filename: file.originalDocumentName,
