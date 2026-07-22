@@ -33,6 +33,7 @@ It sits under `specFiles/`, but it covers the whole test setup in `src/test`.
 - [21. Where is coverage weak today?](#21-where-is-coverage-weak-today)
 - [22. src/test overview](#22-srctest-overview)
 - [23. Fixtures and how they work](#23-fixtures-and-how-they-work)
+- [23.1 Case lifecycle: creation, reuse, and teardown](#231-case-lifecycle-creation-reuse-and-teardown)
 - [Appendix A. Environment variables used in testing](#appendix-a-environment-variables-used-in-testing)
 - [Appendix B. Script reference highlights](#appendix-b-script-reference-highlights)
 - [Maintenance notes](#maintenance-notes)
