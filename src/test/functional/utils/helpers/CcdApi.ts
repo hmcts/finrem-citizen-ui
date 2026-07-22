@@ -82,6 +82,59 @@ export class CcdApi {
     return response.data;
   }
 
+  async deleteCaseInCcd(
+    userName: string,
+    password: string,
+    caseId: string,
+    caseType: string
+  ): Promise<boolean> {
+    if (shouldLogCcdProgress()) {
+      // eslint-disable-next-line no-console
+      console.info('Deleting CCD case id %s...', caseId);
+    }
+
+    const authToken = await getUserToken(userName, password);
+    const userId = await getUserId(authToken, userName);
+    const serviceToken = await getServiceToken();
+
+    const ccdDeleteCasePath = `/caseworkers/${userId}/jurisdictions/DIVORCE/case-types/${caseType}/cases/${caseId}`;
+
+    try {
+      await axiosRequest<void>({
+        method: 'delete',
+        url: getCcdApiUrl() + ccdDeleteCasePath,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          ServiceAuthorization: `Bearer ${serviceToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (shouldLogCcdProgress()) {
+        // eslint-disable-next-line no-console
+        console.info('Deleted CCD case id %s', caseId);
+      }
+
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const isAlreadyAbsent =
+        message.includes('status 404')
+        || message.includes('CaseNotFoundException')
+        || message.includes('No case found');
+
+      if (isAlreadyAbsent) {
+        if (shouldLogCcdProgress()) {
+          // eslint-disable-next-line no-console
+          console.info('CCD case id %s was already absent during delete.', caseId);
+        }
+        return false;
+      }
+
+      throw error;
+    }
+  }
+
   async getStartEventToken(
     ccdStartCasePath: string,
     ccdSaveCasePath: string,

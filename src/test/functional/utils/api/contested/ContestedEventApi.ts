@@ -118,6 +118,21 @@ export class ContestedEventApi {
     );
   }
 
+  private static isCaseworkerFallbackEligibleError(error: unknown): boolean {
+    if (this.isCaseNotFound404(error)) {
+      return true;
+    }
+
+    const message = error instanceof Error ? error.message : String(error);
+    return (
+      message.includes('status 401')
+      && (
+        message.includes('Problem getting case type version')
+        || message.includes('Unexpected Error')
+      )
+    );
+  }
+
   /**
    * Get caseworker credentials from config
    */
@@ -182,7 +197,7 @@ export class ContestedEventApi {
     } catch (error) {
       const canFallback = !!fallbackCredentials.username && !!fallbackCredentials.password;
 
-      if (!canFallback || !this.isCaseNotFound404(error)) {
+      if (!canFallback || !this.isCaseworkerFallbackEligibleError(error)) {
         throw error;
       }
 

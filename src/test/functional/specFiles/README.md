@@ -33,6 +33,7 @@ It sits under `specFiles/`, but it covers the whole test setup in `src/test`.
 - [21. Where is coverage weak today?](#21-where-is-coverage-weak-today)
 - [22. src/test overview](#22-srctest-overview)
 - [23. Fixtures and how they work](#23-fixtures-and-how-they-work)
+- [23.1 Case lifecycle: creation, reuse, and teardown](#231-case-lifecycle-creation-reuse-and-teardown)
 - [Appendix A. Environment variables used in testing](#appendix-a-environment-variables-used-in-testing)
 - [Appendix B. Script reference highlights](#appendix-b-script-reference-highlights)
 - [Maintenance notes](#maintenance-notes)
@@ -868,6 +869,53 @@ test('example', async ({ loggedInPage, contestedCaseWithHearing, enterCaseNumber
 });
 ```
 
+### 23.1 Case lifecycle: creation, reuse, and teardown
+
+This section explains exactly how case data is handled during functional runs.
+
+Creation model (real CCD targets):
+
+- `contestedCaseForCaseNumber` creates a new contested case per test that requests the fixture.
+- `contestedCaseWithHearing` creates a new contested case per test that requests the fixture.
+- These are test-scoped fixtures, so a case is not shared across separate tests unless a suite introduces its own shared state.
+
+Creation model (local mock CCD target):
+
+- Case creation calls are skipped.
+- Fixtures return a seeded/mock case from env defaults (`MOCK_CASE_ID`, `MOCK_APPLICANT_ACCESS_CODE`, `MOCK_RESPONDENT_ACCESS_CODE`) or fallback constants.
+- In this mode, tests intentionally reuse the same mock case identity.
+
+Are cases recycled?
+
+- Real CCD mode: no automatic recycling between tests. Each test gets its own newly created case from fixture setup.
+- Local mock mode: yes, the seeded mock case can be reused by many tests because it is deterministic test data rather than a freshly created remote CCD record.
+
+Why mock reseeding is still used in some suites:
+
+- Access codes are effectively single-use in journey logic.
+- Mock suites that depend on access-code entry typically call `injectCaseSession(...)` so each test starts from a fresh deterministic session and does not inherit code-consumption state from prior tests.
+
+Teardown/delete behavior:
+
+- Teardown is controlled by `DELETE_CREATED_CCD_CASES`.
+- Default behavior is to keep created CCD cases unless `DELETE_CREATED_CCD_CASES=true` is explicitly set.
+- When enabled, fixture teardown attempts CCD deletion in `finally` blocks for both contested-case fixtures.
+- Deletion is skipped automatically for local mock CCD targets.
+
+Deletion credential fallback order:
+
+- `caseworker`
+- `systemUser`
+- `solicitor`
+
+If deletion fails for all available credentials, tests continue and a warning is logged with attempted users and error details.
+
+Practical expectations for contributors:
+
+- If your spec uses `contestedCaseWithHearing` or `contestedCaseForCaseNumber`, assume one real case per test in preview/AAT/perftest/ITHC.
+- If running locally against mock CCD, assume seeded reusable case data unless your test flow explicitly creates and isolates additional state.
+- If you need post-run cleanup of real CCD data, set `DELETE_CREATED_CCD_CASES=true` for that run.
+
 ## Appendix A. Environment variables used in testing
 
 - `ACCESS_CODE_REAL_INTEGRATION`
@@ -884,6 +932,7 @@ test('example', async ({ loggedInPage, contestedCaseWithHearing, enterCaseNumber
 - `ACCESS_CODE_MANAGE_HEARINGS_REATTEMPTS`
 - `CCD_LOG_PROGRESS`
 - `CCD_VERBOSE_RETRY`
+- `DELETE_CREATED_CCD_CASES`
 - `PLAYWRIGHT_WORKERS`
 - `PLAYWRIGHT_RETRIES`
 

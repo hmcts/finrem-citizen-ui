@@ -106,6 +106,8 @@ if (shouldRunRealCcdIntegrationSuite()) {
   const isLocalMockCcd = isLocalMockCcdConfigured();
 
   test.describe('[integration] Document upload page', () => {
+  test.use({ useAutoA11yAudit: false });
+
   if (isLocalMockCcd) {
     test.use({ useMockTestSupport: true });
   }
