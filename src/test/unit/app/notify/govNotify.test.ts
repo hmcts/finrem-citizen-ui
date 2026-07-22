@@ -1,13 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import config from 'config';
+import { NotifyClient } from 'notifications-node-client';
 
-const mockSendEmail = jest.fn();
-
-jest.mock('notifications-node-client', () => ({
-  NotifyClient: jest.fn().mockImplementation(() => ({
-    sendEmail: mockSendEmail,
-  })),
-}), { virtual: true });
+let sendEmailSpy: jest.SpiedFunction<NotifyClient['sendEmail']>;
 
 jest.mock('config', () => ({
   get: jest.fn((key: string) => {
@@ -31,14 +26,13 @@ const personalisation = {
 describe('sendNotification', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    sendEmailSpy = jest.spyOn(NotifyClient.prototype, 'sendEmail').mockResolvedValue({} as never);
   });
 
   it('sends email with correct template ID, recipient and personalisation', async () => {
-    mockSendEmail.mockResolvedValue({} as never);
-
     await sendNotification('test-template-id', 'test@hmcts.net', personalisation);
 
-    expect(mockSendEmail).toHaveBeenCalledWith(
+    expect(sendEmailSpy).toHaveBeenCalledWith(
       'test-template-id',
       'test@hmcts.net',
       expect.objectContaining({ personalisation })
@@ -59,12 +53,11 @@ describe('sendNotification', () => {
   });
 
   it('adds a deterministic notification reference prefix', async () => {
-    mockSendEmail.mockResolvedValue({} as never);
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1_735_123_456_789);
 
     await sendNotification('test-template-id', 'test@hmcts.net', personalisation);
 
-    expect(mockSendEmail).toHaveBeenCalledWith(
+    expect(sendEmailSpy).toHaveBeenCalledWith(
       'test-template-id',
       'test@hmcts.net',
       expect.objectContaining({
@@ -76,7 +69,7 @@ describe('sendNotification', () => {
   });
 
   it('throws when sendEmail fails', async () => {
-    mockSendEmail.mockRejectedValue(new Error('Notify API error') as never);
+    sendEmailSpy.mockRejectedValue(new Error('Notify API error') as never);
 
     await expect(sendNotification('test-template-id', 'test@hmcts.net', personalisation)).rejects.toThrow('Notify API error');
   });

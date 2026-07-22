@@ -6,7 +6,7 @@ It sits under `specFiles/`, but it covers the whole test setup in `src/test`.
 ## Contents
 
 - [0. Jenkins Builds](#0-jenkins-builds)
-- [1. Overall testing strategy for the service](#1-overall-testing-strategy-for-the-service)
+- [1. Overall testing strategy](#1-overall-testing-strategy-for-the-service)
 - [2. Unit tests](#2-unit-tests)
 - [3. Route tests](#3-route-tests)
 - [4. API tests](#4-api-tests)
@@ -14,11 +14,15 @@ It sits under `specFiles/`, but it covers the whole test setup in `src/test`.
 - [6. Smoke tests](#6-smoke-tests)
 - [7. Accessibility testing](#7-accessibility-testing)
 - [8. QA scripts and commonly used commands](#8-qa-scripts-and-commonly-used-commands)
+- [8.1 Linting and formatting checks](#81-linting-and-formatting-checks)
 - [9. How Playwright selects the target environment](#9-how-playwright-selects-the-target-environment)
-- [10. Local vs preview vs AAT test execution](#10-local-vs-preview-vs-aat-test-execution)
+- [10. Environment behavior (local, demo, preview, AAT, perftest, ITHC)](#10-environment-behavior-local-demo-preview-aat-perftest-ithc)
 - [11. Use of mock CCD API in local tests](#11-use-of-mock-ccd-api-in-local-tests)
+- [11.1 Test-support route gating](#111-test-support-route-gating)
+- [11.2 Integration test setup for real CCD flows](#112-integration-test-setup-for-real-ccd-flows)
 - [12. Access-code polling and eventual consistency risks](#12-access-code-polling-and-eventual-consistency-risks)
 - [13. Known flaky tests and how to debug them](#13-known-flaky-tests-and-how-to-debug-them)
+- [13.1 Known environment issues: perftest and ITHC](#131-known-environment-issues-perftest-and-ithc)
 - [14. What test evidence should be expected in a PR](#14-what-test-evidence-should-be-expected-in-a-pr)
 - [15. Gaps in current test coverage](#15-gaps-in-current-test-coverage)
 - [16. Contractor recommendations for strengthening the test suite](#16-contractor-recommendations-for-strengthening-the-test-suite)
@@ -39,7 +43,7 @@ It sits under `specFiles/`, but it covers the whole test setup in `src/test`.
 - **Master build runs**: https://build.hmcts.net/job/HMCTS_d_to_i/job/finrem-citizen-ui/job/master/
 - **Preview (PR) build runs**: https://build.hmcts.net/job/HMCTS_d_to_i/job/finrem-citizen-ui/job/PR-437/ (replace 437 with your PR number)
 
-## 1. Overall testing strategy for the service
+## 1. Overall testing strategy
 
 - Use a test pyramid: fast unit/route/API checks, fewer browser integration tests, and a small smoke suite.
 - Keep functional specs focused on journey flow, and keep locator and interaction detail in POMs.
@@ -72,6 +76,7 @@ Test layers:
 - What they prove:
   - route protection and authentication redirects
   - route-level validation and continuation flow
+  - expected rendered page/view behavior for key route states
   - expected route contract behavior
 - Command: `yarn test:routes`.
 
@@ -120,13 +125,15 @@ Mock lane guardrails:
 - start app with `ENABLE_TEST_SUPPORT_ROUTES=true`
 - use `test.use({ useMockTestSupport: true })`
 - use `injectCaseSession()` only in mock scenarios
+- when `injectCaseSession()` is used, place real form-submission calls (`submitCaseNumber`, `submitAccessCode`) in the `else` branch — `injectCaseSession` navigates to `/enter-access-code`, so unconditional form-submission calls after it will time out
 
 Integration lane guardrails:
 
-- use a reachable CCD target (local mock CCD, preview, or AAT)
+- use a reachable CCD target (local mock CCD, preview, AAT, perftest, or ITHC)
 - do not use test-support route injection
-- integration happy-path suites run by default on preview/AAT
-- outside preview/AAT, set `ACCESS_CODE_REAL_INTEGRATION=true`
+- real CCD-backed integration suites run by default on preview/AAT/perftest/ITHC (including `pr-*` preview targets)
+- demo is intentionally hard-skipped for real CCD-backed integration suites
+- local skips real CCD-backed suites by default; set `ACCESS_CODE_REAL_INTEGRATION=true` to force them on local
 
 Functional support utilities overview:
 
@@ -149,6 +156,9 @@ Top-level utility files:
 
 - Location: `src/test/smoke/smoke.ts`.
 - Command: `yarn test:smoke`.
+- When they run:
+  - manually during targeted verification
+  - in CI lanes where smoke is configured as a deployment-readiness gate
 - What they prove:
   - basic service readiness
   - key route availability
@@ -252,6 +262,42 @@ Suggested run order before push:
 3. `yarn test:functional:headed:slowmo` for investigation if needed
 4. `yarn qacichecks` as final gate
 
+## 8.1 Linting and formatting checks
+
+Linting and formatting are enforced both as standalone commands and in pre-commit hooks.
+
+Primary commands:
+
+- `yarn lint` runs ESLint across the repo.
+- `yarn lint:fix` runs ESLint with autofix where possible.
+- `yarn lint-staged` runs staged-file formatting/lint checks.
+
+Where rules are defined:
+
+- `eslint.config.cjs`
+  - flat-config ESLint setup for `*.ts`, `*.tsx`, `*.mts`
+  - TypeScript rules such as `no-explicit-any`, `explicit-module-boundary-types`, and `no-unused-vars`
+  - import ordering via `eslint-plugin-simple-import-sort`
+  - Jest-focused rules via `eslint-plugin-jest`
+  - test override that allows `console` in `*.spec.ts`/`*.test.ts`
+  - global ignore patterns for generated outputs (for example `functional-output/**`, `playwright-report/**`, and Allure folders)
+- `.stylelintrc.json`
+  - SCSS/CSS lint baseline via `stylelint-config-standard-scss`
+  - project overrides for quote and selector-class constraints
+- `package.json` (`lint-staged` section)
+  - `prettier --write --ignore-unknown` for all staged files
+  - `eslint --fix` for staged `js/ts/mts` files
+- `.husky/pre-commit`
+  - runs `yarn build`, `yarn test`, and `yarn lint --fix`
+  - runs production dependency audit and compares against `yarn-audit-known-issues`
+  - blocks commit when `yarn-audit-known-issues` changes until reviewed and staged
+
+Why this matters for test/QA work:
+
+- generated Playwright/Allure artifacts should not be committed or linted; ignore rules prevent false failures
+- pre-commit quality gates catch formatting and lint issues before CI
+- keeping helper/spec changes lint-clean reduces noisy CI failures when validating test behavior
+
 ## 9. How Playwright selects the target environment
 
 Resolution order in `playwright.config.mts` (`getBaseUrl()`):
@@ -265,12 +311,25 @@ How URLs are resolved:
 - `RUNNING_ENV=pr-xxx` maps to the preview URL pattern
 - other env values resolve to `https://finrem-citizen-ui.<env>.platform.hmcts.net`
 
-## 10. Local vs preview vs AAT test execution
+## 10. Environment behavior (local, demo, preview, AAT, perftest, ITHC)
+
+Local vs preview vs AAT quick view:
+
+- local: fastest deterministic feedback using mock CCD and test-support routes
+- preview: real deployed PR environment, real CCD-backed integration suites enabled by default
+- AAT: stable shared real environment, real CCD-backed integration suites enabled by default
 
 Local:
 
 - run mock API + local app
-- run local mock suites and local-target integration when needed
+- run the full functional suite (mock + integration) when local mock CCD is configured
+- integration setup uses mock-backed case fixtures on local rather than real CCD flows
+- local intent: all suites execute; happy-path tests that would require shared real CCD are satisfied by mock-seeded data or skipped when local mock prerequisites are missing
+
+Demo:
+
+- run demo-safe suites only (mock + login/validation integration)
+- real CCD-backed integration happy-path suites are hard-skipped on demo by design
 
 Preview:
 
@@ -282,17 +341,41 @@ AAT:
 - target the deployed AAT environment
 - integration happy-path suites enabled by default
 
+Perftest/ITHC:
+
+- target deployed shared environments
+- integration happy-path suites are enabled by default
+- execution depends on valid IDAM users, CCD role grants, and reachable CCD/S2S endpoints
+
 Important:
 
-- For preview/AAT functional runs, do not start local app server.
+- For non-local functional runs (demo/preview/AAT/perftest/ITHC), do not start the local app server.
 
-Preview/AAT run command:
+Recommended commands by environment:
 
 ```bash
-# Select target in .env (RUNNING_ENV=pr-xxx or RUNNING_ENV=aat)
-# or set TEST_URL directly.
+# Local mock flow (highest determinism for UI behavior)
+yarn start:mock-case-api
+ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 yarn test:functional
 ```
+
+```bash
+# Demo-safe run (max pass rate without real CCD dependencies)
+RUNNING_ENV=demo PLAYWRIGHT_RETRIES=${PLAYWRIGHT_RETRIES:-1} playwright test --config playwright.config.mts --project=chromium src/test/functional/specFiles/mock src/test/functional/specFiles/integration/login.integration.spec.ts src/test/functional/specFiles/integration/enterCaseNumber.validation.integration.spec.ts
+```
+
+```bash
+# Preview/AAT/perftest/ITHC (real target)
+# Select target in .env via RUNNING_ENV or TEST_URL.
+yarn test:functional
+```
+
+Why behavior differs by environment:
+
+- local can provide deterministic test-support routes and mock CCD setup
+- demo does not provide stable real-CCD integration prerequisites for this suite, so real CCD-backed happy-path suites are blocked intentionally
+- preview/AAT/perftest/ITHC are treated as real-CCD lanes, so real integration suites are enabled and depend on real identity/network/service readiness
 
 ## 11. Use of mock CCD API in local tests
 
@@ -314,6 +397,93 @@ Mock test rules:
 - mock suites use local test-support routes
 - use `test.use({ useMockTestSupport: true })`
 - use `injectCaseSession()` only for mock scenarios
+
+Local full-suite behavior:
+
+- when `CCD_URL` (or `CCD_DATA_STORE_API_URL`) points to `http://localhost:4100`, integration suites are registered on local
+- local integration fixtures use mock-seeded case and access-code data, so local runs do not depend on shared-environment CCD/IDAM/S2S stability
+- if local mock prerequisites are not met (CCD URL or test-support route mismatch), affected mock-dependent flows are skipped with an explicit reason
+
+### 11.1 Test-support route gating
+
+Test-support route gating prevents mock-only tests from accidentally running against real/shared environments.
+
+How the gate works:
+
+- mock suites opt in with `test.use({ useMockTestSupport: true })`
+- the auto fixture `mockTestSupport` validates that `CCD_URL`/`CCD_DATA_STORE_API_URL` targets local mock CCD (`http://localhost:4100`)
+- the same fixture checks that `/__test/inject-case-session` exists and is not returning 404
+- if either check fails, tests are skipped with an explicit reason rather than failing mid-journey
+
+Where implemented:
+
+- `src/test/fixtures/fixtures.ts` (`mockTestSupport` auto fixture)
+- `src/test/functional/pom/basePage.page.ts` (`injectCaseSession(...)` helper)
+- mock suites under `src/test/functional/specFiles/mock/` that declare `useMockTestSupport`
+
+### 11.2 Integration test setup for CCD-backed flows
+
+CCD-backed integration setup supports both shared real environments and local mock-backed execution.
+
+How real-CCD suites are selected:
+
+- `shouldRunRealCcdIntegrationSuite()` controls registration of CCD-backed integration suites
+- default enabled targets: preview, AAT, perftest, ITHC (including `pr-*`)
+- local is enabled when mock CCD is configured (`CCD_URL`/`CCD_DATA_STORE_API_URL` -> `http://localhost:4100`)
+- demo is always skipped for real CCD-backed suites
+- local without mock CCD remains skipped to avoid false failures
+
+How integration fixtures prepare data:
+
+- integration specs consume `contestedCaseForCaseNumber` and `contestedCaseWithHearing` fixtures
+- on local mock CCD, fixtures return mock-seeded case and access-code data to keep happy-path tests deterministic
+- on preview/AAT/perftest/ITHC, fixture setup creates real cases/events via contested case factory helpers before UI assertions begin
+- when prerequisites are missing (IDAM user auth, CCD role grants, S2S/CCD reachability), failures occur in setup rather than in page assertions
+
+Where implemented:
+
+- `src/test/functional/specFiles/journeyHelpers/integrationTarget.helper.ts` (target gating)
+- `src/test/fixtures/fixtures.ts` (integration fixture wiring)
+- `src/test/functional/utils/factories/contested/ContestedCaseFactory.ts` (real case and access-code setup)
+
+### 11.3 Local mock access-code reseeding and why it is required
+
+When running functional tests against local mock CCD (`http://localhost:4100`), any test that submits an access code must reseed case-session data before that submission.
+
+Why this is needed:
+
+- access codes are single-use in the journey flow because successful submission triggers code invalidation
+- local mock runs frequently reuse the same deterministic fixture values across multiple tests in the same suite
+- without reseeding, a previous test can consume the code and a later test can fail with an access-code mismatch that is unrelated to the scenario being tested
+
+How this is applied:
+
+- only in local mock mode, specs opt in with `test.use({ useMockTestSupport: true })`
+- before each test that depends on code submission, specs call `injectCaseSession(caseId, applicantAccessCode, respondentAccessCode)`
+- this reset is local-only and must not be used for shared-environment integration because test-support routes are intentionally unavailable there- `injectCaseSession` navigates the browser to `/enter-access-code` as part of its flow; for this reason, the mock reseed block and the real form-submission block must be mutually exclusive — use an `if/else` pattern, not sequential calls
+
+Required `if/else` pattern for integration `beforeEach` hooks:
+
+```typescript
+if (isLocalMockCcd) {
+  // Mock: inject session directly and land at /enter-access-code
+  await basePage.injectCaseSession(
+    contestedCaseWithHearing.caseId,
+    contestedCaseWithHearing.applicantAccessCode,
+    contestedCaseWithHearing.respondentAccessCode
+  );
+} else {
+  // Real CCD: drive the full form journey from /enter-case-number
+  await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+  await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+}
+```
+
+Do not call `submitCaseNumber` or `submitAccessCode` after `injectCaseSession` — the browser is already past the case-number form and those interactions will time out.
+Expected outcome:
+
+- each test starts from a clean, deterministic access-code state
+- failures reflect real regression in UI/journey behavior rather than cross-test state leakage
 
 Targeted runs:
 
@@ -356,11 +526,11 @@ Key tuning variables:
 Related environment controls:
 
 - `ACCESS_CODE_REAL_INTEGRATION`
-  - `true`: enable integration happy-path suites for any target
-  - `false`: treated as local default; preview/AAT still run integration happy-path suites
+  - `true`: force-enable real CCD-backed integration suites on non-demo targets (mainly for local override)
+  - `false`: does not disable known real-CCD targets (preview/AAT/perftest/ITHC still run by default)
 - `ENABLE_TEST_SUPPORT_ROUTES`
   - `true`: enables local test-support endpoints
-  - `false`: test-support endpoints disabled (preview/AAT default)
+  - `false`: test-support endpoints disabled (normal non-local behavior)
 - `CCD_LOG_PROGRESS=true`: create/update progress logs
 - `CCD_VERBOSE_RETRY=true`: verbose retry/fallback logs
 
@@ -389,6 +559,64 @@ Common transient causes:
 - CCD eventual consistency lag
 - browser timing issues
 
+## 13.1 Known environment issues: perftest and ITHC
+
+These are recurring environment issues that can prevent integration suites from executing reliably on perftest/ITHC even when test code is unchanged.
+
+Issue A: `invalid_grant` for solicitor/caseworker users
+
+- Symptom:
+  - test setup fails before journey assertions
+  - IDAM `/o/token` returns `{"error":"invalid_grant","error_description":"Resource owner authentication failed"}`
+- Why it happens:
+  - the configured user exists in Key Vault metadata but the account is missing, disabled, locked, or has a stale password in that target environment
+  - perftest/ITHC do not always contain the same seeded mailinator user set as AAT/preview
+- Impact:
+  - contested case creation and solicitor event flows fail early
+  - many integration specs appear as "not executing" because fixture setup aborts first
+- What to confirm:
+  1. `PLAYWRIGHT_SOLICITOR_USERNAME` and `PLAYWRIGHT_SOLICITOR_PSWD` authenticate successfully against target IDAM
+  2. `USERNAME_CASEWORKER` and `PASSWORD_CASEWORKER` (or system-user fallback) authenticate successfully
+  3. those users have the required roles for CCD events in that environment
+
+Issue B: CCD endpoint reachability and topology mismatch
+
+- Symptom:
+  - `ENOTFOUND` / connection errors for CCD/S2S internal hostnames
+  - start-event or case-read requests fail before test steps begin
+- Why it happens:
+  - local runs may use internal service URLs (`*.service.core-compute-<env>.internal`) that are unreachable without the correct network path
+  - mixed target variables (for example perftest `RUNNING_ENV` with non-perftest CCD URL) route traffic to the wrong backend
+- Impact:
+  - integration setup fails, often reported as generic API errors
+- What to confirm:
+  1. `RUNNING_ENV`, `TEST_URL`, `IDAM_*`, `CCD_DATA_STORE_API_URL`, and `SERVICE_AUTH_PROVIDER_URL` all point to the same target
+  2. the machine/agent can resolve and reach those endpoints
+
+Issue C: S2S token generation failures
+
+- Symptom:
+  - lease/token calls to service-auth provider fail
+  - downstream CCD calls fail with authorization errors
+- Why it happens:
+  - incorrect secret value or secret/client mismatch for the configured microservice
+- What to confirm:
+  1. `SERVICE_AUTH_SECRET` (or fallback secret) matches the configured microservice
+  2. `S2S_MICROSERVICE=finrem_citizen_ui` for this test path
+
+Current suite behavior and gating notes
+
+- Real CCD-backed integration suites are enabled by default on preview/AAT/perftest/ITHC.
+- Demo is intentionally hard-skipped for real CCD-backed integration suites.
+- If perftest/ITHC credentials or network prerequisites are not met, tests fail during setup rather than UI assertions.
+
+Recommended preflight for perftest/ITHC before full run
+
+1. Verify environment coherence (`RUNNING_ENV`, `TEST_URL`, IDAM, CCD, S2S URLs).
+2. Verify password-grant token retrieval for solicitor, caseworker (or fallback), and system user.
+3. Run one narrow integration spec first.
+4. Run full functional suite only after those checks pass.
+
 Debug sequence:
 
 1. Confirm one coherent target env (`TEST_URL`/`RUNNING_ENV`/CCD URLs).
@@ -414,7 +642,7 @@ ENABLE_TEST_SUPPORT_ROUTES=true yarn start:dev
 yarn test:functional -- src/test/functional/specFiles/mock/
 ```
 
-Integration suites skipped outside preview/AAT:
+Integration suites skipped on local by default (demo remains hard-skipped):
 
 ```bash
 export ACCESS_CODE_REAL_INTEGRATION=true

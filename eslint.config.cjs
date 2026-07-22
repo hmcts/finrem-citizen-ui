@@ -6,7 +6,19 @@ const simpleImportSort = require('eslint-plugin-simple-import-sort');
 
 module.exports = [
   {
-    ignores: ['coverage/lcov-report/**'],
+    ignores: [
+      'coverage/lcov-report/**',
+      'functional-output/**',
+      'playwright-report/**',
+      'test-results/**',
+      'smoke-output/**',
+      'a11y-output/**',
+      'allure-report/**',
+      'allure-results/**',
+      'allure-results-smoke/**',
+      'allure-results-functional/**',
+      'perf-functional-output/**',
+    ],
   },
 
   {

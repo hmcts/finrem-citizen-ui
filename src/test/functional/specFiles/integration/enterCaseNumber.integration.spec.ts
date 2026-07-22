@@ -1,27 +1,6 @@
 import { expect, test } from '../../../fixtures/fixtures';
+import { shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationTarget.helper';
 import { expectAuthenticated, runA11yAudit } from '../journeyHelpers/specAssertions.helper';
-
-function shouldRunHappyPathIntegrationSuite(): boolean {
-  const explicitToggle = process.env.ACCESS_CODE_REAL_INTEGRATION;
-  const runningEnv = (process.env.RUNNING_ENV || '').toLowerCase();
-  const testUrl = (process.env.TEST_URL || '').toLowerCase();
-  const isPreviewOrAatTarget =
-    runningEnv === 'aat'
-    || runningEnv.startsWith('pr-')
-    || testUrl.includes('.preview.platform.hmcts.net')
-    || testUrl.includes('.aat.platform.hmcts.net');
-
-  if (explicitToggle === 'true') {
-    return true;
-  }
-
-  if (explicitToggle === 'false') {
-    // Legacy .env files often set false; do not block preview/AAT by default.
-    return isPreviewOrAatTarget;
-  }
-
-  return isPreviewOrAatTarget;
-}
 
 /**
  * INTEGRATION TESTS: Enter Case Number
@@ -29,19 +8,14 @@ function shouldRunHappyPathIntegrationSuite(): boolean {
  * These tests verify case number happy-path integration logic.
  * Real integration tests create actual CCD cases and verify successful submissions.
  *
- * Runs on: AAT/preview by default (or any target when ACCESS_CODE_REAL_INTEGRATION=true)
- * Default: Skipped outside preview/AAT unless ACCESS_CODE_REAL_INTEGRATION=true.
+ * Runs on: preview/AAT/perftest/ITHC by default, plus local when mock CCD is configured.
+ * Default: skipped on demo; local runs require CCD_URL/CCD_DATA_STORE_API_URL -> http://localhost:4100.
  * ACCESS_CODE_REAL_INTEGRATION=false is treated as legacy local default and
- * does not disable AAT/preview happy-path runs.
+ * does not disable known real-CCD targets.
  */
 
-const runIntegration = shouldRunHappyPathIntegrationSuite();
-
-test.describe('[integration-happy-path] Enter Case Number - Happy Path', () => {
-  test.skip(
-    !runIntegration,
-    'Skipped outside preview/AAT by default. Set ACCESS_CODE_REAL_INTEGRATION=true to force enable on non-preview/non-AAT targets.'
-  );
+if (shouldRunRealCcdIntegrationSuite()) {
+  test.describe('[integration-happy-path] Enter Case Number - Happy Path', () => {
 
   test.describe.configure({ mode: 'serial' });
 
@@ -83,4 +57,5 @@ test.describe('[integration-happy-path] Enter Case Number - Happy Path', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Enter access code' })).toBeVisible();
     await runA11yAudit(axeUtils);
   });
-});
+  });
+}

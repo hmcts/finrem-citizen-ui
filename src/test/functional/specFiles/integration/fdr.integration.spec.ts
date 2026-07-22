@@ -1,4 +1,8 @@
 import { test } from '../../../fixtures/fixtures';
+import {
+  isLocalMockCcdConfigured,
+  shouldRunRealCcdIntegrationSuite,
+} from '../journeyHelpers/integrationTarget.helper';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
@@ -16,9 +20,16 @@ import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.hel
  * Runs on:
  * - Environments with working authentication/session support
  */
-test.describe('[integration] FDR page', () => {
-  // Run serially to avoid concurrent logins overwhelming the AAT pod.
-  test.describe.configure({ mode: 'serial' });
+if (shouldRunRealCcdIntegrationSuite()) {
+  const isLocalMockCcd = isLocalMockCcdConfigured();
+
+  test.describe('[integration] FDR page', () => {
+    // Run serially to avoid concurrent logins overwhelming the AAT pod.
+    test.describe.configure({ mode: 'serial' });
+
+  if (isLocalMockCcd) {
+    test.use({ useMockTestSupport: true });
+  }
 
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
@@ -30,8 +41,17 @@ test.describe('[integration] FDR page', () => {
     confidentialityPage,
     basePage,
   }) => {
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    // Local mock mode needs deterministic reseed so one-time code invalidation does not leak between tests.
+    if (isLocalMockCcd) {
+      await basePage.injectCaseSession(
+        contestedCaseWithHearing.caseId,
+        contestedCaseWithHearing.applicantAccessCode,
+        contestedCaseWithHearing.respondentAccessCode
+      );
+    } else {
+      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    }
 
     await navigateToFdrStep(dashboardPage, beforeYouStartPage, confidentialityPage, basePage);
   });
@@ -69,4 +89,5 @@ test.describe('[integration] FDR page', () => {
     await fdrPage.verifyGettingHelpSection();
     await runA11yAudit(axeUtils);
   });
-});
+  });
+}

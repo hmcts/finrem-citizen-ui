@@ -1,4 +1,8 @@
 import { test } from '../../../fixtures/fixtures';
+import {
+  isLocalMockCcdConfigured,
+  shouldRunRealCcdIntegrationSuite,
+} from '../journeyHelpers/integrationTarget.helper';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToDashboardStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
@@ -11,7 +15,14 @@ import { navigateToDashboardStep } from '../journeyHelpers/uploadJourneyNavigati
  * Runs on: Environments with working authentication/session support
  */
 
-test.describe('[integration] Dashboard upload journey', () => {
+if (shouldRunRealCcdIntegrationSuite()) {
+  const isLocalMockCcd = isLocalMockCcdConfigured();
+
+  test.describe('[integration] Dashboard upload journey', () => {
+  if (isLocalMockCcd) {
+    test.use({ useMockTestSupport: true });
+  }
+
   test.beforeEach(async ({
     loggedInPage: _loggedInPage,
     enterCaseNumberPage,
@@ -20,8 +31,17 @@ test.describe('[integration] Dashboard upload journey', () => {
     dashboardPage,
     basePage,
   }) => {
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    // Local mock mode needs deterministic reseed so one-time code invalidation does not leak between tests.
+    if (isLocalMockCcd) {
+      await basePage.injectCaseSession(
+        contestedCaseWithHearing.caseId,
+        contestedCaseWithHearing.applicantAccessCode,
+        contestedCaseWithHearing.respondentAccessCode
+      );
+    } else {
+      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    }
 
     // Ensure logged-in session and navigate to dashboard for each test
     await navigateToDashboardStep(dashboardPage, basePage);
@@ -88,4 +108,5 @@ test.describe('[integration] Dashboard upload journey', () => {
     await confidentialityPage.verifyConfidentialityPageContent();
     await runA11yAudit(axeUtils);
   });
-});
+  });
+}
