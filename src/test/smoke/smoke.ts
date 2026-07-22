@@ -42,7 +42,7 @@ const pages: SmokePage[] = [
     expectsLoginRedirect: true,
   },
   {
-    name: 'FDR',
+    name: 'Hearing (FDR)',
     path: `${PrivateRoutes.uploadJourney}/${UploadStepNames.FDR}`,
     expectsLoginRedirect: true,
   },
@@ -54,6 +54,21 @@ const pages: SmokePage[] = [
   {
     name: 'Upload Documents',
     path: `${PrivateRoutes.uploadJourney}/${UploadStepNames.UploadDocuments}`,
+    expectsLoginRedirect: true,
+  },
+  {
+    name: 'Check Upload',
+    path: `${PrivateRoutes.uploadJourney}/${UploadStepNames.CheckUpload}`,
+    expectsLoginRedirect: true,
+  },
+  {
+    name: 'Send To Other Party',
+    path: `${PrivateRoutes.uploadJourney}/${UploadStepNames.SendToOtherParty}`,
+    expectsLoginRedirect: true,
+  },
+  {
+    name: 'Case Submission (Confirmation)',
+    path: `${PrivateRoutes.uploadJourney}/${UploadStepNames.Confirmation}`,
     expectsLoginRedirect: true,
   },
   ...(process.env.NODE_ENV === 'production'
