@@ -182,6 +182,11 @@ Before running local functional tests, ensure `.env` uses local target values:
 - `CCD_URL=http://localhost:4100`
 - `CCD_DATA_STORE_API_URL=http://localhost:4100`
 
+Why this local setup is important:
+- local mock integration and mock suites reseed access-code session data before tests that submit access codes
+- reseeding prevents one test from consuming a single-use code and causing unrelated failures in later tests
+- full details are documented in `src/test/functional/specFiles/README.md` under section 11.3
+
 Use `yarn test:functional:quick` when you want the same local target but faster feedback:
 - Chromium only
 - no `playwright install --with-deps` step

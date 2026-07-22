@@ -13,16 +13,22 @@
         <a href="/upload/{{ previousStep }}" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
       {% endif %}
 
-      {% if errors and errors.upload %}
-        {{ govukErrorSummary({
-          titleText: "There is a problem",
-          errorList: [
-            {
-              text: errors.upload,
-              href: "#upload"
-            }
-          ]
-        }) }}
+      {% if errors and data.selectedDocumentTypes %}
+        {% set errorList = [] %}
+        {% for documentType in data.selectedDocumentTypes %}
+          {% if errors[documentType.value] %}
+            {% set errorList = (errorList.push({
+              text: errors[documentType.value],
+              href: "#file-upload-" + documentType.value
+            }), errorList) %}
+          {% endif %}
+        {% endfor %}
+        {% if errorList.length > 0 %}
+          {{ govukErrorSummary({
+            titleText: "There is a problem",
+            errorList: errorList
+          }) }}
+        {% endif %}
       {% endif %}
 
       <h1 class="govuk-heading-l">Upload your documents</h1>
@@ -42,15 +48,8 @@
   </p>
 {% endif %}
 
-          <div class="govuk-inset-text govuk-!-margin-top-4">
-            {% set docTypeError = errors[documentType.value] if errors %}
-            {% if docTypeError %}
-              {{ govukErrorMessage({
-                text: docTypeError,
-                classes: "govuk-!-margin-bottom-4"
-              }) }}
-            {% endif %}
-
+          {% set docTypeError = errors[documentType.value] if errors %}
+          <div class="govuk-inset-text govuk-!-margin-top-4{% if docTypeError %} govuk-inset-text--error{% endif %}">
             <form method="post" action="/documents/upload?documentType={{ documentType.value }}&returnUrl=/upload/upload-documents" enctype="multipart/form-data" data-upload-form="{{ documentType.value }}">
               <input type="hidden" name="documentType" value="{{ documentType.value }}">
               <input type="hidden" name="returnUrl" value="/upload/upload-documents">
@@ -65,6 +64,9 @@
                 hint: {
                   text: "Files must be in jpg, png, pdf, docx or xlsx format."
                 },
+                errorMessage: {
+                  text: docTypeError
+                } if docTypeError,
                 attributes: {
                   "aria-describedby": "file-upload-" + documentType.value + "-hint"
                 }

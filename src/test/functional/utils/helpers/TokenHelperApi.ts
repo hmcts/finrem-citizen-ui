@@ -31,6 +31,21 @@ function maskIdentifier(value: string): string {
   return `${value.slice(0, 2)}***`;
 }
 
+function getTargetEnvLabel(): string {
+  const runningEnv = (process.env.RUNNING_ENV || '').trim();
+  const idamEnv = (process.env.IDAM_ENV || '').trim();
+
+  if (runningEnv) {
+    return runningEnv;
+  }
+
+  if (idamEnv) {
+    return idamEnv;
+  }
+
+  return 'current target environment';
+}
+
 // Load .env file handling both 'export KEY=VALUE' and 'KEY=VALUE' formats
 function ensureEnvLoaded(): void {
   const envPath = path.resolve(process.cwd(), '.env');
@@ -149,7 +164,7 @@ export async function getUserToken(username: string, password: string): Promise<
         `[IDAM auth] Resource owner authentication failed for user ${maskIdentifier(username)}. `
         + 'Check credential env vars for the user role in use (for example USERNAME_CASEWORKER/PASSWORD_CASEWORKER, '
         + 'PLAYWRIGHT_SOLICITOR_USERNAME/PLAYWRIGHT_SOLICITOR_PSWD, or IDAM_SYSTEM_USERNAME/IDAM_SYSTEM_PASSWORD) '
-        + 'and verify they are valid for AAT.'
+        + `and verify they are valid for ${getTargetEnvLabel()}.`
       );
     }
     throw error;

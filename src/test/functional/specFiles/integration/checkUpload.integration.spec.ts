@@ -1,4 +1,8 @@
 import { expect, test } from '../../../fixtures/fixtures';
+import {
+  isLocalMockCcdConfigured,
+  shouldRunRealCcdIntegrationSuite,
+} from '../journeyHelpers/integrationTarget.helper';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import {
   navigateToCheckUploadWithOtherDocument,
@@ -18,28 +22,20 @@ import {
  * - Links case context via case number + access code using `contestedCaseWithHearing`.
  * - Navigates through upload journey helpers to reach check-upload states.
  */
-test.describe('[integration] Check uploaded documents page', () => {
-  test.describe('[integration] Check uploaded documents page with uploaded other document', () => {
-    test.beforeEach(async ({
-      loggedInPage: _loggedInPage,
-      enterCaseNumberPage,
-      enterAccessCodePage,
-      contestedCaseWithHearing,
-      dashboardPage,
-      beforeYouStartPage,
-      confidentialityPage,
-      basePage,
-      fdrPage,
-      documentSelectionPage,
-      documentUploadPage,
-      checkUploadPage,
-    }) => {
-      // Establish real integration session state first
-      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+if (shouldRunRealCcdIntegrationSuite()) {
+  const isLocalMockCcd = isLocalMockCcdConfigured();
 
-      // Continue existing journey.
-      await navigateToCheckUploadWithOtherDocument({
+  test.describe('[integration] Check uploaded documents page', () => {
+    if (isLocalMockCcd) {
+      test.use({ useMockTestSupport: true });
+    }
+
+    test.describe('[integration] Check uploaded documents page with uploaded other document', () => {
+      test.beforeEach(async ({
+        loggedInPage: _loggedInPage,
+        enterCaseNumberPage,
+        enterAccessCodePage,
+        contestedCaseWithHearing,
         dashboardPage,
         beforeYouStartPage,
         confidentialityPage,
@@ -48,8 +44,32 @@ test.describe('[integration] Check uploaded documents page', () => {
         documentSelectionPage,
         documentUploadPage,
         checkUploadPage,
+      }) => {
+        // Local mock mode needs deterministic reseed so one-time code invalidation does not leak between tests.
+        if (isLocalMockCcd) {
+          await basePage.injectCaseSession(
+            contestedCaseWithHearing.caseId,
+            contestedCaseWithHearing.applicantAccessCode,
+            contestedCaseWithHearing.respondentAccessCode
+          );
+        } else {
+          // Establish real integration session state first
+          await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+          await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+        }
+
+        // Continue existing journey
+        await navigateToCheckUploadWithOtherDocument({
+          dashboardPage,
+          beforeYouStartPage,
+          confidentialityPage,
+          basePage,
+          fdrPage,
+          documentSelectionPage,
+          documentUploadPage,
+          checkUploadPage,
+        });
       });
-    });
 
     test('[integration] Check uploaded documents page displays expected content and layout @a11y', async ({
       checkUploadPage,
@@ -224,8 +244,16 @@ test.describe('[integration] Check uploaded documents page', () => {
     checkUploadPage,
     axeUtils,
   }) => {
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    if (isLocalMockCcd) {
+      await basePage.injectCaseSession(
+        contestedCaseWithHearing.caseId,
+        contestedCaseWithHearing.applicantAccessCode,
+        contestedCaseWithHearing.respondentAccessCode
+      );
+    } else {
+      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    }
 
     await navigateToUploadDocumentsStep(
       dashboardPage,
@@ -265,8 +293,16 @@ test.describe('[integration] Check uploaded documents page', () => {
     checkUploadPage,
     axeUtils,
   }) => {
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    if (isLocalMockCcd) {
+      await basePage.injectCaseSession(
+        contestedCaseWithHearing.caseId,
+        contestedCaseWithHearing.applicantAccessCode,
+        contestedCaseWithHearing.respondentAccessCode
+      );
+    } else {
+      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    }
 
     await navigateToUploadDocumentsStep(
       dashboardPage,
@@ -306,8 +342,16 @@ test.describe('[integration] Check uploaded documents page', () => {
     checkUploadPage,
     axeUtils,
   }) => {
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    if (isLocalMockCcd) {
+      await basePage.injectCaseSession(
+        contestedCaseWithHearing.caseId,
+        contestedCaseWithHearing.applicantAccessCode,
+        contestedCaseWithHearing.respondentAccessCode
+      );
+    } else {
+      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    }
 
     await navigateToUploadDocumentsStep(
       dashboardPage,
@@ -370,8 +414,16 @@ test.describe('[integration] Check uploaded documents page', () => {
     checkUploadPage,
     axeUtils,
   }) => {
-    await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    if (isLocalMockCcd) {
+      await basePage.injectCaseSession(
+        contestedCaseWithHearing.caseId,
+        contestedCaseWithHearing.applicantAccessCode,
+        contestedCaseWithHearing.respondentAccessCode
+      );
+    } else {
+      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
+      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    }
 
     await navigateToUploadDocumentsStep(
       dashboardPage,
@@ -428,3 +480,5 @@ test.describe('[integration] Check uploaded documents page', () => {
   });
 
 });
+
+}
