@@ -144,6 +144,47 @@ describe('DocumentManagerController', () => {
     expect(req.session.documents?.documentDetails?.[0].id).toBe('mock-uuid');
   });
 
+  test('stores generalDocumentUploadDateTime as an ISO timestamp', async () => {
+    const createMock = jest.fn().mockResolvedValue([
+      {
+        originalDocumentName: 'file.pdf',
+        _links: {
+          self: { href: '/doc/1' },
+          binary: { href: '/doc/1/bin' },
+        },
+      },
+    ]);
+
+    (controller as unknown as {
+      getApiClient: () => { create: typeof createMock };
+    }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
+
+    const req = buildRequest({
+      files: [
+        {
+          buffer: Buffer.from('file'),
+          originalname: 'file.pdf',
+        } as Express.Multer.File,
+      ],
+    });
+
+    await controller.uploadDocumentToEvidenceStore(
+      req,
+      'BANK_STATEMENTS' as never
+    );
+
+    const uploadedDoc =
+      req.session.documents?.documentDetails?.[0].value;
+
+    expect(uploadedDoc?.generalDocumentUploadDateTime).toBeDefined();
+
+    expect(
+      new Date(
+        uploadedDoc?.generalDocumentUploadDateTime as string
+      ).toISOString()
+    ).toBe(uploadedDoc?.generalDocumentUploadDateTime);
+  });
+
   test('stores OriginalFileName alongside DocumentFileName', async () => {
     const createMock = jest.fn().mockResolvedValue([
       {
