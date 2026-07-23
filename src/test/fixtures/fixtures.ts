@@ -135,14 +135,9 @@ async function cleanupCreatedContestedCase(caseId: string): Promise<void> {
 
 /**
  * Shared axe audit options used by all @a11y tests.
- *
- * `target-size` (axe rule id, WCAG 2.5.8) is disabled because the violation
- * originates in standard GOV.UK Frontend components (.govuk-service-navigation__link,
- * .govuk-button) whose rendered height/spacing falls below the 24px minimum at the
- * version currently in use (govuk-frontend v6.1.0). This is not something we can
- * fix in this codebase. Re-evaluate when upgrading govuk-frontend.
+ * Runs full accessibility audit with all axe rules enabled.
  */
-export const DEFAULT_AXE_OPTIONS = { disableRules: 'target-size' } as const;
+export const DEFAULT_AXE_OPTIONS = {} as const;
 
 /**
  * The result of a completed login attempt.
