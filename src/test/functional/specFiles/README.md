@@ -186,6 +186,7 @@ await axeUtils.audit(DEFAULT_AXE_OPTIONS);
 - Targeted a11y scripts:
   - `yarn test:playwright:a11y:chrome`
   - `yarn test:playwright:a11y:all-browsers`
+- **All axe rules enabled**: The audit now runs with full accessibility rule coverage; no rules are disabled.
 
 Additional conventions:
 
