@@ -5,9 +5,11 @@ import { CitizenUploadDocumentType } from '../../../main/app/case/definition';
 import { RouteNames, ViewNames } from '../../../main/common-constants';
 
 // Mock the DocumentManagerController
+const mockConvertDocumentToPdfIfNotPdf = jest.fn();
 const mockUploadDocumentToEvidenceStore = jest.fn();
 jest.mock('../../../main/app/document/DocumentManagerController', () => ({
   DocumentManagerController: jest.fn().mockImplementation(() => ({
+    convertDocumentToPdfIfNotPdf: mockConvertDocumentToPdfIfNotPdf,
     uploadDocumentToEvidenceStore: mockUploadDocumentToEvidenceStore,
   })),
 }));
@@ -242,6 +244,7 @@ describe('Home Routes', () => {
         post: mockPost,
         delete: jest.fn(),
       } as unknown as Application;
+      mockConvertDocumentToPdfIfNotPdf.mockReset();
       mockUploadDocumentToEvidenceStore.mockReset();
     });
 
@@ -267,6 +270,7 @@ describe('Home Routes', () => {
       expect(mockReq.session?.uploadErrors).toEqual({
         'form-fm1': 'Your file must be in jpg, png, pdf, docx, or xlsx format',
       });
+      expect(mockConvertDocumentToPdfIfNotPdf).not.toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
     });
 
@@ -348,6 +352,7 @@ describe('Home Routes', () => {
       expect(mockReq.session?.uploadErrors).toEqual({
         'form-fm1': 'The selected file is password protected',
       });
+      expect(mockConvertDocumentToPdfIfNotPdf).not.toHaveBeenCalled();
       expect(mockUploadDocumentToEvidenceStore).not.toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
     });
@@ -374,7 +379,72 @@ describe('Home Routes', () => {
       expect(mockReq.session?.uploadErrors).toEqual({
         'form-fm1': 'You must upload at least one file before continuing',
       });
+      expect(mockConvertDocumentToPdfIfNotPdf).not.toHaveBeenCalled();
       expect(mockUploadDocumentToEvidenceStore).not.toHaveBeenCalled();
+      expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
+    });
+
+    it('should convert document to PDF before uploading to evidence store', async () => {
+      const calls: string[] = [];
+      mockConvertDocumentToPdfIfNotPdf.mockImplementationOnce(async () => {
+        calls.push('convert');
+      });
+      mockUploadDocumentToEvidenceStore.mockImplementationOnce(async () => {
+        calls.push('upload');
+      });
+
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
+      homeRoutes(app);
+
+      const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
+      const mockReq = {
+        files: [{ originalname: 'statement.docx', size: 1024 }],
+        body: { documentType: CitizenUploadDocumentType.BANK_STATEMENTS, returnUrl: '/upload/upload-documents' },
+        session: {
+          save: jest.fn((cb: (err?: Error) => void) => cb()),
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(calls).toEqual(['convert', 'upload']);
+      expect(mockConvertDocumentToPdfIfNotPdf).toHaveBeenCalledWith(mockReq);
+      expect(mockUploadDocumentToEvidenceStore).toHaveBeenCalledWith(
+        mockReq,
+        CitizenUploadDocumentType.BANK_STATEMENTS
+      );
+      expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
+    });
+
+    it('should handle document conversion errors', async () => {
+      mockConvertDocumentToPdfIfNotPdf.mockRejectedValueOnce(new Error('Conversion failed') as never);
+
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
+      homeRoutes(app);
+
+      const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
+      const mockReq = {
+        files: [{ originalname: 'statement.docx', size: 1024 }],
+        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        session: {
+          save: jest.fn((cb: (err?: Error) => void) => cb()),
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockUploadDocumentToEvidenceStore).not.toHaveBeenCalled();
+      expect(mockReq.session?.uploadErrors).toEqual({
+        'form-fm1': 'The selected file could not be uploaded - try again',
+      });
       expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
     });
 

@@ -20,13 +20,37 @@ import {
   CaseDocumentManagementClient,
   Classification
 } from './CaseDocumentManagementClient';
+import { ConvertedUploadedFile, DocumentConversionService } from './DocumentConversionService';
 import {
   PreviouslyUploadedDocumentClient,
   PreviouslyUploadedDocumentsResponse
 } from './PreviouslyUploadedDocumentClient';
 
 export class DocumentManagerController {
-  constructor(private readonly logger: LoggerInstance) {
+  constructor(
+    private readonly logger: LoggerInstance,
+    private readonly documentConversionService = new DocumentConversionService(logger)
+  ) {
+  }
+
+  public async convertDocumentToPdfIfNotPdf(req: AppRequest): Promise<void> {
+    const files = req.files as Express.Multer.File[] | undefined;
+    if (!files?.length) {
+      return;
+    }
+
+    const convertedFiles: ConvertedUploadedFile[] = [];
+
+    try {
+      for (const file of files) {
+        convertedFiles.push(await this.documentConversionService.convertUploadedFileToPdfIfNotPdf(file));
+      }
+
+      req.files = convertedFiles;
+    } catch (error) {
+      await this.documentConversionService.cleanupTemporaryConversionFiles(convertedFiles);
+      throw error;
+    }
   }
 
   public async uploadDocumentToEvidenceStore(
@@ -44,7 +68,8 @@ export class DocumentManagerController {
       throw new Error('No user in session');
     }
 
-    const originalFilenames = (req.files as Express.Multer.File[]).map(file => file.originalname);
+    const originalFilenames = (req.files as ConvertedUploadedFile[])
+      .map(file => file.originalUploadedName ?? file.originalname);
 
     const filesCreated = await this.getApiClient(user).create({
       files: req.files,
