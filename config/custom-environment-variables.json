@@ -34,6 +34,7 @@
     },
     "authProvider": {
       "url": "SERVICE_AUTH_PROVIDER_URL",
+      "microservice": "S2S_MICROSERVICE",
       "secret": "SERVICE_AUTH_SECRET"
     },
     "case": {

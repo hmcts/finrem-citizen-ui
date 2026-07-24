@@ -309,7 +309,7 @@ describe('Enter Case Number Route Handlers', () => {
 
     expect(res.status).toBe(302);
     expect(res.header.location).toBe('/enter-access-code');
-    expect(capturedSession?.caseNumber).toBe('1234-5678-0123-4567');
+    expect(capturedSession?.caseNumber).toBe('1234567801234567'); // Stored without hyphens for CCD API compatibility
     expect(capturedSession?.caseData).toEqual(loadedCaseData);
     expect(capturedSession?.caseNumberErrors).toBeUndefined();
     expect(capturedSession?.tempCaseNumber).toBeUndefined();
