@@ -62,7 +62,7 @@ describe('CaseApi', () => {
 
     await expect(api.getCaseById('1234')).rejects.toThrow('Case could not be retrieved.');
 
-    expect(mockLogger.error).toHaveBeenCalledWith('API Error GET https://example.com');
+    expect(mockLogger.error).toHaveBeenCalledWith('API Error GET https://example.com - No response received');
   });
 
   test('Should catch all errors', async () => {
@@ -142,9 +142,8 @@ describe('CaseApi.addCaseUserRoles', () => {
 
     await expect(api.addCaseUserRoles(assignments)).rejects.toThrow('Case user roles could not be added.');
 
-    expect(mockLogger.error).toHaveBeenCalledWith('API Error post /case-users 500');
-
-    expect(mockLogger.info).toHaveBeenCalledWith('Response: ', {
+    expect(mockLogger.error).toHaveBeenCalledWith('API Error post /case-users - Status: 500');
+    expect(mockLogger.error).toHaveBeenCalledWith('Response data:', {
       error: 'Internal error',
     });
   });
@@ -208,11 +207,11 @@ describe('CaseApiClient.findExistingUserCases', () => {
       .rejects.toThrow('Case could not be retrieved.');
 
     expect(mockLogger.error).toHaveBeenCalledWith(
-      `API Error post ${UrlEndPoints.SearchCases(CASE_TYPE)} 500`
+      `API Error post ${UrlEndPoints.SearchCases(CASE_TYPE)} - Status: 500`
     );
 
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Response: ',
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Response data:',
       { error: 'bad' }
     );
   });
@@ -351,11 +350,11 @@ const applicantAccessCodes = [
     ).rejects.toThrow('Case could not be updated.');
 
     expect(mockLogger.error).toHaveBeenCalledWith(
-      `API Error post ${UrlEndPoints.CaseEvents(CASE_ID)} 400`
+      `API Error post ${UrlEndPoints.CaseEvents(CASE_ID)} - Status: 400`
     );
 
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Response: ',
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Response data:',
       { error: 'bad request' }
     );
   });
@@ -430,11 +429,11 @@ describe('CaseApiClient.getCaseUserRoles', () => {
       .toThrow('Case roles could not be fetched.');
 
     expect(mockLogger.error).toHaveBeenCalledWith(
-      'API Error post case-users/search 500'
+      'API Error post case-users/search - Status: 500'
     );
 
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Response: ',
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Response data:',
       { error: 'Internal error' }
     );
   });
