@@ -196,6 +196,42 @@ describe('getHomePageForUser', () => {
       caseData: undefined
     });
   });
+
+  test('should handle error when checking for NFD case and set hasNFDCase to false', async () => {
+    const nfdError = new Error('NFD case type not available');
+    mockGetExistingUserCase
+      .mockRejectedValueOnce(nfdError)
+      .mockResolvedValueOnce(undefined);
+
+    const result = await homePageUtil.orchestrateHome(
+      userDetails,
+      mockLogger
+    );
+
+    expect(mockGetExistingUserCase).toHaveBeenCalledWith(CaseType.NFD);
+    expect(mockGetExistingUserCase).toHaveBeenCalledWith(CASE_TYPE);
+    expect(userDetails.hasNFDCase).toBe(false);
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Could not check for NFD case (case type may not exist in this environment):',
+      'NFD case type not available'
+    );
+    expect(result).toEqual({
+      url: RouteNames.enterCaseNumber,
+      caseData: undefined
+    });
+  });
+
+  test('should handle error when retrieving Financial Remedy case and route to enterCaseNumber', async () => {
+    const frError = new Error('Permission denied');
+    mockGetExistingUserCase.mockRejectedValueOnce(frError);
+
+    const result = await homePageUtil.getHomePageForUser(userDetails);
+
+    expect(mockGetExistingUserCase).toHaveBeenCalledWith(CASE_TYPE);
+    expect(result).toEqual({
+      url: RouteNames.enterCaseNumber
+    });
+  });
 });
 
 describe('loadCaseAndReloadSession', () => {
