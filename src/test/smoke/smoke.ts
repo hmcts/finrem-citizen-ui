@@ -9,12 +9,12 @@ const testUrl = process.env.TEST_URL || 'http://localhost:3100';
 const axiosConfig = {
   headers: { 'Accept-Encoding': 'gzip' },
   maxRedirects: 0,
-  validateStatus: (status: number) => [200, 302].includes(status),
 };
 
 type SmokePage = {
   name: string;
   path: string;
+  expectedStatuses?: number[];
   expectsLoginRedirect?: boolean;
   expectedRedirectPath?: string;
   responseKind?: 'html' | 'json';
@@ -22,14 +22,18 @@ type SmokePage = {
 
 const pages: SmokePage[] = [
   { name: 'Home', path: PublicRoutes.basePath, expectsLoginRedirect: true },
-  { name: 'Health', path: PublicRoutes.health, responseKind: 'json' },
+  { name: 'Health', path: PublicRoutes.health, expectedStatuses: [200, 503], responseKind: 'json' },
   { name: 'Info', path: PublicRoutes.info, responseKind: 'json' },
   { name: 'Autocomplete', path: PublicRoutes.autocomplete, responseKind: 'json' },
   { name: 'Enter Case Number', path: PrivateRoutes.enterCaseNumber, expectsLoginRedirect: true },
   { name: 'Enter Access Code', path: PrivateRoutes.enterAccessCode, expectsLoginRedirect: true },
   { name: 'Dashboard', path: PrivateRoutes.dashboard, expectsLoginRedirect: true },
   { name: 'Task List Upload Dashboard', path: PrivateRoutes.taskListUpload, expectsLoginRedirect: true },
-  { name: 'Documents', path: PrivateRoutes.documents, expectsLoginRedirect: true },
+  {
+    name: 'Previously Uploaded Documents',
+    path: `${PrivateRoutes.uploadJourney}/previously-uploaded-documents`,
+    expectsLoginRedirect: true,
+  },
   { name: 'Upload Journey Start', path: PrivateRoutes.uploadJourney, expectsLoginRedirect: true },
   {
     name: 'Before You Start',
@@ -94,7 +98,8 @@ function getContentTypeHeader(response: AxiosResponse): string {
 }
 
 function assertSuccessfulPageResponse(response: AxiosResponse, page: SmokePage): void {
-  expect([200, 302]).toContain(response.status);
+  const expectedStatuses = page.expectedStatuses ?? [200, 302];
+  expect(expectedStatuses).toContain(response.status);
 
   if (response.status === 302) {
     const location = response.headers.location;
@@ -130,7 +135,11 @@ function assertSuccessfulPageResponse(response: AxiosResponse, page: SmokePage):
 describe('Smoke Test - Page Availability', () => {
   test.each(pages)('$name page is reachable and valid', async page => {
     const { path } = page;
-    const response = await axios.get(`${testUrl}${path}`, axiosConfig);
+    const expectedStatuses = page.expectedStatuses ?? [200, 302];
+    const response = await axios.get(`${testUrl}${path}`, {
+      ...axiosConfig,
+      validateStatus: (status: number) => expectedStatuses.includes(status),
+    });
     assertSuccessfulPageResponse(response, page);
   });
 

@@ -40,7 +40,6 @@ export const ViewNames = {
   Dashboard: 'dashboard',
   EnterCaseNumber: 'enter-case-number',
   EnterAccessCode: 'enter-access-code',
-  Document: 'document',
   Error: 'error',
   NotFound: 'not-found',
   TaskListUploadDashboard: 'task-list-upload-dashboard',

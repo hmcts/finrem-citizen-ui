@@ -169,6 +169,12 @@ Top-level utility files:
   - CCD mutation correctness
   - complete browser journey correctness
 
+Current route expectations in smoke:
+
+- Smoke route entries are sourced from shared constants (`PublicRoutes`, `PrivateRoutes`, `UploadStepNames`) to reduce drift.
+- `/health` is treated as reachable for both `200` (healthy) and `503` (degraded dependency state), with JSON response assertions.
+- The old standalone `/documents` page route is not smoke-tested as a GET page endpoint; route coverage uses `/upload/previously-uploaded-documents` instead.
+
 ## 7. Accessibility testing
 
 - Accessibility is built into functional testing.

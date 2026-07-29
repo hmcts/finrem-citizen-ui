@@ -8,16 +8,13 @@ import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../../app/auth/user';
 import { getCaseApi } from '../../app/case/case-api';
-import { CaseAssignedUserRole } from '../../app/case/case-roles';
-import { CASE_TYPE } from '../../app/case/case-type';
-import { CaseRole, CitizenUploadDocumentType } from '../../app/case/definition';
+import { CitizenUploadDocumentType } from '../../app/case/definition';
 import { AppRequest, UserDetails } from '../../app/controller/AppRequest';
 import { DocumentManagerController } from '../../app/document/DocumentManagerController';
-import { RouteNames, ViewNames } from '../../common-constants';
+import { RouteNames } from '../../common-constants';
 import { orchestrateHome } from '../../functions/util/homePageUtil';
 import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../../functions/util/uploadValidation';
 import { oidcMiddleware } from '../../middleware';
-import { AppInsights } from '../../modules/appinsights';
 
 export default function (app: Application): void {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
@@ -45,50 +42,6 @@ export default function (app: Application): void {
     const caseworkerUserApi = getCaseApi(systemUser, logger);
     const caseData = await caseworkerUserApi.getCaseById(caseReference);
     res.json(caseData);
-  });
-
-  app.get(RouteNames.caseUserRole, async (req, res) => {
-    const assignments: CaseAssignedUserRole[] = [
-      {
-        case_id: req.params.caseReference,
-        user_id: req.params.userId,
-        case_role: req.params.caseRole as CaseRole,
-      },
-    ];
-    try {
-      const systemUser = await getSystemUser();
-      const caseworkerUserApi = getCaseApi(systemUser, logger);
-
-      await caseworkerUserApi.addUsersToCase(assignments);
-
-      return res.status(200).json({
-        success: true,
-        message: 'User successfully added to case.',
-        data: assignments,
-      });
-    } catch (error) {
-      const err = error as Error;
-      const errorMessage = 'Failed to add user to case.';
-      logger.error('Error adding user to case', { error: err.message });
-      AppInsights.trackException(error, {
-        route: RouteNames.caseUserRole,
-        userId: assignments[0].user_id,
-        caseRole: assignments[0].case_role,
-        caseId: assignments[0].case_id,
-        reason: errorMessage,
-      });
-      return res.status(500).json({
-        success: false,
-        message: errorMessage,
-        error: err.message,
-      });
-    }
-  });
-
-  app.get(RouteNames.retrieveCase, async (req, res) => {
-    const caseApi = getCaseApi(req.session.user as UserDetails, logger);
-    const caseId = await caseApi.getExistingUserCase(CASE_TYPE);
-    res.json({ id: caseId });
   });
 
   const upload = multer({
@@ -135,42 +88,6 @@ export default function (app: Application): void {
   }
 
   const documentController = new DocumentManagerController(logger);
-
-  app.get(RouteNames.documents, oidcMiddleware, (req, res) => {
-    const appReq = req as AppRequest;
-
-    const documentCount =
-      appReq.session.documents?.documentDetails?.length ?? 0;
-
-    const isFDR =
-      appReq.session.documents?.isFinancialDisputeResolution ?? false;
-
-    const documentTypes = Object.entries(CitizenUploadDocumentType).map(
-      ([key, value]) => ({
-        value: key,
-        label: value,
-      })
-    );
-
-    const documents =
-      (appReq.session.documents?.documentDetails ?? []).map(doc => {
-        const url = doc.value?.DocumentLink?.document_url || '';
-
-        const documentId = url.split('/').pop();
-
-        return {
-          ...doc,
-          extractedDocumentId: documentId,
-        };
-      });
-
-    res.render(ViewNames.Document, {
-      documentTypes,
-      documentCount,
-      isFDR,
-      documents,
-    });
-  });
 
   app.post(
     RouteNames.documentUpload,
@@ -350,11 +267,6 @@ export default function (app: Application): void {
       }
     }
   );
-
-  app.get(RouteNames.getCaseRole, oidcMiddleware, async (req, res) => {
-    const user = req.session.user as UserDetails;
-    res.json({ caseRole: user.caseRole });
-  });
 
   app.get(
     RouteNames.documentDownload,
