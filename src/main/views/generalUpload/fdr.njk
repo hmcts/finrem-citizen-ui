@@ -1,6 +1,7 @@
 {% from "govuk/components/radios/macro.njk" import govukRadios %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "../macros/getting-help.njk" import gettingHelp %}
+{% from "../macros/form.njk" import form with context %}
 
 {% extends "template.njk" %}
 
@@ -13,7 +14,7 @@
         <a href="/dashboard" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
       {% endif %}
 
-      <form method="post">
+      {% call form({}) %}
         {{ govukRadios({
           name: "fdrHearing",
           fieldset: {
@@ -46,7 +47,7 @@
         {{ govukButton({
           text: "Continue"
         }) }}
-      </form>
+      {% endcall %}
     </div>
 
     <div class="govuk-grid-column-one-third">

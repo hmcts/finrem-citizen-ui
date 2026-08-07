@@ -9,6 +9,7 @@ import * as path from 'path';
 import { ViewNames } from './common-constants';
 import { contactEmailMiddleware, globalErrorHandler } from './middleware';
 import { AppInsights } from './modules/appinsights';
+import { CSRFToken } from './modules/csrf';
 import { Helmet } from './modules/helmet';
 import { Nunjucks } from './modules/nunjucks';
 import { OIDCModule } from './modules/oidc';
@@ -54,6 +55,9 @@ app.use((req, res, next) => {
 });
 
 new Session().enableFor(app);
+if (config.get<boolean>('useCSRFProtection')) {
+  new CSRFToken().enableFor(app);
+}
 new OIDCModule().enableFor(app);
 
 // Add contact email to all templates via res.locals

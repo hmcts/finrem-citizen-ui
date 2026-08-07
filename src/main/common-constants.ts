@@ -17,6 +17,7 @@ export const TestRoutes = {
 export const PrivateRoutes = {
   caseUserRole: '/case/:caseReference/:userId/:caseRole',
   caseReference: '/case/:caseReference',
+  csrfError: '/csrf-error',
   retrieveCase: '/retrieveCase',
   enterCaseNumber: '/enter-case-number',
   dashboard: '/dashboard',

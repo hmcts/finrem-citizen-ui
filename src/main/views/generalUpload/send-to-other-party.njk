@@ -3,6 +3,7 @@
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "../macros/form.njk" import form with context %}
 
 {% extends "template.njk" %}
 
@@ -45,7 +46,7 @@
         <p class='govuk-body'>If the court has already agreed to send your documents for you, you must email the court to tell them you have uploaded your documents ready for service.</p>"
       }) }}
 
-      <form method="post">
+      {% call form({}) %}
         {{ govukCheckboxes({
           name: "understand",
           items: [
@@ -63,7 +64,7 @@
         {{ govukButton({
           text: "Submit"
         }) }}
-      </form>
+      {% endcall %}
     </div>
 
     <div class="govuk-grid-column-one-third">
