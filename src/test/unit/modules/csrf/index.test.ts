@@ -86,7 +86,7 @@ describe('CSRFToken module', () => {
   it.each([
     ['request-body', makeReq({ body: { _csrf: 'request-body' } })],
     ['request-header', makeReq({ headers: { 'x-csrf-token': 'request-header' } })],
-    ['query-string', makeReq({ query: { _csrf: ['query-string', 'second-token'] }})],
+    ['query-string', makeReq({ query: { _csrf: ['query-string', 'second-token'] } })],
   ])('reads CSRF token from %s', (source, req) => {
     expect(options.getTokenFromRequest(req)).toBe(source);
   });
