@@ -21,7 +21,11 @@ test.describe('[integration] CSRF protection', () => {
     await expect(loggedInPage).toBeTruthy();
     await expect(page).toHaveURL(/\/enter-case-number$/);
 
-    await page.locator('input[name="_csrf"]').fill('invalid-csrf-token');
+    await page.locator('input[name="_csrf"]').evaluate(node => {
+      if (node instanceof HTMLInputElement) {
+        node.value = 'invalid-csrf-token';
+      }
+    });
     await page.getByRole('button', { name: 'Continue' }).click();
 
     await expect(page).toHaveURL(/\/csrf-error$/);
