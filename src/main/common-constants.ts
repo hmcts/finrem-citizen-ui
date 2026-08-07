@@ -3,6 +3,7 @@ export const PublicRoutes = {
   autocomplete: '/autocomplete',
   basePath: '/',
   callbackUrl: '/oauth2/callback',
+  csrfError: '/csrf-error',
   config: '/config',
   health: '/health',
   info: '/info',
@@ -17,7 +18,6 @@ export const TestRoutes = {
 export const PrivateRoutes = {
   caseUserRole: '/case/:caseReference/:userId/:caseRole',
   caseReference: '/case/:caseReference',
-  csrfError: '/csrf-error',
   retrieveCase: '/retrieveCase',
   enterCaseNumber: '/enter-case-number',
   dashboard: '/dashboard',
