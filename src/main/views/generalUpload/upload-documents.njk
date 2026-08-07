@@ -3,6 +3,7 @@
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "govuk/components/error-message/macro.njk" import govukErrorMessage %}
+{% from "../macros/form.njk" import form with context %}
 
 {% extends "template.njk" %}
 
@@ -50,7 +51,13 @@
 
           {% set docTypeError = errors[documentType.value] if errors %}
           <div class="govuk-inset-text govuk-!-margin-top-4{% if docTypeError %} govuk-inset-text--error{% endif %}">
-            <form method="post" action="/documents/upload?documentType={{ documentType.value }}&returnUrl=/upload/upload-documents" enctype="multipart/form-data" data-upload-form="{{ documentType.value }}">
+            {% call form({
+              action: "/documents/upload?documentType=" + documentType.value + "&returnUrl=/upload/upload-documents&_csrf=" + csrfToken,
+              enctype: "multipart/form-data",
+              attributes: {
+                "data-upload-form": documentType.value
+              }
+            }) %}
               <input type="hidden" name="documentType" value="{{ documentType.value }}">
               <input type="hidden" name="returnUrl" value="/upload/upload-documents">
 
@@ -80,7 +87,7 @@
                   "aria-label": "Upload file for " + documentType.label
                 }
               }) }}
-            </form>
+            {% endcall %}
           </div>
 
           <h3 class="govuk-heading-s govuk-!-margin-top-6">Uploaded files</h3>
@@ -99,8 +106,9 @@
                        class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-2"
                        data-remove-file="{{ file.id }}"
                        data-document-type="{{ documentType.value }}"
+                       data-csrf-token="{{ csrfToken }}"
                        aria-label="Remove {{ file.displayFilename }}">
-                      Remove document
+                       Remove document
                     </a>
                   </li>
                 {% endfor %}
@@ -118,11 +126,11 @@
         <p class="govuk-body">No document types selected. Please go back and select the documents you want to upload.</p>
       {% endif %}
 
-      <form method="post" class="govuk-!-margin-top-8">
+      {% call form({ classes: "govuk-!-margin-top-8" }) %}
         {{ govukButton({
           text: "Continue"
         }) }}
-      </form>
+      {% endcall %}
     </div>
 
     <div class="govuk-grid-column-one-third">

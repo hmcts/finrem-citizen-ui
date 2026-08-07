@@ -2,7 +2,13 @@ import type { NextFunction, Request, RequestHandler, Response } from 'express';
 
 import { RouteNames } from '../common-constants';
 
-const PUBLIC_PATHS = [RouteNames.login, RouteNames.callbackUrl, RouteNames.info, '/favicon.ico'];
+const PUBLIC_PATHS = [
+  RouteNames.login,
+  RouteNames.callbackUrl,
+  RouteNames.csrfError,
+  RouteNames.info,
+  '/favicon.ico'
+];
 const PUBLIC_PREFIXES = [RouteNames.health];
 
 export const oidcMiddleware: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {

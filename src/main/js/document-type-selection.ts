@@ -80,10 +80,12 @@ class DocumentTypeSelectionManager {
     }
 
     try {
+      const csrfToken = this.getCsrfToken();
       const response = await fetch(DocumentTypeSelectionManager.ENDPOINTS.ADD, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
         },
         body: JSON.stringify(this.selectedDocumentType),
       });
@@ -116,8 +118,12 @@ class DocumentTypeSelectionManager {
 
   private async removeDocumentType(index: number): Promise<void> {
     try {
+      const csrfToken = this.getCsrfToken();
       const response = await fetch(`${DocumentTypeSelectionManager.ENDPOINTS.REMOVE}/${index}`, {
         method: 'DELETE',
+        headers: {
+          ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
+        },
       });
 
       if (!response.ok) {
@@ -184,6 +190,12 @@ class DocumentTypeSelectionManager {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  private getCsrfToken(): string | undefined {
+    const tokenInput = this.container?.querySelector('input[name="_csrf"]') as HTMLInputElement | null;
+    const token = tokenInput?.value?.trim();
+    return token || undefined;
   }
 }
 
