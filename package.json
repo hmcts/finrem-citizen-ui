@@ -138,7 +138,7 @@
     "@grpc/grpc-js": "1.14.4",
     "basic-ftp": "6.0.2",
     "handlebars": "4.7.9",
-    "ip-address": "10.3.1",
+    "ip-address": "^10.3.1",
     "shell-quote": "1.10.0",
     "follow-redirects": "1.16.0",
     "node-gyp": "13.0.1",
