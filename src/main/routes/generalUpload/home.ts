@@ -11,7 +11,8 @@ import { getCaseApi } from '../../app/case/case-api';
 import { CitizenUploadDocumentType } from '../../app/case/definition';
 import { AppRequest, UserDetails } from '../../app/controller/AppRequest';
 import { DocumentManagerController } from '../../app/document/DocumentManagerController';
-import { RouteNames } from '../../common-constants';
+import { RouteNames } from '../../constants';
+import { FileUploadInputFieldNames } from '../../constants/file-upload';
 import { orchestrateHome } from '../../functions/util/homePageUtil';
 import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../../functions/util/uploadValidation';
 import { oidcMiddleware } from '../../middleware';
@@ -93,7 +94,7 @@ export default function (app: Application): void {
     RouteNames.documentUpload,
     oidcMiddleware,
     checkContentLength,
-    upload.any(),
+    upload.single(FileUploadInputFieldNames.documentFile),
     (err: Error, req: Request, res: Response, next: (error?: Error) => void) => {
       if (err) {
         const documentType = req.body.documentType as string;

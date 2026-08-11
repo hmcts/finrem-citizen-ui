@@ -1,4 +1,3 @@
-
 export const PublicRoutes = {
   autocomplete: '/autocomplete',
   basePath: '/',
@@ -64,7 +63,6 @@ export const CaseUserNames = {
   RESPONDENT: 'Respondent',
 } as const;
 
-
 export const UrlEndPoints = {
   CaseEvents: (caseId: string): string => `/cases/${caseId}/events`,
   CaseEventTrigger: (caseId: string, eventId: string) => `/cases/${caseId}/event-triggers/${eventId}`,
@@ -78,13 +76,6 @@ export const UrlEndPoints = {
   PreviouslyUploadedDocuments: (caseId: string, userRole: string) => `/cases/${caseId}/event-triggers/${userRole}`,
 } as const;
 
-/**
- * Maps document types that should be auto-renamed to their rename format.
- * Format: UserName-{RenameFormat}-DD-MM-YY
- *
- * If a document type is in this object, it will be auto-renamed.
- * If not, it keeps its original filename.
- */
 export const DOCUMENT_RENAME_FORMATS: Record<string, string> = {
   'family-mediation-information-and-assessment-meeting-miam-form-form-fm1': 'FormFM1',
   'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5': 'FormFM5',
@@ -94,7 +85,7 @@ export const DOCUMENT_RENAME_FORMATS: Record<string, string> = {
   'certificate-of-service-form-fp6': 'FP6',
   'response-to-the-notice-of-first-appointment-form-g': 'FormG',
   'position-statement': 'PositionStatement',
-  'chronology': 'Chronology',
+  chronology: 'Chronology',
   'statement-of-issues': 'StatementOfIssues',
   'composite-case-summary-form-es1': 'ES1',
   'composite-schedule-of-assets-and-income-form-es2': 'ES2',
@@ -109,27 +100,18 @@ export const DOCUMENT_RENAME_FORMATS: Record<string, string> = {
   'pension-report-expert-report': 'ExpertReports',
   'hearing-bundle': 'bundle',
   'fdr-bundle': 'bundle',
-  'attachments-to-form-e': 'AttachmentsFormE'
+  'attachments-to-form-e': 'AttachmentsFormE',
 };
 
-/**
- * Maps document types to their combined PDF naming format.
- * Format: UserName-{CombinedFormat}-DD-MM-YY
- *
- * Multiple uploaded files of these types will be combined into a single PDF
- * with the specified naming convention when submitted.
- */
 export const DOCUMENT_COMBINED_PDF_FORMATS: Record<string, string> = {
   'updating-disclosure': 'UpdatingDisclosure',
   'attachments-to-form-e': 'AttachmentsFormE',
   'reply-to-questionnaire-supporting-documents': 'ReplyToQuestionnaireSupportingDocuments',
   'reply-to-schedule-of-deficiencies-or-supplemental-questionnaires-supporting-documents': 'ReplyToScheduleOfDeficienciesSupportingDocuments',
-
-  // Supporting financial documents (all share the same combined format)
   'bank-statements': 'SupportingFinancialDocuments',
-  'payslips': 'SupportingFinancialDocuments',
-  'p60': 'SupportingFinancialDocuments',
-  'p45': 'SupportingFinancialDocuments',
+  payslips: 'SupportingFinancialDocuments',
+  p60: 'SupportingFinancialDocuments',
+  p45: 'SupportingFinancialDocuments',
   'debt-statement': 'SupportingFinancialDocuments',
   'list-of-assets': 'SupportingFinancialDocuments',
   'loan-statement': 'SupportingFinancialDocuments',
@@ -142,7 +124,7 @@ export const DOCUMENT_COMBINED_PDF_FORMATS: Record<string, string> = {
   'mortgage-statements-for-family-home': 'SupportingFinancialDocuments',
   'investment-statements': 'SupportingFinancialDocuments',
   'business-accounts': 'SupportingFinancialDocuments',
-  'p11d': 'SupportingFinancialDocuments',
+  p11d: 'SupportingFinancialDocuments',
   'tax-assessments': 'SupportingFinancialDocuments',
   'income-evidence': 'SupportingFinancialDocuments',
   'pension-statement': 'SupportingFinancialDocuments',

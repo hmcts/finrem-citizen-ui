@@ -54,12 +54,12 @@
               <input type="hidden" name="documentType" value="{{ documentType.value }}">
               <input type="hidden" name="returnUrl" value="/upload/upload-documents">
 
-              {{ govukFileUpload({
-                id: "file-upload-" + documentType.value,
-                name: "file",
-                label: {
-                  text: "Upload a file",
-                  classes: "govuk-label--s"
+                {{ govukFileUpload({
+                  id: "file-upload-" + documentType.value,
+                  name: FileUploadInputFieldNames.documentFile,
+                  label: {
+                    text: "Upload a file",
+                    classes: "govuk-label--s"
                 },
                 hint: {
                   text: "Files must be in jpg, png, pdf, docx or xlsx format."

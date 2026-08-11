@@ -3,7 +3,7 @@ import express, { Application } from 'express';
 import session from 'express-session';
 import request from 'supertest';
 
-import { PublicRoutes } from '../../../main/common-constants';
+import { PublicRoutes } from '../../../main/constants';
 import autocompleteRoute from '../../../main/routes/generalUpload/autocomplete';
 
 describe('Autocomplete Route', () => {

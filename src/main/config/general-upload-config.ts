@@ -1,6 +1,6 @@
 import type { Request } from 'express';
 
-import { UploadStepNames, ViewNames } from '../common-constants';
+import { UploadStepNames, ViewNames } from '../constants';
 import { toDocumentTypeKey } from '../functions/util/documentUtil';
 
 export type UploadStepId = typeof UploadStepNames[keyof typeof UploadStepNames];

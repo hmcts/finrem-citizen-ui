@@ -2,7 +2,7 @@ import { describe, expect, test } from '@jest/globals';
 import request from 'supertest';
 
 import { app } from '../../../main/app';
-import { PublicRoutes } from '../../../main/common-constants';
+import { PublicRoutes } from '../../../main/constants';
 
 describe('Public Endpoints (No Authentication Required)', () => {
   test('GET /info returns build and runtime metadata', async () => {

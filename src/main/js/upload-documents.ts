@@ -1,9 +1,8 @@
+import { FILE_UPLOAD_ALLOWED_EXTENSIONS, FILE_UPLOAD_MAX_SIZE_BYTES } from '../constants/file-upload';
 import { getLogger } from './logger';
 
 const logger = getLogger('upload-documents');
 
-const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
-const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.pdf', '.docx', '.xlsx'];
 const ERROR_MESSAGE_SIZE = 'Your file must be smaller than 100MB';
 const ERROR_MESSAGE_TYPE = 'Your file must be in jpg, png, pdf, docx, or xlsx format';
 
@@ -13,7 +12,7 @@ function getFileExtension(filename: string): string {
 
 function isValidFileType(filename: string): boolean {
   const ext = getFileExtension(filename);
-  return ALLOWED_EXTENSIONS.includes(ext);
+  return FILE_UPLOAD_ALLOWED_EXTENSIONS.includes(ext);
 }
 
 function showErrorSummary(documentType: string, inputId: string, errorMessage: string): void {
@@ -112,7 +111,7 @@ export function initUploadValidation(): void {
       }
       
       // Then check file size
-      if (file.size > MAX_FILE_SIZE_BYTES) {
+      if (file.size > FILE_UPLOAD_MAX_SIZE_BYTES) {
         const fileSizeMB = Math.round(file.size / 1024 / 1024);
         logger.warn(`File too large: ${fileSizeMB}MB (max 100MB)`);
         showClientError(form, input, ERROR_MESSAGE_SIZE);
@@ -142,7 +141,7 @@ export function initUploadValidation(): void {
       }
       
       // Check file size
-      if (file.size > MAX_FILE_SIZE_BYTES) {
+      if (file.size > FILE_UPLOAD_MAX_SIZE_BYTES) {
         e.preventDefault();
         const fileSizeMB = Math.round(file.size / 1024 / 1024);
         logger.warn(`File too large on submit: ${fileSizeMB}MB (max 100MB)`);

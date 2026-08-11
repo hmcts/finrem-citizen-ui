@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 import { Application, Request, Response } from 'express';
 
 import { CitizenUploadDocumentType } from '../../../main/app/case/definition';
-import { RouteNames } from '../../../main/common-constants';
+import { RouteNames } from '../../../main/constants';
 
 // Mock the DocumentManagerController
 const mockUploadDocumentToEvidenceStore = jest.fn();

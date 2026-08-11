@@ -3,7 +3,7 @@ import { Application, NextFunction, Request, Response } from 'express';
 
 import { CaseRole } from '../../../main/app/case/definition';
 import { DocumentManagerController } from '../../../main/app/document/DocumentManagerController';
-import { RouteNames, UploadStepNames } from '../../../main/common-constants';
+import { RouteNames, UploadStepNames } from '../../../main/constants';
 import setupGeneralUploadRoute from '../../../main/routes/generalUpload';
 
 jest.mock('../../../main/app/document/DocumentManagerController', () => ({

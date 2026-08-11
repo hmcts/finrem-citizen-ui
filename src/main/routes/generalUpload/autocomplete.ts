@@ -1,6 +1,6 @@
 import { Application, Request, Response } from 'express';
 
-import { RouteNames } from '../../common-constants';
+import { RouteNames } from '../../constants';
 import documentTypes from '../../models/document-types.json';
 
 interface DocumentType {

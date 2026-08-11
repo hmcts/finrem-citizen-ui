@@ -1,7 +1,7 @@
 import express, { Application } from 'express';
 import request from 'supertest';
 
-import { RouteNames } from '../../main/common-constants';
+import { RouteNames } from '../../main/constants';
 import setupLogoutRoute from '../../main/routes/logout';
 
 jest.mock('config', () => ({
