@@ -35,7 +35,7 @@ export class DocumentManagerController {
   ): Promise<void> {
     this.logger.info('Uploading document via CDAM');
 
-    if (!req.files?.length || req.headers.accept?.includes('application/json')) {
+    if (!req.file || req.headers.accept?.includes('application/json')) {
       throw new Error('No files were uploaded');
     }
 
@@ -44,10 +44,12 @@ export class DocumentManagerController {
       throw new Error('No user in session');
     }
 
-    const originalFilenames = (req.files as Express.Multer.File[]).map(file => file.originalname);
+    const uploadedFile = req.file as Express.Multer.File;
+    const uploadedFiles = [uploadedFile];
+    const originalFilenames = [uploadedFile.originalname];
 
     const filesCreated = await this.getApiClient(user).create({
-      files: req.files,
+      files: uploadedFiles,
       classification: Classification.Public,
       documentType,
       caseUserName: req.session.caseUserName,

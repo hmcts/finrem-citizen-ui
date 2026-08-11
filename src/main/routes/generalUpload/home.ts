@@ -73,9 +73,13 @@ export default function (app: Application): void {
     next();
   }
 
+  function getUploadedFiles(req: Request): Express.Multer.File[] | undefined {
+    return req.file ? [req.file] : undefined;
+  }
+
   async function cleanupUploadedFiles(files: Express.Multer.File[] | undefined): Promise<void> {
     await Promise.all((files ?? [])
-      .filter(file => !!file.path)
+      .filter((file): file is Express.Multer.File => !!file?.path)
       .map(async file => {
         try {
           await fs.unlink(file.path);
@@ -94,7 +98,7 @@ export default function (app: Application): void {
     RouteNames.documentUpload,
     oidcMiddleware,
     checkContentLength,
-    upload.single(FileUploadInputFieldNames.documentFile),
+    upload.single(FileUploadInputFieldNames.file),
     (err: Error, req: Request, res: Response, next: (error?: Error) => void) => {
       if (err) {
         const documentType = req.body.documentType as string;
@@ -138,9 +142,10 @@ export default function (app: Application): void {
       try {
         const documentType = req.body.documentType as string;
         const returnUrl = req.body.returnUrl || RouteNames.documents;
+        const uploadedFiles = getUploadedFiles(req);
 
         // Validate uploaded file
-        const validationError = await validateUploadedFile(req.files as Express.Multer.File[]);
+        const validationError = await validateUploadedFile(uploadedFiles);
         if (validationError) {
           return redirectWithError(req, res, next, documentType, returnUrl, validationError);
         }
@@ -169,7 +174,7 @@ export default function (app: Application): void {
           return redirectWithError(req, res, next, documentType, returnUrl, FILE_VALIDATION_ERRORS.UPLOAD_FAILED);
         }
 
-        await cleanupUploadedFiles(req.files as Express.Multer.File[]);
+        await cleanupUploadedFiles(uploadedFiles);
 
         // Clear errors on successful upload
         if (req.session.uploadErrors) {
@@ -186,7 +191,7 @@ export default function (app: Application): void {
           res.redirect(returnUrl);
         });
       } catch (error) {
-        await cleanupUploadedFiles(req.files as Express.Multer.File[]);
+        await cleanupUploadedFiles(getUploadedFiles(req));
         next(error);
       }
     }
@@ -200,7 +205,7 @@ export default function (app: Application): void {
     returnUrl: string,
     errorMessage: string
   ): void {
-    void cleanupUploadedFiles(req.files as Express.Multer.File[]);
+    void cleanupUploadedFiles(getUploadedFiles(req));
 
     // Store error in session
     if (!req.session.uploadErrors) {
