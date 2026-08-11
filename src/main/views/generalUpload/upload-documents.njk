@@ -52,7 +52,7 @@
           {% set docTypeError = errors[documentType.value] if errors %}
           <div class="govuk-inset-text govuk-!-margin-top-4{% if docTypeError %} govuk-inset-text--error{% endif %}">
             {% call form({
-              action: "/documents/upload?documentType=" + documentType.value + "&returnUrl=/upload/upload-documents",
+              action: "/documents/upload?documentType=" + documentType.value + "&returnUrl=/upload/upload-documents&_csrf=" + csrfToken,
               enctype: "multipart/form-data",
               attributes: {
                 "data-upload-form": documentType.value
