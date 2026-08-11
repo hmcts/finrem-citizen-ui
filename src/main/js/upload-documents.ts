@@ -1,3 +1,4 @@
+import { getCsrfHeaders } from './csrf';
 import { getLogger } from './logger';
 
 const logger = getLogger('upload-documents');
@@ -154,17 +155,6 @@ export function initUploadValidation(): void {
 }
 
 export function initUploadedDocuments(): void {
-  const getCsrfToken = (): string | undefined => {
-    const linkToken = document.querySelector<HTMLElement>('[data-remove-file]')?.getAttribute('data-csrf-token')?.trim();
-    if (linkToken) {
-      return linkToken;
-    }
-
-    const tokenInput = document.querySelector<HTMLInputElement>('input[name="_csrf"]');
-    const token = tokenInput?.value?.trim();
-    return token || undefined;
-  };
-
   document.querySelectorAll('[data-remove-file]').forEach(button => {
     button.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -177,13 +167,9 @@ export function initUploadedDocuments(): void {
       }
       
       try {
-        const linkElement = button as HTMLElement;
-        const csrfToken = linkElement.getAttribute('data-csrf-token')?.trim() || getCsrfToken();
         const response = await fetch(`/documents/remove/${fileId}`, {
           method: 'DELETE',
-          headers: {
-            ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
-          },
+          headers: getCsrfHeaders(),
         });
         
         if (!response.ok) {

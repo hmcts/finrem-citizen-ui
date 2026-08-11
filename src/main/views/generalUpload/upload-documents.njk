@@ -52,7 +52,7 @@
           {% set docTypeError = errors[documentType.value] if errors %}
           <div class="govuk-inset-text govuk-!-margin-top-4{% if docTypeError %} govuk-inset-text--error{% endif %}">
             {% call form({
-              action: "/documents/upload?documentType=" + documentType.value + "&returnUrl=/upload/upload-documents&_csrf=" + csrfToken,
+              action: "/documents/upload?documentType=" + documentType.value + "&returnUrl=/upload/upload-documents",
               enctype: "multipart/form-data",
               attributes: {
                 "data-upload-form": documentType.value
@@ -106,7 +106,6 @@
                        class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-2"
                        data-remove-file="{{ file.id }}"
                        data-document-type="{{ documentType.value }}"
-                       data-csrf-token="{{ csrfToken }}"
                        aria-label="Remove {{ file.displayFilename }}">
                        Remove document
                     </a>
