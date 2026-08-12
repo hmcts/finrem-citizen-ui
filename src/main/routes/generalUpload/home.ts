@@ -13,9 +13,9 @@ import { AppRequest, UserDetails } from '../../app/controller/AppRequest';
 import { DocumentManagerController } from '../../app/document/DocumentManagerController';
 import { RouteNames } from '../../constants';
 import {
-  FileUploadInputFieldNames,
-  FILE_UPLOAD_MAX_SIZE_LABEL,
   FILE_UPLOAD_MAX_SIZE_BYTES,
+  FILE_UPLOAD_MAX_SIZE_LABEL,
+  FileUploadInputFieldNames,
   ONE_MEGABYTE_IN_BYTES,
 } from '../../constants/file-upload';
 import { orchestrateHome } from '../../functions/util/homePageUtil';

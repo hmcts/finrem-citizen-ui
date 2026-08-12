@@ -3,7 +3,7 @@ import { Application, Request, Response } from 'express';
 
 import { CitizenUploadDocumentType } from '../../../main/app/case/definition';
 import { RouteNames } from '../../../main/constants';
-import { ONE_MEGABYTE_IN_BYTES, FILE_UPLOAD_MAX_SIZE_BYTES } from '../../../main/constants/file-upload';
+import { FILE_UPLOAD_MAX_SIZE_BYTES,ONE_MEGABYTE_IN_BYTES } from '../../../main/constants/file-upload';
 
 const FILE_UPLOAD_TOO_LARGE_ERROR = 'Your file must be smaller than 100MB';
 const MAX_CONTENT_LENGTH_BYTES = FILE_UPLOAD_MAX_SIZE_BYTES + ONE_MEGABYTE_IN_BYTES;

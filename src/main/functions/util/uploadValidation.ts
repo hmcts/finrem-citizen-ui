@@ -3,8 +3,8 @@ import { open } from 'fs/promises';
 
 import {
   FILE_UPLOAD_ALLOWED_EXTENSIONS,
-  FILE_UPLOAD_MAX_SIZE_LABEL,
   FILE_UPLOAD_MAX_SIZE_BYTES,
+  FILE_UPLOAD_MAX_SIZE_LABEL,
 } from '../../constants/file-upload';
 
 export const FILE_VALIDATION_ERRORS = {

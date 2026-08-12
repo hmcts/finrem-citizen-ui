@@ -1,7 +1,7 @@
 import {
   FILE_UPLOAD_ALLOWED_EXTENSIONS,
-  FILE_UPLOAD_MAX_SIZE_LABEL,
   FILE_UPLOAD_MAX_SIZE_BYTES,
+  FILE_UPLOAD_MAX_SIZE_LABEL,
   ONE_MEGABYTE_IN_BYTES,
 } from '../constants/file-upload';
 import { getLogger } from './logger';
