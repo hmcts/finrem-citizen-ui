@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import type { Application, NextFunction, Request, Response } from 'express';
 
 import { CaseRole } from '../../../main/app/case/definition';
-import { RouteNames, ViewNames } from '../../../main/common-constants';
+import { RouteNames, ViewNames } from '../../../main/constants';
 import { requireCaseRole } from '../../../main/middleware/require-case-role';
 import setupDashboardRoute from '../../../main/routes/generalUpload/dashboard';
 

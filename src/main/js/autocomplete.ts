@@ -2,7 +2,7 @@
 
 import accessibleAutocomplete from 'accessible-autocomplete';
 
-import { PublicRoutes } from '../common-constants';
+import { PublicRoutes } from '../constants';
 
 interface AutocompleteResult {
   id: number;

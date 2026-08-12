@@ -2,7 +2,7 @@
 import { describe, expect, test } from '@jest/globals';
 import axios, { AxiosResponse } from 'axios';
 
-import { PrivateRoutes, PublicRoutes, UploadStepNames } from '../../main/common-constants';
+import { PrivateRoutes, PublicRoutes, UploadStepNames } from '../../main/constants';
 
 const testUrl = process.env.TEST_URL || 'http://localhost:3100';
 

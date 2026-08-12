@@ -1,5 +1,5 @@
-import { UploadStepNames } from '../../../main/common-constants';
 import { uploadSteps } from '../../../main/config/general-upload-config';
+import { UploadStepNames } from '../../../main/constants';
 
 describe('General Upload Configuration', () => {
   describe(UploadStepNames.PUD, () => {
