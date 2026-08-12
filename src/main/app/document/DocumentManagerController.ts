@@ -4,6 +4,7 @@ import { Response } from 'express';
 import { v4 as generateUuid } from 'uuid';
 import { LoggerInstance } from 'winston';
 
+import { extractDocumentIdFromUrl, getCaseDocumentsByRole } from '../../functions/util/documentAccess';
 import { loadCaseAndReloadSession } from '../../functions/util/homePageUtil';
 import { AppInsights } from '../../modules/appinsights';
 import { getSystemUser } from '../auth/user';
@@ -194,8 +195,49 @@ export class DocumentManagerController {
       res.status(403).send('Forbidden');
       return;
     }
+
+    if (!this.userCanAccessDocument(req, documentId)) {
+      this.logger.warn('Document download forbidden: document not accessible for user', {
+        caseId,
+        documentId,
+        caseRole: req.session.user?.caseRole,
+      });
+      res.status(403).send('Forbidden');
+      return;
+    }
+
     const systemUser = await getSystemUser();
     await this.getApiClient(systemUser).getDocument(res, documentId);
+  }
+
+  private userCanAccessDocument(req: AppRequest, documentId: string): boolean {
+    return this.sessionContainsDocumentId(req, documentId)
+      || this.caseDataContainsDocumentIdForRole(req, documentId);
+  }
+
+  private sessionContainsDocumentId(req: AppRequest, documentId: string): boolean {
+    const sessionDocuments = req.session.documents?.documentDetails ?? [];
+
+    return sessionDocuments.some(document => {
+      const documentUrl = document?.value?.DocumentLink?.document_url;
+      return extractDocumentIdFromUrl(documentUrl) === documentId;
+    });
+  }
+
+  private caseDataContainsDocumentIdForRole(req: AppRequest, documentId: string): boolean {
+    const caseRole = req.session.user?.caseRole;
+    const caseData = req.session.caseData;
+
+    if (!caseRole || !caseData) {
+      return false;
+    }
+
+    const documents = getCaseDocumentsByRole(caseRole, caseData);
+
+    return (documents ?? []).some(document => {
+      const documentUrl = document?.value?.DocumentLink?.document_url;
+      return extractDocumentIdFromUrl(documentUrl) === documentId;
+    });
   }
 
   public async previouslyUploadedDocuments(
