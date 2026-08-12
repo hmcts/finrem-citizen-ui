@@ -1,11 +1,15 @@
 import { createReadStream } from 'fs';
 import { open } from 'fs/promises';
 
-import { FILE_UPLOAD_ALLOWED_EXTENSIONS, FILE_UPLOAD_MAX_SIZE_BYTES } from '../../constants/file-upload';
+import {
+  FILE_UPLOAD_ALLOWED_EXTENSIONS,
+  FILE_UPLOAD_MAX_SIZE_LABEL,
+  FILE_UPLOAD_MAX_SIZE_BYTES,
+} from '../../constants/file-upload';
 
 export const FILE_VALIDATION_ERRORS = {
   INVALID_TYPE: 'Your file must be in jpg, png, pdf, docx, or xlsx format',
-  TOO_LARGE: 'Your file must be smaller than 100MB',
+  TOO_LARGE: `Your file must be smaller than ${FILE_UPLOAD_MAX_SIZE_LABEL}`,
   EMPTY: 'The selected file is empty',
   UPLOAD_FAILED: 'The selected file could not be uploaded - try again',
   NO_FILE: 'You must upload at least one file before continuing',

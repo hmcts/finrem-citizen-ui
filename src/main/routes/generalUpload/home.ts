@@ -12,7 +12,12 @@ import { CitizenUploadDocumentType } from '../../app/case/definition';
 import { AppRequest, UserDetails } from '../../app/controller/AppRequest';
 import { DocumentManagerController } from '../../app/document/DocumentManagerController';
 import { RouteNames } from '../../constants';
-import { FileUploadInputFieldNames } from '../../constants/file-upload';
+import {
+  FileUploadInputFieldNames,
+  FILE_UPLOAD_MAX_SIZE_LABEL,
+  FILE_UPLOAD_MAX_SIZE_BYTES,
+  ONE_MEGABYTE_IN_BYTES,
+} from '../../constants/file-upload';
 import { orchestrateHome } from '../../functions/util/homePageUtil';
 import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../../functions/util/uploadValidation';
 import { oidcMiddleware } from '../../middleware';
@@ -53,13 +58,13 @@ export default function (app: Application): void {
       },
     }),
     limits: {
-      fileSize: 100 * 1024 * 1024, // 100MB max file size
+      fileSize: FILE_UPLOAD_MAX_SIZE_BYTES,
     },
   });
 
-  // Allow a small buffer above 100MB to account for multipart encoding overhead
-  // (boundaries, field names, headers) so a file exactly at 100MB is not wrongly rejected.
-  const MAX_UPLOAD_BYTES = 101 * 1024 * 1024;
+  // Allow a small buffer above max file size to account for multipart encoding overhead
+  // (boundaries, field names, headers) so a file exactly at the configured limit is not wrongly rejected.
+  const MAX_UPLOAD_BYTES = FILE_UPLOAD_MAX_SIZE_BYTES + ONE_MEGABYTE_IN_BYTES;
 
   // Reject oversized uploads using the Content-Length header BEFORE Multer reads the body.
   function checkContentLength(req: Request, res: Response, next: (error?: Error) => void): void {
@@ -109,7 +114,7 @@ export default function (app: Application): void {
           if (err.code === 'LIMIT_FILE_SIZE') {
             logger.warn('File size limit exceeded', {
               fieldname: err.field,
-              limit: '100MB'
+              limit: FILE_UPLOAD_MAX_SIZE_LABEL,
             });
             return redirectWithError(
               req,

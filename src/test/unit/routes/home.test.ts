@@ -3,6 +3,10 @@ import { Application, Request, Response } from 'express';
 
 import { CitizenUploadDocumentType } from '../../../main/app/case/definition';
 import { RouteNames } from '../../../main/constants';
+import { ONE_MEGABYTE_IN_BYTES, FILE_UPLOAD_MAX_SIZE_BYTES } from '../../../main/constants/file-upload';
+
+const FILE_UPLOAD_TOO_LARGE_ERROR = 'Your file must be smaller than 100MB';
+const MAX_CONTENT_LENGTH_BYTES = FILE_UPLOAD_MAX_SIZE_BYTES + ONE_MEGABYTE_IN_BYTES;
 
 // Mock the DocumentManagerController
 const mockUploadDocumentToEvidenceStore = jest.fn();
@@ -195,7 +199,7 @@ describe('Home Routes', () => {
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
-        file: { originalname: 'test.pdf', size: 101 * 1024 * 1024 },
+        file: { originalname: 'test.pdf', size: FILE_UPLOAD_MAX_SIZE_BYTES + 1 },
         body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
@@ -209,7 +213,7 @@ describe('Home Routes', () => {
       await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
 
       expect(mockReq.session?.uploadErrors).toEqual({
-        'form-fm1': 'Your file must be smaller than 100MB',
+        'form-fm1': FILE_UPLOAD_TOO_LARGE_ERROR,
       });
       expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
     });
@@ -430,7 +434,7 @@ describe('Home Routes', () => {
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
 
       const mockReq = {
-        file: { originalname: 'huge.pdf', size: 101 * 1024 * 1024 },
+        file: { originalname: 'huge.pdf', size: FILE_UPLOAD_MAX_SIZE_BYTES + 1 },
         body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
@@ -445,7 +449,7 @@ describe('Home Routes', () => {
 
       // Our validation should catch it
       expect(mockReq.session?.uploadErrors).toEqual({
-        'form-fm1': 'Your file must be smaller than 100MB',
+        'form-fm1': FILE_UPLOAD_TOO_LARGE_ERROR,
       });
     });
 
@@ -511,7 +515,7 @@ describe('Home Routes', () => {
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
-        file: { originalname: 'large.pdf', size: 100 * 1024 * 1024 }, // Exactly 100MB
+        file: { originalname: 'large.pdf', size: FILE_UPLOAD_MAX_SIZE_BYTES }, // Exactly max size
         body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
@@ -560,7 +564,7 @@ describe('Home Routes', () => {
       errorHandler(multerError, mockReq as unknown as Request, mockRes as Response, mockNext);
 
       expect(mockReq.session?.uploadErrors).toEqual({
-        'form-fm1': 'Your file must be smaller than 100MB',
+        'form-fm1': FILE_UPLOAD_TOO_LARGE_ERROR,
       });
       expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
     });
@@ -638,7 +642,7 @@ describe('Home Routes', () => {
       const checkContentLength = postCalls[0][2] as HomeHandler;
 
       const mockReq = {
-        headers: { 'content-length': String(200 * 1024 * 1024) },
+        headers: { 'content-length': String(MAX_CONTENT_LENGTH_BYTES + 1) },
         query: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
         body: {},
         session: {
@@ -653,7 +657,7 @@ describe('Home Routes', () => {
       checkContentLength(mockReq as unknown as Request, mockRes as Response, mockNext);
 
       expect(mockReq.session?.uploadErrors).toEqual({
-        'form-fm1': 'Your file must be smaller than 100MB',
+        'form-fm1': FILE_UPLOAD_TOO_LARGE_ERROR,
       });
       expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
       expect(mockNext).not.toHaveBeenCalled();
