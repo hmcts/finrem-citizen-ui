@@ -63,7 +63,7 @@ export default function (app: Application): void {
   });
 
   // Allow a small buffer above max file size to account for multipart encoding overhead
-  // (boundaries, field names, headers) so a file exactly at the configured limit is not wrongly rejected.
+  // (boundaries, field names, headers) so a file exactly at the limit is not wrongly rejected.
   const MAX_UPLOAD_BYTES = FILE_UPLOAD_MAX_SIZE_BYTES + ONE_MEGABYTE_IN_BYTES;
 
   // Reject oversized uploads using the Content-Length header BEFORE Multer reads the body.
