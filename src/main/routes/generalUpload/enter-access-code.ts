@@ -250,8 +250,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
 
       // All validations passed - proceed to dashboard
       logger.info('Access code validated successfully', {
-        caseNumber: req.session.caseNumber,
-        accessCode: trimmedAccessCode,
+        caseNumber: req.session.caseNumber
       });
 
       // Remove hyphens from case number for CCD API calls
