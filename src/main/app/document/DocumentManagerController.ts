@@ -209,6 +209,33 @@ export class DocumentManagerController {
     await this.getApiClient(systemUser).getDocument(res, documentId);
   }
 
+  public async previouslyUploadedDocuments(
+    req: AppRequest,
+    res: Response,
+    caseId: string
+  ): Promise<PreviouslyUploadedDocumentsResponse> {
+    const user = req.session.user;
+
+    if (!user) {
+      throw new Error('No user in session');
+    }
+
+    if (!req.session.caseNumber || req.session.caseNumber !== caseId) {
+      res.status(403).send('Forbidden');
+      throw new Error('Forbidden');
+    }
+
+    const caseRole = req.session.user?.caseRole;
+    this.logger.info('is Applicant or respondent', caseRole);
+
+    const documentCollection = this.getDocumentCollection(user.caseRole as string);
+
+    const systemUser = await getSystemUser();
+    const previouslyUploadedDocumentClient = new PreviouslyUploadedDocumentClient(systemUser);
+
+    return previouslyUploadedDocumentClient.getPreviouslyUploadedDocuments(caseId, documentCollection);
+  }
+
   private userCanAccessDocument(req: AppRequest, documentId: string): boolean {
     return this.sessionContainsDocumentId(req, documentId)
       || this.caseDataContainsDocumentIdForRole(req, documentId);
@@ -237,33 +264,6 @@ export class DocumentManagerController {
       const documentUrl = document?.value?.DocumentLink?.document_url;
       return extractDocumentIdFromUrl(documentUrl) === documentId;
     });
-  }
-
-  public async previouslyUploadedDocuments(
-    req: AppRequest,
-    res: Response,
-    caseId: string
-  ): Promise<PreviouslyUploadedDocumentsResponse> {
-    const user = req.session.user;
-
-    if (!user) {
-      throw new Error('No user in session');
-    }
-
-    if (!req.session.caseNumber || req.session.caseNumber !== caseId) {
-      res.status(403).send('Forbidden');
-      throw new Error('Forbidden');
-    }
-
-    const caseRole = req.session.user?.caseRole;
-    this.logger.info('is Applicant or respondent', caseRole);
-
-    const documentCollection = this.getDocumentCollection(user.caseRole as string);
-
-    const systemUser = await getSystemUser();
-    const previouslyUploadedDocumentClient = new PreviouslyUploadedDocumentClient(systemUser);
-
-    return previouslyUploadedDocumentClient.getPreviouslyUploadedDocuments(caseId, documentCollection);
   }
 
   private formatUploadTime(): string {
