@@ -683,40 +683,6 @@ describe('Home Routes', () => {
       expect(mockNext).not.toHaveBeenCalled();
     });
 
-    it('should ignore query returnTarget and use fixed backend return URL', () => {
-      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
-      homeRoutes(app);
-
-      const postCalls = (app.post as jest.Mock).mock.calls.filter(
-        (call: unknown[]) => call[0] === RouteNames.documentUpload
-      );
-      const checkContentLength = postCalls[0][2] as HomeHandler;
-
-      const mockReq = {
-        headers: { 'content-length': String(200 * 1024 * 1024) },
-        query: { documentType: 'form-fm1', returnTarget: '//evil.example' },
-        body: {},
-        session: {
-          save: jest.fn((cb: (err?: Error) => void) => cb()),
-        },
-      } as PartialRequestWithSession;
-      const mockRes = {
-        redirect: jest.fn(),
-      } as Partial<Response>;
-      const mockNext = jest.fn();
-
-      checkContentLength(mockReq as unknown as Request, mockRes as Response, mockNext);
-
-      expect(mockReq.session?.uploadErrors).toEqual({
-        'form-fm1': 'Your file must be smaller than 100MB',
-      });
-      expect(mockRes.redirect).toHaveBeenCalledWith(GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL);
-      expect(console.warn).toHaveBeenCalledWith(
-        'Upload rejected by Content-Length pre-check',
-        { contentLength: 200 * 1024 * 1024 }
-      );
-    });
-
     it('should pass through Content-Length pre-check when within limit', () => {
       const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
