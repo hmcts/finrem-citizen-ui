@@ -199,8 +199,7 @@ export class DocumentManagerController {
     if (!this.userCanAccessDocument(req, documentId)) {
       this.logger.warn('Document download forbidden: document not accessible for user', {
         caseId,
-        documentId,
-        caseRole: req.session.user?.caseRole,
+        documentId
       });
       res.status(403).send('Forbidden');
       return;
