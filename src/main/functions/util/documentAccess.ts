@@ -1,5 +1,8 @@
 import { CaseRole } from '../../app/case/definition';
 
+const DUMMY_BASE_URL = 'http://localhost';
+const DOCUMENT_PATH_SEGMENT = 'documents';
+
 type CaseRoleDocumentCollections<T> = {
   citizenApplicantDocument?: T[];
   citizenRespondentDocument?: T[];
@@ -20,13 +23,13 @@ export function getCaseDocumentsByRole<T>(
 
 export function extractDocumentIdFromUrl(documentUrl?: string): string | undefined {
   if (!documentUrl) {
-    return undefined;
+    return;
   }
 
   try {
-    const pathname = new URL(documentUrl, 'http://localhost').pathname;
+    const pathname = new URL(documentUrl, DUMMY_BASE_URL).pathname;
     const pathSegments = pathname.split('/').filter(Boolean);
-    const documentSegmentIndex = pathSegments.findIndex(segment => segment === 'documents');
+    const documentSegmentIndex = pathSegments.findIndex(segment => segment === DOCUMENT_PATH_SEGMENT);
 
     if (documentSegmentIndex >= 0) {
       return pathSegments[documentSegmentIndex + 1];
@@ -34,6 +37,6 @@ export function extractDocumentIdFromUrl(documentUrl?: string): string | undefin
 
     return pathSegments[pathSegments.length - 1];
   } catch {
-    return undefined;
+    return;
   }
 }
