@@ -57,6 +57,12 @@ describe('documentAccess', () => {
       expect(result).toBe('f6b20958-b1d9-4cda-8354-8b8236ef299d');
     });
 
+    it('extracts document id from /documents/{id}/binary URL', () => {
+      const result = extractDocumentIdFromUrl('http://dm-store/documents/f6b20958-b1d9-4cda-8354-8b8236ef299d/binary');
+
+      expect(result).toBe('f6b20958-b1d9-4cda-8354-8b8236ef299d');
+    });
+
     it('extracts document id when query string is present', () => {
       const result = extractDocumentIdFromUrl('http://dm-store/documents/doc-123?download=true');
 
