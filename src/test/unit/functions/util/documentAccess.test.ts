@@ -46,6 +46,12 @@ describe('documentAccess', () => {
 
   describe('extractDocumentIdFromUrl', () => {
     it('extracts document id from /documents/{id} URL', () => {
+      const result = extractDocumentIdFromUrl('http://dm-store/documents');
+
+      expect(result).toBe(undefined);
+    });
+
+    it('extracts document id from /documents/{id} URL', () => {
       const result = extractDocumentIdFromUrl('http://dm-store/documents/f6b20958-b1d9-4cda-8354-8b8236ef299d');
 
       expect(result).toBe('f6b20958-b1d9-4cda-8354-8b8236ef299d');
