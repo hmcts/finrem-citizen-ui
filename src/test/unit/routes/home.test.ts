@@ -3,6 +3,7 @@ import { Application, Request, Response } from 'express';
 
 import { CitizenUploadDocumentType } from '../../../main/app/case/definition';
 import { RouteNames } from '../../../main/common-constants';
+import { GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL } from '../../../main/steps/general-upload-sequence';
 
 // Mock the DocumentManagerController
 const mockUploadDocumentToEvidenceStore = jest.fn();
@@ -171,7 +172,7 @@ describe('Home Routes', () => {
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
         files: [{ originalname: 'test.txt', size: 1024 }],
-        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
@@ -196,7 +197,7 @@ describe('Home Routes', () => {
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
         files: [{ originalname: 'test.pdf', size: 101 * 1024 * 1024 }],
-        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
@@ -221,7 +222,7 @@ describe('Home Routes', () => {
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
         files: [{ originalname: 'test.pdf', size: 0 }],
-        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
@@ -252,7 +253,7 @@ describe('Home Routes', () => {
             buffer: Buffer.from('%PDF-1.7\n1 0 obj\n<< /Encrypt 2 0 R >>\nendobj'),
           },
         ],
-        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
@@ -278,7 +279,7 @@ describe('Home Routes', () => {
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
         files: [],
-        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
@@ -297,7 +298,7 @@ describe('Home Routes', () => {
       expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
     });
 
-    it('should use default returnUrl when not provided', async () => {
+    it('should use fixed backend return URL', async () => {
       const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
@@ -316,7 +317,30 @@ describe('Home Routes', () => {
 
       await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
 
-      expect(mockRes.redirect).toHaveBeenCalledWith(RouteNames.documents);
+      expect(mockRes.redirect).toHaveBeenCalledWith(GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL);
+    });
+
+    it('should ignore body returnTarget and use fixed backend return URL', async () => {
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
+      homeRoutes(app);
+
+      const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
+      const mockReq = {
+        files: [{ originalname: 'test.txt', size: 1024 }],
+        body: { documentType: 'form-fm1', returnTarget: 'https://evil.example/phish' },
+        session: {
+          save: jest.fn((cb: (err?: Error) => void) => cb()),
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith(GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL);
+      expect(console.warn).not.toHaveBeenCalled();
     });
 
     it('should handle CDAM upload errors', async () => {
@@ -328,7 +352,7 @@ describe('Home Routes', () => {
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
         files: [{ originalname: 'test.pdf', size: 1024 }],
-        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
@@ -355,7 +379,7 @@ describe('Home Routes', () => {
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
         files: [{ originalname: 'test.pdf', size: 1024 }],
-        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: { documentType: 'form-fm1' },
         session: {
           uploadErrors: { 'form-fm1': 'Old error', 'other-doc': 'Other error' },
           save: jest.fn((cb: (err?: Error) => void) => cb()),
@@ -382,7 +406,7 @@ describe('Home Routes', () => {
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
         files: [{ originalname: 'test.pdf', size: 1024 }],
-        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: { documentType: 'form-fm1' },
         session: {
           uploadErrors: { 'form-fm1': 'Old error' },
           save: jest.fn((cb: (err?: Error) => void) => cb()),
@@ -410,7 +434,7 @@ describe('Home Routes', () => {
       const saveError = new Error('Session save failed');
       const mockReq = {
         files: [{ originalname: 'test.pdf', size: 1024 }],
-        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb(saveError)),
         },
@@ -433,7 +457,7 @@ describe('Home Routes', () => {
 
       const mockReq = {
         files: [{ originalname: 'huge.pdf', size: 101 * 1024 * 1024 }],
-        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
@@ -460,7 +484,7 @@ describe('Home Routes', () => {
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
         files: [{ originalname: 'test.pdf', size: 1024 }],
-        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
@@ -486,7 +510,7 @@ describe('Home Routes', () => {
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
         files: [{ originalname: 'test.pdf', size: 1024 }],
-        body: { documentType: CitizenUploadDocumentType.BANK_STATEMENTS, returnUrl: '/upload/upload-documents' },
+        body: { documentType: CitizenUploadDocumentType.BANK_STATEMENTS },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
@@ -514,7 +538,7 @@ describe('Home Routes', () => {
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
         files: [{ originalname: 'large.pdf', size: 100 * 1024 * 1024 }], // Exactly 100MB
-        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
@@ -547,7 +571,7 @@ describe('Home Routes', () => {
       const multerError = new multer.MulterError('LIMIT_FILE_SIZE', 'file');
 
       const mockReq = {
-        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
@@ -582,7 +606,7 @@ describe('Home Routes', () => {
       const multerError = new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'file');
 
       const mockReq = {
-        body: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
@@ -639,7 +663,7 @@ describe('Home Routes', () => {
 
       const mockReq = {
         headers: { 'content-length': String(200 * 1024 * 1024) },
-        query: { documentType: 'form-fm1', returnUrl: '/upload/upload-documents' },
+        query: { documentType: 'form-fm1' },
         body: {},
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
@@ -655,8 +679,42 @@ describe('Home Routes', () => {
       expect(mockReq.session?.uploadErrors).toEqual({
         'form-fm1': 'Your file must be smaller than 100MB',
       });
-      expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
+      expect(mockRes.redirect).toHaveBeenCalledWith(GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL);
       expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it('should ignore query returnTarget and use fixed backend return URL', () => {
+      const homeRoutes = require('../../../main/routes/generalUpload/home').default;
+      homeRoutes(app);
+
+      const postCalls = (app.post as jest.Mock).mock.calls.filter(
+        (call: unknown[]) => call[0] === RouteNames.documentUpload
+      );
+      const checkContentLength = postCalls[0][2] as HomeHandler;
+
+      const mockReq = {
+        headers: { 'content-length': String(200 * 1024 * 1024) },
+        query: { documentType: 'form-fm1', returnTarget: '//evil.example' },
+        body: {},
+        session: {
+          save: jest.fn((cb: (err?: Error) => void) => cb()),
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      checkContentLength(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockReq.session?.uploadErrors).toEqual({
+        'form-fm1': 'Your file must be smaller than 100MB',
+      });
+      expect(mockRes.redirect).toHaveBeenCalledWith(GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL);
+      expect(console.warn).toHaveBeenCalledWith(
+        'Upload rejected by Content-Length pre-check',
+        { contentLength: 200 * 1024 * 1024 }
+      );
     });
 
     it('should pass through Content-Length pre-check when within limit', () => {
