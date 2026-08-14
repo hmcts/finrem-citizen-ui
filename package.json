@@ -145,6 +145,7 @@
     "flatted": "^3.4.0",
     "picomatch": "4.0.5",
     "protobufjs": "8.7.1",
+    "uuid": "14.0.1",
     "@opentelemetry/sdk-node": "0.221.0",
     "@opentelemetry/exporter-prometheus": "0.221.0",
     "@opentelemetry/core": "^2.8.0",
