@@ -60,7 +60,7 @@
     "connect-redis": "^8.1.0",
     "cookie-parser": "1.4.7",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.2.1",
+    "express-rate-limit": "^8.6.0",
     "express-session": "1.19.0",
     "fs-extra": "^11.3.4",
     "glob": "13.0.6",
