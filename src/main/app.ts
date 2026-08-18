@@ -11,9 +11,7 @@ import { Helmet } from './modules/helmet';
 import { Nunjucks } from './modules/nunjucks';
 import { OIDCModule } from './modules/oidc';
 import { PropertiesVolume } from './modules/properties-volume';
-import {
-  createDefaultRateLimiter,
-} from './modules/rate-limiter';
+import { createDefaultRateLimiter } from './modules/rate-limiter';
 import { Session } from './modules/session';
 
 const { setupDev } = require('./development');

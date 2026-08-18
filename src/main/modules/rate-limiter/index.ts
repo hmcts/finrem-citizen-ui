@@ -83,11 +83,11 @@ function readRateLimitRedisPrefix(): string {
   return DEFAULT_RATE_LIMIT_REDIS_PREFIX;
 }
 
-function readRateLimitConfig(configKey: string, fallback: number): number {
+function readRateLimitConfig(configKey: string, defaultValue: number): number {
   const value = readConfigValue<unknown>(configKey);
 
   if (value === undefined) {
-    return fallback;
+    return defaultValue;
   }
 
   const numericValue = Number(value);
@@ -95,8 +95,9 @@ function readRateLimitConfig(configKey: string, fallback: number): number {
     return numericValue;
   }
 
-  logInvalidConfigValue(configKey, value, fallback);
-  return fallback;
+  logInvalidConfigValue(configKey, value, defaultValue);
+
+  return defaultValue;
 }
 
 function readConfigValue<T>(configKey: string): T | undefined {

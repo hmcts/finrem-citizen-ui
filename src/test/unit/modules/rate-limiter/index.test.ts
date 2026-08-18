@@ -33,6 +33,31 @@ import {
   createRedisRateLimitStore,
 } from '../../../../main/modules/rate-limiter';
 
+const DEFAULT_WINDOW_MS = 900000;
+const DEFAULT_MAX_REQUESTS = 100;
+const DEFAULT_REDIS_PREFIX = 'finrem-rate-limit:';
+
+type LimiterConfig = {
+  skip: (req: { method: string }) => boolean;
+  keyGenerator: (req: {
+    session?: { user?: { id?: string } };
+    ip?: string;
+    socket?: { remoteAddress?: string };
+  }) => string;
+};
+
+function mockConfig(configValues: Record<string, unknown>): void {
+  configHasMock.mockImplementation(
+    (key: unknown) => Object.prototype.hasOwnProperty.call(configValues, String(key))
+  );
+  configGetMock.mockImplementation((key: unknown) => configValues[String(key)]);
+}
+
+function createLimiterConfig(redisClient?: { call: (...args: string[]) => Promise<unknown> }): LimiterConfig {
+  createDefaultRateLimiter(redisClient as never);
+  return rateLimitMock.mock.calls[0][0] as LimiterConfig;
+}
+
 describe('rate limiter config fallback behavior', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -43,20 +68,13 @@ describe('rate limiter config fallback behavior', () => {
     createDefaultRateLimiter();
 
     expect(rateLimitMock).toHaveBeenCalledWith(expect.objectContaining({
-      windowMs: 900000,
-      max: 100,
+      windowMs: DEFAULT_WINDOW_MS,
+      max: DEFAULT_MAX_REQUESTS,
     }));
   });
 
   it('uses configured max when config value is a positive integer', () => {
-    configHasMock.mockImplementation((key: unknown) => key === 'rateLimit.maxRequests');
-    configGetMock.mockImplementation((key: unknown) => {
-      if (key === 'rateLimit.maxRequests') {
-        return '321';
-      }
-
-      return undefined;
-    });
+    mockConfig({ 'rateLimit.maxRequests': '321' });
 
     createDefaultRateLimiter();
 
@@ -64,37 +82,23 @@ describe('rate limiter config fallback behavior', () => {
   });
 
   it('falls back and logs warning when configured max is invalid', () => {
-    configHasMock.mockImplementation((key: unknown) => key === 'rateLimit.maxRequests');
-    configGetMock.mockImplementation((key: unknown) => {
-      if (key === 'rateLimit.maxRequests') {
-        return 'not-a-number';
-      }
-
-      return undefined;
-    });
+    mockConfig({ 'rateLimit.maxRequests': 'not-a-number' });
 
     createDefaultRateLimiter();
 
-    expect(rateLimitMock).toHaveBeenCalledWith(expect.objectContaining({ max: 100 }));
+    expect(rateLimitMock).toHaveBeenCalledWith(expect.objectContaining({ max: DEFAULT_MAX_REQUESTS }));
     expect(warnMock).toHaveBeenCalledWith(
       'Invalid rate limit config value. Using fallback.',
       expect.objectContaining({
         configKey: 'rateLimit.maxRequests',
         configuredValue: 'not-a-number',
-        fallback: 100,
+        fallback: DEFAULT_MAX_REQUESTS,
       })
     );
   });
 
   it('uses configured window when rateLimit.windowMs is set', () => {
-    configHasMock.mockImplementation((key: unknown) => key === 'rateLimit.windowMs');
-    configGetMock.mockImplementation((key: unknown) => {
-      if (key === 'rateLimit.windowMs') {
-        return '120000';
-      }
-
-      return undefined;
-    });
+    mockConfig({ 'rateLimit.windowMs': '120000' });
 
     createDefaultRateLimiter();
 
@@ -109,19 +113,12 @@ describe('rate limiter config fallback behavior', () => {
     expect(redisStoreMock).toHaveBeenCalledTimes(1);
     expect(rateLimitMock).toHaveBeenCalledWith(expect.objectContaining({
       store: expect.objectContaining({ options: expect.any(Object) }),
-      max: 100,
+      max: DEFAULT_MAX_REQUESTS,
     }));
   });
 
   it('creates redis store using configured prefix and redis call command bridge', async () => {
-    configHasMock.mockImplementation((key: unknown) => key === 'rateLimit.redisPrefix');
-    configGetMock.mockImplementation((key: unknown) => {
-      if (key === 'rateLimit.redisPrefix') {
-        return 'custom-rl:';
-      }
-
-      return undefined;
-    });
+    mockConfig({ 'rateLimit.redisPrefix': 'custom-rl:' });
 
     const redisCallMock = jest.fn(async () => 'OK');
     const redisClient = { call: redisCallMock };
@@ -144,49 +141,30 @@ describe('rate limiter config fallback behavior', () => {
   });
 
   it('falls back to default redis prefix when configured prefix is invalid', () => {
-    configHasMock.mockImplementation((key: unknown) => key === 'rateLimit.redisPrefix');
-    configGetMock.mockImplementation((key: unknown) => {
-      if (key === 'rateLimit.redisPrefix') {
-        return '   ';
-      }
-
-      return undefined;
-    });
+    mockConfig({ 'rateLimit.redisPrefix': '   ' });
 
     createRedisRateLimitStore({ call: jest.fn() } as never);
 
-    expect(redisStoreMock).toHaveBeenCalledWith(expect.objectContaining({ prefix: 'finrem-rate-limit:' }));
+    expect(redisStoreMock).toHaveBeenCalledWith(expect.objectContaining({ prefix: DEFAULT_REDIS_PREFIX }));
     expect(warnMock).toHaveBeenCalledWith(
       'Invalid rate limit config value. Using fallback.',
       expect.objectContaining({
         configKey: 'rateLimit.redisPrefix',
         configuredValue: '   ',
-        fallback: 'finrem-rate-limit:',
+        fallback: DEFAULT_REDIS_PREFIX,
       })
     );
   });
 
   it('skips non-POST requests', () => {
-    createDefaultRateLimiter();
-
-    const limiterConfig = rateLimitMock.mock.calls[0][0] as {
-      skip: (req: { method: string }) => boolean;
-    };
+    const limiterConfig = createLimiterConfig();
 
     expect(limiterConfig.skip({ method: 'GET' })).toBe(true);
     expect(limiterConfig.skip({ method: 'POST' })).toBe(false);
   });
 
   it('uses IDAM user id for rate limit key when available', () => {
-    createDefaultRateLimiter();
-
-    const limiterConfig = rateLimitMock.mock.calls[0][0] as {
-      keyGenerator: (req: {
-        session?: { user?: { id?: string } };
-        ip?: string;
-        socket?: { remoteAddress?: string };
-      }) => string;
-    };
+    const limiterConfig = createLimiterConfig();
 
     const key = limiterConfig.keyGenerator({
       session: { user: { id: '12345' } },
@@ -198,15 +176,7 @@ describe('rate limiter config fallback behavior', () => {
   });
 
   it('falls back to IP key when user id is missing', () => {
-    createDefaultRateLimiter();
-
-    const limiterConfig = rateLimitMock.mock.calls[0][0] as {
-      keyGenerator: (req: {
-        session?: { user?: { id?: string } };
-        ip?: string;
-        socket?: { remoteAddress?: string };
-      }) => string;
-    };
+    const limiterConfig = createLimiterConfig();
 
     const key = limiterConfig.keyGenerator({ ip: '10.10.10.10' });
 
