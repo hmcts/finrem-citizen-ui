@@ -320,14 +320,14 @@ describe('Home Routes', () => {
       expect(mockRes.redirect).toHaveBeenCalledWith(GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL);
     });
 
-    it('should ignore body returnTarget and use fixed backend return URL', async () => {
+    it('should ignore body returnUrl and use fixed backend return URL', async () => {
       const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
         files: [{ originalname: 'test.txt', size: 1024 }],
-        body: { documentType: 'form-fm1', returnTarget: 'https://evil.example/phish' },
+        body: { documentType: 'form-fm1', returnUrl: 'https://evil.example/phish' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
         },
