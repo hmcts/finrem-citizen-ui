@@ -2,7 +2,6 @@ provider "azurerm" {
   features {}
 }
 
-# No-op change to trigger CI/CD pipeline run.
 locals {
   azureVaultName = "finrem-${var.env}"
 }
