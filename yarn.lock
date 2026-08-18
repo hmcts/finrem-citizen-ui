@@ -8754,6 +8754,7 @@ __metadata:
     otplib: "npm:13.4.1"
     prettier: "npm:3.9.6"
     proper-lockfile: "npm:^4.1.2"
+    rate-limit-redis: "npm:^6.0.1"
     sass: "npm:1.102.0"
     sass-loader: "npm:17.0.0"
     style-loader: "npm:4.0.0"
@@ -12650,6 +12651,15 @@ __metadata:
   version: 1.2.1
   resolution: "range-parser@npm:1.2.1"
   checksum: 10/ce21ef2a2dd40506893157970dc76e835c78cf56437e26e19189c48d5291e7279314477b06ac38abd6a401b661a6840f7b03bd0b1249da9b691deeaa15872c26
+  languageName: node
+  linkType: hard
+
+"rate-limit-redis@npm:^6.0.1":
+  version: 6.0.1
+  resolution: "rate-limit-redis@npm:6.0.1"
+  peerDependencies:
+    express-rate-limit: ">= 8.6.0"
+  checksum: 10/20275f341dc58d4989bb3ef1a3acc07bdffc0f7cffdc0fd9061c10cad077bf017a52ad5695cb50f8739387812db52dc7e2037c99109355525cc850e5a43ad433
   languageName: node
   linkType: hard
 

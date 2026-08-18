@@ -58,6 +58,10 @@
       "DOCUMENT-UPLOAD-EMAIL-TEMPLATE-ID": "FINREM_CITIZEN_UI_TEMPLATE_ID"
     }
   },
-  "rateLimitWindowMs": 900000
+  "rateLimit": {
+    "windowMs": 900000,
+    "maxRequests": 100,
+    "redisPrefix": "finrem-rate-limit:"
+  }
 
 }
