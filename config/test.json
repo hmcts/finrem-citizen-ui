@@ -1,5 +1,1 @@
-{
-  "rateLimit": {
-    "maxRequests": 10000
-  }
-}
+{}
