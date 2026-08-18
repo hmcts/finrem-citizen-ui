@@ -12,8 +12,7 @@ import { Nunjucks } from './modules/nunjucks';
 import { OIDCModule } from './modules/oidc';
 import { PropertiesVolume } from './modules/properties-volume';
 import {
-  createAuthenticatedRateLimiter,
-  createRedisRateLimitStore,
+  createDefaultRateLimiter,
 } from './modules/rate-limiter';
 import { Session } from './modules/session';
 
@@ -46,11 +45,7 @@ app.use((req, res, next) => {
 new Session().enableFor(app);
 new OIDCModule().enableFor(app);
 
-const redisRateLimitStore = app.locals.redisClient
-  ? createRedisRateLimitStore(app.locals.redisClient)
-  : undefined;
-
-app.use(Object.values(PrivateRoutes), createAuthenticatedRateLimiter(redisRateLimitStore));
+app.use(Object.values(PrivateRoutes), createDefaultRateLimiter(app.locals.redisClient));
 
 // Add contact email to all templates via res.locals
 app.use(contactEmailMiddleware);

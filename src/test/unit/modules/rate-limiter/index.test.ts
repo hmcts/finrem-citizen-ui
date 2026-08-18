@@ -29,7 +29,7 @@ jest.mock('rate-limit-redis', () => ({
 }));
 
 import {
-  createAuthenticatedRateLimiter,
+  ccreateDefaultRateLimiter,
   createRedisRateLimitStore,
 } from '../../../../main/modules/rate-limiter';
 
@@ -40,7 +40,7 @@ describe('rate limiter config fallback behavior', () => {
   });
 
   it('uses fallback when rateLimit.maxRequests config is missing', () => {
-    createAuthenticatedRateLimiter();
+    ccreateDefaultRateLimiter();
 
     expect(rateLimitMock).toHaveBeenCalledWith(expect.objectContaining({
       windowMs: 900000,
@@ -58,7 +58,7 @@ describe('rate limiter config fallback behavior', () => {
       return undefined;
     });
 
-    createAuthenticatedRateLimiter();
+    ccreateDefaultRateLimiter();
 
     expect(rateLimitMock).toHaveBeenCalledWith(expect.objectContaining({ max: 321 }));
   });
@@ -73,7 +73,7 @@ describe('rate limiter config fallback behavior', () => {
       return undefined;
     });
 
-    createAuthenticatedRateLimiter();
+    ccreateDefaultRateLimiter();
 
     expect(rateLimitMock).toHaveBeenCalledWith(expect.objectContaining({ max: 20 }));
     expect(warnMock).toHaveBeenCalledWith(
@@ -96,7 +96,7 @@ describe('rate limiter config fallback behavior', () => {
       return undefined;
     });
 
-    createAuthenticatedRateLimiter();
+    ccreateDefaultRateLimiter();
 
     expect(rateLimitMock).toHaveBeenCalledWith(expect.objectContaining({ windowMs: 120000 }));
   });
@@ -104,7 +104,7 @@ describe('rate limiter config fallback behavior', () => {
   it('passes provided store to express-rate-limit', () => {
     const store = { name: 'redis-store' };
 
-    createAuthenticatedRateLimiter(store as never);
+    ccreateDefaultRateLimiter(store as never);
 
     expect(rateLimitMock).toHaveBeenCalledWith(expect.objectContaining({
       store,
@@ -166,7 +166,7 @@ describe('rate limiter config fallback behavior', () => {
   });
 
   it('skips non-POST requests', () => {
-    createAuthenticatedRateLimiter();
+    ccreateDefaultRateLimiter();
 
     const limiterConfig = rateLimitMock.mock.calls[0][0] as {
       skip: (req: { method: string }) => boolean;
@@ -177,7 +177,7 @@ describe('rate limiter config fallback behavior', () => {
   });
 
   it('uses IDAM user id for rate limit key when available', () => {
-    createAuthenticatedRateLimiter();
+    ccreateDefaultRateLimiter();
 
     const limiterConfig = rateLimitMock.mock.calls[0][0] as {
       keyGenerator: (req: {
@@ -197,7 +197,7 @@ describe('rate limiter config fallback behavior', () => {
   });
 
   it('falls back to IP key when user id is missing', () => {
-    createAuthenticatedRateLimiter();
+    ccreateDefaultRateLimiter();
 
     const limiterConfig = rateLimitMock.mock.calls[0][0] as {
       keyGenerator: (req: {
