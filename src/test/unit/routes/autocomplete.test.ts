@@ -19,10 +19,32 @@ describe('Autocomplete Route', () => {
         saveUninitialized: true,
       })
     );
+    app.use((req, _res, next) => {
+      (req.session as unknown as Record<string, unknown>).user = { id: 'test-user-id' };
+      next();
+    });
     autocompleteRoute(app);
   });
 
   describe('GET /autocomplete', () => {
+    it('should redirect unauthenticated users to login', async () => {
+      const unauthenticatedApp = express();
+      unauthenticatedApp.use(express.json());
+      unauthenticatedApp.use(
+        session({
+          secret: 'test-secret',
+          resave: false,
+          saveUninitialized: true,
+        })
+      );
+      autocompleteRoute(unauthenticatedApp);
+
+      const response = await request(unauthenticatedApp).get(PublicRoutes.autocomplete).query({ q: 'bank' });
+
+      expect(response.status).toBe(302);
+      expect(response.headers.location).toBe(PublicRoutes.login);
+    });
+
     it('should return all document types when query is empty', async () => {
       const response = await request(app).get(PublicRoutes.autocomplete).query({ q: '' });
 
@@ -84,7 +106,9 @@ describe('Autocomplete Route', () => {
         })
       );
       testApp.use((req, _res, next) => {
-        (req.session as unknown as Record<string, unknown>).DocumentSelection = {
+        const sessionData = req.session as unknown as Record<string, unknown>;
+        sessionData.user = { id: 'test-user-id' };
+        sessionData.DocumentSelection = {
           documentDetails: [
             {
               id: 'uuid-1',
