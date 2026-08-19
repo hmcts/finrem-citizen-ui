@@ -7,16 +7,20 @@ import { type RedisReply, RedisStore } from 'rate-limit-redis';
 
 const logger = Logger.getLogger('rate-limiter');
 
+const RATE_LIMIT_REDIS_PREFIX_CONFIG_KEY = 'rateLimit.redisPrefix';
+const RATE_LIMIT_WINDOW_MS_CONFIG_KEY = 'rateLimit.windowMs';
+const RATE_LIMIT_MAX_REQUESTS_CONFIG_KEY = 'rateLimit.maxRequests';
+const DEFAULT_RATE_LIMIT_REDIS_PREFIX = 'finrem-rate-limit:';
 const DEFAULT_RATE_LIMIT_WINDOW_MS = 900000; // 15 minutes
 const DEFAULT_RATE_LIMIT_MAX_REQUESTS = 100;
-const DEFAULT_RATE_LIMIT_REDIS_PREFIX = 'finrem-rate-limit:';
-const RATE_LIMIT_REDIS_PREFIX_CONFIG_KEY = 'rateLimit.redisPrefix';
+
+const RATE_LIMIT_HEADER_FORMAT: Options['standardHeaders'] = 'draft-8';
 
 type RateLimiterStore = Options['store'];
 
 export const createDefaultRateLimiter = (redisClient?: Redis): ReturnType<typeof rateLimit> => {
-  const windowMs = readRateLimitConfig('rateLimit.windowMs', DEFAULT_RATE_LIMIT_WINDOW_MS);
-  const maxRequests = readRateLimitConfig('rateLimit.maxRequests', DEFAULT_RATE_LIMIT_MAX_REQUESTS);
+  const windowMs = readRateLimitConfig(RATE_LIMIT_WINDOW_MS_CONFIG_KEY, DEFAULT_RATE_LIMIT_WINDOW_MS);
+  const maxRequests = readRateLimitConfig(RATE_LIMIT_MAX_REQUESTS_CONFIG_KEY, DEFAULT_RATE_LIMIT_MAX_REQUESTS);
   const store = redisClient ? createRedisRateLimitStore(redisClient) : undefined;
 
   return createRateLimiter(windowMs, maxRequests, store);
@@ -30,12 +34,18 @@ export const createRedisRateLimitStore = (redisClient: Redis): RateLimiterStore 
 };
 
 const createRateLimiter = (windowMs: number, maxRequests: number, store?: RateLimiterStore) => {
+  logger.info('Creating rate limiter', {
+    windowMs,
+    maxRequests,
+    store: store ? 'Redis' : 'Memory',
+  });
+
   return rateLimit({
     windowMs,
     max: maxRequests,
     ...(store ? { store } : {}),
     legacyHeaders: false,
-    standardHeaders: 'draft-8',
+    standardHeaders: RATE_LIMIT_HEADER_FORMAT,
     skip: req => req.method !== 'POST',
     keyGenerator: rateLimitKeyGenerator,
     handler: (req, res) => {
@@ -76,9 +86,7 @@ function readRateLimitRedisPrefix(): string {
     return value;
   }
 
-  if (value !== undefined) {
-    logInvalidConfigValue(RATE_LIMIT_REDIS_PREFIX_CONFIG_KEY, value, DEFAULT_RATE_LIMIT_REDIS_PREFIX);
-  }
+  logInvalidConfigValue(RATE_LIMIT_REDIS_PREFIX_CONFIG_KEY, value, DEFAULT_RATE_LIMIT_REDIS_PREFIX);
 
   return DEFAULT_RATE_LIMIT_REDIS_PREFIX;
 }
