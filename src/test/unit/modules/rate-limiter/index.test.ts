@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 const rateLimitMock = jest.fn((_options?: unknown) => (_req: unknown, _res: unknown, next: () => void) => next());
 const ipKeyGeneratorMock = jest.fn((ip: string) => `hashed:${ip}`);
 const redisStoreMock = jest.fn((options: unknown) => ({ options }));
+const infoMock = jest.fn();
 const warnMock = jest.fn();
 const configHasMock = jest.fn();
 const configGetMock = jest.fn();
@@ -15,7 +16,7 @@ jest.mock('express-rate-limit', () => ({
 
 jest.mock('@hmcts/nodejs-logging', () => ({
   Logger: {
-    getLogger: () => ({ warn: warnMock }),
+    getLogger: () => ({ info: infoMock, warn: warnMock }),
   },
 }));
 
