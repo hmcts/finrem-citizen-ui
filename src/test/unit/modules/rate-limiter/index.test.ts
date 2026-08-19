@@ -118,7 +118,7 @@ describe('rate limiter config fallback behavior', () => {
     }));
   });
 
-  it('creates redis store using configured prefix and redis call command bridge', async () => {
+  it('creates redis store using configured prefix', async () => {
     mockConfig({ 'rateLimit.redisPrefix': 'custom-rl:' });
 
     const redisCallMock = jest.fn(async () => 'OK');
