@@ -3,7 +3,7 @@ import express, { Application } from 'express';
 import session from 'express-session';
 import request from 'supertest';
 
-import { PublicRoutes } from '../../../main/common-constants';
+import { PrivateRoutes, PublicRoutes } from '../../../main/common-constants';
 import autocompleteRoute from '../../../main/routes/generalUpload/autocomplete';
 
 describe('Autocomplete Route', () => {
@@ -39,14 +39,14 @@ describe('Autocomplete Route', () => {
       );
       autocompleteRoute(unauthenticatedApp);
 
-      const response = await request(unauthenticatedApp).get(PublicRoutes.autocomplete).query({ q: 'bank' });
+      const response = await request(unauthenticatedApp).get(PrivateRoutes.autocomplete).query({ q: 'bank' });
 
       expect(response.status).toBe(302);
       expect(response.headers.location).toBe(PublicRoutes.login);
     });
 
     it('should return all document types when query is empty', async () => {
-      const response = await request(app).get(PublicRoutes.autocomplete).query({ q: '' });
+      const response = await request(app).get(PrivateRoutes.autocomplete).query({ q: '' });
 
       expect(response.status).toBe(200);
       expect(response.body.length).toBeGreaterThan(0);
@@ -61,7 +61,7 @@ describe('Autocomplete Route', () => {
     });
 
     it('should return matching documents by label', async () => {
-      const response = await request(app).get(PublicRoutes.autocomplete).query({ q: 'bank' });
+      const response = await request(app).get(PrivateRoutes.autocomplete).query({ q: 'bank' });
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual(
@@ -76,14 +76,14 @@ describe('Autocomplete Route', () => {
     });
 
     it('should return matching documents by alias', async () => {
-      const response = await request(app).get(PublicRoutes.autocomplete).query({ q: 'FP9' });
+      const response = await request(app).get(PrivateRoutes.autocomplete).query({ q: 'FP9' });
 
       expect(response.status).toBe(200);
       expect(response.body.length).toBeGreaterThan(0);
     });
 
     it('should return "Other document" when no matches found', async () => {
-      const response = await request(app).get(PublicRoutes.autocomplete).query({ q: 'xyz123nonexistent' });
+      const response = await request(app).get(PrivateRoutes.autocomplete).query({ q: 'xyz123nonexistent' });
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual([
@@ -122,7 +122,7 @@ describe('Autocomplete Route', () => {
       });
       autocompleteRoute(testApp);
 
-      const response = await request(testApp).get(PublicRoutes.autocomplete).query({ q: 'bank' });
+      const response = await request(testApp).get(PrivateRoutes.autocomplete).query({ q: 'bank' });
 
       expect(response.status).toBe(200);
       const bankStatements = response.body.find((doc: { value: string }) => doc.value === 'bank-statements');
