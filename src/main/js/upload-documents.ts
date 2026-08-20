@@ -1,3 +1,4 @@
+import { getCsrfHeaders } from './csrf';
 import { getLogger } from './logger';
 
 const logger = getLogger('upload-documents');
@@ -168,6 +169,7 @@ export function initUploadedDocuments(): void {
       try {
         const response = await fetch(`/documents/remove/${fileId}`, {
           method: 'DELETE',
+          headers: getCsrfHeaders(),
         });
         
         if (!response.ok) {

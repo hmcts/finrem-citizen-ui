@@ -1,4 +1,5 @@
 {% extends "template.njk" %}
+{% from "macros/form.njk" import form with context %}
 
 {% block content %}
   <div class="govuk-grid-row">
@@ -20,7 +21,7 @@
       
       <p class="govuk-body">This is the 16 digit financial remedy case number that you received from the court. This is different to your divorce case number if you are also involved in divorce proceedings.</p>
 
-      <form method="post" novalidate>
+{% call form({ novalidate: true }) %}
         <div class="govuk-form-group {% if errors.caseNumber %}govuk-form-group--error{% endif %}">
           <label class="govuk-label govuk-label--m" for="caseNumber">
             Enter your case number
@@ -46,7 +47,7 @@
         <button type="submit" class="govuk-button" data-module="govuk-button">
           Continue
         </button>
-      </form>
+      {% endcall %}
     </div>
   </div>
 {% endblock %}
