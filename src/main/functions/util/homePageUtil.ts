@@ -25,8 +25,15 @@ export async function getHomePageForUser(userDetails: UserDetails): Promise<User
   const logger: LoggerInstance = console as unknown as LoggerInstance;
 
   const caseApi = getCaseApi(userDetails, logger);
-  const caseId = await caseApi.getExistingUserCase(CASE_TYPE);
-  logger.info('caseId returned is ', caseId);
+  let caseId: string | undefined;
+  
+  try {
+    caseId = await caseApi.getExistingUserCase(CASE_TYPE);
+    logger.info('caseId returned is ', caseId);
+  } catch (err) {
+    logger.info('Could not retrieve existing case (user may not have permission or no cases exist):', err.message);
+    caseId = undefined;
+  }
 
   if (caseId?.trim()) {
     const systemUser = await getSystemUser();
@@ -47,9 +54,14 @@ export async function orchestrateHome(
 ): Promise<HomeOrchestratorResult> {
 
   if (user.hasNFDCase === undefined) {
-    const caseApi = getCaseApi(user, logger);
-    const nfdCase = await caseApi.getExistingUserCase(CaseType.NFD);
-    user.hasNFDCase = nfdCase !== undefined;
+    try {
+      const caseApi = getCaseApi(user, logger);
+      const nfdCase = await caseApi.getExistingUserCase(CaseType.NFD);
+      user.hasNFDCase = nfdCase !== undefined;
+    } catch (err) {
+      logger.info('Could not check for NFD case (case type may not exist in this environment):', err.message);
+      user.hasNFDCase = false;
+    }
   }
   logger.info('user has NFD case registered : ', user.hasNFDCase);
   const { url, caseData, caseNumber } = await getHomePageForUser(user);
