@@ -118,8 +118,8 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
       return;
     }
 
-    // Save the validated case number to session
-    req.session.caseNumber = caseNumber.trim();
+    // Save normalized case number to session
+    req.session.caseNumber = caseId;
 
     req.session.save(err => {
       if (err) {
