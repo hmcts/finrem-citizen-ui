@@ -65,7 +65,7 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
     });
   });
 
-  app.post(RouteNames.enterCaseNumber, async (req: Request, res: Response) => {
+  app.post(RouteNames.enterCaseNumber, oidcMiddleware, async (req: Request, res: Response) => {
     const caseNumber = req.body.caseNumber;
 
     // Validate the case number format
@@ -118,8 +118,8 @@ export default function setupEnterCaseNumberRoute(app: Application): void {
       return;
     }
 
-    // Save the validated case number to session
-    req.session.caseNumber = caseNumber.trim();
+    // Save validated and normalised case number to session
+    req.session.caseNumber = caseId;
 
     req.session.save(err => {
       if (err) {

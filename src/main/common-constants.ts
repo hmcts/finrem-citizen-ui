@@ -15,8 +15,6 @@ export const TestRoutes = {
 } as const;
 
 export const PrivateRoutes = {
-  caseUserRole: '/case/:caseReference/:userId/:caseRole',
-  retrieveCase: '/retrieveCase',
   enterCaseNumber: '/enter-case-number',
   dashboard: '/dashboard',
   enterAccessCode: '/enter-access-code',
