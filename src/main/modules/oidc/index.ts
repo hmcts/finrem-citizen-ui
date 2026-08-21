@@ -3,8 +3,10 @@ import { UserDetails } from 'app/controller/AppRequest';
 import config from 'config';
 import type { Express, NextFunction, Request, Response } from 'express';
 import type * as OidcClientType from 'openid-client';
+import { LoggerInstance } from 'winston';
 
 import { RouteNames } from '../../common-constants';
+import { orchestrateHome, setCaseUserName, setCaseUserRole } from '../../functions/util/homePageUtil';
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
 
@@ -135,7 +137,6 @@ export class OIDCModule {
     app.get(RouteNames.login, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
         if (!this.clientConfig) {
-          req.session.returnTo = req.session.returnTo ?? RouteNames.basePath;
           req.session.save(() => {
             res.status(200).type('html').send(`
               <!doctype html>
@@ -236,12 +237,28 @@ export class OIDCModule {
           roles: (claims.roles ?? []) as string[],
         } satisfies UserDetails;
 
+        try {
+          const { caseData, caseNumber } = await orchestrateHome(
+            req.session.user,
+            this.logger as unknown as LoggerInstance
+          );
+          if (caseNumber) {
+            req.session.caseNumber = caseNumber;
+          }
+          if (caseData) {
+            req.session.caseData = caseData;
+          }
+
+          await setCaseUserRole(req.session);
+          setCaseUserName(req.session);
+        } catch (hydrationError) {
+          this.logger.error('Failed to hydrate case context during callback:', hydrationError);
+        }
+
         req.session.save(() => {
           delete req.session.codeVerifier;
           delete req.session.nonce;
-          const returnTo = req.session.returnTo ?? RouteNames.basePath;
-          delete req.session.returnTo;
-          res.redirect(returnTo);
+          res.redirect(RouteNames.basePath);
         });
       } catch (err: unknown) {
         this.logger.error('OIDC callback error:', err);

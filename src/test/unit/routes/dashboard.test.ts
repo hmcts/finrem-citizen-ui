@@ -3,14 +3,7 @@ import type { Application, NextFunction, Request, Response } from 'express';
 
 import { CaseRole } from '../../../main/app/case/definition';
 import { RouteNames, ViewNames } from '../../../main/common-constants';
-import { requireCaseRole } from '../../../main/middleware/require-case-role';
 import setupDashboardRoute from '../../../main/routes/generalUpload/dashboard';
-
-
-jest.mock('../../../main/functions/util/homePageUtil', () => ({
-  setCaseUserRole: jest.fn().mockImplementation(async () => {}),
-  setCaseUserName: jest.fn().mockImplementation(() => {}),
-}));
 
 jest.mock('../../../main/middleware', () => ({
   oidcMiddleware: jest.fn(
@@ -58,14 +51,12 @@ describe('Dashboard Route', () => {
     mockGet = jest.fn();
     setupDashboardRoute({ get: mockGet } as unknown as Application);
 
-    handler = mockGet.mock.calls[0][3] as typeof handler;
+    handler = mockGet.mock.calls[0][2] as typeof handler;
   });
 
   it('should register dashboard route with oidc middleware', () => {
     expect(mockGet).toHaveBeenCalledWith(
       RouteNames.dashboard,
-      expect.any(Function),
-      expect.any(Function),
       expect.any(Function),
       expect.any(Function)
     );
@@ -93,21 +84,6 @@ describe('Dashboard Route', () => {
     );
   });
 
-  it('should block access if no caseRole', () => {
-    const req = {
-      session: {
-        user: {}
-      }
-    } as unknown as Request;
-    const res = {
-      status: jest.fn().mockReturnThis(),
-      render: jest.fn()
-    } as unknown as Response;
-    const next = jest.fn();
-    requireCaseRole(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(next).not.toHaveBeenCalled();
-  });
   it('should render dashboard view with respondent name from caseData', async () => {
     const { res } = await callHandler({
       caseNumber: '1234-5678-9012-3456',

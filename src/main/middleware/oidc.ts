@@ -19,7 +19,6 @@ export const oidcMiddleware: RequestHandler = (req: Request, res: Response, next
   }
 
   if (req.session) {
-    req.session.returnTo = req.originalUrl;
     req.session.save(() => {
       res.redirect(RouteNames.login);
     });

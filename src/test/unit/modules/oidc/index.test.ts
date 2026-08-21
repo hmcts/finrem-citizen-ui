@@ -7,6 +7,14 @@ import { RouteNames } from '../../../../main/common-constants';
 import { OIDCAuthenticationError, OIDCCallbackError } from '../../../../main/modules/oidc/errors';
 import { OIDCModule } from '../../../../main/modules/oidc/index';
 
+jest.mock('../../../../main/functions/util/homePageUtil', () => ({
+  orchestrateHome: jest.fn(),
+  setCaseUserRole: jest.fn(),
+  setCaseUserName: jest.fn(),
+}));
+
+import { orchestrateHome, setCaseUserName, setCaseUserRole } from '../../../../main/functions/util/homePageUtil';
+
 const mockLogger = {
   info: jest.fn(),
   error: jest.fn(),
@@ -48,7 +56,6 @@ type SessionUser = {
 type SessionLike = {
   codeVerifier?: string;
   nonce?: string;
-  returnTo?: string;
   user?: SessionUser;
   destroy: (callback: (err?: unknown) => void) => void;
   save: (callback: () => void) => void;
@@ -94,6 +101,10 @@ describe('OIDCModule', () => {
     jest.clearAllMocks();
     delete process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET;
     delete process.env.IDAM_SECRET;
+
+    jest.mocked(orchestrateHome).mockResolvedValue({ url: RouteNames.basePath });
+    jest.mocked(setCaseUserRole).mockResolvedValue();
+    jest.mocked(setCaseUserName).mockImplementation(() => undefined);
 
     mockedConfig.get.mockImplementation(<T>(key: string): T => {
       if (key === 'oidc') {
@@ -629,7 +640,7 @@ describe('OIDCModule', () => {
     }
   });
 
-  it('callback stores user, clears temp values and redirects to returnTo', async () => {
+  it('callback stores user, clears temp values and redirects to root', async () => {
     const app = makeApp();
     const module = new OIDCModule();
     const clientConfig = {} as unknown as oidcClient.Configuration;
@@ -666,7 +677,6 @@ describe('OIDCModule', () => {
       session: {
         codeVerifier: 'verifier-123',
         nonce: 'nonce-123',
-        returnTo: RouteNames.dashboard,
         destroy: (callback: (err?: unknown) => void): void => callback(),
         save: (callback: () => void): void => callback(),
       },
@@ -700,16 +710,18 @@ describe('OIDCModule', () => {
       idToken: 'id-123',
       refreshToken: 'refresh-123',
     });
+    expect(orchestrateHome).toHaveBeenCalledWith(expect.objectContaining({ sub: 'user-123' }), expect.anything());
+    expect(setCaseUserRole).toHaveBeenCalledWith(expect.anything());
+    expect(setCaseUserName).toHaveBeenCalledWith(expect.anything());
     expect(requestAfter.session.codeVerifier).toBeUndefined();
     expect(requestAfter.session.nonce).toBeUndefined();
-    expect(requestAfter.session.returnTo).toBeUndefined();
 
     const redirectMock = (res as unknown as ResponseLike).redirect;
-    expect(redirectMock).toHaveBeenCalledWith(RouteNames.dashboard);
+    expect(redirectMock).toHaveBeenCalledWith(RouteNames.basePath);
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('callback defaults redirect to root when returnTo is missing', async () => {
+  it('callback redirects to root when returnTo is missing', async () => {
     const app = makeApp();
     const module = new OIDCModule();
     const clientConfig = {} as unknown as oidcClient.Configuration;
@@ -747,6 +759,50 @@ describe('OIDCModule', () => {
 
     const redirectMock = (res as unknown as ResponseLike).redirect;
     expect(redirectMock).toHaveBeenCalledWith(RouteNames.basePath);
+  });
+
+  it('callback logs hydration failure but still redirects to root', async () => {
+    const app = makeApp();
+    const module = new OIDCModule();
+    const clientConfig = {} as unknown as oidcClient.Configuration;
+
+    setClientConfig(module, clientConfig);
+
+    jest.mocked(orchestrateHome).mockRejectedValue(new Error('CCD unavailable'));
+
+    const tokens = {
+      access_token: 'access-123',
+      id_token: 'id-123',
+      refresh_token: 'refresh-123',
+      claims: (): { sub: string } => ({ sub: 'user-123' }),
+    } as unknown as Awaited<ReturnType<typeof oidcClient.authorizationCodeGrant>>;
+
+    mockedOidc.authorizationCodeGrant.mockResolvedValue(tokens);
+
+    module.enableFor(app as unknown as Express);
+
+    const handler = app.__routes[RouteNames.callbackUrl];
+    const req = makeReq({
+      originalUrl: '/oauth2/callback?code=abc',
+      session: {
+        codeVerifier: 'verifier',
+        nonce: 'nonce',
+        destroy: (callback: (err?: unknown) => void): void => callback(),
+        save: (callback: () => void): void => callback(),
+      },
+    });
+    const res = makeRes();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
+
+    await handler(req, res, next);
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Failed to hydrate case context during callback:',
+      expect.any(Error)
+    );
+    const redirectMock = (res as unknown as ResponseLike).redirect;
+    expect(redirectMock).toHaveBeenCalledWith(RouteNames.basePath);
+    expect(next).not.toHaveBeenCalled();
   });
 
   it('callback passes through OIDCCallbackError when no ID token is returned', async () => {
