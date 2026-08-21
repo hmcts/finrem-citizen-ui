@@ -6,7 +6,6 @@ export {};
 declare module 'express-session' {
   interface SessionData {
     user?: UserDetails;
-    returnTo?: string;
     codeVerifier?: string;
     nonce?: string;
     caseNumber?: string;
