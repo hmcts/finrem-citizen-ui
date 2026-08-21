@@ -1,8 +1,9 @@
-import { afterEach, describe, expect, jest,test } from '@jest/globals';
+import { afterEach, describe, expect, jest, test } from '@jest/globals';
 import type { Application } from 'express';
 import request from 'supertest';
 
 import { PrivateRoutes } from '../../../main/common-constants';
+import { HttpStatusCodes } from '../../../main/constants/http-status-codes';
 
 const originalRateLimitWindowMs = process.env.RATE_LIMIT_WINDOW_MS;
 const originalRateLimitMaxRequests = process.env.RATE_LIMIT_MAX_REQUESTS;
@@ -46,9 +47,9 @@ describe('Rate limiting', () => {
       const secondResponse = await request(app).post(privatePath).send({});
       const throttledResponse = await request(app).post(privatePath).send({});
 
-      expect(firstResponse.status).not.toBe(429);
-      expect(secondResponse.status).not.toBe(429);
-      expect(throttledResponse.status).toBe(429);
+      expect(firstResponse.status).not.toBe(HttpStatusCodes.TOO_MANY_REQUESTS);
+      expect(secondResponse.status).not.toBe(HttpStatusCodes.TOO_MANY_REQUESTS);
+      expect(throttledResponse.status).toBe(HttpStatusCodes.TOO_MANY_REQUESTS);
     }
   );
 });

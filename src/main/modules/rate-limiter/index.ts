@@ -5,6 +5,8 @@ import rateLimit, { ipKeyGenerator, type Options } from 'express-rate-limit';
 import type { Redis } from 'ioredis';
 import { type RedisReply, RedisStore } from 'rate-limit-redis';
 
+import { HttpStatusCodes } from '../../constants/http-status-codes';
+
 const logger = Logger.getLogger('rate-limiter');
 
 const RATE_LIMIT_REDIS_PREFIX_CONFIG_KEY = 'rateLimit.redisPrefix';
@@ -57,7 +59,7 @@ const createRateLimiter = (windowMs: number, maxRequests: number, store?: RateLi
         userAgent: req.get('user-agent') || '',
       });
 
-      res.status(429).send('Too many requests. Please try again later.');
+      res.status(HttpStatusCodes.TOO_MANY_REQUESTS).send('Too many requests. Please try again later.');
     },
   });
 };
