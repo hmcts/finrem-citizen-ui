@@ -10,6 +10,7 @@ import { getSystemUser } from '../../app/auth/user';
 import { getCaseApi } from '../../app/case/case-api';
 import { CitizenUploadDocumentType } from '../../app/case/definition';
 import { AppRequest, UserDetails } from '../../app/controller/AppRequest';
+import type { ConvertedUploadedFile } from '../../app/document/DocumentConversionService';
 import { DocumentManagerController } from '../../app/document/DocumentManagerController';
 import { RouteNames } from '../../common-constants';
 import { orchestrateHome } from '../../functions/util/homePageUtil';
@@ -73,14 +74,19 @@ export default function (app: Application): void {
   }
 
   async function cleanupUploadedFiles(files: Express.Multer.File[] | undefined): Promise<void> {
-    await Promise.all((files ?? [])
-      .filter(file => !!file.path)
-      .map(async file => {
+    const filePaths = [...new Set((files ?? [])
+      .flatMap(file => {
+        const cleanupPaths = (file as ConvertedUploadedFile).cleanupPaths ?? [];
+        return [...cleanupPaths, file.path].filter((filePath): filePath is string => !!filePath);
+      }))];
+
+    await Promise.all(filePaths
+      .map(async filePath => {
         try {
-          await fs.unlink(file.path);
+          await fs.unlink(filePath);
         } catch (error) {
           logger.warn('Failed to remove temporary upload file', {
-            filePath: file.path,
+            filePath,
             error,
           });
         }
@@ -158,6 +164,7 @@ export default function (app: Application): void {
           ];
 
         try {
+          await documentController.convertDocumentToPdfIfNotPdf(req as unknown as AppRequest);
           await documentController.uploadDocumentToEvidenceStore(
             req as unknown as AppRequest,
             selectedType
