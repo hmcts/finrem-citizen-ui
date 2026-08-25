@@ -244,9 +244,10 @@ export class OIDCModule {
           );
           if (caseNumber) {
             req.session.caseNumber = caseNumber;
-          }
-          if (caseData) {
             req.session.caseData = caseData;
+          } else {
+            delete req.session.caseNumber;
+            delete req.session.caseData;
           }
 
           await setCaseUserRole(req.session);

@@ -24,12 +24,12 @@ export default function (app: Application): void {
     }
     const user = req.session.user as UserDetails;
     const caseContext = await loadUserCaseContext(user, logger);
-    if (caseContext.caseData) {
-      req.session.caseData = caseContext.caseData;
-      req.session.caseNumber = caseContext.caseNumber;
-    }
     if (caseContext.caseNumber) {
       req.session.caseNumber = caseContext.caseNumber;
+      req.session.caseData = caseContext.caseData;
+    } else {
+      delete req.session.caseNumber;
+      delete req.session.caseData;
     }
     res.redirect(resolveHomeUrl(caseContext));
   });

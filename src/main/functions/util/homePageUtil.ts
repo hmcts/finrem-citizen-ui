@@ -54,10 +54,10 @@ export async function orchestrateHome(
   logger: LoggerInstance,
 ): Promise<HomeOrchestratorResult> {
   const caseContext = await loadUserCaseContext(user, logger);
-  const url = resolveHomeUrl(caseContext);
-  logger.info('Routing to : ', url);
+  const userHomeUrl = resolveHomeUrl(caseContext);
+  logger.info('Routing to : ', userHomeUrl);
 
-  return { ...caseContext, url };
+  return { ...caseContext, url: userHomeUrl };
 }
 
 /**
