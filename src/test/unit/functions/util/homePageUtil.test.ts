@@ -11,7 +11,6 @@ import { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { CaseUserNames, RouteNames } from '../../../../main/common-constants';
 import * as homePageUtil from '../../../../main/functions/util/homePageUtil';
 import {
-  getHomePageForUser,
   loadCaseAndReloadSession,
   loadUserCaseContext,
   resolveHomeUrl,
@@ -80,7 +79,7 @@ const createUserDetails = (): UserDetails => ({
   roles: ['citizen'],
 });
 
-describe('getHomePageForUser', () => {
+describe('orchestrateHome', () => {
   let mockGetExistingUserCase: jest.MockedFunction<GetExistingUserCaseMock>;
   let mockGetCaseById: jest.MockedFunction<GetCaseByIdMock>;
   let userDetails: UserDetails;
@@ -109,37 +108,6 @@ describe('getHomePageForUser', () => {
     } as unknown as LoggerInstance;
 
     userDetails = createUserDetails();
-  });
-
-  test('should route to dashboard when caseId exists', async () => {
-    const mockCaseData = createCaseData('CASE123');
-
-    mockGetExistingUserCase.mockResolvedValue('CASE123');
-    mockGetCaseById.mockResolvedValue(mockCaseData);
-
-    const homepageResult = await getHomePageForUser(userDetails);
-
-    expect(mockGetExistingUserCase).toHaveBeenCalledWith(CASE_TYPE);
-    expect(mockGetCaseById).toHaveBeenCalledWith('CASE123');
-    expect(homepageResult).toEqual({
-      caseData: { id: 'CASE123' },
-      caseNumber: 'CASE123',
-      url: RouteNames.dashboard,
-    });
-    expect(getSystemUser).toHaveBeenCalled();
-  });
-
-  test.each<[string, string | undefined]>([
-    ['empty string', ''],
-    ['undefined', undefined],
-  ])('should route to enterCaseNumber when caseId is %s', async (_label, caseId) => {
-    mockGetExistingUserCase.mockResolvedValue(caseId);
-
-    const result = await getHomePageForUser(userDetails);
-
-    expect(mockGetExistingUserCase).toHaveBeenCalledWith(CASE_TYPE);
-    expect(mockGetCaseById).not.toHaveBeenCalled();
-    expect(result).toEqual({ url: RouteNames.enterCaseNumber });
   });
 
   test('should fetch NFD case and include hasNFDCase when not already checked', async () => {

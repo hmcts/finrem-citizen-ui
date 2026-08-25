@@ -9,12 +9,6 @@ import { CaseRole, CaseType, FinremCaseData } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
 import { CaseUserNames, RouteNames } from '../../common-constants';
 
-export interface UserDefaultPageDetails {
-  url: string;
-  caseData?: FinremCaseData;
-  caseNumber?: string;
-}
-
 export interface HomeOrchestratorResult {
   url: string;
   caseData?: FinremCaseData;
@@ -39,11 +33,11 @@ export async function loadUserCaseContext(
     const nfdCase = await caseApi.getExistingUserCase(CaseType.NFD);
     user.hasNFDCase = nfdCase !== undefined;
   }
-  logger.info('user has NFD case registered : ', user.hasNFDCase);
+  logger.info('User has NFD case registered: ', user.hasNFDCase);
 
   const caseApi = getCaseApi(user, logger);
   const caseId = await caseApi.getExistingUserCase(CASE_TYPE);
-  logger.info('caseId returned is ', caseId);
+  logger.info('Financial Remedy caseId is: ', caseId);
 
   if (caseId?.trim()) {
     const systemUser = await getSystemUser();
@@ -53,25 +47,6 @@ export async function loadUserCaseContext(
   }
 
   return {};
-}
-
-export async function getHomePageForUser(userDetails: UserDetails): Promise<UserDefaultPageDetails> {
-  const logger: LoggerInstance = console as unknown as LoggerInstance;
-  const caseApi = getCaseApi(userDetails, logger);
-  const caseId = await caseApi.getExistingUserCase(CASE_TYPE);
-  logger.info('caseId returned is ', caseId);
-
-  if (caseId?.trim()) {
-    const systemUser = await getSystemUser();
-    const caseworkerUserApi = getCaseApi(systemUser, logger);
-    const caseData = await caseworkerUserApi.getCaseById(caseId);
-
-    logger.info('Routing to : ', RouteNames.dashboard);
-    return { caseData, caseNumber: caseId, url: RouteNames.dashboard };
-  }
-
-  logger.info('Routing to : ', RouteNames.enterCaseNumber);
-  return { url: RouteNames.enterCaseNumber };
 }
 
 export async function orchestrateHome(
