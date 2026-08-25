@@ -196,6 +196,16 @@ describe('fetchUserCaseContext and resolveHomeUrl', () => {
       },
     });
 
+    const getUsersRoleOnCase = jest.fn().mockImplementation(
+      async () => CaseRole.APPLICANT
+    );
+
+    jest.mocked(getCaseApi).mockReturnValue({
+      getExistingUserCase: mockGetExistingUserCase,
+      getCaseById: mockGetCaseById,
+      getUsersRoleOnCase,
+    } as unknown as ReturnType<typeof getCaseApi>);
+
     const session = {
       user: {
         ...userDetails,

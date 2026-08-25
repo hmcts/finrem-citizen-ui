@@ -6,7 +6,7 @@ import RateLimit from 'express-rate-limit';
 import { glob } from 'glob';
 import * as path from 'path';
 
-import { ViewNames } from './common-constants';
+import { PublicRoutes, ViewNames } from './common-constants';
 import { caseContextMiddleware, contactEmailMiddleware, globalErrorHandler } from './middleware';
 import { AppInsights } from './modules/appinsights';
 import { Helmet } from './modules/helmet';
@@ -40,7 +40,7 @@ const limiter = RateLimit({
   max: 100,
 });
 
-app.get('/favicon.ico', limiter, (req, res) => {
+app.get(PublicRoutes.favicon, limiter, (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));
 });
 

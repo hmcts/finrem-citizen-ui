@@ -2,13 +2,13 @@ import { Logger } from '@hmcts/nodejs-logging';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { LoggerInstance } from 'winston';
 
-import { RouteNames } from '../common-constants';
+import { PublicRoutes, RouteNames } from '../common-constants';
 import { hydrateUserSessionWithCaseContext } from '../functions/util/homePageUtil';
 
 const logger = Logger.getLogger('case-context-middleware') as unknown as LoggerInstance;
-const PUBLIC_PATHS = [RouteNames.login, RouteNames.callbackUrl, RouteNames.logout, RouteNames.info, '/favicon.ico'];
-const PUBLIC_PREFIXES = [RouteNames.health];
-const LINKING_PATHS = [RouteNames.enterAccessCode, RouteNames.enterCaseNumber];
+const PUBLIC_PATHS: string[] = [...Object.values(PublicRoutes)];
+const PUBLIC_PREFIXES: string[] = [PublicRoutes.health];
+const LINKING_PATHS: string[] = [RouteNames.enterAccessCode, RouteNames.enterCaseNumber];
 
 export const caseContextMiddleware: RequestHandler = async (
   req: Request,
@@ -18,7 +18,7 @@ export const caseContextMiddleware: RequestHandler = async (
   const requestPath = req.path || req.originalUrl;
   const isPublicPath =
     PUBLIC_PATHS.includes(requestPath) || PUBLIC_PREFIXES.some(prefix => requestPath.startsWith(prefix));
-  const isLinkingPath = LINKING_PATHS.includes(requestPath as typeof LINKING_PATHS[number]);
+  const isLinkingPath = LINKING_PATHS.includes(requestPath);
 
   if (isPublicPath || isLinkingPath || !req.session?.user) {
     return next();

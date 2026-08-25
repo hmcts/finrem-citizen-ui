@@ -4,6 +4,7 @@ export const PublicRoutes = {
   basePath: '/',
   callbackUrl: '/oauth2/callback',
   config: '/config',
+  favicon: '/favicon.ico',
   health: '/health',
   info: '/info',
   login: '/login',

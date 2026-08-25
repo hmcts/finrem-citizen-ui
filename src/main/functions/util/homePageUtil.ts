@@ -22,22 +22,22 @@ export async function fetchUserCaseContext(
   user: UserDetails,
   logger: LoggerInstance,
 ): Promise<UserCaseContext> {
+  const caseApi = getCaseApi(user, logger);
+
   if (user.hasNFDCase === undefined) {
-    const caseApi = getCaseApi(user, logger);
-    const nfdCase = await caseApi.getExistingUserCase(CaseType.NFD);
-    user.hasNFDCase = nfdCase !== undefined;
+    const nfdCaseId = await caseApi.getExistingUserCase(CaseType.NFD);
+    user.hasNFDCase = nfdCaseId !== undefined;
   }
   logger.info('User has NFD case registered: ', user.hasNFDCase);
 
-  const caseApi = getCaseApi(user, logger);
-  const caseId = await caseApi.getExistingUserCase(CASE_TYPE);
-  logger.info('Financial Remedy caseId is: ', caseId);
+  const finremCaseId = await caseApi.getExistingUserCase(CASE_TYPE);
+  logger.info('Financial Remedy caseId is: ', finremCaseId);
 
-  if (caseId?.trim()) {
+  if (finremCaseId?.trim()) {
     const systemUser = await getSystemUser();
     const caseworkerUserApi = getCaseApi(systemUser, logger);
-    const caseData = await caseworkerUserApi.getCaseById(caseId);
-    return { caseData, caseNumber: caseId };
+    const caseData = await caseworkerUserApi.getCaseById(finremCaseId);
+    return { caseData, caseNumber: finremCaseId };
   }
 
   return {};
@@ -134,7 +134,7 @@ export function setCaseUserName(session: SessionData): void {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
   const caseUserName = resolveCaseUserName(session);
 
-  if (caseUserName && !session.caseUserName) {
+  if (caseUserName) {
     session.caseUserName = caseUserName;
     logger.info('case user name set to ', session.caseUserName);
   }
