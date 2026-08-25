@@ -13,6 +13,7 @@ import { RouteNames } from '../../common-constants';
 import { orchestrateHome } from '../../functions/util/homePageUtil';
 import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../../functions/util/uploadValidation';
 import { oidcMiddleware } from '../../middleware';
+import { GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL } from '../../steps/general-upload-sequence';
 
 export default function (app: Application): void {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
@@ -53,7 +54,7 @@ export default function (app: Application): void {
     const contentLength = Number(req.headers['content-length'] || 0);
     if (contentLength > MAX_UPLOAD_BYTES) {
       const documentType = (req.query.documentType as string) || '';
-      const returnUrl = (req.query.returnUrl as string) || RouteNames.documents;
+      const returnUrl = GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL;
       logger.warn('Upload rejected by Content-Length pre-check', { contentLength });
       return redirectWithError(req, res, next, documentType, returnUrl, FILE_VALIDATION_ERRORS.TOO_LARGE);
     }
@@ -85,7 +86,7 @@ export default function (app: Application): void {
     (err: Error, req: Request, res: Response, next: (error?: Error) => void) => {
       if (err) {
         const documentType = req.body.documentType as string;
-        const returnUrl = req.body.returnUrl || RouteNames.documents;
+        const returnUrl = GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL;
 
         // Handle Multer-specific errors
         if (err instanceof multer.MulterError) {
@@ -124,7 +125,7 @@ export default function (app: Application): void {
     async (req: Request, res: Response, next: (error?: Error) => void) => {
       try {
         const documentType = req.body.documentType as string;
-        const returnUrl = req.body.returnUrl || RouteNames.documents;
+        const returnUrl = GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL;
 
         // Validate uploaded file
         const validationError = await validateUploadedFile(req.files as Express.Multer.File[]);
