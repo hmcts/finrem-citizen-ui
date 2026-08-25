@@ -5,6 +5,7 @@ import type { Express, NextFunction, Request, Response } from 'express';
 import type * as OidcClientType from 'openid-client';
 
 import { RouteNames } from '../../common-constants';
+import { isProfessionalUser } from '../../functions/util/roleGuardUtil';
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
 
@@ -19,6 +20,8 @@ const getOidcClient = async (): Promise<typeof OidcClientType> => {
 export class OIDCModule {
   private clientConfig: OidcClientType.Configuration | undefined;
   private readonly oidcConfig: OIDCConfig = config.get<OIDCConfig>('oidc');
+  private readonly professionalUserRedirectUrl: string =
+    config.get<string>('services.manageCase.url');
   private readonly logger = Logger.getLogger('oidc');
 
   constructor() {
@@ -235,6 +238,20 @@ export class OIDCModule {
           familyName: String(claims.family_name ?? ''),
           roles: (claims.roles ?? []) as string[],
         } satisfies UserDetails;
+
+        if (isProfessionalUser(req.session.user.roles)) {
+          const redirectUrl = this.professionalUserRedirectUrl;
+
+          req.session.destroy((err: unknown) => {
+            if (err) {
+              this.logger.error('Session destroy error for professional user redirect:', err);
+            }
+            this.logger.info(`Professional user blocked from CUI and redirected to manage-case: ${req.session.user?.id}`);
+
+            res.redirect(redirectUrl);
+          });
+          return;
+        }
 
         req.session.save(() => {
           delete req.session.codeVerifier;

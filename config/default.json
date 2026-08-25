@@ -34,6 +34,9 @@
     },
     "orchestrationService": {
       "url": "http://finrem-cos-aat.service.core-compute-aat.internal"
+    },
+    "manageCase": {
+      "url": "https://manage-case.aat.platform.hmcts.net"
     }
   },
   "oidc": {
