@@ -15,7 +15,6 @@ export const TestRoutes = {
 
 export const PrivateRoutes = {
   autocomplete: '/autocomplete',
-  caseReference: '/case/:caseReference',
   enterCaseNumber: '/enter-case-number',
   dashboard: '/dashboard',
   enterAccessCode: '/enter-access-code',
