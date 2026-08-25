@@ -2,7 +2,6 @@ global:
   security:
     allowInsecureImages: true
 nodejs:
-  # Don't modify below here
   image: ${IMAGE_NAME}
   ingressHost: ${SERVICE_FQDN}
   devcpuRequests: 250m
@@ -21,7 +20,6 @@ nodejs:
     IDAM_TOKEN_CACHE: true
     ENABLE_TEST_SUPPORT_ROUTES: 'true'
     OAUTH_CALLBACK_URL: 'https://${SERVICE_FQDN}/oauth2/callback'
-    # AAT IDAM even in preview
     IDAM_WEB_URL: https://hmcts-access.aat.platform.hmcts.net/o/authorize
     IDAM_TOKEN_URL: https://idam-api.aat.platform.hmcts.net/o/token
     REDIS_CONNECTION_STRING: 'redis://{{ .Release.Name }}-redis-master:6379'
