@@ -11,11 +11,11 @@ import { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { CaseUserNames, RouteNames } from '../../../../main/common-constants';
 import * as homePageUtil from '../../../../main/functions/util/homePageUtil';
 import {
+  fetchUserCaseContext,
+  fetchUserCaseRole,
   hydrateUserSessionWithCaseContext,
   loadCaseAndReloadSession,
-  resolveCaseUserRole,
   resolveCaseUserName,
-  loadUserCaseContext,
   resolveHomeUrl,
 } from '../../../../main/functions/util/homePageUtil';
 
@@ -179,7 +179,7 @@ describe('orchestrateHome', () => {
   });
 });
 
-describe('loadUserCaseContext and resolveHomeUrl', () => {
+describe('fetchUserCaseContext and resolveHomeUrl', () => {
   let mockGetExistingUserCase: jest.MockedFunction<GetExistingUserCaseMock>;
   let mockGetCaseById: jest.MockedFunction<GetCaseByIdMock>;
   let userDetails: UserDetails;
@@ -214,7 +214,7 @@ describe('loadUserCaseContext and resolveHomeUrl', () => {
     mockGetExistingUserCase.mockResolvedValue('CASE123');
     mockGetCaseById.mockResolvedValue({ id: 'CASE123' });
 
-    const result = await loadUserCaseContext(userDetails, mockLogger);
+    const result = await fetchUserCaseContext(userDetails, mockLogger);
 
     expect(result).toEqual({
       caseData: { id: 'CASE123' },
@@ -226,13 +226,13 @@ describe('loadUserCaseContext and resolveHomeUrl', () => {
   test('loads empty context when no case exists', async () => {
     mockGetExistingUserCase.mockResolvedValue(undefined);
 
-    const result = await loadUserCaseContext(userDetails, mockLogger);
+    const result = await fetchUserCaseContext(userDetails, mockLogger);
 
     expect(result).toEqual({});
     expect(resolveHomeUrl(result)).toBe(RouteNames.enterCaseNumber);
   });
 
-  test('hydrates session with case context and role', async () => {
+  test('hydrates session with case context, role, and derived user name', async () => {
     mockGetExistingUserCase.mockResolvedValue('CASE123');
     mockGetCaseById.mockResolvedValue({
       id: 'CASE123',
@@ -273,7 +273,7 @@ describe('loadUserCaseContext and resolveHomeUrl', () => {
     });
     expect(typedSession.caseNumber).toBe('CASE123');
     expect(typedSession.user.caseRole).toBe(CaseRole.APPLICANT);
-    expect(typedSession.caseUserName).toBeUndefined();
+    expect(typedSession.caseUserName).toBe('John Smith');
   });
 
   test('hydrates session and derives case user name when role already exists', async () => {
@@ -429,7 +429,7 @@ describe('loadCaseAndReloadSession', () => {
   });
 });
 
-describe('resolveCaseUserRole', () => {
+describe('fetchUserCaseRole', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -443,7 +443,7 @@ describe('resolveCaseUserRole', () => {
       },
     } as unknown as SessionData;
 
-    const result = await resolveCaseUserRole(session);
+    const result = await fetchUserCaseRole(session);
 
     expect(result).toBe('APPLICANT');
     expect(getCaseApi).not.toHaveBeenCalled();
@@ -465,7 +465,7 @@ describe('resolveCaseUserRole', () => {
       getUsersRoleOnCase,
     } as unknown as ReturnType<typeof getCaseApi>);
 
-    const result = await resolveCaseUserRole(session);
+    const result = await fetchUserCaseRole(session);
 
     expect(getUsersRoleOnCase).toHaveBeenCalledWith('CASE123', 'user-5');
     expect(result).toBe('RESPONDENT');
@@ -478,7 +478,7 @@ describe('resolveCaseUserRole', () => {
       },
     } as unknown as SessionData;
 
-    const result = await resolveCaseUserRole(session);
+    const result = await fetchUserCaseRole(session);
 
     expect(result).toBeUndefined();
     expect(getCaseApi).not.toHaveBeenCalled();

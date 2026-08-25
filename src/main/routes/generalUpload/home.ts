@@ -12,7 +12,7 @@ import { CitizenUploadDocumentType } from '../../app/case/definition';
 import { AppRequest } from '../../app/controller/AppRequest';
 import { DocumentManagerController } from '../../app/document/DocumentManagerController';
 import { RouteNames } from '../../common-constants';
-import { hydrateUserSessionWithCaseContext, resolveHomeUrl } from '../../functions/util/homePageUtil';
+import { resolveHomeUrl } from '../../functions/util/homePageUtil';
 import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../../functions/util/uploadValidation';
 import { oidcMiddleware } from '../../middleware';
 
@@ -22,8 +22,7 @@ export default function (app: Application): void {
     if (req.originalUrl === RouteNames.dashboard) {
       return next();
     }
-    const caseContext = await hydrateUserSessionWithCaseContext(req.session, logger);
-    res.redirect(resolveHomeUrl(caseContext));
+    res.redirect(resolveHomeUrl(req.session));
   });
 
   app.get(RouteNames.caseReference, async (req, res) => {

@@ -24,7 +24,7 @@ export function resolveHomeUrl(caseContext: UserCaseContext): string {
   return caseContext.caseNumber?.trim() ? RouteNames.dashboard : RouteNames.enterCaseNumber;
 }
 
-export async function loadUserCaseContext(
+export async function fetchUserCaseContext(
   user: UserDetails,
   logger: LoggerInstance,
 ): Promise<UserCaseContext> {
@@ -53,7 +53,7 @@ export async function orchestrateHome(
   user: UserDetails,
   logger: LoggerInstance,
 ): Promise<HomeOrchestratorResult> {
-  const caseContext = await loadUserCaseContext(user, logger);
+  const caseContext = await fetchUserCaseContext(user, logger);
   const userHomeUrl = resolveHomeUrl(caseContext);
   logger.info('Routing to : ', userHomeUrl);
 
@@ -65,13 +65,13 @@ export async function hydrateUserSessionWithCaseContext(
   logger: LoggerInstance
 ): Promise<UserCaseContext> {
   const user = session.user as UserDetails;
-  const caseContext = await loadUserCaseContext(user, logger);
+  const caseContext = await fetchUserCaseContext(user, logger);
 
   if (caseContext.caseNumber) {
     session.caseNumber = caseContext.caseNumber;
     session.caseData = caseContext.caseData;
+    user.caseRole = await fetchUserCaseRole(session, logger);
     session.caseUserName = resolveCaseUserName(session);
-    user.caseRole = await resolveCaseUserRole(session, logger);
   } else {
     delete session.caseNumber;
     delete session.caseData;
@@ -116,7 +116,7 @@ export async function loadCaseAndReloadSession(
   }
 }
 
-export async function resolveCaseUserRole(
+export async function fetchUserCaseRole(
   session: SessionData,
   logger: LoggerInstance = console as unknown as LoggerInstance
 ): Promise<CaseRole | undefined> {

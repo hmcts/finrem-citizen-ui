@@ -3,10 +3,8 @@ import { UserDetails } from 'app/controller/AppRequest';
 import config from 'config';
 import type { Express, NextFunction, Request, Response } from 'express';
 import type * as OidcClientType from 'openid-client';
-import { LoggerInstance } from 'winston';
 
 import { RouteNames } from '../../common-constants';
-import { hydrateUserSessionWithCaseContext } from '../../functions/util/homePageUtil';
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
 
@@ -236,15 +234,6 @@ export class OIDCModule {
           familyName: String(claims.family_name ?? ''),
           roles: (claims.roles ?? []) as string[],
         } satisfies UserDetails;
-
-        try {
-          await hydrateUserSessionWithCaseContext(
-            req.session,
-            this.logger as unknown as LoggerInstance
-          );
-        } catch (hydrationError) {
-          this.logger.error('Failed to hydrate case context during callback:', hydrationError);
-        }
 
         req.session.save(() => {
           delete req.session.codeVerifier;
