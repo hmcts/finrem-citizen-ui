@@ -60,6 +60,28 @@ export async function orchestrateHome(
   return { ...caseContext, url: userHomeUrl };
 }
 
+export async function hydrateUserSessionWithCaseContext(
+  session: SessionData,
+  logger: LoggerInstance
+): Promise<UserCaseContext> {
+  const user = session.user as UserDetails;
+  const caseContext = await loadUserCaseContext(user, logger);
+
+  if (caseContext.caseNumber) {
+    session.caseNumber = caseContext.caseNumber;
+    session.caseData = caseContext.caseData;
+    session.caseUserName = resolveCaseUserName(session);
+    user.caseRole = await resolveCaseUserRole(session, logger);
+  } else {
+    delete session.caseNumber;
+    delete session.caseData;
+    delete user.caseRole;
+    delete session.caseUserName;
+  }
+
+  return caseContext;
+}
+
 /**
  * Loads a case by reference from CCD and stores it in the session
  * @param req - Express request object with session
@@ -94,27 +116,50 @@ export async function loadCaseAndReloadSession(
   }
 }
 
-export async function setCaseUserRole(session: SessionData): Promise<void> {
-  const logger: LoggerInstance = console as unknown as LoggerInstance;
+export async function resolveCaseUserRole(
+  session: SessionData,
+  logger: LoggerInstance = console as unknown as LoggerInstance
+): Promise<CaseRole | undefined> {
   const user = session.user as UserDetails;
-  if (session.caseNumber && !user.caseRole) {
-    const caseApi = getCaseApi(user, logger);
-    const caseRole = await caseApi.getUsersRoleOnCase(session.caseNumber, user.id);
-    user.caseRole = caseRole;
+
+  if (user.caseRole) {
+    return user.caseRole;
   }
-  logger.info('case role is ', user.caseRole);
+
+  if (session.caseNumber) {
+    const caseApi = getCaseApi(user, logger);
+    return caseApi.getUsersRoleOnCase(session.caseNumber, user.id);
+  }
+
+  return undefined;
 }
 
 export function setCaseUserName(session: SessionData): void {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
-  const user = session.user as UserDetails;
+  const caseUserName = resolveCaseUserName(session);
 
-  if (user.caseRole && session.caseData && !session.caseUserName) {
-    if (user.caseRole === CaseRole.APPLICANT) {
-      session.caseUserName = session.caseData.applicantFlags?.partyName || CaseUserNames.APPLICANT;
-    } else if (user.caseRole === CaseRole.RESPONDENT) {
-      session.caseUserName = session.caseData.respondentFlags?.partyName || CaseUserNames.RESPONDENT;
-    }
+  if (caseUserName && !session.caseUserName) {
+    session.caseUserName = caseUserName;
     logger.info('case user name set to ', session.caseUserName);
   }
+}
+
+export function resolveCaseUserName(session: SessionData): string | undefined {
+  const user = session.user as UserDetails;
+
+  if (session.caseUserName) {
+    return session.caseUserName;
+  }
+
+  if (user.caseRole && session.caseData) {
+    if (user.caseRole === CaseRole.APPLICANT) {
+      return session.caseData.applicantFlags?.partyName || CaseUserNames.APPLICANT;
+    }
+
+    if (user.caseRole === CaseRole.RESPONDENT) {
+      return session.caseData.respondentFlags?.partyName || CaseUserNames.RESPONDENT;
+    }
+  }
+
+  return undefined;
 }

@@ -9,10 +9,10 @@ import { LoggerInstance } from 'winston';
 import { getSystemUser } from '../../app/auth/user';
 import { getCaseApi } from '../../app/case/case-api';
 import { CitizenUploadDocumentType } from '../../app/case/definition';
-import { AppRequest, UserDetails } from '../../app/controller/AppRequest';
+import { AppRequest } from '../../app/controller/AppRequest';
 import { DocumentManagerController } from '../../app/document/DocumentManagerController';
 import { RouteNames } from '../../common-constants';
-import { loadUserCaseContext, resolveHomeUrl } from '../../functions/util/homePageUtil';
+import { hydrateUserSessionWithCaseContext, resolveHomeUrl } from '../../functions/util/homePageUtil';
 import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../../functions/util/uploadValidation';
 import { oidcMiddleware } from '../../middleware';
 
@@ -22,15 +22,7 @@ export default function (app: Application): void {
     if (req.originalUrl === RouteNames.dashboard) {
       return next();
     }
-    const user = req.session.user as UserDetails;
-    const caseContext = await loadUserCaseContext(user, logger);
-    if (caseContext.caseNumber) {
-      req.session.caseNumber = caseContext.caseNumber;
-      req.session.caseData = caseContext.caseData;
-    } else {
-      delete req.session.caseNumber;
-      delete req.session.caseData;
-    }
+    const caseContext = await hydrateUserSessionWithCaseContext(req.session, logger);
     res.redirect(resolveHomeUrl(caseContext));
   });
 

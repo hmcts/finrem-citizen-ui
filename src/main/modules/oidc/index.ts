@@ -6,7 +6,7 @@ import type * as OidcClientType from 'openid-client';
 import { LoggerInstance } from 'winston';
 
 import { RouteNames } from '../../common-constants';
-import { loadUserCaseContext, setCaseUserName, setCaseUserRole } from '../../functions/util/homePageUtil';
+import { hydrateUserSessionWithCaseContext } from '../../functions/util/homePageUtil';
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
 
@@ -238,20 +238,10 @@ export class OIDCModule {
         } satisfies UserDetails;
 
         try {
-          const { caseData, caseNumber } = await loadUserCaseContext(
-            req.session.user,
+          await hydrateUserSessionWithCaseContext(
+            req.session,
             this.logger as unknown as LoggerInstance
           );
-          if (caseNumber) {
-            req.session.caseNumber = caseNumber;
-            req.session.caseData = caseData;
-          } else {
-            delete req.session.caseNumber;
-            delete req.session.caseData;
-          }
-
-          await setCaseUserRole(req.session);
-          setCaseUserName(req.session);
         } catch (hydrationError) {
           this.logger.error('Failed to hydrate case context during callback:', hydrationError);
         }

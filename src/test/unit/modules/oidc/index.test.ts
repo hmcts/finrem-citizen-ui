@@ -8,12 +8,10 @@ import { OIDCAuthenticationError, OIDCCallbackError } from '../../../../main/mod
 import { OIDCModule } from '../../../../main/modules/oidc/index';
 
 jest.mock('../../../../main/functions/util/homePageUtil', () => ({
-  loadUserCaseContext: jest.fn(),
-  setCaseUserRole: jest.fn(),
-  setCaseUserName: jest.fn(),
+  hydrateUserSessionWithCaseContext: jest.fn(),
 }));
 
-import { loadUserCaseContext, setCaseUserName, setCaseUserRole } from '../../../../main/functions/util/homePageUtil';
+import { hydrateUserSessionWithCaseContext } from '../../../../main/functions/util/homePageUtil';
 
 const mockLogger = {
   info: jest.fn(),
@@ -51,6 +49,7 @@ type SessionUser = {
   refreshToken?: string;
   sub?: string;
   given_name?: string;
+  caseRole?: string;
 };
 
 type SessionLike = {
@@ -102,9 +101,7 @@ describe('OIDCModule', () => {
     delete process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET;
     delete process.env.IDAM_SECRET;
 
-    jest.mocked(loadUserCaseContext).mockResolvedValue({});
-    jest.mocked(setCaseUserRole).mockResolvedValue();
-    jest.mocked(setCaseUserName).mockImplementation(() => undefined);
+    jest.mocked(hydrateUserSessionWithCaseContext).mockResolvedValue({});
 
     mockedConfig.get.mockImplementation(<T>(key: string): T => {
       if (key === 'oidc') {
@@ -710,9 +707,7 @@ describe('OIDCModule', () => {
       idToken: 'id-123',
       refreshToken: 'refresh-123',
     });
-    expect(loadUserCaseContext).toHaveBeenCalledWith(expect.objectContaining({ sub: 'user-123' }), expect.anything());
-    expect(setCaseUserRole).toHaveBeenCalledWith(expect.anything());
-    expect(setCaseUserName).toHaveBeenCalledWith(expect.anything());
+    expect(hydrateUserSessionWithCaseContext).toHaveBeenCalledWith(expect.anything(), expect.anything());
     expect(requestAfter.session.codeVerifier).toBeUndefined();
     expect(requestAfter.session.nonce).toBeUndefined();
 
@@ -768,7 +763,7 @@ describe('OIDCModule', () => {
 
     setClientConfig(module, clientConfig);
 
-    jest.mocked(loadUserCaseContext).mockRejectedValue(new Error('CCD unavailable'));
+    jest.mocked(hydrateUserSessionWithCaseContext).mockRejectedValue(new Error('CCD unavailable'));
 
     const tokens = {
       access_token: 'access-123',

@@ -11,7 +11,10 @@ import { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { CaseUserNames, RouteNames } from '../../../../main/common-constants';
 import * as homePageUtil from '../../../../main/functions/util/homePageUtil';
 import {
+  hydrateUserSessionWithCaseContext,
   loadCaseAndReloadSession,
+  resolveCaseUserRole,
+  resolveCaseUserName,
   loadUserCaseContext,
   resolveHomeUrl,
 } from '../../../../main/functions/util/homePageUtil';
@@ -36,7 +39,15 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-type MinimalCaseData = { id: string };
+type MinimalCaseData = {
+  id: string;
+  applicantFlags?: {
+    partyName?: string;
+  };
+  respondentFlags?: {
+    partyName?: string;
+  };
+};
 
 type GetExistingUserCaseMock = (
   caseType: CaseType | string
@@ -220,6 +231,104 @@ describe('loadUserCaseContext and resolveHomeUrl', () => {
     expect(result).toEqual({});
     expect(resolveHomeUrl(result)).toBe(RouteNames.enterCaseNumber);
   });
+
+  test('hydrates session with case context and role', async () => {
+    mockGetExistingUserCase.mockResolvedValue('CASE123');
+    mockGetCaseById.mockResolvedValue({
+      id: 'CASE123',
+      applicantFlags: {
+        partyName: 'John Smith',
+      },
+    });
+
+    const getUsersRoleOnCase = jest.fn().mockImplementation(
+      async () => CaseRole.APPLICANT
+    );
+
+    jest.mocked(getCaseApi).mockReturnValue({
+      getExistingUserCase: mockGetExistingUserCase,
+      getCaseById: mockGetCaseById,
+      getUsersRoleOnCase,
+    } as unknown as ReturnType<typeof getCaseApi>);
+
+    const session = {
+      user: userDetails,
+    } as unknown as SessionData;
+
+    const result = await hydrateUserSessionWithCaseContext(session, mockLogger);
+    const typedSession = session as unknown as {
+      caseNumber?: string;
+      caseUserName?: string;
+      user: { caseRole?: CaseRole };
+    };
+
+    expect(result).toEqual({
+      caseData: {
+        id: 'CASE123',
+        applicantFlags: {
+          partyName: 'John Smith',
+        },
+      },
+      caseNumber: 'CASE123',
+    });
+    expect(typedSession.caseNumber).toBe('CASE123');
+    expect(typedSession.user.caseRole).toBe(CaseRole.APPLICANT);
+    expect(typedSession.caseUserName).toBeUndefined();
+  });
+
+  test('hydrates session and derives case user name when role already exists', async () => {
+    mockGetExistingUserCase.mockResolvedValue('CASE123');
+    mockGetCaseById.mockResolvedValue({
+      id: 'CASE123',
+      applicantFlags: {
+        partyName: 'John Smith',
+      },
+    });
+
+    const session = {
+      user: {
+        ...userDetails,
+        caseRole: CaseRole.APPLICANT,
+      },
+    } as unknown as SessionData;
+
+    await hydrateUserSessionWithCaseContext(session, mockLogger);
+    const typedSession = session as unknown as {
+      caseUserName?: string;
+      user: { caseRole?: CaseRole };
+    };
+
+    expect(typedSession.user.caseRole).toBe(CaseRole.APPLICANT);
+    expect(typedSession.caseUserName).toBe('John Smith');
+  });
+
+  test('clears stale session case context, role, and user name when no case is found', async () => {
+    mockGetExistingUserCase.mockResolvedValue(undefined);
+
+    const session = {
+      caseNumber: 'OLD-CASE',
+      caseData: { id: 'OLD-CASE' },
+      caseUserName: 'Old Name',
+      user: {
+        ...userDetails,
+        caseRole: CaseRole.RESPONDENT,
+      },
+    } as unknown as SessionData;
+
+    const result = await hydrateUserSessionWithCaseContext(session, mockLogger);
+    const typedSession = session as unknown as {
+      caseNumber?: string;
+      caseData?: MinimalCaseData;
+      caseUserName?: string;
+      user: { caseRole?: CaseRole };
+    };
+
+    expect(result).toEqual({});
+    expect(typedSession.caseNumber).toBeUndefined();
+    expect(typedSession.caseData).toBeUndefined();
+    expect(typedSession.caseUserName).toBeUndefined();
+    expect(typedSession.user.caseRole).toBeUndefined();
+  });
 });
 
 describe('loadCaseAndReloadSession', () => {
@@ -320,61 +429,58 @@ describe('loadCaseAndReloadSession', () => {
   });
 });
 
-describe('setCaseUserRole', () => {
+describe('resolveCaseUserRole', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  test('sets caseRole when caseNumber exists and caseRole is undefined', async () => {
+  test('returns existing caseRole without calling API', async () => {
+    const session = {
+      caseNumber: 'CASE789',
+      user: {
+        id: 'user-4',
+        caseRole: 'APPLICANT',
+      },
+    } as unknown as SessionData;
+
+    const result = await resolveCaseUserRole(session);
+
+    expect(result).toBe('APPLICANT');
+    expect(getCaseApi).not.toHaveBeenCalled();
+  });
+
+  test('returns caseRole from API when caseNumber exists and role is missing', async () => {
     const session = {
       caseNumber: 'CASE123',
       user: {
-        id: 'user-1',
+        id: 'user-5',
       },
     } as unknown as SessionData;
 
     const getUsersRoleOnCase = jest.fn().mockImplementation(
-      async () => 'APPLICANT'
+      async () => 'RESPONDENT'
     );
 
     jest.mocked(getCaseApi).mockReturnValue({
       getUsersRoleOnCase,
     } as unknown as ReturnType<typeof getCaseApi>);
 
-    await homePageUtil.setCaseUserRole(session);
+    const result = await resolveCaseUserRole(session);
 
-    expect(getUsersRoleOnCase).toHaveBeenCalledWith('CASE123', 'user-1');
-    const typedSession = session as unknown as {
-      user: { caseRole?: string };
-    };
-
-    expect(typedSession.user.caseRole).toBe('APPLICANT');
-
+    expect(getUsersRoleOnCase).toHaveBeenCalledWith('CASE123', 'user-5');
+    expect(result).toBe('RESPONDENT');
   });
 
-  test('does nothing when caseNumber is missing', async () => {
+  test('returns undefined when caseNumber is missing', async () => {
     const session = {
       user: {
-        id: 'user-2',
+        id: 'user-6',
       },
     } as unknown as SessionData;
 
-    await homePageUtil.setCaseUserRole(session);
+    const result = await resolveCaseUserRole(session);
 
-    expect(getCaseApi).not.toHaveBeenCalled();
-  });
-
-  test('does nothing when caseRole is already set', async () => {
-    const session = {
-      caseNumber: 'CASE456',
-      user: {
-        id: 'user-3',
-        caseRole: 'RESPONDENT',
-      },
-    } as unknown as SessionData;
-
-    await homePageUtil.setCaseUserRole(session);
-
+    expect(result).toBeUndefined();
     expect(getCaseApi).not.toHaveBeenCalled();
   });
 });
@@ -560,5 +666,46 @@ describe('setCaseUserName', () => {
     };
 
     expect(typedSession.caseUserName).toBeUndefined();
+  });
+});
+
+describe('resolveCaseUserName', () => {
+  test('returns existing caseUserName when already set', () => {
+    const session = {
+      caseUserName: 'Existing Name',
+      user: {
+        caseRole: CaseRole.APPLICANT,
+      },
+      caseData: {
+        applicantFlags: {
+          partyName: 'John Smith',
+        },
+      },
+    } as unknown as SessionData;
+
+    expect(resolveCaseUserName(session)).toBe('Existing Name');
+  });
+
+  test('returns derived APPLICANT name when present', () => {
+    const session = {
+      user: {
+        caseRole: CaseRole.APPLICANT,
+      },
+      caseData: {
+        applicantFlags: {
+          partyName: 'John Smith',
+        },
+      },
+    } as unknown as SessionData;
+
+    expect(resolveCaseUserName(session)).toBe('John Smith');
+  });
+
+  test('returns undefined when role/data are missing', () => {
+    const session = {
+      user: {},
+    } as unknown as SessionData;
+
+    expect(resolveCaseUserName(session)).toBeUndefined();
   });
 });
