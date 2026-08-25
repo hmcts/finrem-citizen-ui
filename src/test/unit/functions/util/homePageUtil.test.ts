@@ -5,7 +5,6 @@ import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../../../../main/app/auth/user';
 import { getCaseApi } from '../../../../main/app/case/case-api';
-import { CASE_TYPE } from '../../../../main/app/case/case-type';
 import { CaseRole, CaseType } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { CaseUserNames, RouteNames } from '../../../../main/common-constants';
@@ -14,8 +13,8 @@ import {
   fetchUserCaseContext,
   fetchUserCaseRole,
   hydrateUserSessionWithCaseContext,
-  resetCaseContext,
   loadCaseAndReloadSession,
+  resetCaseContext,
   resolveCaseUserName,
   resolveHomeUrl,
 } from '../../../../main/functions/util/homePageUtil';
