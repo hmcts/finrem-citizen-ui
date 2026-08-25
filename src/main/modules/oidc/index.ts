@@ -5,6 +5,7 @@ import type { Express, NextFunction, Request, Response } from 'express';
 import type * as OidcClientType from 'openid-client';
 
 import { RouteNames } from '../../common-constants';
+import { resetCaseContext } from '../../functions/util/homePageUtil';
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
 
@@ -235,7 +236,7 @@ export class OIDCModule {
           roles: (claims.roles ?? []) as string[],
         } satisfies UserDetails;
 
-        delete req.session.caseContextHydratedUserId;
+        resetCaseContext(req.session);
 
         req.session.save(() => {
           delete req.session.codeVerifier;

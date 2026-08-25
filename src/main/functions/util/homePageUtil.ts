@@ -9,12 +9,6 @@ import { CaseRole, CaseType, FinremCaseData } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
 import { CaseUserNames, RouteNames } from '../../common-constants';
 
-export interface HomeOrchestratorResult {
-  url: string;
-  caseData?: FinremCaseData;
-  caseNumber?: string;
-}
-
 export interface UserCaseContext {
   caseData?: FinremCaseData;
   caseNumber?: string;
@@ -49,17 +43,6 @@ export async function fetchUserCaseContext(
   return {};
 }
 
-export async function orchestrateHome(
-  user: UserDetails,
-  logger: LoggerInstance,
-): Promise<HomeOrchestratorResult> {
-  const caseContext = await fetchUserCaseContext(user, logger);
-  const userHomeUrl = resolveHomeUrl(caseContext);
-  logger.info('Routing to : ', userHomeUrl);
-
-  return { ...caseContext, url: userHomeUrl };
-}
-
 export async function hydrateUserSessionWithCaseContext(
   session: SessionData,
   logger: LoggerInstance
@@ -80,6 +63,19 @@ export async function hydrateUserSessionWithCaseContext(
   }
 
   return caseContext;
+}
+
+export function resetCaseContext(session: SessionData): void {
+  delete session.caseContextHydratedUserId;
+  delete session.caseNumber;
+  delete session.caseData;
+  delete session.caseUserName;
+
+  const user = session.user as UserDetails | undefined;
+  if (user) {
+    delete user.caseRole;
+    delete user.hasNFDCase;
+  }
 }
 
 /**

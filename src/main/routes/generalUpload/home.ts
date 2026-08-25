@@ -22,6 +22,7 @@ export default function (app: Application): void {
     if (req.originalUrl === RouteNames.dashboard) {
       return next();
     }
+
     res.redirect(resolveHomeUrl(req.session));
   });
 

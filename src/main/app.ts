@@ -55,6 +55,7 @@ app.use((req, res, next) => {
 
 new Session().enableFor(app);
 new OIDCModule().enableFor(app);
+
 app.use(caseContextMiddleware);
 
 // Add contact email to all templates via res.locals

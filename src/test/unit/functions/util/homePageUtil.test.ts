@@ -14,6 +14,7 @@ import {
   fetchUserCaseContext,
   fetchUserCaseRole,
   hydrateUserSessionWithCaseContext,
+  resetCaseContext,
   loadCaseAndReloadSession,
   resolveCaseUserName,
   resolveHomeUrl,
@@ -88,95 +89,6 @@ const createUserDetails = (): UserDetails => ({
   familyName: 'Dorian',
   id: '123',
   roles: ['citizen'],
-});
-
-describe('orchestrateHome', () => {
-  let mockGetExistingUserCase: jest.MockedFunction<GetExistingUserCaseMock>;
-  let mockGetCaseById: jest.MockedFunction<GetCaseByIdMock>;
-  let userDetails: UserDetails;
-  let mockLogger: LoggerInstance;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-
-    mockGetExistingUserCase = jest.fn<GetExistingUserCaseMock>();
-    mockGetCaseById = jest.fn<GetCaseByIdMock>();
-
-    const caseApiMock: HomePageCaseApiMock = {
-      getExistingUserCase: mockGetExistingUserCase,
-      getCaseById: mockGetCaseById,
-    };
-
-    jest
-      .mocked(getCaseApi)
-      .mockReturnValue(caseApiMock as unknown as ReturnType<typeof getCaseApi>);
-
-    jest.mocked(getSystemUser).mockResolvedValue(createSystemUser());
-
-    mockLogger = {
-      info: jest.fn(),
-      error: jest.fn(),
-    } as unknown as LoggerInstance;
-
-    userDetails = createUserDetails();
-  });
-
-  test('should fetch NFD case and include hasNFDCase when not already checked', async () => {
-    mockGetExistingUserCase.mockResolvedValue('NFD123');
-    mockGetCaseById.mockResolvedValue({ id: 'CASE123' });
-
-    const result = await homePageUtil.orchestrateHome(
-      userDetails,
-      mockLogger
-    );
-
-    expect(mockGetExistingUserCase).toHaveBeenCalledWith(CaseType.NFD);
-    expect(mockGetExistingUserCase).toHaveBeenCalledWith(CASE_TYPE);
-    expect(userDetails.hasNFDCase).toBe(true);
-
-    expect(result).toEqual({
-      url: RouteNames.dashboard,
-      caseData: { id: 'CASE123' },
-      caseNumber: 'NFD123',
-    });
-  });
-
-  test('should skip NFD lookup if already checked', async () => {
-    mockGetExistingUserCase.mockResolvedValue('CASE123');
-    mockGetCaseById.mockResolvedValue({ id: 'CASE123' });
-    userDetails.hasNFDCase = true;
-    const result = await homePageUtil.orchestrateHome(
-      userDetails,
-      mockLogger
-    );
-
-    expect(mockGetExistingUserCase).not.toHaveBeenCalledWith(CaseType.NFD);
-    expect(mockGetExistingUserCase).toHaveBeenCalledWith(CASE_TYPE);
-    expect(userDetails.hasNFDCase).toBe(true);
-
-    expect(result).toEqual({
-      url: RouteNames.dashboard,
-      caseData: { id: 'CASE123' },
-      caseNumber: 'CASE123',
-    });
-  });
-
-  test('should set hasNFDCase to false when no NFD case found', async () => {
-    mockGetExistingUserCase.mockResolvedValue(undefined);
-
-    const result = await homePageUtil.orchestrateHome(
-      userDetails,
-      mockLogger
-    );
-
-    expect(mockGetExistingUserCase).toHaveBeenCalledWith(CaseType.NFD);
-    expect(mockGetExistingUserCase).toHaveBeenCalledWith(CASE_TYPE);
-    expect(userDetails.hasNFDCase).toBe(false);
-    expect(result).toEqual({
-      url: RouteNames.enterCaseNumber,
-      caseData: undefined
-    });
-  });
 });
 
 describe('fetchUserCaseContext and resolveHomeUrl', () => {
@@ -707,5 +619,38 @@ describe('resolveCaseUserName', () => {
     } as unknown as SessionData;
 
     expect(resolveCaseUserName(session)).toBeUndefined();
+  });
+});
+
+describe('resetCaseContext', () => {
+  test('clears case context fields from session and user', () => {
+    const session = {
+      caseContextHydratedUserId: 'user-123',
+      caseNumber: 'CASE123',
+      caseData: { id: 'CASE123' },
+      caseUserName: 'John Smith',
+      user: {
+        id: 'user-123',
+        caseRole: CaseRole.APPLICANT,
+        hasNFDCase: true,
+      },
+    } as unknown as SessionData;
+
+    resetCaseContext(session);
+
+    const typedSession = session as unknown as {
+      caseContextHydratedUserId?: string;
+      caseNumber?: string;
+      caseData?: unknown;
+      caseUserName?: string;
+      user?: { caseRole?: CaseRole; hasNFDCase?: boolean };
+    };
+
+    expect(typedSession.caseContextHydratedUserId).toBeUndefined();
+    expect(typedSession.caseNumber).toBeUndefined();
+    expect(typedSession.caseData).toBeUndefined();
+    expect(typedSession.caseUserName).toBeUndefined();
+    expect(typedSession.user?.caseRole).toBeUndefined();
+    expect(typedSession.user?.hasNFDCase).toBeUndefined();
   });
 });

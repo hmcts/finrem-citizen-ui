@@ -7,7 +7,7 @@ import { RouteNames } from '../../../../main/common-constants';
 import { OIDCAuthenticationError, OIDCCallbackError } from '../../../../main/modules/oidc/errors';
 import { OIDCModule } from '../../../../main/modules/oidc/index';
 
-const mockLogger = {
+var mockLogger = {
   info: jest.fn(),
   error: jest.fn(),
 };
