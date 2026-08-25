@@ -22,8 +22,17 @@ export const caseContextMiddleware: RequestHandler = async (
     return next();
   }
 
+  const userId = req.session.user.id || req.session.user.sub;
+  const hasCaseContext = Boolean(req.session.caseNumber?.trim()) || req.session.caseData !== undefined;
+  const alreadyHydratedForUser = req.session.caseContextHydratedUserId === userId;
+
+  if (alreadyHydratedForUser || hasCaseContext) {
+    return next();
+  }
+
   try {
     await hydrateUserSessionWithCaseContext(req.session, logger);
+    req.session.caseContextHydratedUserId = userId;
     return next();
   } catch (error) {
     logger.error('Failed to hydrate case context in middleware:', error);

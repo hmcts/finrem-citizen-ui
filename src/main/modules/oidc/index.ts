@@ -235,6 +235,8 @@ export class OIDCModule {
           roles: (claims.roles ?? []) as string[],
         } satisfies UserDetails;
 
+        delete req.session.caseContextHydratedUserId;
+
         req.session.save(() => {
           delete req.session.codeVerifier;
           delete req.session.nonce;

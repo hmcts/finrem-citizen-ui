@@ -16,6 +16,7 @@ declare module 'express-session' {
     caseData?: FinremCaseData;
     caseRole?: CaseRole;
     caseUserName?: string;
+    caseContextHydratedUserId?: string;
     DocumentSelection?: UserDocumentSelection;
     documents?: UserDocumentSelection;
     uploadErrors?: Record<string, string>;
