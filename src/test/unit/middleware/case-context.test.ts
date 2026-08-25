@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import type { NextFunction, Request, Response } from 'express';
 
-import { PublicRoutes, RouteNames } from '../../../main/common-constants';
+import { RouteNames } from '../../../main/common-constants';
 
 var mockLogger = {
   info: jest.fn(),
@@ -66,14 +66,14 @@ describe('caseContextMiddleware', () => {
     hydrateUserSessionWithCaseContext.mockResolvedValue({});
   });
 
-  it('skips hydration for public routes', async () => {
-    const req = makeReq({ path: PublicRoutes.login, originalUrl: PublicRoutes.login });
+  it('hydrates on base path for authenticated users', async () => {
+    const req = makeReq({ path: RouteNames.basePath, originalUrl: RouteNames.basePath });
     const res = makeRes();
 
     await caseContextMiddleware(req, res, next);
 
     expect(next).toHaveBeenCalledTimes(1);
-    expect(hydrateUserSessionWithCaseContext).not.toHaveBeenCalled();
+    expect(hydrateUserSessionWithCaseContext).toHaveBeenCalled();
   });
 
   it('skips hydration for linking routes', async () => {

@@ -2,25 +2,26 @@ import { Logger } from '@hmcts/nodejs-logging';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { LoggerInstance } from 'winston';
 
-import { PublicRoutes, RouteNames } from '../common-constants';
+import { RouteNames } from '../common-constants';
 import { hydrateUserSessionWithCaseContext } from '../functions/util/homePageUtil';
 
 const logger = Logger.getLogger('case-context-middleware') as unknown as LoggerInstance;
-const PUBLIC_PATHS: string[] = [...Object.values(PublicRoutes)];
-const PUBLIC_PREFIXES: string[] = [PublicRoutes.health];
 const LINKING_PATHS: string[] = [RouteNames.enterAccessCode, RouteNames.enterCaseNumber];
+const EXCLUDED_PATHS: string[] = [RouteNames.logout, ...LINKING_PATHS];
 
 export const caseContextMiddleware: RequestHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const requestPath = req.path || req.originalUrl;
-  const isPublicPath =
-    PUBLIC_PATHS.includes(requestPath) || PUBLIC_PREFIXES.some(prefix => requestPath.startsWith(prefix));
-  const isLinkingPath = LINKING_PATHS.includes(requestPath);
+  if (!req.session?.user) {
+    return next();
+  }
 
-  if (isPublicPath || isLinkingPath || !req.session?.user) {
+  const requestPath = req.path || req.originalUrl;
+  const isExcludedPath = EXCLUDED_PATHS.includes(requestPath);
+
+  if (isExcludedPath) {
     return next();
   }
 
