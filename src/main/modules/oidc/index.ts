@@ -246,7 +246,7 @@ export class OIDCModule {
             if (err) {
               this.logger.error('Session destroy error for professional user redirect:', err);
             }
-            this.logger.info(`Professional user blocked from CUI and redirected to manage-case: ${req.session.user?.id}`);
+            this.logger.info(`Professional user blocked from CUI and redirected to manage-case: ${claims.uid}`);
 
             res.redirect(redirectUrl);
           });
