@@ -8,6 +8,7 @@ import { hydrateUserSessionWithCaseContext } from '../functions/util/homePageUti
 const logger = Logger.getLogger('case-context-middleware') as unknown as LoggerInstance;
 const PUBLIC_PATHS = [RouteNames.login, RouteNames.callbackUrl, RouteNames.logout, RouteNames.info, '/favicon.ico'];
 const PUBLIC_PREFIXES = [RouteNames.health];
+const LINKING_PATHS = [RouteNames.enterAccessCode, RouteNames.enterCaseNumber];
 
 export const caseContextMiddleware: RequestHandler = async (
   req: Request,
@@ -17,8 +18,9 @@ export const caseContextMiddleware: RequestHandler = async (
   const requestPath = req.path || req.originalUrl;
   const isPublicPath =
     PUBLIC_PATHS.includes(requestPath) || PUBLIC_PREFIXES.some(prefix => requestPath.startsWith(prefix));
+  const isLinkingPath = LINKING_PATHS.includes(requestPath as typeof LINKING_PATHS[number]);
 
-  if (isPublicPath || !req.session?.user) {
+  if (isPublicPath || isLinkingPath || !req.session?.user) {
     return next();
   }
 
