@@ -75,8 +75,6 @@ Default local URL: `http://localhost:3100`
 ### Enviroment Variable full scope
 NODE_ENV=
 NODE_CONFIG_ENV=
-IDAM_CLIENT=
-IDAM_WEB_SERVICE=
 IDAM_API_SERVICE=
 IDAM_WEB_URL=
 IDAM_TOKEN_URL=
