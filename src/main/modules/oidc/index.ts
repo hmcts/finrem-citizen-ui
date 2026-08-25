@@ -6,7 +6,7 @@ import type * as OidcClientType from 'openid-client';
 import { LoggerInstance } from 'winston';
 
 import { RouteNames } from '../../common-constants';
-import { orchestrateHome, setCaseUserName, setCaseUserRole } from '../../functions/util/homePageUtil';
+import { loadUserCaseContext, setCaseUserName, setCaseUserRole } from '../../functions/util/homePageUtil';
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
 
@@ -238,7 +238,7 @@ export class OIDCModule {
         } satisfies UserDetails;
 
         try {
-          const { caseData, caseNumber } = await orchestrateHome(
+          const { caseData, caseNumber } = await loadUserCaseContext(
             req.session.user,
             this.logger as unknown as LoggerInstance
           );

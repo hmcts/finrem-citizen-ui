@@ -12,7 +12,7 @@ import { CitizenUploadDocumentType } from '../../app/case/definition';
 import { AppRequest, UserDetails } from '../../app/controller/AppRequest';
 import { DocumentManagerController } from '../../app/document/DocumentManagerController';
 import { RouteNames } from '../../common-constants';
-import { orchestrateHome } from '../../functions/util/homePageUtil';
+import { loadUserCaseContext, resolveHomeUrl } from '../../functions/util/homePageUtil';
 import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../../functions/util/uploadValidation';
 import { oidcMiddleware } from '../../middleware';
 
@@ -23,15 +23,15 @@ export default function (app: Application): void {
       return next();
     }
     const user = req.session.user as UserDetails;
-    const result = await orchestrateHome(user, logger);
-    if (result.caseData) {
-      req.session.caseData = result.caseData;
-      req.session.caseNumber = result.caseNumber;
+    const caseContext = await loadUserCaseContext(user, logger);
+    if (caseContext.caseData) {
+      req.session.caseData = caseContext.caseData;
+      req.session.caseNumber = caseContext.caseNumber;
     }
-    if (result.caseNumber) {
-      req.session.caseNumber = result.caseNumber;
+    if (caseContext.caseNumber) {
+      req.session.caseNumber = caseContext.caseNumber;
     }
-    res.redirect(result.url);
+    res.redirect(resolveHomeUrl(caseContext));
   });
 
   app.get(RouteNames.caseReference, async (req, res) => {

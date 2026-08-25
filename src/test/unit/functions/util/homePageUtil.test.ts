@@ -13,6 +13,8 @@ import * as homePageUtil from '../../../../main/functions/util/homePageUtil';
 import {
   getHomePageForUser,
   loadCaseAndReloadSession,
+  loadUserCaseContext,
+  resolveHomeUrl,
 } from '../../../../main/functions/util/homePageUtil';
 
 jest.mock('config', () => ({
@@ -195,6 +197,60 @@ describe('getHomePageForUser', () => {
       url: RouteNames.enterCaseNumber,
       caseData: undefined
     });
+  });
+});
+
+describe('loadUserCaseContext and resolveHomeUrl', () => {
+  let mockGetExistingUserCase: jest.MockedFunction<GetExistingUserCaseMock>;
+  let mockGetCaseById: jest.MockedFunction<GetCaseByIdMock>;
+  let userDetails: UserDetails;
+  let mockLogger: LoggerInstance;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    mockGetExistingUserCase = jest.fn<GetExistingUserCaseMock>();
+    mockGetCaseById = jest.fn<GetCaseByIdMock>();
+
+    const caseApiMock: HomePageCaseApiMock = {
+      getExistingUserCase: mockGetExistingUserCase,
+      getCaseById: mockGetCaseById,
+    };
+
+    jest
+      .mocked(getCaseApi)
+      .mockReturnValue(caseApiMock as unknown as ReturnType<typeof getCaseApi>);
+
+    jest.mocked(getSystemUser).mockResolvedValue(createSystemUser());
+
+    mockLogger = {
+      info: jest.fn(),
+      error: jest.fn(),
+    } as unknown as LoggerInstance;
+
+    userDetails = createUserDetails();
+  });
+
+  test('loads context with case data when case exists', async () => {
+    mockGetExistingUserCase.mockResolvedValue('CASE123');
+    mockGetCaseById.mockResolvedValue({ id: 'CASE123' });
+
+    const result = await loadUserCaseContext(userDetails, mockLogger);
+
+    expect(result).toEqual({
+      caseData: { id: 'CASE123' },
+      caseNumber: 'CASE123',
+    });
+    expect(resolveHomeUrl(result)).toBe(RouteNames.dashboard);
+  });
+
+  test('loads empty context when no case exists', async () => {
+    mockGetExistingUserCase.mockResolvedValue(undefined);
+
+    const result = await loadUserCaseContext(userDetails, mockLogger);
+
+    expect(result).toEqual({});
+    expect(resolveHomeUrl(result)).toBe(RouteNames.enterCaseNumber);
   });
 });
 

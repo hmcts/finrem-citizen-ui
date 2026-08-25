@@ -21,9 +21,42 @@ export interface HomeOrchestratorResult {
   caseNumber?: string;
 }
 
+export interface UserCaseContext {
+  caseData?: FinremCaseData;
+  caseNumber?: string;
+}
+
+export function resolveHomeUrl(caseContext: UserCaseContext): string {
+  return caseContext.caseNumber?.trim() ? RouteNames.dashboard : RouteNames.enterCaseNumber;
+}
+
+export async function loadUserCaseContext(
+  user: UserDetails,
+  logger: LoggerInstance,
+): Promise<UserCaseContext> {
+  if (user.hasNFDCase === undefined) {
+    const caseApi = getCaseApi(user, logger);
+    const nfdCase = await caseApi.getExistingUserCase(CaseType.NFD);
+    user.hasNFDCase = nfdCase !== undefined;
+  }
+  logger.info('user has NFD case registered : ', user.hasNFDCase);
+
+  const caseApi = getCaseApi(user, logger);
+  const caseId = await caseApi.getExistingUserCase(CASE_TYPE);
+  logger.info('caseId returned is ', caseId);
+
+  if (caseId?.trim()) {
+    const systemUser = await getSystemUser();
+    const caseworkerUserApi = getCaseApi(systemUser, logger);
+    const caseData = await caseworkerUserApi.getCaseById(caseId);
+    return { caseData, caseNumber: caseId };
+  }
+
+  return {};
+}
+
 export async function getHomePageForUser(userDetails: UserDetails): Promise<UserDefaultPageDetails> {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
-
   const caseApi = getCaseApi(userDetails, logger);
   const caseId = await caseApi.getExistingUserCase(CASE_TYPE);
   logger.info('caseId returned is ', caseId);
@@ -35,26 +68,21 @@ export async function getHomePageForUser(userDetails: UserDetails): Promise<User
 
     logger.info('Routing to : ', RouteNames.dashboard);
     return { caseData, caseNumber: caseId, url: RouteNames.dashboard };
-  } else {
-    logger.info('Routing to : ', RouteNames.enterCaseNumber);
-    return { url: RouteNames.enterCaseNumber };
   }
+
+  logger.info('Routing to : ', RouteNames.enterCaseNumber);
+  return { url: RouteNames.enterCaseNumber };
 }
 
 export async function orchestrateHome(
   user: UserDetails,
   logger: LoggerInstance,
 ): Promise<HomeOrchestratorResult> {
+  const caseContext = await loadUserCaseContext(user, logger);
+  const url = resolveHomeUrl(caseContext);
+  logger.info('Routing to : ', url);
 
-  if (user.hasNFDCase === undefined) {
-    const caseApi = getCaseApi(user, logger);
-    const nfdCase = await caseApi.getExistingUserCase(CaseType.NFD);
-    user.hasNFDCase = nfdCase !== undefined;
-  }
-  logger.info('user has NFD case registered : ', user.hasNFDCase);
-  const { url, caseData, caseNumber } = await getHomePageForUser(user);
-
-  return { url, caseData, caseNumber };
+  return { ...caseContext, url };
 }
 
 /**

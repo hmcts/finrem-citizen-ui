@@ -8,12 +8,12 @@ import { OIDCAuthenticationError, OIDCCallbackError } from '../../../../main/mod
 import { OIDCModule } from '../../../../main/modules/oidc/index';
 
 jest.mock('../../../../main/functions/util/homePageUtil', () => ({
-  orchestrateHome: jest.fn(),
+  loadUserCaseContext: jest.fn(),
   setCaseUserRole: jest.fn(),
   setCaseUserName: jest.fn(),
 }));
 
-import { orchestrateHome, setCaseUserName, setCaseUserRole } from '../../../../main/functions/util/homePageUtil';
+import { loadUserCaseContext, setCaseUserName, setCaseUserRole } from '../../../../main/functions/util/homePageUtil';
 
 const mockLogger = {
   info: jest.fn(),
@@ -102,7 +102,7 @@ describe('OIDCModule', () => {
     delete process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET;
     delete process.env.IDAM_SECRET;
 
-    jest.mocked(orchestrateHome).mockResolvedValue({ url: RouteNames.basePath });
+    jest.mocked(loadUserCaseContext).mockResolvedValue({});
     jest.mocked(setCaseUserRole).mockResolvedValue();
     jest.mocked(setCaseUserName).mockImplementation(() => undefined);
 
@@ -710,7 +710,7 @@ describe('OIDCModule', () => {
       idToken: 'id-123',
       refreshToken: 'refresh-123',
     });
-    expect(orchestrateHome).toHaveBeenCalledWith(expect.objectContaining({ sub: 'user-123' }), expect.anything());
+    expect(loadUserCaseContext).toHaveBeenCalledWith(expect.objectContaining({ sub: 'user-123' }), expect.anything());
     expect(setCaseUserRole).toHaveBeenCalledWith(expect.anything());
     expect(setCaseUserName).toHaveBeenCalledWith(expect.anything());
     expect(requestAfter.session.codeVerifier).toBeUndefined();
@@ -768,7 +768,7 @@ describe('OIDCModule', () => {
 
     setClientConfig(module, clientConfig);
 
-    jest.mocked(orchestrateHome).mockRejectedValue(new Error('CCD unavailable'));
+    jest.mocked(loadUserCaseContext).mockRejectedValue(new Error('CCD unavailable'));
 
     const tokens = {
       access_token: 'access-123',
