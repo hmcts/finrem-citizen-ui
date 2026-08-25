@@ -6,8 +6,6 @@ import { tmpdir } from 'os';
 import path from 'path';
 import { LoggerInstance } from 'winston';
 
-import { getSystemUser } from '../../app/auth/user';
-import { getCaseApi } from '../../app/case/case-api';
 import { CitizenUploadDocumentType } from '../../app/case/definition';
 import { AppRequest, UserDetails } from '../../app/controller/AppRequest';
 import { DocumentManagerController } from '../../app/document/DocumentManagerController';
@@ -33,16 +31,6 @@ export default function (app: Application): void {
       req.session.caseNumber = result.caseNumber;
     }
     res.redirect(result.url);
-  });
-
-  app.get(RouteNames.caseReference, async (req, res) => {
-    const { caseReference } = req.params;
-
-    const systemUser = await getSystemUser();
-
-    const caseworkerUserApi = getCaseApi(systemUser, logger);
-    const caseData = await caseworkerUserApi.getCaseById(caseReference);
-    res.json(caseData);
   });
 
   const upload = multer({
