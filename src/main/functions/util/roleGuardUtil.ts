@@ -1,6 +1,6 @@
 import { CaseRole } from '../../app/case/definition';
 
-const PROFESSIONAL_ROLE_PATTERNS: RegExp[] = [/caseworker/i, /solicitor/i];
+const PROFESSIONAL_IDAM_ROLE_PATTERNS: RegExp[] = [/caseworker/i, /solicitor/i];
 
 export function hasValidCaseRole(caseRole: CaseRole | undefined): boolean {
   if (!caseRole) {
@@ -11,5 +11,5 @@ export function hasValidCaseRole(caseRole: CaseRole | undefined): boolean {
 }
 
 export function isProfessionalUser(userRoles: string[] = []): boolean {
-  return userRoles.some(role => PROFESSIONAL_ROLE_PATTERNS.some(pattern => pattern.test(role)));
+  return userRoles.some(role => PROFESSIONAL_IDAM_ROLE_PATTERNS.some(pattern => pattern.test(role)));
 }
