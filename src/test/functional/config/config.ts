@@ -131,10 +131,10 @@ const config = {
       : isCI || isPerftestTarget,
 
   // IDAM endpoints - derived from target block unless explicitly overridden
-  idamApi: process.env.IDAM_TOKEN_URL
-    || `https://idam-api.${serviceEnv}.platform.hmcts.net/o/token`,
+  idamApi:  process.env.IDAM_API_URL
+    || `https://idam-api.${serviceEnv}.platform.hmcts.net`,
   idamWebUrl: process.env.IDAM_WEB_URL
-   || `https://hmcts-access.${serviceEnv}.platform.hmcts.net/o/authorize`,
+   || `https://idam-web-public.${serviceEnv}.platform.hmcts.net`,
 
   // S2S endpoint - derived from target block unless explicitly overridden
   s2sUrl: process.env.SERVICE_AUTH_PROVIDER_URL
