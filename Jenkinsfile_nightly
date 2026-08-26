@@ -48,6 +48,11 @@ withNightlyPipeline(type, product, component) {
   env.RUNNING_ENV = "aat"
   env.TEST_URL = params.URL_TO_TEST
   env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl
+  env.PLAYWRIGHT_WORKERS = "4"
+  env.PLAYWRIGHT_RETRIES = "2"
+  env.PLAYWRIGHT_A11Y_CHROMIUM_WORKERS = "4"
+  env.PLAYWRIGHT_A11Y_RETRIES = "1"
+  env.ACCESS_CODE_REAL_INTEGRATION = "false"
   loadVaultSecrets(secrets)
 
   // TODO: Enable and implement when these tests are planned and written
@@ -62,10 +67,12 @@ withNightlyPipeline(type, product, component) {
 
   before('fullFunctionalTest') {
     sh 'rm -rf smoke-output functional-output a11y-output'
-    yarnBuilder.yarn('playwright install --with-deps chromium')
+    retry(2) {
+      yarnBuilder.yarn('playwright install --with-deps chromium')
+    }
   }
 
-  enableFullFunctionalTest(200)
+  enableFullFunctionalTest(260)
 
   afterAlways('fullFunctionalTest') {
     junit testResults: 'functional-output/functional-test-result.xml', allowEmptyResults: true

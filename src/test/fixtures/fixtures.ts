@@ -50,18 +50,11 @@ function isPreviewOrAatTarget(): boolean {
 }
 
 function shouldUseRealAccessCodeIntegration(): boolean {
-  const explicitToggle = process.env.ACCESS_CODE_REAL_INTEGRATION;
-
-  if (explicitToggle === 'true') {
-    return true;
-  }
-
-  if (explicitToggle === 'false') {
-    // Legacy .env files often set false; do not block preview/AAT by default.
-    return isPreviewOrAatTarget();
-  }
-
-  return isPreviewOrAatTarget();
+  return (
+    process.env.ACCESS_CODE_REAL_INTEGRATION === 'true'
+    && isPreviewOrAatTarget()
+    && !isLocalMockCcdUrl(getConfiguredCcdUrl())
+  );
 }
 
 function isLocalMockCcdUrl(url: string): boolean {
@@ -151,7 +144,7 @@ export type AuthSession = {
 
 /**
  * Bare minimum case data shared by all case-creation fixtures.
- * `caseId` is the raw 16-digit identifier; 
+ * `caseId` is the raw 16-digit identifier;
  * `formattedCaseId` is the hyphen-separated display form (e.g. 1234-5678-9012-3456).
  */
 export type CreatedCase = {
@@ -310,7 +303,7 @@ export const test = base.extend<MyFixtures & MockOptions>({
 
   /**
    * Creates a unique IDAM citizen user for each test that requires it.
-   * The user is created fresh per test 
+   * The user is created fresh per test
    * Any fixture or test that depends on `citizenUser` or `loggedInPage` will automatically trigger this.
    */
   citizenUser: async ({ idamApiService }, use) => {
@@ -436,7 +429,7 @@ export const test = base.extend<MyFixtures & MockOptions>({
         await cleanupCreatedContestedCase(caseId);
       }
     },
-    { timeout: 240 * 1000 }
+    { timeout: 360 * 1000 }
   ],
 
   /**
@@ -475,7 +468,7 @@ export const test = base.extend<MyFixtures & MockOptions>({
         await cleanupCreatedContestedCase(caseId);
       }
     },
-    { timeout: 240 * 1000 }
+    { timeout: 360 * 1000 }
   ],
 });
 

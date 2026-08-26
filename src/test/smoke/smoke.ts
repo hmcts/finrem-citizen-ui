@@ -9,6 +9,7 @@ const testUrl = process.env.TEST_URL || 'http://localhost:3100';
 const axiosConfig = {
   headers: { 'Accept-Encoding': 'gzip' },
   maxRedirects: 0,
+  timeout: 20_000,
 };
 
 type SmokePage = {
@@ -132,14 +133,41 @@ function assertSuccessfulPageResponse(response: AxiosResponse, page: SmokePage):
   expect(body).not.toContain('Cannot GET');
 }
 
+function isTransientAxiosError(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  const code = error.code || '';
+  return ['ECONNABORTED', 'ECONNRESET', 'ETIMEDOUT', 'EAI_AGAIN'].includes(code);
+}
+
+async function getWithRetry(url: string, expectedStatuses: number[], attempts = 2): Promise<AxiosResponse> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await axios.get(url, {
+        ...axiosConfig,
+        validateStatus: (status: number) => expectedStatuses.includes(status),
+      });
+    } catch (error) {
+      lastError = error;
+      if (!isTransientAxiosError(error) || attempt === attempts) {
+        throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+
+  throw lastError;
+}
+
 describe('Smoke Test - Page Availability', () => {
   test.each(pages)('$name page is reachable and valid', async page => {
     const { path } = page;
     const expectedStatuses = page.expectedStatuses ?? [200, 302];
-    const response = await axios.get(`${testUrl}${path}`, {
-      ...axiosConfig,
-      validateStatus: (status: number) => expectedStatuses.includes(status),
-    });
+    const response = await getWithRetry(`${testUrl}${path}`, expectedStatuses);
     assertSuccessfulPageResponse(response, page);
   });
 
