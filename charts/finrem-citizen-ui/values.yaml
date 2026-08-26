@@ -40,6 +40,7 @@ nodejs:
     ORCHESTRATION_SERVICE_URL: 'http://finrem-cos-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal'
     IDAM_CLIENT_ID: 'finrem-citizen-ui'
     IDAM_END_SESSION_URL: 'https://hmcts-access.{{ .Values.global.environment }}.platform.hmcts.net/o/endSession'
+    MANAGE_CASE_URL: 'https://manage-case.platform.hmcts.net'
     REDIS_EXPIRE_IN_DAYS: 180
     SESSION_STORE: 'redis'
     SECURE_COOKIE: 'true'
