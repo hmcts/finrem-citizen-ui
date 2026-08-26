@@ -1,0 +1,15 @@
+@use 'govuk-frontend' as *;
+
+.cookie-banner {
+  margin-bottom: 0;
+}
+
+.cookie-banner-message {
+  p {
+    margin-bottom: 10px;
+  }
+}
+
+.cookie-preference-success {
+  display: none;
+}
