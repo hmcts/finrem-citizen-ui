@@ -8538,15 +8538,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express-rate-limit@npm:^8.2.1":
-  version: 8.6.0
-  resolution: "express-rate-limit@npm:8.6.0"
+"express-rate-limit@npm:^8.6.0":
+  version: 8.6.2
+  resolution: "express-rate-limit@npm:8.6.2"
   dependencies:
     debug: "npm:^4.4.3"
     ip-address: "npm:^10.2.0"
   peerDependencies:
     express: ">= 4.11"
-  checksum: 10/193c346cfae0e2ce43d51d8f0c9d34f96dcd9d8d3675f463583f4440ba585deaab0fddc7a94722516699d9181b593902736b08a7374a6eb9082f7b62dfa8f1c1
+  checksum: 10/cf9d2a286821a650890366ed14f3d582293175b6f540e3f64b5fd276201cacef6c1e218448dd54f4a1e860de48c395e3d8ddda4d4a032812266a19d8d947208a
   languageName: node
   linkType: hard
 
@@ -8849,7 +8849,7 @@ __metadata:
     eslint-plugin-jest: "npm:^29.0.0"
     eslint-plugin-simple-import-sort: "npm:^14.0.0"
     express: "npm:^5.2.1"
-    express-rate-limit: "npm:^8.2.1"
+    express-rate-limit: "npm:^8.6.0"
     express-session: "npm:1.19.0"
     fs-extra: "npm:^11.3.4"
     glob: "npm:13.0.6"
@@ -8879,6 +8879,7 @@ __metadata:
     otplib: "npm:13.4.1"
     prettier: "npm:3.9.6"
     proper-lockfile: "npm:^4.1.2"
+    rate-limit-redis: "npm:^6.0.1"
     sass: "npm:1.102.0"
     sass-loader: "npm:17.0.0"
     style-loader: "npm:4.0.0"
@@ -12843,6 +12844,15 @@ __metadata:
   version: 1.2.1
   resolution: "range-parser@npm:1.2.1"
   checksum: 10/ce21ef2a2dd40506893157970dc76e835c78cf56437e26e19189c48d5291e7279314477b06ac38abd6a401b661a6840f7b03bd0b1249da9b691deeaa15872c26
+  languageName: node
+  linkType: hard
+
+"rate-limit-redis@npm:^6.0.1":
+  version: 6.0.1
+  resolution: "rate-limit-redis@npm:6.0.1"
+  peerDependencies:
+    express-rate-limit: ">= 8.6.0"
+  checksum: 10/20275f341dc58d4989bb3ef1a3acc07bdffc0f7cffdc0fd9061c10cad077bf017a52ad5695cb50f8739387812db52dc7e2037c99109355525cc850e5a43ad433
   languageName: node
   linkType: hard
 
