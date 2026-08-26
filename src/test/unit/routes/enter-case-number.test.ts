@@ -8,7 +8,13 @@ import { FinremCaseData } from '../../../main/app/case/definition';
 import setupEnterCaseNumberRoute, { validateCaseNumber } from '../../../main/routes/generalUpload/enter-case-number';
 
 jest.mock('../../../main/middleware', () => ({
-  oidcMiddleware: (_req: Request, _res: Response, next: NextFunction) => next(),
+  oidcMiddleware: (req: Request, res: Response, next: NextFunction) => {
+    if ((req as unknown as { session?: { user?: unknown } }).session?.user) {
+      return next();
+    }
+
+    return res.redirect('/login');
+  },
 }));
 
 jest.mock('config', () => ({
@@ -59,6 +65,7 @@ const buildTestApp = (
 
   testApp.use((req: Request, _res: Response, next: NextFunction) => {
     const session: SessionLike = {
+      user: { accessToken: 'token' },
       save: (cb?: (err?: Error) => void) => {
         cb?.(saveErr);
       },
@@ -263,18 +270,28 @@ describe('Enter Case Number Route Handlers', () => {
     });
   });
 
-  it('POST /enter-case-number stores validation errors and redirects when input is invalid', async () => {
+  it('POST /enter-case-number stores validation errors and redirects when input is blank', async () => {
     const res = await request(buildTestApp()).post('/enter-case-number').send({ caseNumber: '' });
 
     expect(res.status).toBe(302);
     expect(res.header.location).toBe('/enter-case-number');
+    expect(mockGetCaseById).not.toHaveBeenCalled();
   });
 
-  it('POST /enter-case-number redirects to oauth login when user is unauthenticated', async () => {
-    const res = await request(buildTestApp({ user: {} })).post('/enter-case-number').send({ caseNumber: '1234567890123456' });
+  it('POST /enter-case-number stores validation errors and redirects when input is invalid', async () => {
+    const res = await request(buildTestApp()).post('/enter-case-number').send({ caseNumber: '1111' });
 
     expect(res.status).toBe(302);
-    expect(res.header.location).toBe('/oauth2/login');
+    expect(res.header.location).toBe('/enter-case-number');
+    expect(mockGetCaseById).not.toHaveBeenCalled();
+  });
+
+  it('POST /enter-case-number redirects to login before validation when user is unauthenticated', async () => {
+    const res = await request(buildTestApp({ user: undefined })).post('/enter-case-number').send({ caseNumber: '1234567890123456' });
+
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/login');
+    expect(mockGetCaseById).not.toHaveBeenCalled();
   });
 
   it('POST /enter-case-number stores caseData and redirects to enter-access-code on CCD success', async () => {
@@ -309,7 +326,7 @@ describe('Enter Case Number Route Handlers', () => {
 
     expect(res.status).toBe(302);
     expect(res.header.location).toBe('/enter-access-code');
-    expect(capturedSession?.caseNumber).toBe('1234-5678-0123-4567');
+    expect(capturedSession?.caseNumber).toBe('1234567801234567');
     expect(capturedSession?.caseData).toEqual(loadedCaseData);
     expect(capturedSession?.caseNumberErrors).toBeUndefined();
     expect(capturedSession?.tempCaseNumber).toBeUndefined();
@@ -318,12 +335,26 @@ describe('Enter Case Number Route Handlers', () => {
   it('POST /enter-case-number sets form error and redirects when CCD lookup fails', async () => {
     mockGetCaseById.mockRejectedValue(new Error('Not found'));
 
-    const res = await request(buildTestApp({ user: { accessToken: 'token' } }))
+    let capturedSession: SessionLike | undefined;
+
+    const res = await request(
+      buildTestApp(
+        { user: { accessToken: 'token' } },
+        undefined,
+        session => {
+          capturedSession = session;
+        }
+      )
+    )
       .post('/enter-case-number')
       .send({ caseNumber: '1234-5678-0123-4567' });
 
     expect(res.status).toBe(302);
     expect(res.header.location).toBe('/enter-case-number');
+    expect(capturedSession?.caseNumberErrors).toEqual({
+      caseNumber: 'We cannot find that case number, Enter the case number that you received from the court',
+    });
+    expect(capturedSession?.tempCaseNumber).toBe('1234-5678-0123-4567');
   });
 
   it('POST /enter-case-number logs session save error but still redirects', async () => {

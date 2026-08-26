@@ -2,7 +2,7 @@
 
 import accessibleAutocomplete from 'accessible-autocomplete';
 
-import { PublicRoutes } from '../common-constants';
+import { PrivateRoutes } from '../common-constants';
 
 interface AutocompleteResult {
   id: number;
@@ -19,7 +19,7 @@ interface AutocompleteConfig {
 
 function getAutocompleteConfig(element: Element): AutocompleteConfig {
   return {
-    apiUrl: element.getAttribute('data-url') || PublicRoutes.autocomplete,
+    apiUrl: element.getAttribute('data-url') || PrivateRoutes.autocomplete,
     eventName: element.getAttribute('data-event') || 'autocomplete:selected',
     inputId: element.getAttribute('data-input-id') || 'autocomplete',
     inputName: element.getAttribute('data-input-name') || 'autocomplete',
