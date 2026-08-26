@@ -1,6 +1,5 @@
 
 export const PublicRoutes = {
-  autocomplete: '/autocomplete',
   basePath: '/',
   callbackUrl: '/oauth2/callback',
   config: '/config',
@@ -16,7 +15,7 @@ export const TestRoutes = {
 } as const;
 
 export const PrivateRoutes = {
-  caseReference: '/case/:caseReference',
+  autocomplete: '/autocomplete',
   enterCaseNumber: '/enter-case-number',
   dashboard: '/dashboard',
   enterAccessCode: '/enter-access-code',
