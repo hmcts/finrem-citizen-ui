@@ -1,6 +1,6 @@
 #!groovy
 
-@Library("Infrastructure@master")
+@Library("Infrastructure@2.5.1")
 
 def type = "nodejs"
 def product = "finrem"
@@ -37,11 +37,6 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 withPipeline(type, product, component) {
   // test:coverage executes unit + route tests via jest.config roots.
   env.UNIT_TESTS_COMMAND = "yarn test:coverage && yarn lint && yarn test:api"
-  env.PLAYWRIGHT_WORKERS = "4"
-  env.PLAYWRIGHT_RETRIES = "1"
-  env.PLAYWRIGHT_A11Y_CHROMIUM_WORKERS = "4"
-  env.PLAYWRIGHT_A11Y_RETRIES = "1"
-  env.ACCESS_CODE_REAL_INTEGRATION = "false"
 
   loadVaultSecrets(secrets)
 
