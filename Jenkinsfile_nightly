@@ -53,6 +53,8 @@ withNightlyPipeline(type, product, component) {
   env.PLAYWRIGHT_A11Y_CHROMIUM_WORKERS = "4"
   env.PLAYWRIGHT_A11Y_RETRIES = "1"
   env.ACCESS_CODE_REAL_INTEGRATION = "false"
+  env.PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}/.playwright-browsers"
+  env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "0"
   loadVaultSecrets(secrets)
 
   // TODO: Enable and implement when these tests are planned and written
@@ -67,8 +69,9 @@ withNightlyPipeline(type, product, component) {
 
   before('fullFunctionalTest') {
     sh 'rm -rf smoke-output functional-output a11y-output'
+    sh 'rm -rf .playwright-browsers'
     retry(2) {
-      yarnBuilder.yarn('playwright install --with-deps chromium')
+      yarnBuilder.yarn('test:functional:install-deps')
     }
   }
 
