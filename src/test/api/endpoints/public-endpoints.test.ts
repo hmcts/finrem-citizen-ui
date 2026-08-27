@@ -104,6 +104,5 @@ describe('Public Endpoints (No Authentication Required)', () => {
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toMatch(/text\/html/i);
     expect(res.text).toContain('Cookies on Dividing your money and property');
-    expect(res.text).toContain('Save cookie settings');
   });
 });

@@ -1,6 +1,8 @@
 import { describe, expect, jest, test } from '@jest/globals';
 import config from 'config';
 
+import { PublicRoutes } from '../../../main/common-constants';
+
 jest.mock('config', () => ({
   __esModule: true,
   default: {
@@ -25,7 +27,7 @@ describe('cookies route', () => {
     setupCookiesRoute(app as never);
 
     expect(get).toHaveBeenCalledTimes(1);
-    expect(get.mock.calls[0][0]).toBe('/cookies');
+    expect(get.mock.calls[0][0]).toBe(PublicRoutes.cookies);
 
     const handler = get.mock.calls[0][1] as (
       _req: unknown,

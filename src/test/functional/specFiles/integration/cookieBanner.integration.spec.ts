@@ -1,9 +1,10 @@
+import { PublicRoutes } from '../../../../main/common-constants';
 import { expect, test } from '../../../fixtures/fixtures';
 
 test.describe('[integration] Cookie banner behavior', () => {
   test('[integration] First visit shows cookie banner on non-cookies pages @a11y', async ({ page, basePage }) => {
     await basePage.clearSession();
-    await page.goto('/page-not-found-for-cookie-banner-check');
+    await page.goto('/page-not-found');
 
     await expect(page.locator('.cookie-banner')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Accept analytics cookies' })).toBeVisible();
@@ -29,7 +30,7 @@ test.describe('[integration] Cookie banner behavior', () => {
 
   test('[integration] Cookies settings page shows preferences form and suppresses banner @a11y', async ({ page, basePage }) => {
     await basePage.clearSession();
-    await page.goto('/cookies');
+    await page.goto(PublicRoutes.cookies);
 
     await expect(page.locator('.cookie-preferences-form')).toBeVisible();
     await expect(page.locator('.cookie-banner')).toBeHidden();
