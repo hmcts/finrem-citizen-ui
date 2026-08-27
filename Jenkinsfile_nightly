@@ -71,7 +71,7 @@ withNightlyPipeline(type, product, component) {
     sh 'rm -rf smoke-output functional-output a11y-output'
     sh 'rm -rf .playwright-browsers'
     retry(2) {
-      yarnBuilder.yarn('test:functional:install-deps')
+      yarnBuilder.yarn('test:playwright:install-ci')
     }
   }
 
