@@ -1,6 +1,6 @@
 import cookieManager from '@hmcts/cookie-manager';
 
-const preferencesCookieName = 'finrem-cookie-preferences';
+const preferencesCookieName = 'cookie-preferences';
 
 cookieManager.on('UserPreferencesLoaded', preferences => {
   const dataLayer = window.dataLayer || [];
