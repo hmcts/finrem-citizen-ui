@@ -62,7 +62,6 @@ withNightlyPipeline(type, product, component) {
 
   before('fullFunctionalTest') {
     sh 'rm -rf smoke-output functional-output a11y-output'
-    yarnBuilder.yarn('playwright install --with-deps chromium')
   }
 
   enableFullFunctionalTest(200)

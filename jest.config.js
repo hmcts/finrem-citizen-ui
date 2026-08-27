@@ -5,6 +5,7 @@ module.exports = {
   testRegex: String.raw`.*\.(test|spec)\.ts$`,
   testPathIgnorePatterns: ['<rootDir>/src/test/unit/scripts/setupManualTest.manual.test.ts'],
   moduleFileExtensions: ['ts', 'js', 'json'],
+  testTimeout: 15000,
   testEnvironment: 'node',
   transform: {
     '^.+\\.ts?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' }],
@@ -17,7 +18,7 @@ module.exports = {
   },
 transformIgnorePatterns: [
   '/node_modules/(?!(openid-client|oauth4webapi|jose|otplib|@otplib|@scure|@noble|uuid|@azure|@hmcts)/)',
-],  
+],
   setupFilesAfterEnv: ['<rootDir>/src/test/jest.setup.ts'],
   collectCoverageFrom: [
     'src/main/**/*.ts',

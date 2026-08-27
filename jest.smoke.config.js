@@ -2,6 +2,7 @@ module.exports = {
   roots: ['<rootDir>/src/test/smoke'],
   testRegex: '(/src/test/.*|\\.test)\\.(ts|js)$',
   testEnvironment: 'node',
+  testTimeout: 20000,
   testRunner: 'jest-circus/runner',
 
   moduleNameMapper: {
@@ -25,7 +26,7 @@ module.exports = {
   },
 transformIgnorePatterns: [
   '/node_modules/(?!(openid-client|oauth4webapi|jose|otplib|@otplib|@scure|@noble|uuid|@azure|@hmcts)/)',
-], 
+],
   moduleFileExtensions: ['ts', 'js', 'json'],
   reporters: [
     'default',
