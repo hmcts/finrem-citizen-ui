@@ -2,6 +2,7 @@ import * as express from 'express';
 import * as nunjucks from 'nunjucks';
 import * as path from 'path';
 
+import { RouteNames } from '../../common-constants';
 import { offsetDate } from '../../functions/task-list/calculate-offset-date';
 import { taskListFormItems } from '../../functions/task-list/task-list-form-items';
 import { taskListWarningMessage } from '../../functions/task-list/task-list-warning-message';
@@ -37,6 +38,7 @@ export const buildFeedbackSurveyUrl = (req: express.Request): string =>
 export const addNunjucksLocals: express.RequestHandler = (req, res, next) => {
   res.locals.pagePath = req.path;
   res.locals.feedbackSurveyUrl = buildFeedbackSurveyUrl(req);
+  res.locals.routes = RouteNames;
   next();
 };
 
