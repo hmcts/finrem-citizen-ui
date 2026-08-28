@@ -38,7 +38,9 @@ export const buildFeedbackSurveyUrl = (req: express.Request): string =>
 export const addNunjucksLocals: express.RequestHandler = (req, res, next) => {
   res.locals.pagePath = req.path;
   res.locals.feedbackSurveyUrl = buildFeedbackSurveyUrl(req);
-  res.locals.routes = RouteNames;
+  res.locals.appRoutes = {
+    cookies: RouteNames.cookies,
+  };
   next();
 };
 
