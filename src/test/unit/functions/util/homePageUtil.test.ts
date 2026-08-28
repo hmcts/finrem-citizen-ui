@@ -8,7 +8,7 @@ import { getCaseApi } from '../../../../main/app/case/case-api';
 import { CASE_TYPE } from '../../../../main/app/case/case-type';
 import { CaseRole, CaseType } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
-import { CaseUserNames, RouteNames } from '../../../../main/common-constants';
+import { CaseUserNames, RouteNames } from '../../../../main/constants';
 import * as homePageUtil from '../../../../main/functions/util/homePageUtil';
 import {
   getHomePageForUser,
