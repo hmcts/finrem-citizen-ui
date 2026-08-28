@@ -86,12 +86,12 @@ describe('DocumentManagerController', () => {
     ({
       session: { user: userDetails },
       headers: {},
-      files: [],
+      file: undefined,
       ...overrides,
     } as unknown as AppRequest);
 
   test('throws when no files uploaded', async () => {
-    const req = buildRequest({ files: [] });
+    const req = buildRequest({ file: undefined });
 
     await expect(
       controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never)
@@ -101,12 +101,10 @@ describe('DocumentManagerController', () => {
   test('throws when user is missing', async () => {
     const req = buildRequest({
       session: { user: undefined } as unknown as AppRequest['session'],
-      files: [
-        {
-          buffer: Buffer.from('file'),
-          originalname: 'file.pdf',
-        } as Express.Multer.File,
-      ],
+      file: {
+        buffer: Buffer.from('file'),
+        originalname: 'file.pdf',
+      } as Express.Multer.File,
     });
 
     await expect(
@@ -130,12 +128,10 @@ describe('DocumentManagerController', () => {
     }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
 
     const req = buildRequest({
-      files: [
-        {
-          buffer: Buffer.from('file'),
-          originalname: 'file.pdf',
-        } as Express.Multer.File,
-      ],
+      file: {
+        buffer: Buffer.from('file'),
+        originalname: 'file.pdf',
+      } as Express.Multer.File,
     });
 
     await controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never);
@@ -160,12 +156,10 @@ describe('DocumentManagerController', () => {
     }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
 
     const req = buildRequest({
-      files: [
-        {
-          buffer: Buffer.from('file'),
-          originalname: 'file.pdf',
-        } as Express.Multer.File,
-      ],
+      file: {
+        buffer: Buffer.from('file'),
+        originalname: 'file.pdf',
+      } as Express.Multer.File,
     });
 
     await controller.uploadDocumentToEvidenceStore(
@@ -201,12 +195,11 @@ describe('DocumentManagerController', () => {
     }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
 
     const req = buildRequest({
-      files: [
+      file:
         {
           buffer: Buffer.from('file'),
           originalname: 'my-bank-statement.pdf',
         } as Express.Multer.File,
-      ],
     });
 
     await controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never);
@@ -233,7 +226,10 @@ describe('DocumentManagerController', () => {
     }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
 
     const req = buildRequest({
-      files: [{} as Express.Multer.File],
+      file: {
+        buffer: Buffer.from('file-2'),
+        originalname: 'file2.pdf',
+      } as Express.Multer.File,
       session: {
         user: userDetails,
         documents: {
@@ -1017,4 +1013,3 @@ describe('DocumentManagerController', () => {
     );
   });
 });
-

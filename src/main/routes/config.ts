@@ -1,7 +1,7 @@
 import config from 'config';
 import { Application, NextFunction, Request, Response } from 'express';
 
-import { RouteNames } from '../common-constants';
+import { RouteNames } from '../constants';
 
 function nonProdOnly(req: Request, res: Response, next: NextFunction) {
   const env = process.env.NODE_ENV || 'development';

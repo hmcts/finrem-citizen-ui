@@ -1,6 +1,6 @@
 import type { Request } from 'express';
 
-import { RouteNames, UploadStepNames, ViewNames } from '../common-constants';
+import { RouteNames, UploadStepNames, ViewNames } from '../constants';
 import { toDocumentTypeKey } from '../functions/util/documentUtil';
 
 export const GENERAL_UPLOAD_BASE_URL = RouteNames.uploadJourney;

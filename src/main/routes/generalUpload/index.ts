@@ -9,7 +9,8 @@ import type {
   PreviouslyUploadedDocument,
   PreviouslyUploadedDocumentsCaseData,
 } from '../../app/document/PreviouslyUploadedDocumentClient';
-import { RouteNames } from '../../common-constants';
+import { RouteNames } from '../../constants';
+import { FileUploadInputFieldNames } from '../../constants/file-upload';
 import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../../functions/util/documentUtil';
 import { oidcMiddleware } from '../../middleware';
 import { GENERAL_UPLOAD_BASE_URL, UploadStepId, uploadSteps } from '../../steps/general-upload-sequence';
@@ -306,6 +307,7 @@ export default function setupGeneralUploadRoute(app: Application): void {
       previousStep,
       caseUserName: req.session.caseUserName,
       contactEmail,
+      FileUploadInputFieldNames,
       shouldAutoRename,
       getDocumentRenameFormat,
       shouldCombineIntoPDF,
@@ -345,6 +347,7 @@ export default function setupGeneralUploadRoute(app: Application): void {
           values: { selectedDocumentTypes, fdrHearing, uploadMore: req.body.uploadMore, understand: req.body.understand },
           previousStep,
           caseUserName: req.session.caseUserName,
+          FileUploadInputFieldNames,
           shouldAutoRename,
           getDocumentRenameFormat,
           generateRenamedFilename,
