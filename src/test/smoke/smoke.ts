@@ -2,7 +2,7 @@
 import { describe, expect, test } from '@jest/globals';
 import axios, { AxiosResponse } from 'axios';
 
-import { PrivateRoutes, PublicRoutes, UploadStepNames } from '../../main/common-constants';
+import { PrivateRoutes, PublicRoutes, UploadStepNames } from '../../main/constants';
 
 const testUrl = process.env.TEST_URL || 'http://localhost:3100';
 
@@ -24,7 +24,7 @@ const pages: SmokePage[] = [
   { name: 'Home', path: PublicRoutes.basePath, expectsLoginRedirect: true },
   { name: 'Health', path: PublicRoutes.health, expectedStatuses: [200, 503], responseKind: 'json' },
   { name: 'Info', path: PublicRoutes.info, responseKind: 'json' },
-  { name: 'Autocomplete', path: PublicRoutes.autocomplete, responseKind: 'json' },
+  { name: 'Autocomplete', path: PrivateRoutes.autocomplete, expectsLoginRedirect: true },
   { name: 'Enter Case Number', path: PrivateRoutes.enterCaseNumber, expectsLoginRedirect: true },
   { name: 'Enter Access Code', path: PrivateRoutes.enterAccessCode, expectsLoginRedirect: true },
   { name: 'Dashboard', path: PrivateRoutes.dashboard, expectsLoginRedirect: true },

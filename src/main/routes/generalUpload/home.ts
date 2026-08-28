@@ -6,15 +6,20 @@ import { tmpdir } from 'os';
 import path from 'path';
 import { LoggerInstance } from 'winston';
 
-import { getSystemUser } from '../../app/auth/user';
-import { getCaseApi } from '../../app/case/case-api';
 import { CitizenUploadDocumentType } from '../../app/case/definition';
 import { AppRequest, UserDetails } from '../../app/controller/AppRequest';
 import { DocumentManagerController } from '../../app/document/DocumentManagerController';
-import { RouteNames } from '../../common-constants';
+import { RouteNames } from '../../constants';
+import {
+  FILE_UPLOAD_MAX_SIZE_BYTES,
+  FILE_UPLOAD_MAX_SIZE_LABEL,
+  FileUploadInputFieldNames,
+  ONE_MEGABYTE_IN_BYTES,
+} from '../../constants/file-upload';
 import { orchestrateHome } from '../../functions/util/homePageUtil';
 import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../../functions/util/uploadValidation';
 import { oidcMiddleware } from '../../middleware';
+import { GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL } from '../../steps/general-upload-sequence';
 
 export default function (app: Application): void {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
@@ -34,16 +39,6 @@ export default function (app: Application): void {
     res.redirect(result.url);
   });
 
-  app.get(RouteNames.caseReference, async (req, res) => {
-    const { caseReference } = req.params;
-
-    const systemUser = await getSystemUser();
-
-    const caseworkerUserApi = getCaseApi(systemUser, logger);
-    const caseData = await caseworkerUserApi.getCaseById(caseReference);
-    res.json(caseData);
-  });
-
   const upload = multer({
     storage: multer.diskStorage({
       destination: tmpdir(),
@@ -52,29 +47,33 @@ export default function (app: Application): void {
       },
     }),
     limits: {
-      fileSize: 100 * 1024 * 1024, // 100MB max file size
+      fileSize: FILE_UPLOAD_MAX_SIZE_BYTES,
     },
   });
 
-  // Allow a small buffer above 100MB to account for multipart encoding overhead
-  // (boundaries, field names, headers) so a file exactly at 100MB is not wrongly rejected.
-  const MAX_UPLOAD_BYTES = 101 * 1024 * 1024;
+  // Allow a small buffer above max file size to account for multipart encoding overhead
+  // (boundaries, field names, headers) so a file exactly at the limit is not wrongly rejected.
+  const MAX_UPLOAD_BYTES = FILE_UPLOAD_MAX_SIZE_BYTES + ONE_MEGABYTE_IN_BYTES;
 
   // Reject oversized uploads using the Content-Length header BEFORE Multer reads the body.
   function checkContentLength(req: Request, res: Response, next: (error?: Error) => void): void {
     const contentLength = Number(req.headers['content-length'] || 0);
     if (contentLength > MAX_UPLOAD_BYTES) {
       const documentType = (req.query.documentType as string) || '';
-      const returnUrl = (req.query.returnUrl as string) || RouteNames.documents;
+      const returnUrl = GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL;
       logger.warn('Upload rejected by Content-Length pre-check', { contentLength });
       return redirectWithError(req, res, next, documentType, returnUrl, FILE_VALIDATION_ERRORS.TOO_LARGE);
     }
     next();
   }
 
+  function getUploadedFiles(req: Request): Express.Multer.File[] | undefined {
+    return req.file ? [req.file] : undefined;
+  }
+
   async function cleanupUploadedFiles(files: Express.Multer.File[] | undefined): Promise<void> {
     await Promise.all((files ?? [])
-      .filter(file => !!file.path)
+      .filter((file): file is Express.Multer.File => !!file?.path)
       .map(async file => {
         try {
           await fs.unlink(file.path);
@@ -93,18 +92,18 @@ export default function (app: Application): void {
     RouteNames.documentUpload,
     oidcMiddleware,
     checkContentLength,
-    upload.any(),
+    upload.single(FileUploadInputFieldNames.file),
     (err: Error, req: Request, res: Response, next: (error?: Error) => void) => {
       if (err) {
         const documentType = req.body.documentType as string;
-        const returnUrl = req.body.returnUrl || RouteNames.documents;
+        const returnUrl = GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL;
 
         // Handle Multer-specific errors
         if (err instanceof multer.MulterError) {
           if (err.code === 'LIMIT_FILE_SIZE') {
             logger.warn('File size limit exceeded', {
               fieldname: err.field,
-              limit: '100MB'
+              limit: FILE_UPLOAD_MAX_SIZE_LABEL,
             });
             return redirectWithError(
               req,
@@ -136,10 +135,11 @@ export default function (app: Application): void {
     async (req: Request, res: Response, next: (error?: Error) => void) => {
       try {
         const documentType = req.body.documentType as string;
-        const returnUrl = req.body.returnUrl || RouteNames.documents;
+        const returnUrl = GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL;
+        const uploadedFiles = getUploadedFiles(req);
 
         // Validate uploaded file
-        const validationError = await validateUploadedFile(req.files as Express.Multer.File[]);
+        const validationError = await validateUploadedFile(uploadedFiles);
         if (validationError) {
           return redirectWithError(req, res, next, documentType, returnUrl, validationError);
         }
@@ -168,7 +168,7 @@ export default function (app: Application): void {
           return redirectWithError(req, res, next, documentType, returnUrl, FILE_VALIDATION_ERRORS.UPLOAD_FAILED);
         }
 
-        await cleanupUploadedFiles(req.files as Express.Multer.File[]);
+        await cleanupUploadedFiles(uploadedFiles);
 
         // Clear errors on successful upload
         if (req.session.uploadErrors) {
@@ -185,7 +185,7 @@ export default function (app: Application): void {
           res.redirect(returnUrl);
         });
       } catch (error) {
-        await cleanupUploadedFiles(req.files as Express.Multer.File[]);
+        await cleanupUploadedFiles(getUploadedFiles(req));
         next(error);
       }
     }
@@ -199,7 +199,7 @@ export default function (app: Application): void {
     returnUrl: string,
     errorMessage: string
   ): void {
-    void cleanupUploadedFiles(req.files as Express.Multer.File[]);
+    void cleanupUploadedFiles(getUploadedFiles(req));
 
     // Store error in session
     if (!req.session.uploadErrors) {

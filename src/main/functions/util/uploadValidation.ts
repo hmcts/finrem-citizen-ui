@@ -1,17 +1,21 @@
 import { createReadStream } from 'fs';
 import { open } from 'fs/promises';
 
+import {
+  FILE_UPLOAD_ALLOWED_EXTENSIONS,
+  FILE_UPLOAD_MAX_SIZE_BYTES,
+  FILE_UPLOAD_MAX_SIZE_LABEL,
+} from '../../constants/file-upload';
+
 export const FILE_VALIDATION_ERRORS = {
   INVALID_TYPE: 'Your file must be in jpg, png, pdf, docx, or xlsx format',
-  TOO_LARGE: 'Your file must be smaller than 100MB',
+  TOO_LARGE: `Your file must be smaller than ${FILE_UPLOAD_MAX_SIZE_LABEL}`,
   EMPTY: 'The selected file is empty',
   UPLOAD_FAILED: 'The selected file could not be uploaded - try again',
   NO_FILE: 'You must upload at least one file before continuing',
   PASSWORD_PROTECTED: 'The selected file is password protected',
 } as const;
 
-const ALLOWED_FILE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.pdf', '.docx', '.xlsx'];
-const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
 const PDF_ENCRYPTION_MARKER = Buffer.from('/Encrypt');
 const COMPOUND_FILE_SIGNATURE = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
 const OFFICE_ENCRYPTION_MARKERS = [
@@ -31,11 +35,11 @@ export function getFileExtension(filename: string): string {
 
 export function isValidFileType(filename: string): boolean {
   const ext = getFileExtension(filename);
-  return ALLOWED_FILE_EXTENSIONS.includes(ext);
+  return FILE_UPLOAD_ALLOWED_EXTENSIONS.includes(ext);
 }
 
 export function isValidFileSize(sizeInBytes: number): boolean {
-  return sizeInBytes > 0 && sizeInBytes <= MAX_FILE_SIZE_BYTES;
+  return sizeInBytes > 0 && sizeInBytes <= FILE_UPLOAD_MAX_SIZE_BYTES;
 }
 
 export async function validateUploadedFile(files: Express.Multer.File[] | undefined): Promise<string | null> {

@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
 import { CitizenUploadDocument, ListValue } from '../../app/case/definition';
-import { DOCUMENT_COMBINED_PDF_FORMATS, DOCUMENT_RENAME_FORMATS } from '../../common-constants';
+import { DOCUMENT_COMBINED_PDF_FORMATS, DOCUMENT_RENAME_FORMATS } from '../../constants';
 import documentTypes from '../../models/document-types.json';
 
 interface DocumentType {

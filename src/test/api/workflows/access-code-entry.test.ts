@@ -2,7 +2,7 @@ import { describe, expect, jest, test } from '@jest/globals';
 import request, { Response } from 'supertest';
 
 import { app } from '../../../main/app';
-import { PrivateRoutes, PublicRoutes } from '../../../main/common-constants';
+import { PrivateRoutes, PublicRoutes } from '../../../main/constants';
 
 jest.setTimeout(15000);
 
@@ -41,22 +41,22 @@ describe('Access Code & Case Number Entry Workflows', () => {
       assertRedirectContract(res, /oauth2|login/i);
     });
 
-    test('POST /enter-case-number with invalid case number format returns validation error or redirects', async () => {
+    test('POST /enter-case-number with invalid case number format redirects to login when unauthenticated', async () => {
       const res = await request(app)
         .post(PrivateRoutes.enterCaseNumber)
         .send({ caseNumber: 'invalid' });
 
-      // Invalid format stays on the form or redirects to same route
-      assertRedirectContract(res, /enter-case-number/i);
+      // Auth check runs first, so unauthenticated requests redirect to login
+      assertRedirectContract(res, /oauth2|login/i);
     });
 
-    test('POST /enter-case-number without case number field returns redirect', async () => {
+    test('POST /enter-case-number without case number field redirects to login when unauthenticated', async () => {
       const res = await request(app)
         .post(PrivateRoutes.enterCaseNumber)
         .send({});
 
-      // Missing field stays on the form or redirects to same route
-      assertRedirectContract(res, /enter-case-number/i);
+      // Auth check runs first, so unauthenticated requests redirect to login
+      assertRedirectContract(res, /oauth2|login/i);
     });
 
     test('POST /enter-case-number without session redirects to oauth2/login', async () => {

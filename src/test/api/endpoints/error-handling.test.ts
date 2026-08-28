@@ -2,7 +2,7 @@ import { describe, expect, test } from '@jest/globals';
 import request from 'supertest';
 
 import { app } from '../../../main/app';
-import { PrivateRoutes, PublicRoutes } from '../../../main/common-constants';
+import { PrivateRoutes, PublicRoutes } from '../../../main/constants';
 
 describe('Error Handling & Status Codes', () => {
   describe('404 & Method Not Allowed', () => {

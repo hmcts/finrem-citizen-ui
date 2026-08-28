@@ -32,17 +32,15 @@ nodejs:
 
   environment:
     NODE_ENV: production
+    OAUTH_CALLBACK_URL: 'https://${SERVICE_FQDN}/oauth2/callback'
     SERVICE_AUTH_PROVIDER_URL: 'http://rpe-service-auth-provider-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal'
-    IDAM_WEB_URL: 'https://idam-web-public.{{ .Values.global.environment }}.platform.hmcts.net/login'
+    IDAM_WEB_URL: 'https://hmcts-access.{{ .Values.global.environment }}.platform.hmcts.net/o/authorize'
     IDAM_TOKEN_URL: 'https://idam-api.{{ .Values.global.environment }}.platform.hmcts.net/o/token'
     CCD_URL: 'http://ccd-data-store-api-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal'
     CASE_DOCUMENT_MANAGEMENT_URL: 'http://ccd-case-document-am-api-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal'
     ORCHESTRATION_SERVICE_URL: 'http://finrem-cos-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal'
     IDAM_CLIENT_ID: 'finrem-citizen-ui'
-    IDAM_END_SESSION_URL: 'https://hmcts-access.{{ .Values.global.environment }}.platform.hmcts.net/o/endSession'
-    REDIS_EXPIRE_IN_DAYS: 180
     SESSION_STORE: 'redis'
-    SECURE_COOKIE: 'true'
     RATE_LIMIT_WINDOW_MS: 900000
 
 redis:
