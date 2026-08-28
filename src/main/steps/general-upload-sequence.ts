@@ -1,7 +1,11 @@
 import type { Request } from 'express';
 
-import { UploadStepNames, ViewNames } from '../constants';
+import { RouteNames, UploadStepNames, ViewNames } from '../constants';
 import { toDocumentTypeKey } from '../functions/util/documentUtil';
+
+export const GENERAL_UPLOAD_BASE_URL = RouteNames.uploadJourney;
+
+export const GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL = `${GENERAL_UPLOAD_BASE_URL}/${UploadStepNames.UploadDocuments}`;
 
 export type UploadStepId = typeof UploadStepNames[keyof typeof UploadStepNames];
 

@@ -9,13 +9,13 @@ import type {
   PreviouslyUploadedDocument,
   PreviouslyUploadedDocumentsCaseData,
 } from '../../app/document/PreviouslyUploadedDocumentClient';
-import { UploadStepId, uploadSteps } from '../../config/general-upload-config';
 import { RouteNames } from '../../constants';
 import { FileUploadInputFieldNames } from '../../constants/file-upload';
 import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../../functions/util/documentUtil';
 import { oidcMiddleware } from '../../middleware';
+import { GENERAL_UPLOAD_BASE_URL, UploadStepId, uploadSteps } from '../../steps/general-upload-sequence';
 
-const previouslyUploadedDocumentsRoute = `${RouteNames.uploadJourney}/previously-uploaded-documents`;
+const previouslyUploadedDocumentsRoute = `${GENERAL_UPLOAD_BASE_URL}/previously-uploaded-documents`;
 const documentIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function getUploadedFilesByType(req: Request): Record<string, { id: string; filename: string; url: string; displayFilename: string }[]> {
@@ -267,7 +267,7 @@ export default function setupGeneralUploadRoute(app: Application): void {
     }
   );
 
-  app.get(`${RouteNames.uploadJourney}/:stepId`, oidcMiddleware, (req: Request, res: Response) => {
+  app.get(`${GENERAL_UPLOAD_BASE_URL}/:stepId`, oidcMiddleware, (req: Request, res: Response) => {
     const step = uploadSteps[req.params.stepId as UploadStepId];
     if (!step) {
       return res.status(404).send('Step not found');
@@ -317,7 +317,7 @@ export default function setupGeneralUploadRoute(app: Application): void {
   });
 
   // POST /upload/:stepId - Handle form submission for any upload journey step
-  app.post(`${RouteNames.uploadJourney}/:stepId`, oidcMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+  app.post(`${GENERAL_UPLOAD_BASE_URL}/:stepId`, oidcMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const step = uploadSteps[req.params.stepId as UploadStepId];
       if (!step) {
