@@ -3,7 +3,7 @@ import config from 'config';
 import type { Express, NextFunction, Request, Response } from 'express';
 import * as oidcClient from 'openid-client';
 
-import { RouteNames } from '../../../../main/common-constants';
+import { RouteNames } from '../../../../main/constants';
 import { OIDCAuthenticationError, OIDCCallbackError } from '../../../../main/modules/oidc/errors';
 import { OIDCModule } from '../../../../main/modules/oidc/index';
 

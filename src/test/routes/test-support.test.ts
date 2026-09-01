@@ -4,7 +4,7 @@ import { describe, expect, test } from '@jest/globals';
 import express, { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 
-import { TestRoutes } from '../../main/common-constants';
+import { TestRoutes } from '../../main/constants';
 import setupTestSupportRoutes from '../../main/routes/generalUpload/test-support';
 
 const buildTestSupportApp = (saveError?: Error) => {
