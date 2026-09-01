@@ -73,7 +73,7 @@
 
               {{ govukButton({
                 text: "Upload file",
-                classes: "govuk-button--secondary govuk-!-margin-top-2",
+                classes: "govuk-button--secondary govuk-!-margin-top-2 disable-upon-submit",
                 preventDoubleClick: true,
                 attributes: {
                   "data-upload-button": documentType.value,
@@ -121,6 +121,7 @@
       <form method="post" class="govuk-!-margin-top-8">
         {{ govukButton({
           text: "Continue",
+          classes: "disable-upon-submit",
           preventDoubleClick: true
         }) }}
       </form>
