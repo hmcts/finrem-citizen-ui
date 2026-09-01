@@ -63,6 +63,12 @@ describe('General Upload Routes', () => {
   let mockDelete: jest.Mock;
 
   beforeEach(() => {
+    (DocumentManagerController as unknown as jest.Mock).mockReset();
+    (DocumentManagerController as unknown as jest.Mock).mockImplementation(() => ({
+      previouslyUploadedDocuments: jest.fn(),
+      LinkDocumentsToCase: jest.fn(),
+    }));
+
     mockGet = jest.fn();
     mockPost = jest.fn();
     mockDelete = jest.fn();
@@ -1303,7 +1309,7 @@ describe('General Upload Routes', () => {
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
     });
 
-    it('should create documents object when it does not exist', async () => {
+    it('should skip CCD event trigger when documents object does not exist', async () => {
       // @ts-ignore - Jest mock typing issue
       const mockLinkDocumentsToCase = jest.fn().mockResolvedValue(undefined) as jest.Mock;
       (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
@@ -1329,8 +1335,9 @@ describe('General Upload Routes', () => {
 
       await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
 
-      expect(mockReq.session?.documents).toBeDefined();
-      expect(mockReq.session?.documents?.isFinancialDisputeResolution).toBe(true);
+      expect(mockReq.session?.documents).toBeUndefined();
+      expect(mockReq.session?.DocumentSelection).toBeUndefined();
+      expect(mockLinkDocumentsToCase).not.toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
     });
 
@@ -1725,8 +1732,6 @@ describe('General Upload Routes', () => {
       (DocumentManagerController as jest.Mock).mockImplementation(() => ({
         previouslyUploadedDocuments: previouslyUploadedDocumentsMock,
       }));
-
-      setupGeneralUploadRoute(app);
 
       const handler = getRegisteredHandler(
         mockGet,
