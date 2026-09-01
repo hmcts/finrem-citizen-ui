@@ -1,7 +1,7 @@
 import { describe, expect, jest, test } from '@jest/globals';
 import config from 'config';
 
-import { PublicRoutes } from '../../../main/common-constants';
+import { PublicRoutes } from '../../../main/constants';
 
 jest.mock('config', () => ({
   __esModule: true,

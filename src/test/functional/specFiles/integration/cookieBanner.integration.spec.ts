@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 
-import { PublicRoutes } from '../../../../main/common-constants';
+import { PublicRoutes } from '../../../../main/constants';
 import { expect, test } from '../../../fixtures/fixtures';
 
 const clearCookiePreferences = async (page: Page): Promise<void> => {
