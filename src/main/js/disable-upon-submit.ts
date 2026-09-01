@@ -19,3 +19,5 @@ Array.from(submitButtons).forEach(button => {
     return true;
   });
 });
+
+export {};
