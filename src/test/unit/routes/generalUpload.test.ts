@@ -1241,32 +1241,6 @@ describe('General Upload Routes', () => {
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
     });
 
-    it('should skip CCD submission when documentDetails is empty and redirect to confirmation', async () => {
-      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
-      const mockReq = {
-        params: { stepId: 'send-to-other-party' },
-        session: {
-          DocumentSelection: {
-            isFinancialDisputeResolution: true,
-          },
-          documents: {
-            documentDetails: [],
-          },
-          save: jest.fn((callback: (err?: Error) => void) => callback()),
-        },
-        body: { understand: 'yes' },
-      } as PartialRequestWithSession;
-      const mockRes = {
-        redirect: jest.fn(),
-      } as Partial<Response>;
-      const mockNext = jest.fn();
-
-      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
-
-      expect(mockReq.session?.DocumentSelection).toBeUndefined();
-      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
-    });
-
     it('should throw error when LinkDocumentsToCase fails', async () => {
       // @ts-ignore - Jest mock typing issue
       const mockLinkDocumentsToCase = jest.fn().mockRejectedValue(new Error('CCD submission failed')) as jest.Mock;
@@ -1306,13 +1280,13 @@ describe('General Upload Routes', () => {
       expect(mockNext).toHaveBeenCalledWith(new Error('CCD submission failed'));
     });
 
-    it('should skip CCD submission when documents are not present and redirect to confirmation', async () => {
+    it('should skip CCD event trigger when documents have already been linked to case', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: 'send-to-other-party' },
         session: {
-          DocumentSelection: {
-            isFinancialDisputeResolution: true,
+          documents: {
+            documentDetails: [],
           },
           save: jest.fn((callback: (err?: Error) => void) => callback()),
         },
@@ -1325,8 +1299,38 @@ describe('General Upload Routes', () => {
 
       await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
 
-      expect(mockReq.session?.documents).toBeUndefined();
       expect(mockReq.session?.DocumentSelection).toBeUndefined();
+      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
+    });
+
+    it('should create documents object when it does not exist', async () => {
+      // @ts-ignore - Jest mock typing issue
+      const mockLinkDocumentsToCase = jest.fn().mockResolvedValue(undefined) as jest.Mock;
+      (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
+        LinkDocumentsToCase: mockLinkDocumentsToCase,
+      }));
+
+      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: 'send-to-other-party' },
+        session: {
+          DocumentSelection: {
+            isFinancialDisputeResolution: true,
+          },
+          // No documents object
+          save: jest.fn((callback: (err?: Error) => void) => callback()),
+        },
+        body: { understand: 'yes' },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+      const mockNext = jest.fn();
+
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockReq.session?.documents).toBeDefined();
+      expect(mockReq.session?.documents?.isFinancialDisputeResolution).toBe(true);
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
     });
 
@@ -1365,7 +1369,6 @@ describe('General Upload Routes', () => {
       await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
       expect(mockNext).toHaveBeenCalledWith(new Error('Session save failed'));
     });
-
   });
 
   describe('GET /upload', () => {
