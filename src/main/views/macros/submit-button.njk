@@ -1,0 +1,18 @@
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% macro submitButton(params = {}) %}
+  {% set classes = ((params.classes or "") + " disable-upon-submit") | trim %}
+  {{ govukButton({
+    text: params.text,
+    html: params.html,
+    href: params.href,
+    classes: classes,
+    type: params.type or "submit",
+    preventDoubleClick: true,
+    isStartButton: params.isStartButton,
+    name: params.name,
+    value: params.value,
+    disabled: params.disabled,
+    attributes: params.attributes
+  }) }}
+{% endmacro %}

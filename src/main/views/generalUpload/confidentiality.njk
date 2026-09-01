@@ -1,6 +1,7 @@
 {% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
 
 {% from "../macros/getting-help.njk" import gettingHelp %}
+{% from "../macros/submit-button.njk" import submitButton %}
 
 {% extends "template.njk" %}
 
@@ -55,9 +56,7 @@
       }) }}
 
       <form method="post">
-        <button type="submit" class="govuk-button disable-upon-submit" data-prevent-double-click="true" data-module="govuk-button">
-          Continue
-        </button>
+        {{ submitButton({ text: "Continue" }) }}
       </form>
     </div>
 

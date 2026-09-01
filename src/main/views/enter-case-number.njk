@@ -1,4 +1,5 @@
 {% extends "template.njk" %}
+{% from "./macros/submit-button.njk" import submitButton %}
 
 {% block content %}
   <div class="govuk-grid-row">
@@ -43,9 +44,7 @@
           >
         </div>
 
-        <button type="submit" class="govuk-button disable-upon-submit" data-prevent-double-click="true" data-module="govuk-button">
-          Continue
-        </button>
+        {{ submitButton({ text: "Continue" }) }}
       </form>
     </div>
   </div>

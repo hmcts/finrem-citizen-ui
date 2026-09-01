@@ -381,21 +381,9 @@ export default function setupGeneralUploadRoute(app: Application): void {
 
       // Handle send-to-other-party submission - send documents to CCD
       if (req.params.stepId === 'send-to-other-party') {
-        const saveAndRedirectToConfirmation = async (): Promise<void> => {
-          await new Promise<void>((resolve, reject) => {
-            req.session.save((err) => {
-              if (err) {
-                return reject(err);
-              }
-              res.redirect(`${RouteNames.uploadJourney}/confirmation`);
-              resolve();
-            });
-          });
-        };
-
         if (!req.session.documents?.documentDetails?.length) {
           delete req.session.DocumentSelection;
-          await saveAndRedirectToConfirmation();
+          await saveAndRedirectToConfirmationPage(req, res);
           return;
         }
 
@@ -421,7 +409,7 @@ export default function setupGeneralUploadRoute(app: Application): void {
         delete req.session.DocumentSelection;
 
         // Save session and redirect to confirmation page
-        await saveAndRedirectToConfirmation();
+        await saveAndRedirectToConfirmationPage(req, res);
         return;
       }
 
@@ -446,6 +434,18 @@ export default function setupGeneralUploadRoute(app: Application): void {
     res.redirect(`${RouteNames.uploadJourney}/before-you-start`);
   });
 
+}
+
+async function saveAndRedirectToConfirmationPage(req: Request, res: Response): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    req.session.save(err => {
+      if (err) {
+        return reject(err);
+      }
+      res.redirect(`${RouteNames.uploadJourney}/confirmation`);
+      resolve();
+    });
+  });
 }
 
 function getPreviouslyUploadedDocumentsByRole(

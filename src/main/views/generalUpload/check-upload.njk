@@ -1,7 +1,7 @@
 {% from "../macros/getting-help.njk" import gettingHelp %}
 {% from "govuk/components/radios/macro.njk" import govukRadios %}
-{% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "../macros/submit-button.njk" import submitButton %}
 
 {% extends "template.njk" %}
 
@@ -87,10 +87,8 @@
           }
         }) }}
 
-        {{ govukButton({
+        {{ submitButton({
           text: "Continue",
-          classes: "disable-upon-submit",
-          preventDoubleClick: true
         }) }}
       </form>
     </div>
