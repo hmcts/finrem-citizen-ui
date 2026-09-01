@@ -1,7 +1,7 @@
 {% from "../macros/getting-help.njk" import gettingHelp %}
 {% from "govuk/components/radios/macro.njk" import govukRadios %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
-{% from "../macros/submit-button.njk" import submitButton %}
+{% from "../macros/form-submit-button.njk" import formSubmitButton %}
 
 {% extends "template.njk" %}
 
@@ -87,7 +87,7 @@
           }
         }) }}
 
-        {{ submitButton({
+        {{ formSubmitButton({
           text: "Continue",
         }) }}
       </form>

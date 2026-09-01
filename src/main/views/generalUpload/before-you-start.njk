@@ -1,5 +1,5 @@
 {% from "../macros/getting-help.njk" import gettingHelp %}
-{% from "../macros/submit-button.njk" import submitButton %}
+{% from "../macros/form-submit-button.njk" import formSubmitButton %}
 
 {% extends "template.njk" %}
 
@@ -66,7 +66,7 @@
       </details>
 
       <form method="post">
-        {{ submitButton({
+        {{ formSubmitButton({
           text: "Start now",
           isStartButton: true
         }) }}

@@ -1,6 +1,6 @@
 {% from "govuk/components/button/macro.njk" import govukButton %}
 
-{% macro submitButton(params = {}) %}
+{% macro formSubmitButton(params = {}) %}
   {% set classes = ((params.classes or "") + " disable-upon-submit") | trim %}
   {{ govukButton({
     text: params.text,
