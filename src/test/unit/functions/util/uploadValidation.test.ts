@@ -6,8 +6,8 @@ import { FILE_UPLOAD_MAX_SIZE_BYTES } from '../../../../main/constants/file-uplo
 import {
   FILE_VALIDATION_ERRORS,
   getFileExtension,
+  isValidFileExtension,
   isValidFileSize,
-  isValidFileType,
   validateUploadedFile,
 } from '../../../../main/functions/util/uploadValidation';
 
@@ -78,33 +78,33 @@ describe('uploadValidation', () => {
     });
   });
 
-  describe('isValidFileType', () => {
+  describe('isValidFileExtension', () => {
     it('should return true for valid file types', () => {
-      expect(isValidFileType('file.jpg')).toBe(true);
-      expect(isValidFileType('file.jpeg')).toBe(true);
-      expect(isValidFileType('file.png')).toBe(true);
-      expect(isValidFileType('file.pdf')).toBe(true);
-      expect(isValidFileType('file.docx')).toBe(true);
-      expect(isValidFileType('file.xlsx')).toBe(true);
+      expect(isValidFileExtension('file.jpg')).toBe(true);
+      expect(isValidFileExtension('file.jpeg')).toBe(true);
+      expect(isValidFileExtension('file.png')).toBe(true);
+      expect(isValidFileExtension('file.pdf')).toBe(true);
+      expect(isValidFileExtension('file.docx')).toBe(true);
+      expect(isValidFileExtension('file.xlsx')).toBe(true);
     });
 
     it('should return true for uppercase extensions', () => {
-      expect(isValidFileType('file.PDF')).toBe(true);
-      expect(isValidFileType('file.DOCX')).toBe(true);
-      expect(isValidFileType('FILE.JPEG')).toBe(true);
+      expect(isValidFileExtension('file.PDF')).toBe(true);
+      expect(isValidFileExtension('file.DOCX')).toBe(true);
+      expect(isValidFileExtension('FILE.JPEG')).toBe(true);
     });
 
     it('should return false for invalid file types', () => {
-      expect(isValidFileType('file.txt')).toBe(false);
-      expect(isValidFileType('file.exe')).toBe(false);
-      expect(isValidFileType('file.zip')).toBe(false);
-      expect(isValidFileType('file.doc')).toBe(false);
-      expect(isValidFileType('file.xls')).toBe(false);
-      expect(isValidFileType('file.csv')).toBe(false);
+      expect(isValidFileExtension('file.txt')).toBe(false);
+      expect(isValidFileExtension('file.exe')).toBe(false);
+      expect(isValidFileExtension('file.zip')).toBe(false);
+      expect(isValidFileExtension('file.doc')).toBe(false);
+      expect(isValidFileExtension('file.xls')).toBe(false);
+      expect(isValidFileExtension('file.csv')).toBe(false);
     });
 
     it('should return false for files with no extension', () => {
-      expect(isValidFileType('noextension')).toBe(false);
+      expect(isValidFileExtension('noextension')).toBe(false);
     });
   });
 

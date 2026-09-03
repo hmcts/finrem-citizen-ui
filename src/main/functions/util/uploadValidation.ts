@@ -54,7 +54,7 @@ export function getFileExtension(filename: string): string {
   return filename.substring(filename.lastIndexOf('.')).toLowerCase();
 }
 
-export function isValidFileType(filename: string): boolean {
+export function isValidFileExtension(filename: string): boolean {
   const ext = getFileExtension(filename);
   return FILE_UPLOAD_ALLOWED_EXTENSIONS.includes(ext);
 }
@@ -63,7 +63,10 @@ export function isValidFileSize(sizeInBytes: number): boolean {
   return sizeInBytes > 0 && sizeInBytes <= FILE_UPLOAD_MAX_SIZE_BYTES;
 }
 
-export async function validateUploadedFile(files: Express.Multer.File[] | undefined): Promise<string | null> {
+export async function validateUploadedFile(
+  files: Express.Multer.File[] | undefined,
+  caseId?: string
+): Promise<string | null> {
   if (!files || files.length === 0) {
     return FILE_VALIDATION_ERRORS.NO_FILE;
   }
@@ -74,9 +77,9 @@ export async function validateUploadedFile(files: Express.Multer.File[] | undefi
     return FILE_VALIDATION_ERRORS.EMPTY;
   }
 
-  if (!isValidFileType(file.originalname)) {
+  if (!isValidFileExtension(file.originalname)) {
     logger.info('Upload rejected: unsupported file extension', {
-      filename: file.originalname,
+      caseId,
       extension: getFileExtension(file.originalname),
     });
     return FILE_VALIDATION_ERRORS.INVALID_TYPE;
@@ -87,10 +90,11 @@ export async function validateUploadedFile(files: Express.Multer.File[] | undefi
   }
 
   try {
-    if (!(await isValidMimeType(file))) {
+    if (!(await isValidMimeType(file, caseId))) {
       return FILE_VALIDATION_ERRORS.INVALID_TYPE;
     }
   } catch {
+    logger.info('Upload validation failed during file type checks', { caseId });
     return FILE_VALIDATION_ERRORS.UPLOAD_FAILED;
   }
 
@@ -99,17 +103,18 @@ export async function validateUploadedFile(files: Express.Multer.File[] | undefi
       return FILE_VALIDATION_ERRORS.PASSWORD_PROTECTED;
     }
   } catch {
+    logger.info('Upload validation failed during password-protection checks', { caseId });
     return FILE_VALIDATION_ERRORS.UPLOAD_FAILED;
   }
 
   return null;
 }
 
-async function isValidMimeType(file: Express.Multer.File): Promise<boolean> {
+async function isValidMimeType(file: Express.Multer.File, caseId?: string): Promise<boolean> {
   const fileExtension = getFileExtension(file.originalname);
   if (!mimeTypeMatchesExtension(fileExtension, file.mimetype)) {
     logger.info('Upload rejected: MIME type does not match extension', {
-      filename: file.originalname,
+      caseId,
       extension: fileExtension,
       mimeType: file.mimetype,
     });
@@ -120,7 +125,7 @@ async function isValidMimeType(file: Express.Multer.File): Promise<boolean> {
   const detectedFileSignature = await detectFileSignature(file);
   if (!signatureMatchesExtension(fileExtension, detectedFileSignature)) {
     logger.info('Upload rejected: file signature does not match extension', {
-      filename: file.originalname,
+      caseId,
       extension: fileExtension,
       detectedFileSignature,
     });
@@ -132,7 +137,7 @@ async function isValidMimeType(file: Express.Multer.File): Promise<boolean> {
     const hasDocxMarkers = await fileContainsAllMarkers(file, [OOXML_CONTENT_TYPES_MARKER, OOXML_DOCX_MARKER]);
     if (!hasDocxMarkers) {
       logger.info('Upload rejected: docx file is missing expected OOXML markers', {
-        filename: file.originalname,
+        caseId,
       });
     }
 
@@ -143,7 +148,7 @@ async function isValidMimeType(file: Express.Multer.File): Promise<boolean> {
     const hasXlsxMarkers = await fileContainsAllMarkers(file, [OOXML_CONTENT_TYPES_MARKER, OOXML_XLSX_MARKER]);
     if (!hasXlsxMarkers) {
       logger.info('Upload rejected: xlsx file is missing expected OOXML markers', {
-        filename: file.originalname,
+        caseId,
       });
     }
 
