@@ -22,6 +22,7 @@ export const getTokenFromApi = async (): Promise<void> => {
     });
 
     token = response.data;
+    logger.info('Service authorisation token obtained successfully');
   } catch (error) {
     logger.error('Failed to obtain service authorisation token', error);
     throw error;
