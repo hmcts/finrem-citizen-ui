@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import type { NextFunction, Request, Response } from 'express';
 
-import { RouteNames } from '../../../main/common-constants';
+import { RouteNames } from '../../../main/constants';
 
 var mockLogger = {
   info: jest.fn(),

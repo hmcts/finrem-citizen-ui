@@ -2,7 +2,7 @@ import { Logger } from '@hmcts/nodejs-logging';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { LoggerInstance } from 'winston';
 
-import { RouteNames } from '../common-constants';
+import { RouteNames } from '../constants';
 import { hydrateUserSessionWithCaseContext } from '../functions/util/homePageUtil';
 
 const logger = Logger.getLogger('case-context-middleware') as unknown as LoggerInstance;
