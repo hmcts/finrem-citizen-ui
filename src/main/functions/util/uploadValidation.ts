@@ -3,6 +3,7 @@ import { open } from 'fs/promises';
 import { LoggerInstance } from 'winston';
 
 import {
+  FILE_SIGNATURES,
   FILE_UPLOAD_ALLOWED_EXTENSIONS,
   FILE_UPLOAD_ALLOWED_TYPE_RULES,
   FILE_UPLOAD_MAX_SIZE_BYTES,
@@ -44,7 +45,7 @@ const PDF_EXTENSION = '.pdf';
 const DOCX_EXTENSION = '.docx';
 const XLSX_EXTENSION = '.xlsx';
 
-type DetectedFileSignature = 'jpg' | 'png' | 'pdf' | 'zip' | 'unknown';
+type DetectedFileSignature = (typeof FILE_SIGNATURES)[keyof typeof FILE_SIGNATURES];
 
 export function getFileExtension(filename: string): string {
   return filename.substring(filename.lastIndexOf('.')).toLowerCase();
@@ -83,7 +84,7 @@ export async function validateUploadedFile(files: Express.Multer.File[] | undefi
   }
 
   try {
-    if (!(await isConsistentWithExpectedType(file))) {
+    if (!(await isValidMimeType(file))) {
       return FILE_VALIDATION_ERRORS.INVALID_TYPE;
     }
   } catch {
@@ -101,7 +102,7 @@ export async function validateUploadedFile(files: Express.Multer.File[] | undefi
   return null;
 }
 
-async function isConsistentWithExpectedType(file: Express.Multer.File): Promise<boolean> {
+async function isValidMimeType(file: Express.Multer.File): Promise<boolean> {
   const fileExtension = getFileExtension(file.originalname);
   if (!mimeTypeMatchesExtension(fileExtension, file.mimetype)) {
     logger.info('Upload rejected: MIME type does not match extension', {
@@ -166,15 +167,15 @@ async function detectFileSignature(file: Express.Multer.File): Promise<DetectedF
   const header = await readFileRange(file, 0, 8);
 
   if (bufferStartsWith(header, JPEG_SIGNATURE)) {
-    return 'jpg';
+    return FILE_SIGNATURES.JPG;
   }
 
   if (bufferStartsWith(header, PNG_SIGNATURE)) {
-    return 'png';
+    return FILE_SIGNATURES.PNG;
   }
 
   if (bufferStartsWith(header, PDF_SIGNATURE)) {
-    return 'pdf';
+    return FILE_SIGNATURES.PDF;
   }
 
   if (header.length >= 4) {
@@ -184,11 +185,11 @@ async function detectFileSignature(file: Express.Multer.File): Promise<DetectedF
       || zipSignature === ZIP_END_OF_CENTRAL_DIRECTORY_SIGNATURE
       || zipSignature === ZIP_SPANNED_ARCHIVE_SIGNATURE
     ) {
-      return 'zip';
+      return FILE_SIGNATURES.ZIP;
     }
   }
 
-  return 'unknown';
+  return FILE_SIGNATURES.UNKNOWN;
 }
 
 function signatureMatchesExtension(extension: string, signature: DetectedFileSignature): boolean {
