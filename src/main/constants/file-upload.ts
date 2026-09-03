@@ -10,24 +10,33 @@ export const FILE_SIGNATURES = {
   UNKNOWN: 'unknown',
 } as const;
 
-export const FILE_UPLOAD_ALLOWED_TYPE_RULES = {
-  '.jpg': {
+export const FILE_EXTENSIONS = {
+  JPG: '.jpg',
+  JPEG: '.jpeg',
+  PNG: '.png',
+  PDF: '.pdf',
+  DOCX: '.docx',
+  XLSX: '.xlsx',
+} as const;
+
+export const FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES = {
+  [FILE_EXTENSIONS.JPG]: {
     signatures: [FILE_SIGNATURES.JPG],
     mimeTypes: ['image/jpeg', 'image/pjpeg'],
   },
-  '.jpeg': {
+  [FILE_EXTENSIONS.JPEG]: {
     signatures: [FILE_SIGNATURES.JPG],
     mimeTypes: ['image/jpeg', 'image/pjpeg'],
   },
-  '.png': {
+  [FILE_EXTENSIONS.PNG]: {
     signatures: [FILE_SIGNATURES.PNG],
     mimeTypes: ['image/png'],
   },
-  '.pdf': {
+  [FILE_EXTENSIONS.PDF]: {
     signatures: [FILE_SIGNATURES.PDF],
     mimeTypes: ['application/pdf'],
   },
-  '.docx': {
+  [FILE_EXTENSIONS.DOCX]: {
     signatures: [FILE_SIGNATURES.ZIP],
     mimeTypes: [
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -35,7 +44,7 @@ export const FILE_UPLOAD_ALLOWED_TYPE_RULES = {
       'application/octet-stream',
     ],
   },
-  '.xlsx': {
+  [FILE_EXTENSIONS.XLSX]: {
     signatures: [FILE_SIGNATURES.ZIP],
     mimeTypes: [
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -45,7 +54,7 @@ export const FILE_UPLOAD_ALLOWED_TYPE_RULES = {
   },
 } as const;
 
-export const FILE_UPLOAD_ALLOWED_EXTENSIONS: readonly string[] = Object.keys(FILE_UPLOAD_ALLOWED_TYPE_RULES);
+export const FILE_UPLOAD_ALLOWED_EXTENSIONS: readonly string[] = Object.values(FILE_EXTENSIONS);
 
 export const ONE_MEGABYTE_IN_BYTES = 1024 * 1024;
 

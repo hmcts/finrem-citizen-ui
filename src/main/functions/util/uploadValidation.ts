@@ -3,9 +3,10 @@ import { open } from 'fs/promises';
 import { LoggerInstance } from 'winston';
 
 import {
+  FILE_EXTENSIONS,
   FILE_SIGNATURES,
+  FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES,
   FILE_UPLOAD_ALLOWED_EXTENSIONS,
-  FILE_UPLOAD_ALLOWED_TYPE_RULES,
   FILE_UPLOAD_MAX_SIZE_BYTES,
   FILE_UPLOAD_MAX_SIZE_LABEL,
 } from '../../constants/file-upload';
@@ -31,6 +32,11 @@ const ZIP_END_OF_CENTRAL_DIRECTORY_SIGNATURE = 0x06054b50;
 const ZIP_CENTRAL_DIRECTORY_HEADER_SIGNATURE = 0x02014b50;
 const ZIP_LOCAL_FILE_HEADER_SIGNATURE = 0x04034b50;
 const ZIP_SPANNED_ARCHIVE_SIGNATURE = 0x08074b50;
+const ZIP_FILE_SIGNATURES = new Set<number>([
+  ZIP_LOCAL_FILE_HEADER_SIGNATURE,
+  ZIP_END_OF_CENTRAL_DIRECTORY_SIGNATURE,
+  ZIP_SPANNED_ARCHIVE_SIGNATURE,
+]);
 const ZIP_END_OF_CENTRAL_DIRECTORY_MIN_SIZE = 22;
 const ZIP_MAX_COMMENT_SIZE = 0xffff;
 const ZIP_CENTRAL_DIRECTORY_FIXED_HEADER_SIZE = 46;
@@ -41,9 +47,6 @@ const PDF_SIGNATURE = Buffer.from('%PDF-');
 const OOXML_CONTENT_TYPES_MARKER = Buffer.from('[Content_Types].xml');
 const OOXML_DOCX_MARKER = Buffer.from('word/');
 const OOXML_XLSX_MARKER = Buffer.from('xl/');
-const PDF_EXTENSION = '.pdf';
-const DOCX_EXTENSION = '.docx';
-const XLSX_EXTENSION = '.xlsx';
 
 type DetectedFileSignature = (typeof FILE_SIGNATURES)[keyof typeof FILE_SIGNATURES];
 
@@ -125,7 +128,7 @@ async function isValidMimeType(file: Express.Multer.File): Promise<boolean> {
     return false;
   }
 
-  if (fileExtension === DOCX_EXTENSION) {
+  if (fileExtension === FILE_EXTENSIONS.DOCX) {
     const hasDocxMarkers = await fileContainsAllMarkers(file, [OOXML_CONTENT_TYPES_MARKER, OOXML_DOCX_MARKER]);
     if (!hasDocxMarkers) {
       logger.info('Upload rejected: docx file is missing expected OOXML markers', {
@@ -136,7 +139,7 @@ async function isValidMimeType(file: Express.Multer.File): Promise<boolean> {
     return hasDocxMarkers;
   }
 
-  if (fileExtension === XLSX_EXTENSION) {
+  if (fileExtension === FILE_EXTENSIONS.XLSX) {
     const hasXlsxMarkers = await fileContainsAllMarkers(file, [OOXML_CONTENT_TYPES_MARKER, OOXML_XLSX_MARKER]);
     if (!hasXlsxMarkers) {
       logger.info('Upload rejected: xlsx file is missing expected OOXML markers', {
@@ -155,7 +158,7 @@ function mimeTypeMatchesExtension(extension: string, mimeType?: string): boolean
     return true;
   }
 
-  const rules = FILE_UPLOAD_ALLOWED_TYPE_RULES[extension as keyof typeof FILE_UPLOAD_ALLOWED_TYPE_RULES];
+  const rules = FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES[extension as keyof typeof FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES];
   if (!rules) {
     return false;
   }
@@ -180,11 +183,7 @@ async function detectFileSignature(file: Express.Multer.File): Promise<DetectedF
 
   if (header.length >= 4) {
     const zipSignature = header.readUInt32LE(0);
-    if (
-      zipSignature === ZIP_LOCAL_FILE_HEADER_SIGNATURE
-      || zipSignature === ZIP_END_OF_CENTRAL_DIRECTORY_SIGNATURE
-      || zipSignature === ZIP_SPANNED_ARCHIVE_SIGNATURE
-    ) {
+    if (ZIP_FILE_SIGNATURES.has(zipSignature)) {
       return FILE_SIGNATURES.ZIP;
     }
   }
@@ -193,7 +192,7 @@ async function detectFileSignature(file: Express.Multer.File): Promise<DetectedF
 }
 
 function signatureMatchesExtension(extension: string, signature: DetectedFileSignature): boolean {
-  const fileSignatureRule = FILE_UPLOAD_ALLOWED_TYPE_RULES[extension as keyof typeof FILE_UPLOAD_ALLOWED_TYPE_RULES];
+  const fileSignatureRule = FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES[extension as keyof typeof FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES];
 
   if (!fileSignatureRule) {
     return false;
@@ -205,11 +204,11 @@ function signatureMatchesExtension(extension: string, signature: DetectedFileSig
 async function isPasswordProtectedFile(file: Express.Multer.File): Promise<boolean> {
   const ext = getFileExtension(file.originalname);
 
-  if (ext === PDF_EXTENSION) {
+  if (ext === FILE_EXTENSIONS.PDF) {
     return fileContainsAllMarkers(file, [PDF_ENCRYPTION_MARKER]);
   }
 
-  if (ext === DOCX_EXTENSION || ext === XLSX_EXTENSION) {
+  if (ext === FILE_EXTENSIONS.DOCX || ext === FILE_EXTENSIONS.XLSX) {
     return isPasswordProtectedOfficeFile(file);
   }
 
