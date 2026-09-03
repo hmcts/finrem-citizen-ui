@@ -2,7 +2,7 @@ import 'express-session';
 
 import { Application, Request, Response } from 'express';
 
-import { RouteNames, ViewNames } from '../../common-constants';
+import { RouteNames, ViewNames } from '../../constants';
 import { loadCaseAndReloadSession } from '../../functions/util/homePageUtil';
 import { oidcMiddleware } from '../../middleware';
 import { AppInsights } from '../../modules/appinsights';

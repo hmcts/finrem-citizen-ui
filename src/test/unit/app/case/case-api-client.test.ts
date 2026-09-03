@@ -6,7 +6,7 @@ import { CaseAssignedUserRole } from '../../../../main/app/case/case-roles';
 import { EVENT_TYPE } from '../../../../main/app/case/case-type';
 import { CaseRole, YesOrNo } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
-import { UrlEndPoints } from '../../../../main/common-constants';
+import { UrlEndPoints } from '../../../../main/constants';
 
 jest.mock('axios');
 

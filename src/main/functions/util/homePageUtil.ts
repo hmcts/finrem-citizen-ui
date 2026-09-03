@@ -7,7 +7,7 @@ import { getCaseApi } from '../../app/case/case-api';
 import { CASE_TYPE } from '../../app/case/case-type';
 import { CaseRole, CaseType, FinremCaseData } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
-import { CaseUserNames, RouteNames } from '../../common-constants';
+import { CaseUserNames, RouteNames } from '../../constants';
 
 export interface UserCaseContext {
   caseData?: FinremCaseData;

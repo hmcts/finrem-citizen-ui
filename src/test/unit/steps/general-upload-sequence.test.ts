@@ -1,4 +1,4 @@
-import { UploadStepNames } from '../../../main/common-constants';
+import { UploadStepNames } from '../../../main/constants';
 import { uploadSteps } from '../../../main/steps/general-upload-sequence';
 
 describe('General Upload Configuration', () => {

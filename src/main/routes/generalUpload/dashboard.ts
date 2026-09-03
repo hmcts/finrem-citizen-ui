@@ -1,7 +1,7 @@
 import { Application, Request, Response } from 'express';
 
 import { UserDetails } from '../../app/controller/AppRequest';
-import { RouteNames, ViewNames } from '../../common-constants';
+import { RouteNames, ViewNames } from '../../constants';
 import { oidcMiddleware } from '../../middleware';
 
 export default function setupDashboardRoute(app: Application): void {

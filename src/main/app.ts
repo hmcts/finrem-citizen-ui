@@ -6,7 +6,7 @@ import RateLimit from 'express-rate-limit';
 import { glob } from 'glob';
 import * as path from 'path';
 
-import { PublicRoutes, ViewNames } from './common-constants';
+import { PublicRoutes, ViewNames } from './constants';
 import { caseContextMiddleware, contactEmailMiddleware, globalErrorHandler } from './middleware';
 import { AppInsights } from './modules/appinsights';
 import { Helmet } from './modules/helmet';

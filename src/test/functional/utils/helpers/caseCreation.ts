@@ -86,9 +86,9 @@ const getEnvironment = (): string => {
 };
 
 const getConfig = (): ApiConfig => {
-  if (!process.env.IDAM_CLIENT_SECRET) {
+  if (!process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET) {
     // eslint-disable-next-line no-console
-    console.warn('⚠️  IDAM_CLIENT_SECRET not set - authentication may fail');
+    console.warn('⚠️  FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET not set - authentication may fail');
   }
 
   const env = getEnvironment();
@@ -99,7 +99,7 @@ const getConfig = (): ApiConfig => {
     idam: {
       baseUrl: process.env.IDAM_TOKEN_URL || `https://idam-api.${serviceEnv}.platform.hmcts.net`,
       clientId: process.env.IDAM_CLIENT_ID || 'divorce',
-      clientSecret: process.env.IDAM_CLIENT_SECRET || ''
+      clientSecret: process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET || ''
     },
     ccd: {
       dataStoreApi: 'https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net'

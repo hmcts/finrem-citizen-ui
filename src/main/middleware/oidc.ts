@@ -1,6 +1,6 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 
-import { PublicRoutes, RouteNames } from '../common-constants';
+import { PublicRoutes, RouteNames } from '../constants';
 
 const PUBLIC_PATHS: string[] = [RouteNames.login, RouteNames.callbackUrl, RouteNames.info, PublicRoutes.favicon];
 const PUBLIC_PREFIXES: string[] = [RouteNames.health];
