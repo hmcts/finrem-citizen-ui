@@ -9,7 +9,6 @@ import { LoggerInstance } from 'winston';
 import { CitizenUploadDocumentType } from '../../app/case/definition';
 import { AppRequest } from '../../app/controller/AppRequest';
 import { DocumentManagerController } from '../../app/document/DocumentManagerController';
-import { resolveHomeUrl } from '../../functions/util/homePageUtil';
 import { RouteNames } from '../../constants';
 import {
   FILE_UPLOAD_MAX_SIZE_BYTES,
@@ -17,6 +16,7 @@ import {
   FileUploadInputFieldNames,
   ONE_MEGABYTE_IN_BYTES,
 } from '../../constants/file-upload';
+import { resolveHomeUrl } from '../../functions/util/homePageUtil';
 import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../../functions/util/uploadValidation';
 import { oidcMiddleware } from '../../middleware';
 import { GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL } from '../../steps/general-upload-sequence';
