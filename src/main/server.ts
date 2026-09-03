@@ -16,22 +16,30 @@ let httpsServer: https.Server | null = null;
 app.locals.shutdown = false;
 
 const port: number = parseInt(process.env.PORT || '3100', 10);
-new AuthProvider().enable();
-if (config.get<boolean>('use-ssl')) {
-  const sslDirectory = path.join(__dirname, 'resources', 'localhost-ssl');
-  const sslOptions = {
-    cert: fs.readFileSync(path.join(sslDirectory, 'localhost.crt')),
-    key: fs.readFileSync(path.join(sslDirectory, 'localhost.key')),
-  };
-  httpsServer = https.createServer(sslOptions, app);
-  httpsServer.listen(port, () => {
-    logger.info(`Application started: https://localhost:${port}`);
-  });
-} else {
-  app.listen(port, () => {
-    logger.info(`Application started: http://localhost:${port}`);
-  });
+
+async function startServer() {
+  await new AuthProvider().enable();
+  if (config.get<boolean>('use-ssl')) {
+    const sslDirectory = path.join(__dirname, 'resources', 'localhost-ssl');
+    const sslOptions = {
+      cert: fs.readFileSync(path.join(sslDirectory, 'localhost.crt')),
+      key: fs.readFileSync(path.join(sslDirectory, 'localhost.key')),
+    };
+    httpsServer = https.createServer(sslOptions, app);
+    httpsServer.listen(port, () => {
+      logger.info(`Application started: https://localhost:${port}`);
+    });
+  } else {
+    app.listen(port, () => {
+      logger.info(`Application started: http://localhost:${port}`);
+    });
+  }
 }
+
+startServer().catch((error) => {
+  logger.error('Failed to start application', error);
+  process.exit(1);
+});
 
 function gracefulShutdownHandler(signal: string) {
   logger.info(`Caught ${signal}, gracefully shutting down. Setting readiness to DOWN`);
