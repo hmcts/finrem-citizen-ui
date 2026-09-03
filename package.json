@@ -135,6 +135,9 @@
   },
   "packageManager": "yarn@4.17.1",
   "resolutions": {
+    "fast-uri": "3.1.6",
+    "postcss-selector-parser": "7.1.4",
+    "qs": "6.16.0",
     "uuid": "14.0.1",
     "@opentelemetry/sdk-node": "0.221.0",
     "@opentelemetry/core": "^2.8.0",
