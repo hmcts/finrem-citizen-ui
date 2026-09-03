@@ -1,5 +1,6 @@
 import { createReadStream } from 'fs';
 import { open } from 'fs/promises';
+import { LoggerInstance } from 'winston';
 
 import {
   FILE_UPLOAD_ALLOWED_EXTENSIONS,
@@ -16,6 +17,8 @@ export const FILE_VALIDATION_ERRORS = {
   NO_FILE: 'You must upload at least one file before continuing',
   PASSWORD_PROTECTED: 'The selected file is password protected',
 } as const;
+
+const logger: LoggerInstance = console as unknown as LoggerInstance;
 
 const PDF_ENCRYPTION_MARKER = Buffer.from('/Encrypt');
 const COMPOUND_FILE_SIGNATURE = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
@@ -68,6 +71,10 @@ export async function validateUploadedFile(files: Express.Multer.File[] | undefi
   }
 
   if (!isValidFileType(file.originalname)) {
+    logger.info('Upload rejected: unsupported file extension', {
+      filename: file.originalname,
+      extension: getFileExtension(file.originalname),
+    });
     return FILE_VALIDATION_ERRORS.INVALID_TYPE;
   }
 
@@ -97,20 +104,46 @@ export async function validateUploadedFile(files: Express.Multer.File[] | undefi
 async function isConsistentWithExpectedType(file: Express.Multer.File): Promise<boolean> {
   const fileExtension = getFileExtension(file.originalname);
   if (!mimeTypeMatchesExtension(fileExtension, file.mimetype)) {
+    logger.info('Upload rejected: MIME type does not match extension', {
+      filename: file.originalname,
+      extension: fileExtension,
+      mimeType: file.mimetype,
+    });
+
     return false;
   }
 
   const detectedFileSignature = await detectFileSignature(file);
   if (!signatureMatchesExtension(fileExtension, detectedFileSignature)) {
+    logger.info('Upload rejected: file signature does not match extension', {
+      filename: file.originalname,
+      extension: fileExtension,
+      detectedFileSignature,
+    });
+
     return false;
   }
 
   if (fileExtension === DOCX_EXTENSION) {
-    return fileContainsAllMarkers(file, [OOXML_CONTENT_TYPES_MARKER, OOXML_DOCX_MARKER]);
+    const hasDocxMarkers = await fileContainsAllMarkers(file, [OOXML_CONTENT_TYPES_MARKER, OOXML_DOCX_MARKER]);
+    if (!hasDocxMarkers) {
+      logger.info('Upload rejected: docx file is missing expected OOXML markers', {
+        filename: file.originalname,
+      });
+    }
+
+    return hasDocxMarkers;
   }
 
   if (fileExtension === XLSX_EXTENSION) {
-    return fileContainsAllMarkers(file, [OOXML_CONTENT_TYPES_MARKER, OOXML_XLSX_MARKER]);
+    const hasXlsxMarkers = await fileContainsAllMarkers(file, [OOXML_CONTENT_TYPES_MARKER, OOXML_XLSX_MARKER]);
+    if (!hasXlsxMarkers) {
+      logger.info('Upload rejected: xlsx file is missing expected OOXML markers', {
+        filename: file.originalname,
+      });
+    }
+
+    return hasXlsxMarkers;
   }
 
   return true;
@@ -159,13 +192,13 @@ async function detectFileSignature(file: Express.Multer.File): Promise<DetectedF
 }
 
 function signatureMatchesExtension(extension: string, signature: DetectedFileSignature): boolean {
-  const rules = FILE_UPLOAD_ALLOWED_TYPE_RULES[extension as keyof typeof FILE_UPLOAD_ALLOWED_TYPE_RULES];
+  const fileSignatureRule = FILE_UPLOAD_ALLOWED_TYPE_RULES[extension as keyof typeof FILE_UPLOAD_ALLOWED_TYPE_RULES];
 
-  if (!rules) {
+  if (!fileSignatureRule) {
     return false;
   }
 
-  return (rules.signatures as readonly string[]).includes(signature);
+  return (fileSignatureRule.signatures as readonly string[]).includes(signature);
 }
 
 async function isPasswordProtectedFile(file: Express.Multer.File): Promise<boolean> {
