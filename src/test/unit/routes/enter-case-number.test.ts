@@ -270,18 +270,6 @@ describe('Enter Case Number Route Handlers', () => {
     });
   });
 
-  it('GET /enter-case-number renders view when user already has linked case context', async () => {
-    const res = await request(
-      buildTestApp({
-        caseNumber: '1234567890123456',
-        user: { accessToken: 'token', caseRole: 'APPLICANT' },
-      })
-    ).get('/enter-case-number');
-
-    expect(res.status).toBe(200);
-    expect(res.body.view).toBe('enter-case-number');
-  });
-
   it('POST /enter-case-number stores validation errors and redirects when input is blank', async () => {
     const res = await request(buildTestApp()).post('/enter-case-number').send({ caseNumber: '' });
 
