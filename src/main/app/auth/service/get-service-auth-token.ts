@@ -14,17 +14,35 @@ export const getTokenFromApi = async (): Promise<void> => {
   const microservice: string = config.get('services.authProvider.microservice');
   const secret: string = config.get('services.authProvider.secret');
   const oneTimePassword = await generate ( { secret });
-  const body = { microservice, oneTimePassword };
 
-  axios
-    .post(url, body)
-    .then(response => (token = response.data))
-    .catch(err => logger.error(err.response?.status, err.response?.data));
+  try {
+    const response = await axios.post(url, {
+      microservice,
+      oneTimePassword,
+    });
+
+    token = response.data;
+    logger.info('Service authorisation token obtained successfully');
+  } catch (error) {
+    logger.error('Failed to obtain service authorisation token', error);
+    throw error;
+  }
 };
 
-export const initAuthToken = (): void => {
-  getTokenFromApi();
-  setInterval(getTokenFromApi, 1000 * 60 * 60);
+export const initAuthToken = async (): Promise<void> => {
+  await getTokenFromApi();
+
+  setInterval(() => {
+    getTokenFromApi().catch(error => {
+      logger.error('Failed to refresh service authorisation token', error);
+    });
+  }, 1000 * 60 * 60);
 };
 
-export const getServiceAuthToken = (): string => token;
+export const getServiceAuthToken = (): string => {
+  if (!token) {
+    throw new Error('Service authorisation token is unavailable');
+  }
+
+  return token;
+};
