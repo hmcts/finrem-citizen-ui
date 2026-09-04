@@ -1,6 +1,7 @@
 {% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
 
 {% from "../macros/getting-help.njk" import gettingHelp %}
+{% from "../macros/form-submit-button.njk" import formSubmitButton %}
 
 {% extends "template.njk" %}
 
@@ -55,9 +56,7 @@
       }) }}
 
       <form method="post">
-        <button type="submit" class="govuk-button" data-module="govuk-button">
-          Continue
-        </button>
+        {{ formSubmitButton({ text: "Continue" }) }}
       </form>
     </div>
 

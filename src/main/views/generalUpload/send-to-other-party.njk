@@ -1,8 +1,8 @@
 {% from "../macros/getting-help.njk" import gettingHelp %}
 {% from "govuk/components/details/macro.njk" import govukDetails %}
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
-{% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "../macros/form-submit-button.njk" import formSubmitButton %}
 
 {% extends "template.njk" %}
 
@@ -60,7 +60,7 @@
           }
         }) }}
 
-        {{ govukButton({
+        {{ formSubmitButton({
           text: "Submit"
         }) }}
       </form>
