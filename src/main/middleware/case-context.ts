@@ -6,8 +6,7 @@ import { RouteNames } from '../constants';
 import { hydrateUserSessionWithCaseContext } from '../functions/util/homePageUtil';
 
 const logger = Logger.getLogger('case-context-middleware') as unknown as LoggerInstance;
-const LINKING_PATHS: string[] = [RouteNames.enterAccessCode, RouteNames.enterCaseNumber];
-const EXCLUDED_PATHS: string[] = [RouteNames.logout, ...LINKING_PATHS];
+const EXCLUDED_PATHS: string[] = [RouteNames.logout];
 
 export const caseContextMiddleware: RequestHandler = async (
   req: Request,

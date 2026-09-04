@@ -76,14 +76,14 @@ describe('caseContextMiddleware', () => {
     expect(hydrateUserSessionWithCaseContext).toHaveBeenCalled();
   });
 
-  it('skips hydration for linking routes', async () => {
+  it('hydrates on linking routes for authenticated users', async () => {
     const req = makeReq({ path: RouteNames.enterAccessCode, originalUrl: RouteNames.enterAccessCode });
     const res = makeRes();
 
     await caseContextMiddleware(req, res, next);
 
     expect(next).toHaveBeenCalledTimes(1);
-    expect(hydrateUserSessionWithCaseContext).not.toHaveBeenCalled();
+    expect(hydrateUserSessionWithCaseContext).toHaveBeenCalled();
   });
 
   it('skips hydration for unauthenticated requests', async () => {
