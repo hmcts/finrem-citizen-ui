@@ -163,7 +163,7 @@ function mimeTypeMatchesExtension(extension: string, mimeType?: string): boolean
     return true;
   }
 
-  const rules = FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES[extension as keyof typeof FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES];
+  const rules = getAllowedTypeRule(extension);
   if (!rules) {
     return false;
   }
@@ -197,13 +197,19 @@ async function detectFileSignature(file: Express.Multer.File): Promise<DetectedF
 }
 
 function signatureMatchesExtension(extension: string, signature: DetectedFileSignature): boolean {
-  const fileSignatureRule = FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES[extension as keyof typeof FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES];
+  const fileSignatureRule = getAllowedTypeRule(extension);
 
   if (!fileSignatureRule) {
     return false;
   }
 
   return (fileSignatureRule.signatures as readonly string[]).includes(signature);
+}
+
+function getAllowedTypeRule(extension: string) {
+  return FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES[
+    extension as keyof typeof FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES
+  ];
 }
 
 async function isPasswordProtectedFile(file: Express.Multer.File): Promise<boolean> {
