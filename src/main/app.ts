@@ -7,7 +7,7 @@ import { glob } from 'glob';
 import * as path from 'path';
 
 import { PublicRoutes, ViewNames } from './constants';
-import { caseContextMiddleware, contactEmailMiddleware, globalErrorHandler } from './middleware';
+import { caseContextMiddleware, contactEmailMiddleware, globalErrorHandler, routeAccessMiddleware } from './middleware';
 import { AppInsights } from './modules/appinsights';
 import { Helmet } from './modules/helmet';
 import { Nunjucks } from './modules/nunjucks';
@@ -57,6 +57,7 @@ new Session().enableFor(app);
 new OIDCModule().enableFor(app);
 
 app.use(caseContextMiddleware);
+app.use(routeAccessMiddleware);
 
 // Add contact email to all templates via res.locals
 app.use(contactEmailMiddleware);

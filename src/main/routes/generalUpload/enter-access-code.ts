@@ -191,10 +191,6 @@ export async function invalidateAccessCode(finremCaseData: FinremCaseData,
 
 export default function setupEnterAccessCodeRoute(app: Application): void {
   app.get(RouteNames.enterAccessCode, oidcMiddleware, (req: Request, res: Response) => {
-    if (req.session.user?.caseRole && req.session.caseNumber) {
-      return res.redirect(RouteNames.dashboard);
-    }
-
     // Check if case number exists in session
     if (!req.session.caseNumber) {
       return res.redirect(RouteNames.enterCaseNumber);
