@@ -2,15 +2,15 @@ import type { NextFunction, Request, RequestHandler, Response } from 'express';
 
 import { PublicRoutes, RouteNames } from '../constants';
 
-const NEW_USER_CASE_LINKING_ROUTES: string[] = [
+const NEW_USER_CASE_LINKING_ROUTES: ReadonlySet<string> = new Set([
   RouteNames.enterCaseNumber,
   RouteNames.enterAccessCode,
-];
+]);
 
-const NEW_USER_ALLOWED_ROUTES: string[] = [
+const NEW_USER_ALLOWED_ROUTES: ReadonlySet<string> = new Set([
   ...Object.values(PublicRoutes),
   ...NEW_USER_CASE_LINKING_ROUTES,
-];
+]);
 
 export const routeAccessMiddleware: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
   if (!req.session?.user) {
@@ -39,9 +39,9 @@ function hasCaseNumberAndRole(req: Request): boolean {
 }
 
 function isAccessingCaseLinkingRoutes(requestPath: string): boolean {
-  return NEW_USER_CASE_LINKING_ROUTES.some(route => requestPath === route);
+  return NEW_USER_CASE_LINKING_ROUTES.has(requestPath);
 }
 
 function isAccessingNewUserRoute(requestPath: string): boolean {
-  return NEW_USER_ALLOWED_ROUTES.includes(requestPath);
+  return NEW_USER_ALLOWED_ROUTES.has(requestPath);
 }
