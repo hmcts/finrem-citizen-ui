@@ -8,6 +8,9 @@ import { CaseRole } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
 
 jest.mock('axios');
+jest.mock('../../../../main/app/auth/service/get-service-auth-token', () => ({
+  getServiceAuthToken: jest.fn().mockReturnValue('service-token'),
+}));
 
 const userDetails: UserDetails = {
   accessToken: '123',

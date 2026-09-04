@@ -42,6 +42,8 @@ export class IdamApiService {
         password: DEFAULT_TEST_USER_PASSWORD,
       };
 
+      console.log(`[IdamApiService] Creating test user: ${user.username}`);
+
       await this.withRetry(async () => {
         const accessToken = await this.getAccessToken(apiContext);
         await this.provisionUser(apiContext, accessToken, user, 'Test', 'User');

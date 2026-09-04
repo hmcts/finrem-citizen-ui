@@ -18,7 +18,7 @@ nodejs:
         - finrem-system-update-username
         - finrem-system-update-password
         - finrem-citizen-ui-idam-client-secret
-        - finrem-citizen-s2s-client-secret
+        - name: finrem-citizen-s2s-client-secret
         - finrem-citizen-ui-redis-connection-string
         - session-secret
         - name: gov-uk-notification-key
