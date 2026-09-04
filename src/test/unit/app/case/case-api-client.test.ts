@@ -9,6 +9,9 @@ import { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { UrlEndPoints } from '../../../../main/constants';
 
 jest.mock('axios');
+jest.mock('../../../../main/app/auth/service/get-service-auth-token', () => ({
+  getServiceAuthToken: jest.fn().mockReturnValue('service-token'),
+}));
 
 const userDetails: UserDetails = {
   accessToken: '123',
