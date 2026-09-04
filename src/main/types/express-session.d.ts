@@ -6,7 +6,6 @@ export {};
 declare module 'express-session' {
   interface SessionData {
     user?: UserDetails;
-    returnTo?: string;
     codeVerifier?: string;
     nonce?: string;
     caseNumber?: string;
@@ -17,6 +16,7 @@ declare module 'express-session' {
     caseData?: FinremCaseData;
     caseRole?: CaseRole;
     caseUserName?: string;
+    caseContextHydratedUserId?: string;
     DocumentSelection?: UserDocumentSelection;
     documents?: UserDocumentSelection;
     uploadErrors?: Record<string, string>;

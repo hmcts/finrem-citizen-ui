@@ -7,7 +7,7 @@ import path from 'path';
 import { LoggerInstance } from 'winston';
 
 import { CitizenUploadDocumentType } from '../../app/case/definition';
-import { AppRequest, UserDetails } from '../../app/controller/AppRequest';
+import { AppRequest } from '../../app/controller/AppRequest';
 import { DocumentManagerController } from '../../app/document/DocumentManagerController';
 import { RouteNames } from '../../constants';
 import {
@@ -16,7 +16,7 @@ import {
   FileUploadInputFieldNames,
   ONE_MEGABYTE_IN_BYTES,
 } from '../../constants/file-upload';
-import { orchestrateHome } from '../../functions/util/homePageUtil';
+import { resolveHomeUrl } from '../../functions/util/homePageUtil';
 import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../../functions/util/uploadValidation';
 import { oidcMiddleware } from '../../middleware';
 import { GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL } from '../../steps/general-upload-sequence';
@@ -27,16 +27,8 @@ export default function (app: Application): void {
     if (req.originalUrl === RouteNames.dashboard) {
       return next();
     }
-    const user = req.session.user as UserDetails;
-    const result = await orchestrateHome(user, logger);
-    if (result.caseData) {
-      req.session.caseData = result.caseData;
-      req.session.caseNumber = result.caseNumber;
-    }
-    if (result.caseNumber) {
-      req.session.caseNumber = result.caseNumber;
-    }
-    res.redirect(result.url);
+
+    res.redirect(resolveHomeUrl(req.session));
   });
 
   const upload = multer({

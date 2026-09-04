@@ -7,7 +7,7 @@ import { RouteNames } from '../../../../main/constants';
 import { OIDCAuthenticationError, OIDCCallbackError } from '../../../../main/modules/oidc/errors';
 import { OIDCModule } from '../../../../main/modules/oidc/index';
 
-const mockLogger = {
+var mockLogger = {
   info: jest.fn(),
   error: jest.fn(),
 };
@@ -43,12 +43,12 @@ type SessionUser = {
   refreshToken?: string;
   sub?: string;
   given_name?: string;
+  caseRole?: string;
 };
 
 type SessionLike = {
   codeVerifier?: string;
   nonce?: string;
-  returnTo?: string;
   user?: SessionUser;
   destroy: (callback: (err?: unknown) => void) => void;
   save: (callback: () => void) => void;
@@ -629,7 +629,7 @@ describe('OIDCModule', () => {
     }
   });
 
-  it('callback stores user, clears temp values and redirects to returnTo', async () => {
+  it('callback stores user, clears temp values and redirects to root', async () => {
     const app = makeApp();
     const module = new OIDCModule();
     const clientConfig = {} as unknown as oidcClient.Configuration;
@@ -666,7 +666,6 @@ describe('OIDCModule', () => {
       session: {
         codeVerifier: 'verifier-123',
         nonce: 'nonce-123',
-        returnTo: RouteNames.dashboard,
         destroy: (callback: (err?: unknown) => void): void => callback(),
         save: (callback: () => void): void => callback(),
       },
@@ -702,14 +701,13 @@ describe('OIDCModule', () => {
     });
     expect(requestAfter.session.codeVerifier).toBeUndefined();
     expect(requestAfter.session.nonce).toBeUndefined();
-    expect(requestAfter.session.returnTo).toBeUndefined();
 
     const redirectMock = (res as unknown as ResponseLike).redirect;
-    expect(redirectMock).toHaveBeenCalledWith(RouteNames.dashboard);
+    expect(redirectMock).toHaveBeenCalledWith(RouteNames.basePath);
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('callback defaults redirect to root when returnTo is missing', async () => {
+  it('callback redirects to root when returnTo is missing', async () => {
     const app = makeApp();
     const module = new OIDCModule();
     const clientConfig = {} as unknown as oidcClient.Configuration;
