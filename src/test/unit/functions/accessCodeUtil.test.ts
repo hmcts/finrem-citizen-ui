@@ -7,6 +7,7 @@ import {
   YesOrNo,
 } from '../../../main/app/case/definition';
 import {
+  buildLinkingEventPayload,
   findMatchingAccessCode,
   getAccessCodeCaseField,
   getCaseAccessCodesByRole,
@@ -135,5 +136,103 @@ describe('getAccessCodeCaseField', () => {
 
   it('returns respondentAccessCodes for respondent role', () => {
     expect(getAccessCodeCaseField(CaseRole.RESPONDENT)).toBe('respondentAccessCodes');
+  });
+});
+
+describe('buildLinkingEventPayload', () => {
+  it('builds applicant payload and marks matched code as used', () => {
+    const accessCodesForRole: AccessCodeCollection[] = [
+      {
+        id: '1',
+        value: {
+          accessCode: 'AAAA1111',
+          isValid: YesOrNo.YES,
+        },
+      },
+      {
+        id: '2',
+        value: {
+          accessCode: 'BBBB2222',
+          isValid: YesOrNo.YES,
+        },
+      },
+    ];
+
+    const payload = buildLinkingEventPayload({
+      matchingAccessCode: { role: CaseRole.APPLICANT, match: accessCodesForRole[0] },
+      caseAccessCodesByRole: {
+        [CaseRole.APPLICANT]: accessCodesForRole,
+        [CaseRole.RESPONDENT]: [],
+      },
+      userId: 'user-123',
+      userEmail: 'user@example.com',
+      validatedAt: '2026-01-01T00:00:00.000Z',
+    });
+
+    expect(payload.applicantEmail).toBe('user@example.com');
+    expect(payload.applicantAccessCodes).toEqual([
+      {
+        id: '1',
+        value: {
+          accessCode: 'AAAA1111',
+          isValid: YesOrNo.NO,
+          userIdamID: 'user-123',
+          usedAt: '2026-01-01T00:00:00.000Z',
+        },
+      },
+      {
+        id: '2',
+        value: {
+          accessCode: 'BBBB2222',
+          isValid: YesOrNo.YES,
+        },
+      },
+    ]);
+  });
+
+  it('builds respondent payload and only updates exact matching code', () => {
+    const accessCodesForRole: AccessCodeCollection[] = [
+      {
+        id: '1',
+        value: {
+          accessCode: 'AAAA1111',
+          isValid: YesOrNo.YES,
+        },
+      },
+      {
+        id: '2',
+        value: {
+          accessCode: 'CCCC3333',
+          isValid: YesOrNo.YES,
+        },
+      },
+    ];
+
+    const payload = buildLinkingEventPayload({
+      matchingAccessCode: { role: CaseRole.RESPONDENT, match: accessCodesForRole[1] },
+      caseAccessCodesByRole: {
+        [CaseRole.APPLICANT]: [],
+        [CaseRole.RESPONDENT]: accessCodesForRole,
+      },
+      validatedAt: '2026-01-02T10:20:30.000Z',
+    });
+
+    expect(payload.respondentEmail).toBeUndefined();
+    expect(payload.respondentAccessCodes?.[0]).toEqual({
+      id: '1',
+      value: {
+        accessCode: 'AAAA1111',
+        isValid: YesOrNo.YES,
+      },
+    });
+    expect(payload.respondentAccessCodes?.[1]).toEqual({
+      id: '2',
+      value: {
+        accessCode: 'CCCC3333',
+        isValid: YesOrNo.NO,
+        userIdamID: undefined,
+        usedAt: '2026-01-02T10:20:30.000Z',
+      },
+    });
   });
 });

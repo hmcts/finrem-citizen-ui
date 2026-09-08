@@ -1,10 +1,10 @@
 import { LoggerInstance } from 'winston';
 
+import { getSystemUser } from '../auth/user';
 import { UserDetails } from '../controller/AppRequest';
 import { CaseApiClient, getCaseApiClient } from './case-api-client';
-import { CaseRole, FinremCaseData } from './definition';
-import { getSystemUser } from '../auth/user';
 import { EVENT_TYPE } from './case-type';
+import { CaseRole, FinremCaseData } from './definition';
 
 export class CaseApi {
   constructor(
@@ -49,9 +49,9 @@ export const getCaseApi = (userDetails: UserDetails, logger: LoggerInstance): Ca
   return new CaseApi(getCaseApiClient(userDetails, logger), logger);
 };
 
-export const triggerSystemEvent = async (caseId: string, data: Partial<FinremCaseData>, eventName: EVENT_TYPE, logger: LoggerInstance) => {
+export const triggerSystemEvent = async (caseId: string, data: Partial<FinremCaseData>, eventName: EVENT_TYPE, logger: LoggerInstance): Promise<FinremCaseData> => {
   const systemUser = await getSystemUser();
   const caseworkerUserApi = getCaseApi(systemUser, logger);
 
-  return await caseworkerUserApi.triggerEvent(caseId, data, eventName);
-}
+  return caseworkerUserApi.triggerEvent(caseId, data, eventName);
+};

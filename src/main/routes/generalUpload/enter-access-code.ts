@@ -1,15 +1,14 @@
-import { EVENT_TYPE } from '../../app/case/case-type';
 import { Application, Request, Response } from 'express';
 
 import { triggerSystemEvent } from '../../app/case/case-api';
-import { AccessCodeCollection, CaseRole, FinremCaseData, YesOrNo } from '../../app/case/definition';
+import { EVENT_TYPE } from '../../app/case/case-type';
+import { CaseRole } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
 import { CaseUserNames, RouteNames, ViewNames } from '../../constants';
 import {
-  getAccessCodeCaseField,
-  getCaseAccessCodesByRole,
-  getEmailCaseField,
+  buildLinkingEventPayload,
   findMatchingAccessCode,
+  getCaseAccessCodesByRole,
   validateAccessCodeFormat,
 } from '../../functions/util/accessCodeUtil';
 import { oidcMiddleware } from '../../middleware';
@@ -39,12 +38,9 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
 
     // Validate access code format
     const { accessCode } = req.body;
-    const accessCodeFormatErrors = validateAccessCodeFormat(accessCode);
-    if (accessCodeFormatErrors) {
-      return res.render('enter-access-code', {
-        errors: accessCodeFormatErrors,
-        accessCode: accessCode || '',
-      });
+    const formatErrors = validateAccessCodeFormat(accessCode);
+    if (formatErrors) {
+      return res.render('enter-access-code', { errors: formatErrors, accessCode: accessCode || '' });
     }
 
     // Find matching access code in case data
@@ -65,31 +61,12 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
     try {
       const { match, role } = matchingAccessCode;
       const user = req.session.user as UserDetails | undefined;
-      const accessCodeField = getAccessCodeCaseField(role);
-      const accessCodesForRole = caseData[accessCodeField] as AccessCodeCollection[] | undefined;
-
-      if (!accessCodesForRole?.length) {
-        logger.error('Access code history missing for matched role', { role });
-        return res.render(ViewNames.Error);
-      }
-
-      const linkingEventPayload: Partial<FinremCaseData> = {};
-      const validatedAt = new Date().toISOString();
-      linkingEventPayload[getEmailCaseField(role)] = user?.email;
-      linkingEventPayload[accessCodeField] = accessCodesForRole.map(code => {
-        if (code.id !== match.id || code.value.accessCode.toUpperCase() !== trimmedAccessCode) {
-          return code;
-        }
-
-        return {
-          ...code,
-          value: {
-            ...code.value,
-            isValid: YesOrNo.NO,
-            userIdamID: user?.id,
-            usedAt: validatedAt,
-          },
-        };
+      const linkingEventPayload = buildLinkingEventPayload({
+        matchingAccessCode: { match, role },
+        caseAccessCodesByRole,
+        userId: user?.id,
+        userEmail: user?.email,
+        validatedAt: new Date().toISOString(),
       });
 
       const caseId = caseNumber?.replace(/-/g, '');

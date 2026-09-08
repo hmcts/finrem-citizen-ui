@@ -10,6 +10,14 @@ export type MatchingAccessCodeResult =
   | { match: AccessCodeCollection; role: CaseRole }
   | { errors: AccessCodeError };
 
+export interface BuildLinkingEventPayloadParams {
+  matchingAccessCode: Extract<MatchingAccessCodeResult, { match: AccessCodeCollection; role: CaseRole }>;
+  caseAccessCodesByRole: Record<CaseRole, AccessCodeCollection[]>;
+  userId?: string;
+  userEmail?: string;
+  validatedAt: string;
+}
+
 export function validateAccessCodeFormat(accessCode: string | undefined): AccessCodeError | null {
   const errors: AccessCodeError = {};
 
@@ -69,4 +77,37 @@ export function getEmailCaseField(caseRole: CaseRole): EmailField {
 
 export function getAccessCodeCaseField(caseRole: CaseRole): AccessCodeField {
   return caseRole === CaseRole.APPLICANT ? 'applicantAccessCodes' : 'respondentAccessCodes';
+}
+
+export function buildLinkingEventPayload({
+  matchingAccessCode,
+  caseAccessCodesByRole,
+  userId,
+  userEmail,
+  validatedAt,
+}: BuildLinkingEventPayloadParams): Partial<FinremCaseData> {
+  const { role, match } = matchingAccessCode;
+  const accessCodeCaseField = getAccessCodeCaseField(role);
+  const userEmailCaseField = getEmailCaseField(role);
+  const accessCodesForRole = caseAccessCodesByRole[role] || [];
+
+  const linkingEventPayload: Partial<FinremCaseData> = {};
+  linkingEventPayload[userEmailCaseField] = userEmail;
+  linkingEventPayload[accessCodeCaseField] = accessCodesForRole.map(code => {
+    if (code.id !== match.id) {
+      return code;
+    }
+
+    return {
+      ...code,
+      value: {
+        ...code.value,
+        isValid: YesOrNo.NO,
+        userIdamID: userId,
+        usedAt: validatedAt,
+      },
+    };
+  });
+
+  return linkingEventPayload;
 }
