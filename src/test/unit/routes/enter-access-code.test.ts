@@ -155,17 +155,17 @@ describe('POST /enter-access-code route handler', () => {
     );
   });
 
-  it('passes UTC usedAt timestamp to triggerSystemEvent payload', async () => {
+  it('does not set usedAt timestamp in triggerSystemEvent payload', async () => {
     const caseData = buildMockCaseData();
     await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
       .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
 
     const payload = jest.mocked(triggerSystemEvent).mock.calls[0][1] as {
-      applicantAccessCodes: { value: { usedAt: string } }[];
+      applicantAccessCodes: { value: { usedAt?: string } }[];
     };
     const usedAt = payload.applicantAccessCodes[0].value.usedAt;
 
-    expect(usedAt).toMatch(/Z$/);
+    expect(usedAt).toBeUndefined();
   });
 
   it('redirects to dashboard on successful applicant access code submission', async () => {

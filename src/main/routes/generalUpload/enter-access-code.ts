@@ -65,7 +65,6 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
         caseAccessCodesByRole,
         userId: user?.id,
         userEmail: user?.email,
-        validatedAt: new Date().toISOString(),
       });
 
       const linkingCCDEventId = getLinkingEventType(role);

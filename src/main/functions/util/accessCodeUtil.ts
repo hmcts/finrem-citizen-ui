@@ -16,7 +16,6 @@ export interface BuildLinkingEventPayloadParams {
   caseAccessCodesByRole: Record<CaseRole, AccessCodeCollection[]>;
   userId?: string;
   userEmail?: string;
-  validatedAt: string;
 }
 
 export function validateAccessCodeFormat(accessCode: string | undefined): AccessCodeError | null {
@@ -85,7 +84,6 @@ export function buildLinkingEventPayload({
   caseAccessCodesByRole,
   userId,
   userEmail,
-  validatedAt,
 }: BuildLinkingEventPayloadParams): Partial<FinremCaseData> {
   const { role, match } = matchingAccessCode;
   const accessCodeCaseField = getAccessCodeCaseField(role);
@@ -105,7 +103,6 @@ export function buildLinkingEventPayload({
         ...code.value,
         isValid: YesOrNo.NO,
         userIdamID: userId,
-        usedAt: validatedAt,
       },
     };
   });

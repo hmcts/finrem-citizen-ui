@@ -170,7 +170,6 @@ describe('buildLinkingEventPayload', () => {
       },
       userId: 'user-123',
       userEmail: 'user@example.com',
-      validatedAt: '2026-01-01T00:00:00.000Z',
     });
 
     expect(payload.applicantEmail).toBe('user@example.com');
@@ -181,7 +180,6 @@ describe('buildLinkingEventPayload', () => {
           accessCode: 'AAAA1111',
           isValid: YesOrNo.NO,
           userIdamID: 'user-123',
-          usedAt: '2026-01-01T00:00:00.000Z',
         },
       },
       {
@@ -218,7 +216,6 @@ describe('buildLinkingEventPayload', () => {
         [CaseRole.APPLICANT]: [],
         [CaseRole.RESPONDENT]: accessCodesForRole,
       },
-      validatedAt: '2026-01-02T10:20:30.000Z',
     });
 
     expect(payload.respondentEmail).toBeUndefined();
@@ -235,7 +232,6 @@ describe('buildLinkingEventPayload', () => {
         accessCode: 'CCCC3333',
         isValid: YesOrNo.NO,
         userIdamID: undefined,
-        usedAt: '2026-01-02T10:20:30.000Z',
       },
     });
   });
