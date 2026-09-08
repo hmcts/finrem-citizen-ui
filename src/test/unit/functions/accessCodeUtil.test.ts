@@ -1,6 +1,9 @@
 import { describe, expect, it } from '@jest/globals';
 
 import {
+  EVENT_TYPE,
+} from '../../../main/app/case/case-type';
+import {
   AccessCodeCollection,
   CaseRole,
   FinremCaseData,
@@ -12,6 +15,7 @@ import {
   getAccessCodeCaseField,
   getCaseAccessCodesByRole,
   getEmailCaseField,
+  getLinkingEventType,
   validateAccessCodeFormat,
 } from '../../../main/functions/util/accessCodeUtil';
 
@@ -234,5 +238,15 @@ describe('buildLinkingEventPayload', () => {
         usedAt: '2026-01-02T10:20:30.000Z',
       },
     });
+  });
+});
+
+describe('getLinkingEventType', () => {
+  it('returns applicant linking event for applicant role', () => {
+    expect(getLinkingEventType(CaseRole.APPLICANT)).toBe(EVENT_TYPE.LINK_APPLICANT_TO_CASE);
+  });
+
+  it('returns respondent linking event for respondent role', () => {
+    expect(getLinkingEventType(CaseRole.RESPONDENT)).toBe(EVENT_TYPE.LINK_RESPONDENT_TO_CASE);
   });
 });

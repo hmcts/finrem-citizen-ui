@@ -101,6 +101,7 @@ describe('POST /enter-access-code route handler', () => {
       .post('/enter-access-code').send({ accessCode: '' });
     expect(res.status).toBe(200);
     expect(res.body.locals.errors.accessCode).toBe('Enter your access code');
+    expect(triggerSystemEvent).not.toHaveBeenCalled();
   });
 
   it('renders with validation errors for wrong-length access code', async () => {
@@ -108,6 +109,7 @@ describe('POST /enter-access-code route handler', () => {
       .post('/enter-access-code').send({ accessCode: 'SHORT' });
     expect(res.status).toBe(200);
     expect(res.body.locals.errors.accessCode).toBe('Access code must be 8 characters');
+    expect(triggerSystemEvent).not.toHaveBeenCalled();
   });
 
   it('redirects to enter-case-number when caseData missing from session', async () => {
@@ -123,6 +125,7 @@ describe('POST /enter-access-code route handler', () => {
       .post('/enter-access-code').send({ accessCode: 'NOMATCH1' });
     expect(res.status).toBe(200);
     expect(res.body.locals.errors.accessCode).toBe('Access code does not match case number');
+    expect(triggerSystemEvent).not.toHaveBeenCalled();
   });
 
   it('renders error when access code has already been used', async () => {
@@ -135,6 +138,34 @@ describe('POST /enter-access-code route handler', () => {
       'The access code you entered has already been used, you should contact the court.'
     );
     expect(res.body.locals.accessCode).toBe('APPCODE1');
+    expect(triggerSystemEvent).not.toHaveBeenCalled();
+  });
+
+  it('calls triggerSystemEvent with hyphen-stripped case id', async () => {
+    const caseData = buildMockCaseData();
+    const res = await request(buildTestApp({ caseNumber: '1234-5678-9012-3456', caseData }))
+      .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
+
+    expect(res.status).toBe(302);
+    expect(triggerSystemEvent).toHaveBeenCalledWith(
+      '1234567890123456',
+      expect.any(Object),
+      EVENT_TYPE.LINK_APPLICANT_TO_CASE,
+      expect.any(Object)
+    );
+  });
+
+  it('passes UTC usedAt timestamp to triggerSystemEvent payload', async () => {
+    const caseData = buildMockCaseData();
+    await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+      .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
+
+    const payload = jest.mocked(triggerSystemEvent).mock.calls[0][1] as {
+      applicantAccessCodes: { value: { usedAt: string } }[];
+    };
+    const usedAt = payload.applicantAccessCodes[0].value.usedAt;
+
+    expect(usedAt).toMatch(/Z$/);
   });
 
   it('redirects to dashboard on successful applicant access code submission', async () => {

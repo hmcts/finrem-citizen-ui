@@ -1,3 +1,4 @@
+import { EVENT_TYPE } from '../../app/case/case-type';
 import { AccessCodeCollection, CaseRole, FinremCaseData, YesOrNo } from '../../app/case/definition';
 
 export interface AccessCodeError {
@@ -110,4 +111,10 @@ export function buildLinkingEventPayload({
   });
 
   return linkingEventPayload;
+}
+
+export function getLinkingEventType(role: CaseRole): EVENT_TYPE {
+  return role === CaseRole.APPLICANT
+    ? EVENT_TYPE.LINK_APPLICANT_TO_CASE
+    : EVENT_TYPE.LINK_RESPONDENT_TO_CASE;
 }

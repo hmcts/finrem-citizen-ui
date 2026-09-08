@@ -1,7 +1,6 @@
 import { Application, Request, Response } from 'express';
 
 import { triggerSystemEvent } from '../../app/case/case-api';
-import { EVENT_TYPE } from '../../app/case/case-type';
 import { CaseRole } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
 import { CaseUserNames, RouteNames, ViewNames } from '../../constants';
@@ -9,6 +8,7 @@ import {
   buildLinkingEventPayload,
   findMatchingAccessCode,
   getCaseAccessCodesByRole,
+  getLinkingEventType,
   validateAccessCodeFormat,
 } from '../../functions/util/accessCodeUtil';
 import { oidcMiddleware } from '../../middleware';
@@ -54,7 +54,6 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       });
     }
 
-    // All validations passed - proceed to dashboard
     logger.info('Access code validated successfully', { caseNumber });
 
     // Linking user to case
@@ -69,8 +68,13 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
         validatedAt: new Date().toISOString(),
       });
 
-      const caseId = caseNumber?.replace(/-/g, '');
-      req.session.caseData = await triggerSystemEvent(caseId, linkingEventPayload, role === CaseRole.APPLICANT ? EVENT_TYPE.LINK_APPLICANT_TO_CASE : EVENT_TYPE.LINK_RESPONDENT_TO_CASE, logger);
+      const linkingCCDEventId = getLinkingEventType(role);
+      req.session.caseData = await triggerSystemEvent(
+        caseNumber?.replace(/-/g, ''),
+        linkingEventPayload,
+        linkingCCDEventId,
+        logger
+      );
 
       req.session.caseRole = role;
       if (user) {
@@ -87,7 +91,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       return res.render(ViewNames.Error);
     }
 
-    // TODO: Send confirmation email if this is a new account setup
+    // TODO: Send confirmation email if this is a new account setup (DFR-5507)
     return res.redirect(RouteNames.dashboard);
   });
 }
