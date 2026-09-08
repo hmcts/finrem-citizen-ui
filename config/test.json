@@ -1,4 +1,3 @@
 {
-  "useCSRFProtection": false,
-  "rateLimitWindowMs": 900000
+  "useCSRFProtection": false
 }

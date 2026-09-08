@@ -49,5 +49,9 @@
       "url": "MANAGE_CASE_URL"
     }
   },
-  "rateLimitWindowMs": "RATE_LIMIT_WINDOW_MS"
+  "rateLimit": {
+    "windowMs": "RATE_LIMIT_WINDOW_MS",
+    "maxRequests": "RATE_LIMIT_MAX_REQUESTS",
+    "redisPrefix": "RATE_LIMIT_REDIS_PREFIX"
+  }
 }
