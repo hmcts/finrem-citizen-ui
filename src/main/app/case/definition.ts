@@ -3527,7 +3527,7 @@ export const enum SolicitorToDraftOrder {
 }
 
 export const enum CaseRole {
- APP_SOLICITOR = '[APPSOLICITOR]',
+  APP_SOLICITOR = '[APPSOLICITOR]',
   APP_BARRISTER = '[APPBARRISTER]',
   RESP_SOLICITOR = '[RESPSOLICITOR]',
   RESP_BARRISTER = '[RESPBARRISTER]',
