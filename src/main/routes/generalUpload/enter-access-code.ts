@@ -1,25 +1,22 @@
-import { EVENT_TYPE } from 'app/case/case-type';
+import { EVENT_TYPE } from '../../app/case/case-type';
 import { Application, Request, Response } from 'express';
 
 import { triggerSystemEvent } from '../../app/case/case-api';
 import { AccessCodeCollection, CaseRole, FinremCaseData, YesOrNo } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
 import { CaseUserNames, RouteNames, ViewNames } from '../../constants';
+import {
+  getAccessCodeCaseField,
+  getCaseAccessCodesByRole,
+  getEmailCaseField,
+  findMatchingAccessCode,
+  validateAccessCodeFormat,
+} from '../../functions/util/accessCodeUtil';
 import { oidcMiddleware } from '../../middleware';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
 const logger = Logger.getLogger('enter-access-code');
-
-interface AccessCodeError {
-  accessCode?: string;
-}
-
-type EmailField = 'applicantEmail' | 'respondentEmail';
-type AccessCodeField = 'applicantAccessCodes' | 'respondentAccessCodes';
-type MatchingAccessCodeResult =
-  | { match: AccessCodeCollection; role: CaseRole }
-  | { errors: AccessCodeError };
 
 export default function setupEnterAccessCodeRoute(app: Application): void {
   app.get(RouteNames.enterAccessCode, oidcMiddleware, (req: Request, res: Response) => {
@@ -116,67 +113,4 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
     // TODO: Send confirmation email if this is a new account setup
     return res.redirect(RouteNames.dashboard);
   });
-}
-
-export function validateAccessCodeFormat(accessCode: string | undefined): AccessCodeError | null {
-  const errors: AccessCodeError = {};
-
-  if (!accessCode || !accessCode.trim()) {
-    errors.accessCode = 'Enter your access code';
-    return errors;
-  }
-
-  const trimmedAccessCode = accessCode.trim();
-
-  // Length validation (must be exactly 8 characters)
-  if (trimmedAccessCode.length !== 8) {
-    errors.accessCode = 'Access code must be 8 characters';
-    return errors;
-  }
-
-  // Format validation (only letters a-z and numbers 0-9)
-  const formatRegex = /^[a-zA-Z0-9]+$/;
-  if (!formatRegex.test(trimmedAccessCode)) {
-    errors.accessCode = 'Access code must only include letters a-z, and numbers 0-9';
-    return errors;
-  }
-
-  return null;
-}
-
-export function findMatchingAccessCode(
-  caseAccessCodesByRole: Record<CaseRole, AccessCodeCollection[]>,
-  enteredAccessCode: string
-): MatchingAccessCodeResult {
-  for (const role in caseAccessCodesByRole) {
-    const codes = caseAccessCodesByRole[role as CaseRole];
-    const match = codes.find(ac => ac.value?.accessCode?.toUpperCase() === enteredAccessCode);
-
-    if (!match) {
-      continue;
-    }
-
-    if (match.value.isValid === YesOrNo.NO) {
-      return { errors: { accessCode: 'The access code you entered has already been used, you should contact the court.' } };
-    }
-
-    return { match, role: role as CaseRole };
-  }
-
-  return { errors: { accessCode: 'Access code does not match case number' } };
-}
-
-function getCaseAccessCodesByRole(caseData: FinremCaseData) {
-  return {
-    [CaseRole.APPLICANT]: caseData.applicantAccessCodes || [],
-    [CaseRole.RESPONDENT]: caseData.respondentAccessCodes || [],
-  };
-}
-
-export function getEmailCaseField(caseRole: CaseRole): EmailField {
-  return caseRole === CaseRole.APPLICANT ? 'applicantEmail' : 'respondentEmail';
-}
-
-export function getAccessCodeCaseField(caseRole: CaseRole): AccessCodeField {
-  return caseRole === CaseRole.APPLICANT ? 'applicantAccessCodes' : 'respondentAccessCodes';
 }

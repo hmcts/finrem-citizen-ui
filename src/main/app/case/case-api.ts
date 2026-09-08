@@ -3,7 +3,7 @@ import { LoggerInstance } from 'winston';
 import { UserDetails } from '../controller/AppRequest';
 import { CaseApiClient, getCaseApiClient } from './case-api-client';
 import { CaseRole, FinremCaseData } from './definition';
-import { getSystemUser } from 'app/auth/user';
+import { getSystemUser } from '../auth/user';
 import { EVENT_TYPE } from './case-type';
 
 export class CaseApi {
