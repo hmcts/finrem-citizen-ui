@@ -2,7 +2,7 @@ import { afterEach, describe, expect, jest, test } from '@jest/globals';
 import type { Application } from 'express';
 import request from 'supertest';
 
-import { PrivateRoutes } from '../../../main/common-constants';
+import { PrivateRoutes } from '../../../main/constants';
 import { HttpStatusCodes } from '../../../main/constants/http-status-codes';
 
 const originalRateLimitWindowMs = process.env.RATE_LIMIT_WINDOW_MS;

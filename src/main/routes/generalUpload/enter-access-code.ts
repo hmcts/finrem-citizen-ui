@@ -6,7 +6,7 @@ import { getCaseApi } from '../../app/case/case-api';
 import { CaseAssignedUserRole } from '../../app/case/case-roles';
 import { AccessCodeCollection, CaseRole, FinremCaseData, YesOrNo } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
-import { CaseUserNames, RouteNames, ViewNames } from '../../common-constants';
+import { CaseUserNames, RouteNames, ViewNames } from '../../constants';
 import { oidcMiddleware } from '../../middleware';
 
 const { Logger } = require('@hmcts/nodejs-logging');

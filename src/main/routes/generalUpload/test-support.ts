@@ -1,7 +1,7 @@
 import { Application, Request, Response } from 'express';
 
 import { AccessCodeCollection, FinremCaseData, YesOrNo } from '../../app/case/definition';
-import { RouteNames, TestRoutes } from '../../common-constants';
+import { RouteNames, TestRoutes } from '../../constants';
 
 /**
  * Test-support routes — only registered when explicitly enabled.

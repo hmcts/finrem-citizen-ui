@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import config from 'config';
 
-import { UrlEndPoints } from '../../common-constants';
+import { UrlEndPoints } from '../../constants';
 import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
 import { CASE_DATA_API_URL } from '../case/case-type';
 import type { UserDetails } from '../controller/AppRequest';

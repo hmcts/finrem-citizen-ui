@@ -4,7 +4,7 @@ import express from 'express';
 import { glob } from 'glob';
 import * as path from 'path';
 
-import { PrivateRoutes, ViewNames } from './common-constants';
+import { PrivateRoutes, ViewNames } from './constants';
 import { contactEmailMiddleware, globalErrorHandler } from './middleware';
 import { AppInsights } from './modules/appinsights';
 import { Helmet } from './modules/helmet';
