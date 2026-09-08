@@ -7,6 +7,7 @@ import * as path from 'path';
 import { PrivateRoutes, ViewNames } from './constants';
 import { contactEmailMiddleware, globalErrorHandler } from './middleware';
 import { AppInsights } from './modules/appinsights';
+import { CSRFToken } from './modules/csrf';
 import { Helmet } from './modules/helmet';
 import { Nunjucks } from './modules/nunjucks';
 import { OIDCModule } from './modules/oidc';
@@ -41,6 +42,9 @@ app.use((req, res, next) => {
 });
 
 new Session().enableFor(app);
+if (config.get<boolean>('useCSRFProtection')) {
+  new CSRFToken().enableFor(app);
+}
 new OIDCModule().enableFor(app);
 
 app.use(Object.values(PrivateRoutes), createDefaultRateLimiter(app.locals.redisClient));
