@@ -420,7 +420,7 @@ describe('invalidateAccessCode', () => {
           }),
         ],
       },
-      EVENT_TYPE.INVALIDATE_APPLICANT_ACCESS_CODE
+      EVENT_TYPE.LINK_APPLICANT_TO_CASE
     );
 
     expect(result).toBe(caseData);
@@ -448,7 +448,7 @@ describe('invalidateAccessCode', () => {
           }),
         ],
       },
-      EVENT_TYPE.INVALIDATE_RESPONDENT_ACCESS_CODE
+      EVENT_TYPE.LINK_RESPONDENT_TO_CASE
     );
   });
 

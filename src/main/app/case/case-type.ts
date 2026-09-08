@@ -1,8 +1,8 @@
 import { CaseType } from './definition';
 export const CASE_TYPE: string = process.env.CASE_TYPE || CaseType.CONTESTED;
 export const enum EVENT_TYPE {
-  INVALIDATE_APPLICANT_ACCESS_CODE = 'CUI_invalidateApplicantAccessCode',
-  INVALIDATE_RESPONDENT_ACCESS_CODE = 'CUI_invalidateRespondentAccessCode',
+  LINK_APPLICANT_TO_CASE = 'CUI_linkApplicantToCase',
+  LINK_RESPONDENT_TO_CASE = 'CUI_linkRespondentToCase',
   APPLICANT_UPLOAD_DOCUMENT = 'CUI_applicantUploadDocuments',
   RESPONDENT_UPLOAD_DOCUMENT = 'CUI_respondentUploadDocuments',
 }

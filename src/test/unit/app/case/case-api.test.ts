@@ -182,7 +182,7 @@ describe('CaseApi.triggerEvent', () => {
 
   test('should call apiClient.sendEvent and return the result', async () => {
     const caseId = '123456';
-    const eventName = EVENT_TYPE.INVALIDATE_APPLICANT_ACCESS_CODE;
+    const eventName = EVENT_TYPE.LINK_APPLICANT_TO_CASE;
 
     const userData = {
       applicantAccessCodes: [],
@@ -209,7 +209,7 @@ describe('CaseApi.triggerEvent', () => {
 
   test('should propagate errors thrown by apiClient.sendEvent', async () => {
     const caseId = '123456';
-    const eventName = EVENT_TYPE.INVALIDATE_APPLICANT_ACCESS_CODE;
+    const eventName = EVENT_TYPE.LINK_APPLICANT_TO_CASE;
 
     mockApiClient.sendEvent.mockRejectedValue(
       new Error('Case could not be updated.')
