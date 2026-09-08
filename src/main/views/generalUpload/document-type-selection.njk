@@ -1,6 +1,7 @@
 {% from "../macros/getting-help.njk" import gettingHelp %}
 {% from "../macros/autocomplete.njk" import autocomplete %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "../macros/form-submit-button.njk" import formSubmitButton %}
 
 {% extends "template.njk" %}
 
@@ -63,9 +64,10 @@
 
         <input type="hidden" name="documentsJson" value='{% if values.documentsJson %}{{ values.documentsJson }}{% elif values.selectedDocumentTypes %}{{ values.selectedDocumentTypes | dump | safe }}{% else %}[]{% endif %}'>
 
-        <button type="submit" class="govuk-button govuk-!-margin-top-6" data-module="govuk-button">
-          Continue
-        </button>
+        {{ formSubmitButton({
+          text: "Continue",
+          classes: "govuk-!-margin-top-6"
+        }) }}
       </form>
     </div>
 

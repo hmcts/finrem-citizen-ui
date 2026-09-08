@@ -1,8 +1,8 @@
 {% from "../macros/getting-help.njk" import gettingHelp %}
 {% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
-{% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "govuk/components/error-message/macro.njk" import govukErrorMessage %}
+{% from "../macros/form-submit-button.njk" import formSubmitButton %}
 
 {% extends "template.njk" %}
 
@@ -71,7 +71,7 @@
                 }
               }) }}
 
-              {{ govukButton({
+              {{ formSubmitButton({
                 text: "Upload file",
                 classes: "govuk-button--secondary govuk-!-margin-top-2",
                 attributes: {
@@ -118,7 +118,7 @@
       {% endif %}
 
       <form method="post" class="govuk-!-margin-top-8">
-        {{ govukButton({
+        {{ formSubmitButton({
           text: "Continue"
         }) }}
       </form>
