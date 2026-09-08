@@ -7,13 +7,15 @@ export interface AccessCodeError {
 
 export type EmailField = 'applicantEmail' | 'respondentEmail';
 export type AccessCodeField = 'applicantAccessCodes' | 'respondentAccessCodes';
+export type CitizenCaseRole = CaseRole.APPLICANT | CaseRole.RESPONDENT;
+export type AccessCodesByCitizenRole = Record<CitizenCaseRole, AccessCodeCollection[]>;
 export type MatchingAccessCodeResult =
-  | { match: AccessCodeCollection; role: CaseRole }
+  | { match: AccessCodeCollection; role: CitizenCaseRole }
   | { errors: AccessCodeError };
 
 export interface BuildLinkingEventPayloadParams {
   matchingAccessCode: Extract<MatchingAccessCodeResult, { match: AccessCodeCollection; role: CaseRole }>;
-  caseAccessCodesByRole: Record<CaseRole, AccessCodeCollection[]>;
+  caseAccessCodesByRole: AccessCodesByCitizenRole;
   userId?: string;
   userEmail?: string;
 }
@@ -43,11 +45,11 @@ export function validateAccessCodeFormat(accessCode: string | undefined): Access
 }
 
 export function findMatchingAccessCode(
-  caseAccessCodesByRole: Record<CaseRole, AccessCodeCollection[]>,
+  caseAccessCodesByRole: AccessCodesByCitizenRole,
   enteredAccessCode: string
 ): MatchingAccessCodeResult {
-  for (const role in caseAccessCodesByRole) {
-    const codes = caseAccessCodesByRole[role as CaseRole];
+  for (const role of [CaseRole.APPLICANT, CaseRole.RESPONDENT] as const) {
+    const codes = caseAccessCodesByRole[role];
     const match = codes.find(ac => ac.value?.accessCode?.toUpperCase() === enteredAccessCode);
 
     if (!match) {
@@ -58,13 +60,13 @@ export function findMatchingAccessCode(
       return { errors: { accessCode: 'The access code you entered has already been used, you should contact the court.' } };
     }
 
-    return { match, role: role as CaseRole };
+    return { match, role };
   }
 
   return { errors: { accessCode: 'Access code does not match case number' } };
 }
 
-export function getCaseAccessCodesByRole(caseData: FinremCaseData): Record<CaseRole, AccessCodeCollection[]> {
+export function getCaseAccessCodesByRole(caseData: FinremCaseData): AccessCodesByCitizenRole {
   return {
     [CaseRole.APPLICANT]: caseData.applicantAccessCodes || [],
     [CaseRole.RESPONDENT]: caseData.respondentAccessCodes || [],

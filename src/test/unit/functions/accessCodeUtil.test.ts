@@ -10,6 +10,7 @@ import {
   YesOrNo,
 } from '../../../main/app/case/definition';
 import {
+  AccessCodesByCitizenRole,
   buildLinkingEventPayload,
   findMatchingAccessCode,
   getAccessCodeCaseField,
@@ -42,7 +43,7 @@ describe('validateAccessCodeFormat', () => {
 });
 
 describe('findMatchingAccessCode', () => {
-  const caseAccessCodesByRole: Record<CaseRole, AccessCodeCollection[]> = {
+  const caseAccessCodesByRole: AccessCodesByCitizenRole = {
     [CaseRole.APPLICANT]: [
       {
         id: '1',
@@ -90,7 +91,7 @@ describe('findMatchingAccessCode', () => {
   });
 
   it('returns used-code error when matching code is invalid', () => {
-    const usedCodesByRole: Record<CaseRole, AccessCodeCollection[]> = {
+    const usedCodesByRole: AccessCodesByCitizenRole = {
       [CaseRole.APPLICANT]: [
         {
           id: '1',
