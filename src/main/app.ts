@@ -6,8 +6,8 @@ import RateLimit from 'express-rate-limit';
 import { glob } from 'glob';
 import * as path from 'path';
 
-import { ViewNames } from './constants';
-import { contactEmailMiddleware, globalErrorHandler } from './middleware';
+import { PublicRoutes, ViewNames } from './constants';
+import { caseContextMiddleware, contactEmailMiddleware, globalErrorHandler } from './middleware';
 import { AppInsights } from './modules/appinsights';
 import { Helmet } from './modules/helmet';
 import { Nunjucks } from './modules/nunjucks';
@@ -40,7 +40,7 @@ const limiter = RateLimit({
   max: 100,
 });
 
-app.get('/favicon.ico', limiter, (req, res) => {
+app.get(PublicRoutes.favicon, limiter, (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));
 });
 
@@ -55,6 +55,8 @@ app.use((req, res, next) => {
 
 new Session().enableFor(app);
 new OIDCModule().enableFor(app);
+
+app.use(caseContextMiddleware);
 
 // Add contact email to all templates via res.locals
 app.use(contactEmailMiddleware);

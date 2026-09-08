@@ -5,6 +5,7 @@ import type { Express, NextFunction, Request, Response } from 'express';
 import type * as OidcClientType from 'openid-client';
 
 import { RouteNames } from '../../constants';
+import { resetCaseContext } from '../../functions/util/homePageUtil';
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
 
@@ -135,7 +136,6 @@ export class OIDCModule {
     app.get(RouteNames.login, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
         if (!this.clientConfig) {
-          req.session.returnTo = req.session.returnTo ?? RouteNames.basePath;
           req.session.save(() => {
             res.status(200).type('html').send(`
               <!doctype html>
@@ -236,12 +236,12 @@ export class OIDCModule {
           roles: (claims.roles ?? []) as string[],
         } satisfies UserDetails;
 
+        resetCaseContext(req.session);
+
         req.session.save(() => {
           delete req.session.codeVerifier;
           delete req.session.nonce;
-          const returnTo = req.session.returnTo ?? RouteNames.basePath;
-          delete req.session.returnTo;
-          res.redirect(returnTo);
+          res.redirect(RouteNames.basePath);
         });
       } catch (err: unknown) {
         this.logger.error('OIDC callback error:', err);

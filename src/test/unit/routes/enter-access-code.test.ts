@@ -279,6 +279,20 @@ const buildTestApp = (sessionOverrides: Record<string, unknown> = {}) => {
 };
 
 describe('GET /enter-access-code route handler', () => {
+  it('redirects to dashboard when user already has linked case context', async () => {
+    const caseData = buildMockCaseData();
+    const res = await request(
+      buildTestApp({
+        caseNumber: '1234567890123456',
+        caseData,
+        user: { uid: 'user-1', accessToken: 'token', caseRole: 'APPLICANT' },
+      })
+    ).get('/enter-access-code');
+
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/dashboard');
+  });
+
   it('redirects to enter-case-number when no caseNumber in session', async () => {
     const res = await request(buildTestApp()).get('/enter-access-code');
     expect(res.status).toBe(302);
