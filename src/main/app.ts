@@ -1,4 +1,5 @@
 import * as bodyParser from 'body-parser';
+import config from 'config';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import { glob } from 'glob';
