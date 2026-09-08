@@ -1,6 +1,6 @@
 import { Application, Request, Response } from 'express';
 
-import { RouteNames, ViewNames } from '../common-constants';
+import { RouteNames, ViewNames } from '../constants';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 

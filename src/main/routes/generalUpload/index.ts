@@ -9,12 +9,14 @@ import type {
   PreviouslyUploadedDocument,
   PreviouslyUploadedDocumentsCaseData,
 } from '../../app/document/PreviouslyUploadedDocumentClient';
-import { RouteNames } from '../../common-constants';
-import { UploadStepId, uploadSteps } from '../../config/general-upload-config';
+import { RouteNames } from '../../constants';
+import { FileUploadInputFieldNames } from '../../constants/file-upload';
+import { extractDocumentIdFromUrl, getCaseDocumentsByRole } from '../../functions/util/documentAccess';
 import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../../functions/util/documentUtil';
 import { oidcMiddleware } from '../../middleware';
+import { GENERAL_UPLOAD_BASE_URL, UploadStepId, uploadSteps } from '../../steps/general-upload-sequence';
 
-const previouslyUploadedDocumentsRoute = `${RouteNames.uploadJourney}/previously-uploaded-documents`;
+const previouslyUploadedDocumentsRoute = `${GENERAL_UPLOAD_BASE_URL}/previously-uploaded-documents`;
 const documentIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function getUploadedFilesByType(req: Request): Record<string, { id: string; filename: string; url: string; displayFilename: string }[]> {
@@ -36,7 +38,7 @@ function getUploadedFilesByType(req: Request): Record<string, { id: string; file
 
     // Extract document ID from URL and construct download route
     const documentUrl = doc.value?.DocumentLink?.document_url || '';
-    const extractedDocumentId = documentUrl.split('/').pop() || '';
+    const extractedDocumentId = extractDocumentIdFromUrl(documentUrl) || '';
     const downloadUrl = extractedDocumentId ? `/documents/${extractedDocumentId}/download` : '';
 
     if (!uploadedFilesByType[kebabCase]) {
@@ -72,7 +74,7 @@ function getUploadedFilesByCombinedFormat(req: Request): Record<string, { id: st
 
     // Extract document ID from URL and construct download route
     const documentUrl = doc.value?.DocumentLink?.document_url || '';
-    const extractedDocumentId = documentUrl.split('/').pop() || '';
+    const extractedDocumentId = extractDocumentIdFromUrl(documentUrl) || '';
     const downloadUrl = extractedDocumentId ? `/documents/${extractedDocumentId}/download` : '';
 
     // Group by combined PDF format if applicable, otherwise by original document type
@@ -266,7 +268,7 @@ export default function setupGeneralUploadRoute(app: Application): void {
     }
   );
 
-  app.get(`${RouteNames.uploadJourney}/:stepId`, oidcMiddleware, (req: Request, res: Response) => {
+  app.get(`${GENERAL_UPLOAD_BASE_URL}/:stepId`, oidcMiddleware, (req: Request, res: Response) => {
     const step = uploadSteps[req.params.stepId as UploadStepId];
     if (!step) {
       return res.status(404).send('Step not found');
@@ -306,6 +308,7 @@ export default function setupGeneralUploadRoute(app: Application): void {
       previousStep,
       caseUserName: req.session.caseUserName,
       contactEmail,
+      FileUploadInputFieldNames,
       shouldAutoRename,
       getDocumentRenameFormat,
       shouldCombineIntoPDF,
@@ -315,7 +318,7 @@ export default function setupGeneralUploadRoute(app: Application): void {
   });
 
   // POST /upload/:stepId - Handle form submission for any upload journey step
-  app.post(`${RouteNames.uploadJourney}/:stepId`, oidcMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+  app.post(`${GENERAL_UPLOAD_BASE_URL}/:stepId`, oidcMiddleware, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const step = uploadSteps[req.params.stepId as UploadStepId];
       if (!step) {
@@ -345,6 +348,7 @@ export default function setupGeneralUploadRoute(app: Application): void {
           values: { selectedDocumentTypes, fdrHearing, uploadMore: req.body.uploadMore, understand: req.body.understand },
           previousStep,
           caseUserName: req.session.caseUserName,
+          FileUploadInputFieldNames,
           shouldAutoRename,
           getDocumentRenameFormat,
           generateRenamedFilename,
@@ -439,32 +443,11 @@ function getPreviouslyUploadedDocumentsByRole(
   caseRole: CaseRole,
   caseData?: PreviouslyUploadedDocumentsCaseData
 ): PreviouslyUploadedDocument[] {
-  if (caseRole === CaseRole.APPLICANT) {
-    return caseData?.citizenApplicantDocument ?? [];
-  } else if (caseRole === CaseRole.RESPONDENT) {
-    return caseData?.citizenRespondentDocument ?? [];
-  } else {
-    throw new Error(`Unsupported case role: ${caseRole}`);
-  }
+  return getCaseDocumentsByRole<PreviouslyUploadedDocument>(caseRole, caseData);
 }
 
 function getDocumentIdFromUrl(documentUrl?: string): string | undefined {
-  if (!documentUrl) {
-    return undefined;
-  }
-
-  let pathname: string;
-  try {
-    pathname = new URL(documentUrl, 'http://localhost').pathname;
-  } catch {
-    return undefined;
-  }
-
-  const pathSegments = pathname.split('/').filter(Boolean);
-  const documentsSegmentIndex = pathSegments.findIndex(segment => segment === 'documents');
-  const documentId = documentsSegmentIndex >= 0
-    ? pathSegments[documentsSegmentIndex + 1]
-    : undefined;
+  const documentId = extractDocumentIdFromUrl(documentUrl);
 
   return documentId && documentIdPattern.test(documentId)
     ? documentId

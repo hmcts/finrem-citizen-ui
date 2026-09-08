@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import { expect, Locator, Page } from '@playwright/test';
 
+import { FILE_UPLOAD_MAX_SIZE_BYTES } from '../../../main/constants/file-upload';
 import { BasePage } from './basePage.page';
 import { GETTING_HELP_OPENING_HOURS, GettingHelpPanel } from './components/gettingHelpPanel.component';
 
@@ -262,7 +263,7 @@ export class DocumentUploadPage extends BasePage {
     await this.chooseFileAndUploadDocument(SUPPORTED_UPLOAD_FILES.emptyDocx, 'Other document', false);
   }
 
-  async chooseLargeFileAndUpload(sizeBytes = 101 * 1024 * 1024): Promise<void> {
+  async chooseLargeFileAndUpload(sizeBytes = FILE_UPLOAD_MAX_SIZE_BYTES + 1): Promise<void> {
     const tempFilePath = path.join(
       os.tmpdir(),
       `finrem-large-upload-${Date.now()}-${Math.random().toString(16).slice(2)}.pdf`

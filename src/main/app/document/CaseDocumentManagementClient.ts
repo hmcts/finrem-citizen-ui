@@ -4,7 +4,7 @@ import { Response } from 'express';
 import FormData from 'form-data';
 import { createReadStream } from 'fs';
 
-import { UrlEndPoints } from '../../common-constants';
+import { UrlEndPoints } from '../../constants';
 import { generateRenamedFilename, shouldAutoRename, toDocumentTypeKey } from '../../functions/util/documentUtil';
 import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
 import { CASE_DOCUMENT_MANAGEMENT_SERVICE_URL, CASE_TYPE, JURISDICTION } from '../case/case-type';

@@ -2,7 +2,7 @@ import { csrfSync } from 'csrf-sync';
 import { Application, NextFunction, Request, Response } from 'express';
 import type { LoggerInstance } from 'winston';
 
-import { RouteNames } from '../../common-constants';
+import { RouteNames } from '../../constants';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 const logger: LoggerInstance = Logger.getLogger('app');

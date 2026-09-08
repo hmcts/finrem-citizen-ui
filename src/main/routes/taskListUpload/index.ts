@@ -2,7 +2,7 @@ import { Application } from 'express';
 import fs from 'fs';
 import path from 'path';
 
-import { RouteNames, ViewNames } from '../../common-constants';
+import { RouteNames, ViewNames } from '../../constants';
 import { oidcMiddleware } from '../../middleware';
 
 const taskListUpload = (app: Application): void => {

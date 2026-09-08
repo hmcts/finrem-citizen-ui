@@ -1,6 +1,6 @@
 import express, { Express, Request, Response } from 'express';
 
-import { UrlEndPoints } from '../common-constants';
+import { UrlEndPoints } from '../constants';
 
 type YesOrNo = 'Yes' | 'No';
 

@@ -5,12 +5,12 @@ import { getServiceAuthToken } from '../../../../main/app/auth/service/get-servi
 import { CASE_DATA_API_URL } from '../../../../main/app/case/case-type';
 import type { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { PreviouslyUploadedDocumentClient } from '../../../../main/app/document/PreviouslyUploadedDocumentClient';
-import { UrlEndPoints } from '../../../../main/common-constants';
+import { UrlEndPoints } from '../../../../main/constants';
 
 jest.mock('axios');
 jest.mock('config');
 jest.mock('../../../../main/app/auth/service/get-service-auth-token');
-jest.mock('../../../../main/common-constants', () => ({
+jest.mock('../../../../main/constants', () => ({
   UrlEndPoints: {
     PreviouslyUploadedDocuments: jest.fn(),
   },

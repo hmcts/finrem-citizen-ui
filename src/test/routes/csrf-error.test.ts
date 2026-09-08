@@ -1,7 +1,7 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import type { Application, Request, Response } from 'express';
 
-import { RouteNames, ViewNames } from '../../main/common-constants';
+import { RouteNames, ViewNames } from '../../main/constants';
 import setupCsrfErrorRoute from '../../main/routes/csrf-error';
 
 type RouteHandler = (req: Request, res: Response) => void;

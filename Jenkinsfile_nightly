@@ -8,7 +8,7 @@ properties([
   ])
 ])
 
-@Library("Infrastructure@master")
+@Library("Infrastructure@2.5.1")
 
 def type = "nodejs"
 def product = "finrem"

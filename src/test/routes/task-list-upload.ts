@@ -1,7 +1,7 @@
 import request from 'supertest';
 
 import { app } from '../../main/app';
-import { RouteNames } from '../../main/common-constants';
+import { RouteNames } from '../../main/constants';
 
 describe('GET /task-list-upload-dashboard', function () {
   it('should redirect to login when not authenticated', async function () {
