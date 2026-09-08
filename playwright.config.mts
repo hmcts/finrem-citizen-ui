@@ -2,7 +2,8 @@ import { defineConfig, devices, type ReporterDescription } from '@playwright/tes
 import dotenv from 'dotenv';
 
 // Import HMCTS common configs
-const { CommonConfig, ProjectsConfig } = await import('@hmcts/playwright-common');
+const { CommonConfig } = await import('@hmcts/playwright-common/dist/config/common.config.js');
+const { ProjectsConfig } = await import('@hmcts/playwright-common/dist/config/projects.config.js');
 
 dotenv.config({ quiet: true });
 

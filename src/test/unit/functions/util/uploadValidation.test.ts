@@ -2,6 +2,7 @@ import { mkdtemp, rm, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
+import { FILE_UPLOAD_MAX_SIZE_BYTES } from '../../../../main/constants/file-upload';
 import {
   FILE_VALIDATION_ERRORS,
   getFileExtension,
@@ -92,7 +93,7 @@ describe('uploadValidation', () => {
       expect(isValidFileSize(1)).toBe(true);
       expect(isValidFileSize(1024)).toBe(true);
       expect(isValidFileSize(50 * 1024 * 1024)).toBe(true); // 50MB
-      expect(isValidFileSize(100 * 1024 * 1024)).toBe(true); // 100MB exactly
+      expect(isValidFileSize(FILE_UPLOAD_MAX_SIZE_BYTES)).toBe(true); // max size exactly
     });
 
     it('should return false for empty files', () => {
@@ -100,7 +101,7 @@ describe('uploadValidation', () => {
     });
 
     it('should return false for files over 100MB', () => {
-      expect(isValidFileSize(101 * 1024 * 1024)).toBe(false);
+      expect(isValidFileSize(FILE_UPLOAD_MAX_SIZE_BYTES + 1)).toBe(false);
       expect(isValidFileSize(200 * 1024 * 1024)).toBe(false);
       expect(isValidFileSize(500 * 1024 * 1024)).toBe(false);
     });
@@ -153,7 +154,7 @@ describe('uploadValidation', () => {
       const files = [
         {
           originalname: 'test.pdf',
-          size: 101 * 1024 * 1024,
+          size: FILE_UPLOAD_MAX_SIZE_BYTES + 1,
           buffer: Buffer.from('test')
         } as Express.Multer.File,
       ];

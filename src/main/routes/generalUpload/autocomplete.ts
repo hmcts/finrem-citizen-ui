@@ -1,6 +1,6 @@
 import { Application, Request, Response } from 'express';
 
-import { RouteNames } from '../../common-constants';
+import { RouteNames } from '../../constants';
 import { oidcMiddleware } from '../../middleware';
 import documentTypes from '../../models/document-types.json';
 

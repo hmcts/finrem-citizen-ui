@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import type { NextFunction, Request, Response } from 'express';
 
-import { ViewNames } from '../../../main/common-constants';
+import { ViewNames } from '../../../main/constants';
 import { globalErrorHandler } from '../../../main/middleware/global-error-handler';
 import { AppInsights } from '../../../main/modules/appinsights';
 

@@ -2,7 +2,7 @@ import { describe, expect, jest, test } from '@jest/globals';
 import request, { Response } from 'supertest';
 
 import { app } from '../../../main/app';
-import { PrivateRoutes, PublicRoutes } from '../../../main/common-constants';
+import { PrivateRoutes, PublicRoutes } from '../../../main/constants';
 
 jest.setTimeout(15000);
 

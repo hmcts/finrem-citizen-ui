@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 
-import { ViewNames } from '../common-constants';
+import { ViewNames } from '../constants';
 import { AppInsights } from '../modules/appinsights';
 
 const { Logger } = require('@hmcts/nodejs-logging');

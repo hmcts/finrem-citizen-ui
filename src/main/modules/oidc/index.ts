@@ -4,7 +4,7 @@ import config from 'config';
 import type { Express, NextFunction, Request, Response } from 'express';
 import type * as OidcClientType from 'openid-client';
 
-import { RouteNames } from '../../common-constants';
+import { RouteNames } from '../../constants';
 import { isProfessionalUser } from '../../functions/util/roleGuardUtil';
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
@@ -35,7 +35,7 @@ export class OIDCModule {
 
     const oidcClient = await getOidcClient();
 
-    let clientSecret = process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET || process.env.IDAM_CLIENT_SECRET;
+    let clientSecret = process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET;
 
     if (!clientSecret && config.has('services.idam.clientSecret')) {
       clientSecret = config.get<string>('services.idam.clientSecret');

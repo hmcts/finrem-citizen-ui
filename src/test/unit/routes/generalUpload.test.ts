@@ -3,7 +3,7 @@ import { Application, NextFunction, Request, Response } from 'express';
 
 import { CaseRole } from '../../../main/app/case/definition';
 import { DocumentManagerController } from '../../../main/app/document/DocumentManagerController';
-import { RouteNames, UploadStepNames } from '../../../main/common-constants';
+import { RouteNames, UploadStepNames } from '../../../main/constants';
 import setupGeneralUploadRoute from '../../../main/routes/generalUpload';
 
 jest.mock('../../../main/app/document/DocumentManagerController', () => ({
@@ -391,6 +391,49 @@ describe('General Upload Routes', () => {
             'position-statement': [
               { id: 'file-1', filename: 'statement.pdf', url: '/documents/file1/download', displayFilename: expect.any(String) },
               { id: 'file-2', filename: 'statement2.pdf', url: '/documents/file2/download', displayFilename: expect.any(String) },
+            ],
+          },
+        }),
+      }));
+    });
+
+    it('should derive download URL using final path segment when documents segment is missing', () => {
+      const handler = getRegisteredHandler(mockGet, `${RouteNames.uploadJourney}/:stepId`);
+      const mockReq = {
+        params: { stepId: UploadStepNames.UploadDocuments },
+        session: {
+          DocumentSelection: {
+            documentDetails: [
+              { id: 'doc-1', value: { DocumentType: 'position-statement' } },
+            ],
+          },
+          documents: {
+            documentDetails: [
+              {
+                id: 'file-1',
+                value: {
+                  DocumentType: 'position-statement',
+                  DocumentFileName: 'statement.pdf',
+                  DocumentLink: {
+                    document_url: 'http://example.com/file1?download=true',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      } as PartialRequestWithSession;
+      const mockRes = {
+        render: jest.fn(),
+      } as Partial<Response>;
+
+      handler(mockReq as unknown as Request, mockRes as Response);
+
+      expect(mockRes.render).toHaveBeenCalledWith('generalUpload/upload-documents', expect.objectContaining({
+        data: expect.objectContaining({
+          uploadedFiles: {
+            'position-statement': [
+              { id: 'file-1', filename: 'statement.pdf', url: '/documents/file1/download', displayFilename: expect.any(String) },
             ],
           },
         }),

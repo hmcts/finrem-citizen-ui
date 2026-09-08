@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import config from 'config';
 import { LoggerInstance } from 'winston';
 
-import { UrlEndPoints } from '../../common-constants';
+import { UrlEndPoints } from '../../constants';
 import { AppInsights } from '../../modules/appinsights';
 import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
 import { UserDetails } from '../controller/AppRequest';

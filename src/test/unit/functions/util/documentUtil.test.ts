@@ -1,6 +1,6 @@
 import { Request } from 'express';
 
-import { DOCUMENT_RENAME_FORMATS } from '../../../../main/common-constants';
+import { DOCUMENT_RENAME_FORMATS } from '../../../../main/constants';
 import {
   generateRenamedFilename,
 getCombinedPDFFormat,

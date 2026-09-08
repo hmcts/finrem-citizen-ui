@@ -76,6 +76,7 @@ describe('DocumentManagerController', () => {
 
     mockLogger = {
       info: jest.fn(),
+      warn: jest.fn(),
       error: jest.fn(),
     } as unknown as LoggerInstance;
 
@@ -86,12 +87,12 @@ describe('DocumentManagerController', () => {
     ({
       session: { user: userDetails },
       headers: {},
-      files: [],
+      file: undefined,
       ...overrides,
     } as unknown as AppRequest);
 
   test('throws when no files uploaded', async () => {
-    const req = buildRequest({ files: [] });
+    const req = buildRequest({ file: undefined });
 
     await expect(
       controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never)
@@ -101,12 +102,10 @@ describe('DocumentManagerController', () => {
   test('throws when user is missing', async () => {
     const req = buildRequest({
       session: { user: undefined } as unknown as AppRequest['session'],
-      files: [
-        {
-          buffer: Buffer.from('file'),
-          originalname: 'file.pdf',
-        } as Express.Multer.File,
-      ],
+      file: {
+        buffer: Buffer.from('file'),
+        originalname: 'file.pdf',
+      } as Express.Multer.File,
     });
 
     await expect(
@@ -130,12 +129,10 @@ describe('DocumentManagerController', () => {
     }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
 
     const req = buildRequest({
-      files: [
-        {
-          buffer: Buffer.from('file'),
-          originalname: 'file.pdf',
-        } as Express.Multer.File,
-      ],
+      file: {
+        buffer: Buffer.from('file'),
+        originalname: 'file.pdf',
+      } as Express.Multer.File,
     });
 
     await controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never);
@@ -160,12 +157,10 @@ describe('DocumentManagerController', () => {
     }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
 
     const req = buildRequest({
-      files: [
-        {
-          buffer: Buffer.from('file'),
-          originalname: 'file.pdf',
-        } as Express.Multer.File,
-      ],
+      file: {
+        buffer: Buffer.from('file'),
+        originalname: 'file.pdf',
+      } as Express.Multer.File,
     });
 
     await controller.uploadDocumentToEvidenceStore(
@@ -201,12 +196,11 @@ describe('DocumentManagerController', () => {
     }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
 
     const req = buildRequest({
-      files: [
+      file:
         {
           buffer: Buffer.from('file'),
           originalname: 'my-bank-statement.pdf',
         } as Express.Multer.File,
-      ],
     });
 
     await controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never);
@@ -233,7 +227,10 @@ describe('DocumentManagerController', () => {
     }).getApiClient = jest.fn().mockReturnValue({ create: createMock });
 
     const req = buildRequest({
-      files: [{} as Express.Multer.File],
+      file: {
+        buffer: Buffer.from('file-2'),
+        originalname: 'file2.pdf',
+      } as Express.Multer.File,
       session: {
         user: userDetails,
         documents: {
@@ -573,6 +570,18 @@ describe('DocumentManagerController', () => {
         session: {
           user: userDetails,
           caseNumber: '123',
+          documents: {
+            documentDetails: [
+              {
+                id: '1',
+                value: {
+                  DocumentLink: {
+                    document_url: 'http://dm-store/documents/doc-123',
+                  },
+                },
+              },
+            ],
+          },
         },
       } as unknown as AppRequest;
 
@@ -603,6 +612,18 @@ describe('DocumentManagerController', () => {
         session: {
           user: userDetails,
           caseNumber: '456',
+          documents: {
+            documentDetails: [
+              {
+                id: '1',
+                value: {
+                  DocumentLink: {
+                    document_url: 'http://dm-store/documents/doc-456',
+                  },
+                },
+              },
+            ],
+          },
         },
       } as unknown as AppRequest;
 
@@ -631,6 +652,84 @@ describe('DocumentManagerController', () => {
 
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.send).toHaveBeenCalledWith('Forbidden');
+    });
+
+    test('returns 403 when document is not present in user session or case data', async () => {
+      const getApiClientMock = jest.fn();
+      const { getSystemUser } = require('../../../../main/app/auth/user');
+
+      (controller as unknown as {
+        getApiClient: typeof getApiClientMock;
+      }).getApiClient = getApiClientMock;
+
+      const req = {
+        session: {
+          user: userDetails,
+          caseNumber: '123',
+          documents: {
+            documentDetails: [
+              {
+                id: '1',
+                value: {
+                  DocumentLink: {
+                    document_url: 'http://dm-store/documents/another-doc',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      } as unknown as AppRequest;
+
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+      } as unknown as Response;
+
+      await controller.downloadDocument(req, res, 'doc-123', '123');
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.send).toHaveBeenCalledWith('Forbidden');
+      expect(getSystemUser).not.toHaveBeenCalled();
+      expect(getApiClientMock).not.toHaveBeenCalled();
+    });
+
+    test('allows download when document exists in case data for the user role', async () => {
+      const getDocumentMock = jest.fn().mockResolvedValue(undefined);
+
+      (controller as unknown as {
+        getApiClient: (user: UserDetails) => {
+          getDocument: typeof getDocumentMock;
+        };
+      }).getApiClient = jest.fn().mockReturnValue({
+        getDocument: getDocumentMock,
+      });
+
+      const req = {
+        session: {
+          user: userDetails,
+          caseNumber: '123',
+          caseData: {
+            citizenApplicantDocument: [
+              {
+                id: 'doc-item-1',
+                value: {
+                  DocumentLink: {
+                    document_url: 'http://dm-store/documents/doc-123',
+                  },
+                },
+              },
+            ],
+            citizenRespondentDocument: [],
+          },
+        },
+      } as unknown as AppRequest;
+
+      const res = {} as Response;
+
+      await controller.downloadDocument(req, res, 'doc-123', '123');
+
+      expect(getDocumentMock).toHaveBeenCalledWith(res, 'doc-123');
     });
   });
 
@@ -1017,4 +1116,3 @@ describe('DocumentManagerController', () => {
     );
   });
 });
-

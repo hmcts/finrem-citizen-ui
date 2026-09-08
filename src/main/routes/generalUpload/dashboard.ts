@@ -1,7 +1,7 @@
 import { Application, NextFunction, Request, Response } from 'express';
 
 import { UserDetails } from '../../app/controller/AppRequest';
-import { RouteNames, ViewNames } from '../../common-constants';
+import { RouteNames, ViewNames } from '../../constants';
 import { setCaseUserName, setCaseUserRole } from '../../functions/util/homePageUtil';
 import { oidcMiddleware } from '../../middleware';
 import { requireCaseRole } from '../../middleware/require-case-role';
