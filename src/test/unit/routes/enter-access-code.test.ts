@@ -117,6 +117,7 @@ describe('POST /enter-access-code route handler', () => {
       .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
     expect(res.status).toBe(302);
     expect(res.header.location).toBe('/enter-case-number');
+    expect(triggerSystemEvent).not.toHaveBeenCalled();
   });
 
   it('renders error when access code does not match case data', async () => {
@@ -192,6 +193,12 @@ describe('POST /enter-access-code route handler', () => {
       EVENT_TYPE.LINK_APPLICANT_TO_CASE,
       expect.any(Object)
     );
+    expect(triggerSystemEvent).toHaveBeenCalledTimes(1);
+
+    const payload = jest.mocked(triggerSystemEvent).mock.calls[0][1] as {
+      respondentAccessCodes?: unknown;
+    };
+    expect(payload.respondentAccessCodes).toBeUndefined();
   });
 
   it('redirects to dashboard on successful respondent access code submission', async () => {
@@ -218,6 +225,12 @@ describe('POST /enter-access-code route handler', () => {
       EVENT_TYPE.LINK_RESPONDENT_TO_CASE,
       expect.any(Object)
     );
+    expect(triggerSystemEvent).toHaveBeenCalledTimes(1);
+
+    const payload = jest.mocked(triggerSystemEvent).mock.calls[0][1] as {
+      applicantAccessCodes?: unknown;
+    };
+    expect(payload.applicantAccessCodes).toBeUndefined();
   });
 
   it('renders error view when triggerSystemEvent throws', async () => {

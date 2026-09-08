@@ -1,8 +1,10 @@
 
 import { LoggerInstance } from 'winston';
 
-import { CaseApi, getCaseApi } from '../../../../main/app/case/case-api';
+import * as caseApiModule from '../../../../main/app/case/case-api';
+import { CaseApi, getCaseApi, triggerSystemEvent } from '../../../../main/app/case/case-api';
 import * as caseApiClient from '../../../../main/app/case/case-api-client';
+import { getSystemUser } from '../../../../main/app/auth/user';
 import { CASE_TYPE, EVENT_TYPE } from '../../../../main/app/case/case-type';
 import { CaseRole } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
@@ -10,6 +12,10 @@ import { UserDetails } from '../../../../main/app/controller/AppRequest';
 jest.mock('axios');
 jest.mock('../../../../main/app/auth/service/get-service-auth-token', () => ({
   getServiceAuthToken: jest.fn().mockReturnValue('service-token'),
+}));
+
+jest.mock('../../../../main/app/auth/user', () => ({
+  getSystemUser: jest.fn(),
 }));
 
 const userDetails: UserDetails = {
@@ -275,5 +281,66 @@ describe('CaseApi.getUsersRoleOnCase', () => {
       user_ids: ['user1'],
     });
     expect(result).toBeUndefined();
+  });
+});
+
+describe('triggerSystemEvent', () => {
+  const mockLogger = {
+    error: jest.fn(),
+    info: jest.fn(),
+  } as unknown as LoggerInstance;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('gets system user, case api and triggers event', async () => {
+    const systemUser = { accessToken: 'sys-token' } as UserDetails;
+    const triggerEvent = jest.fn().mockResolvedValue({ id: '123456', state: 'Submitted' });
+    const caseApi = { triggerEvent } as unknown as CaseApi;
+
+    jest.mocked(getSystemUser).mockResolvedValue(systemUser);
+    jest.spyOn(caseApiModule, 'getCaseApi').mockReturnValue(caseApi);
+
+    const result = await triggerSystemEvent(
+      '123456',
+      { applicantAccessCodes: [] },
+      EVENT_TYPE.LINK_APPLICANT_TO_CASE,
+      mockLogger
+    );
+
+    expect(getSystemUser).toHaveBeenCalledTimes(1);
+    expect(caseApiModule.getCaseApi).toHaveBeenCalledWith(systemUser, mockLogger);
+    expect(triggerEvent).toHaveBeenCalledWith(
+      '123456',
+      { applicantAccessCodes: [] },
+      EVENT_TYPE.LINK_APPLICANT_TO_CASE
+    );
+    expect(result).toEqual({ id: '123456', state: 'Submitted' });
+  });
+
+  test('propagates error when triggerEvent fails', async () => {
+    const systemUser = { accessToken: 'sys-token' } as UserDetails;
+    const triggerEvent = jest.fn().mockRejectedValue(new Error('CCD error'));
+    const caseApi = { triggerEvent } as unknown as CaseApi;
+
+    jest.mocked(getSystemUser).mockResolvedValue(systemUser);
+    jest.spyOn(caseApiModule, 'getCaseApi').mockReturnValue(caseApi);
+
+    await expect(
+      triggerSystemEvent('123456', {}, EVENT_TYPE.LINK_RESPONDENT_TO_CASE, mockLogger)
+    ).rejects.toThrow('CCD error');
+
+    expect(getSystemUser).toHaveBeenCalledTimes(1);
+    expect(caseApiModule.getCaseApi).toHaveBeenCalledWith(systemUser, mockLogger);
+    expect(triggerEvent).toHaveBeenCalledWith(
+      '123456',
+      {},
+      EVENT_TYPE.LINK_RESPONDENT_TO_CASE
+    );
   });
 });
