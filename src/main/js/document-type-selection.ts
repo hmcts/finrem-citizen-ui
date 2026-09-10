@@ -1,3 +1,4 @@
+import { getCsrfHeaders } from './csrf';
 import { getLogger } from './logger';
 
 interface SelectedDocumentType {
@@ -84,6 +85,7 @@ class DocumentTypeSelectionManager {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getCsrfHeaders(),
         },
         body: JSON.stringify(this.selectedDocumentType),
       });
@@ -118,6 +120,7 @@ class DocumentTypeSelectionManager {
     try {
       const response = await fetch(`${DocumentTypeSelectionManager.ENDPOINTS.REMOVE}/${index}`, {
         method: 'DELETE',
+        headers: getCsrfHeaders(),
       });
 
       if (!response.ok) {
@@ -185,6 +188,7 @@ class DocumentTypeSelectionManager {
     div.textContent = text;
     return div.innerHTML;
   }
+
 }
 
 function initDocumentTypeSelection(): void {
