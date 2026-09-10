@@ -107,6 +107,9 @@ describe('OIDCModule', () => {
       ) {
         return 'secret-from-config' as T;
       }
+      if (key === 'services.manageCase.url') {
+        return 'https://manage-case.example.com' as T;
+      }
       if (key === 'secrets.finrem.finrem-citizen-ui-redis-connection-string') {
         return 'redis://mocked-connection' as T;
       }
@@ -278,6 +281,9 @@ describe('OIDCModule', () => {
       }
       if (key === 'secrets.finrem.session-secret') {
         return 'mocked-session-secret' as T;
+      }
+      if (key === 'services.manageCase.url') {
+        return 'https://manage-case.example.com' as T;
       }
       throw new Error(`Unexpected config.get key: ${key}`);
     });
@@ -706,6 +712,61 @@ describe('OIDCModule', () => {
 
     const redirectMock = (res as unknown as ResponseLike).redirect;
     expect(redirectMock).toHaveBeenCalledWith(RouteNames.dashboard);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('callback blocks professional users and redirects to manage-case', async () => {
+    const app = makeApp();
+    const module = new OIDCModule();
+    const clientConfig = {} as unknown as oidcClient.Configuration;
+
+    setClientConfig(module, clientConfig);
+
+    const tokens = {
+      access_token: 'access-123',
+      id_token: 'id-123',
+      refresh_token: 'refresh-123',
+      claims: (): {
+        sub: string;
+        uid: string;
+        given_name: string;
+        family_name: string;
+        roles: string[];
+      } => ({
+        sub: 'professional-user',
+        uid: 'uid-123',
+        given_name: 'Pro',
+        family_name: 'User',
+        roles: ['caseworker-divorce'],
+      }),
+    } as unknown as Awaited<ReturnType<typeof oidcClient.authorizationCodeGrant>>;
+
+    mockedOidc.authorizationCodeGrant.mockResolvedValue(tokens);
+
+    module.enableFor(app as unknown as Express);
+
+    const handler = app.__routes[RouteNames.callbackUrl];
+    const destroy = jest.fn((callback: (err?: unknown) => void): void => callback());
+    const save = jest.fn((callback: () => void): void => callback());
+    const req = makeReq({
+      originalUrl: '/oauth2/callback?code=abc',
+      session: {
+        codeVerifier: 'verifier',
+        nonce: 'nonce',
+        destroy,
+        save,
+      },
+    });
+    const res = makeRes();
+    const next = jest.fn() as unknown as jest.MockedFunction<NextFunction>;
+
+    await handler(req, res, next);
+
+    expect(destroy).toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
+
+    const redirectMock = (res as unknown as ResponseLike).redirect;
+    expect(redirectMock).toHaveBeenCalledWith('https://manage-case.example.com');
     expect(next).not.toHaveBeenCalled();
   });
 

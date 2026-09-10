@@ -1,0 +1,21 @@
+{% macro form(options = {}) %}
+  <form method="post"
+    {% if options.action %}action="{{ options.action }}"{% endif %}
+    {% if options.enctype %}enctype="{{ options.enctype }}"{% endif %}
+    {% if options.classes %}class="{{ options.classes }}"{% endif %}
+    {% if options.novalidate %}novalidate{% endif %}
+    {% if options.attributes %}
+      {% for key, value in options.attributes %}
+        {% if value == true %}
+          {{ key }}
+        {% elseif value != false and value != null %}
+          {{ key }}="{{ value }}"
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  >
+    <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+    {{ caller() }}
+  </form>
+{% endmacro %}
