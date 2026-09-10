@@ -50,8 +50,18 @@ export const getCaseApi = (userDetails: UserDetails, logger: LoggerInstance): Ca
 };
 
 export const triggerSystemEvent = async (caseId: string, data: Partial<FinremCaseData>, eventName: EVENT_TYPE, logger: LoggerInstance): Promise<FinremCaseData> => {
-  const systemUser = await getSystemUser();
-  const caseworkerUserApi = getCaseApi(systemUser, logger);
+  logger.info('Triggering system event', { caseId, eventName });
 
-  return caseworkerUserApi.triggerEvent(caseId, data, eventName);
+  try {
+    const systemUser = await getSystemUser();
+    const caseworkerUserApi = getCaseApi(systemUser, logger);
+    const updatedCaseData = await caseworkerUserApi.triggerEvent(caseId, data, eventName);
+
+    logger.info('System event triggered successfully', { caseId, eventName });
+
+    return updatedCaseData;
+  } catch (error) {
+    logger.error('Failed to trigger system event', { caseId, eventName, error });
+    throw error;
+  }
 };
