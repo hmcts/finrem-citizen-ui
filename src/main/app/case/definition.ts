@@ -2524,6 +2524,8 @@ export interface OrderSummary {
 export interface AccessCodeEntry {
   accessCode: string;
   isValid: YesOrNo;
+  userIdamID?: string;
+  usedAt?: string;
 }
 
 export interface CitizenDocumentCollection {

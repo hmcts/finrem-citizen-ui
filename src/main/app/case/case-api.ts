@@ -1,7 +1,9 @@
 import { LoggerInstance } from 'winston';
 
+import { getSystemUser } from '../auth/user';
 import { UserDetails } from '../controller/AppRequest';
 import { CaseApiClient, getCaseApiClient } from './case-api-client';
+import { EVENT_TYPE } from './case-type';
 import { CaseRole, FinremCaseData } from './definition';
 
 export class CaseApi {
@@ -45,4 +47,21 @@ export class CaseApi {
 
 export const getCaseApi = (userDetails: UserDetails, logger: LoggerInstance): CaseApi => {
   return new CaseApi(getCaseApiClient(userDetails, logger), logger);
+};
+
+export const triggerSystemEvent = async (caseId: string, data: Partial<FinremCaseData>, eventName: EVENT_TYPE, logger: LoggerInstance): Promise<FinremCaseData> => {
+  logger.info('Triggering system event', { caseId, eventName });
+
+  try {
+    const systemUser = await getSystemUser();
+    const caseworkerUserApi = getCaseApi(systemUser, logger);
+    const updatedCaseData = await caseworkerUserApi.triggerEvent(caseId, data, eventName);
+
+    logger.info('System event triggered successfully', { caseId, eventName });
+
+    return updatedCaseData;
+  } catch (error) {
+    logger.error('Failed to trigger system event', { caseId, eventName, error });
+    throw error;
+  }
 };
