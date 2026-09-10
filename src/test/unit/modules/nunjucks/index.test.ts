@@ -1,9 +1,12 @@
-import { describe, expect, it } from '@jest/globals';
+import { afterAll, describe, expect, it, jest } from '@jest/globals';
+import config from 'config';
 import type { NextFunction, Request, Response } from 'express';
 import * as nunjucks from 'nunjucks';
 import * as path from 'path';
 
 import { addNunjucksLocals, buildFeedbackSurveyUrl } from '../../../../main/modules/nunjucks';
+
+const DUMMY_DYNATRACE_URL = 'https://example.test/dynatrace.js';
 
 function mockReqGet(host: string): Request['get'] {
   return ((name: string): string | string[] | undefined => (name === 'host' ? host : undefined)) as Request['get'];
@@ -21,6 +24,12 @@ function makeReq(overrides: Partial<Request> = {}): Request {
 }
 
 describe('buildFeedbackSurveyUrl', () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  afterAll(() => {
+    process.env.NODE_ENV = originalNodeEnv;
+  });
+
   it('uses forwarded headers to build the current page URL for deployed environments', () => {
     const req = makeReq({
       headers: {
@@ -52,6 +61,18 @@ describe('buildFeedbackSurveyUrl', () => {
   });
 
   it('adds the generated survey link to response locals for templates', () => {
+    const originalConfigGet = config.get.bind(config);
+    const configGetSpy = jest.spyOn(config, 'get');
+    configGetSpy.mockImplementation(((key: string) => {
+      if (key === 'dynatrace.enabled') {
+        return false;
+      }
+      if (key === 'dynatrace.url') {
+        return DUMMY_DYNATRACE_URL;
+      }
+      return originalConfigGet(key);
+    }) as typeof config.get);
+
     const req = makeReq({
       headers: {
         'x-forwarded-proto': 'https',
@@ -75,7 +96,39 @@ describe('buildFeedbackSurveyUrl', () => {
     expect(res.locals.pagePath).toBe('/test-page');
     expect(res.locals.appRoutes).toBeDefined();
     expect(res.locals.appRoutes.cookies).toBe('/cookies');
+    expect(res.locals.dynatrace).toEqual({
+      enabled: false,
+      url: '',
+    });
     expect(nextCalled).toBe(true);
+
+    configGetSpy.mockRestore();
+  });
+
+  it('enables dynatrace script settings when dynatrace is enabled in config', () => {
+    const originalConfigGet = config.get.bind(config);
+    const configGetSpy = jest.spyOn(config, 'get');
+    configGetSpy.mockImplementation(((key: string) => {
+      if (key === 'dynatrace.enabled') {
+        return true;
+      }
+      if (key === 'dynatrace.url') {
+        return DUMMY_DYNATRACE_URL;
+      }
+      return originalConfigGet(key);
+    }) as typeof config.get);
+
+    const req = makeReq({ path: '/home' });
+    const res = { locals: {} } as Response;
+
+    addNunjucksLocals(req, res, (() => undefined) as NextFunction);
+
+    expect(res.locals.dynatrace).toEqual({
+      enabled: true,
+      url: DUMMY_DYNATRACE_URL,
+    });
+
+    configGetSpy.mockRestore();
   });
 
   it('renders the survey link in the shared beta banner', () => {

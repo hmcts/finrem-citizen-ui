@@ -3,6 +3,10 @@
   "appInsights": {
     "connectionString": false
   },
+  "dynatrace": {
+    "enabled": false,
+    "url": "https://js-cdn.dynatrace.com/jstag/17177a07246/bf24054dsx/8a1b271a7454c49a_complete.js"
+  },
   "security": {
     "referrerPolicy": "same-origin",
     "hsts": {
