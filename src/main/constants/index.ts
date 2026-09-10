@@ -2,6 +2,7 @@
 export const PublicRoutes = {
   basePath: '/',
   callbackUrl: '/oauth2/callback',
+  csrfError: '/csrf-error',
   config: '/config',
   cookies: '/cookies',
   health: '/health',

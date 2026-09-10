@@ -2,6 +2,7 @@ const logger = {
   info: jest.fn(),
   error: jest.fn(),
 };
+
 jest.mock('@hmcts/nodejs-logging', () => ({
   Logger: {
     getLogger: jest.fn(() => logger),
@@ -14,8 +15,9 @@ jest.mock('axios', () => ({
     post: jest.fn(),
   },
 }));
+
 jest.mock('otplib', () => ({
-  generate: jest.fn().mockResolvedValue('12345')
+  generate: jest.fn().mockResolvedValue('12345'),
 }));
 
 jest.useFakeTimers({ legacyFakeTimers: true });
@@ -26,12 +28,17 @@ import { getServiceAuthToken, initAuthToken } from '../../../../../main/app/auth
 
 const mockedAxios = axios as unknown as jest.Mocked<AxiosStatic>;
 
+beforeEach(() => {
+  jest.clearAllMocks();
+  jest.clearAllTimers();
+});
+
 describe('initAuthToken', () => {
   test('Should set an interval to start fetching a token', async () => {
     (mockedAxios.post as jest.Mock).mockResolvedValue({ data: 'token' });
 
-    initAuthToken();
-    await new Promise(setImmediate);
+    await initAuthToken();
+
     expect(mockedAxios.post).toHaveBeenCalledWith(
       'http://rpe-service-auth-provider-aat.service.core-compute-aat.internal/lease',
       {
@@ -41,18 +48,16 @@ describe('initAuthToken', () => {
     );
   });
 
-  test('Should log errors', () => {
-    (mockedAxios.post as jest.Mock).mockRejectedValue({
-      response: { status: 500, data: 'Error' },
-    });
+  test('Should log and rethrow errors when token retrieval fails', async () => {
+    const error = { response: { status: 500, data: 'Error' } };
+    (mockedAxios.post as jest.Mock).mockRejectedValue(error);
 
-    initAuthToken();
-    return new Promise<void>(resolve => {
-      setImmediate(() => {
-        expect(logger.error).toHaveBeenCalledWith(500, 'Error');
-        resolve();
-      });
-    });
+    await expect(initAuthToken()).rejects.toEqual(error);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      'Failed to obtain service authorisation token',
+      error
+    );
   });
 });
 
@@ -60,13 +65,18 @@ describe('getServiceAuthToken', () => {
   test('Should return a token', async () => {
     (mockedAxios.post as jest.Mock).mockResolvedValue({ data: 'token' });
 
-    initAuthToken();
+    await initAuthToken();
 
-    return new Promise<void>(resolve => {
-      setImmediate(() => {
-        expect(getServiceAuthToken()).not.toBeUndefined();
-        resolve();
-      });
-    });
+    expect(getServiceAuthToken()).toBe('token');
+  });
+
+  test('Should throw an error if token is not available', async () => {
+    (mockedAxios.post as jest.Mock).mockResolvedValue({ data: null });
+
+    await initAuthToken();
+
+    expect(() => getServiceAuthToken()).toThrow(
+      'Service authorisation token is unavailable'
+    );
   });
 });
