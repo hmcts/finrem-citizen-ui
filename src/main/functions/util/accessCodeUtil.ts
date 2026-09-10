@@ -5,8 +5,8 @@ export interface AccessCodeError {
   accessCode?: string;
 }
 
-export type EmailField = 'applicantEmail' | 'respondentEmail';
-export type AccessCodeField = 'applicantAccessCodes' | 'respondentAccessCodes';
+export type EmailAddressCaseField = 'applicantEmail' | 'respondentEmail';
+export type AccessCodeCaseField = 'applicantAccessCodes' | 'respondentAccessCodes';
 export type CitizenCaseRole = CaseRole.APPLICANT | CaseRole.RESPONDENT;
 export type AccessCodesByCitizenRole = Record<CitizenCaseRole, AccessCodeCollection[]>;
 export type MatchingAccessCodeResult =
@@ -73,11 +73,11 @@ export function getCaseAccessCodesByRole(caseData: FinremCaseData): AccessCodesB
   };
 }
 
-export function getEmailCaseField(caseRole: CaseRole): EmailField {
+export function getEmailCaseField(caseRole: CaseRole): EmailAddressCaseField {
   return caseRole === CaseRole.APPLICANT ? 'applicantEmail' : 'respondentEmail';
 }
 
-export function getAccessCodeCaseField(caseRole: CaseRole): AccessCodeField {
+export function getAccessCodeCaseField(caseRole: CaseRole): AccessCodeCaseField {
   return caseRole === CaseRole.APPLICANT ? 'applicantAccessCodes' : 'respondentAccessCodes';
 }
 
