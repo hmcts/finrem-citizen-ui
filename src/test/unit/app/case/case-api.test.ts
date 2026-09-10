@@ -1,10 +1,10 @@
 
 import { LoggerInstance } from 'winston';
 
+import { getSystemUser } from '../../../../main/app/auth/user';
 import * as caseApiModule from '../../../../main/app/case/case-api';
 import { CaseApi, getCaseApi, triggerSystemEvent } from '../../../../main/app/case/case-api';
 import * as caseApiClient from '../../../../main/app/case/case-api-client';
-import { getSystemUser } from '../../../../main/app/auth/user';
 import { CASE_TYPE, EVENT_TYPE } from '../../../../main/app/case/case-type';
 import { CaseRole } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';

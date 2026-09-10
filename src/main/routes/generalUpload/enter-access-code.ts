@@ -67,11 +67,10 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
         userEmail: user?.email,
       });
 
-      const linkingCCDEventId = getLinkingEventType(role);
       req.session.caseData = await triggerSystemEvent(
         caseNumber?.replace(/-/g, ''),
         linkingEventPayload,
-        linkingCCDEventId,
+        getLinkingEventType(role),
         logger
       );
 
@@ -86,7 +85,8 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       } else if (role === CaseRole.RESPONDENT) {
         req.session.caseUserName = req.session.caseData.respondentFlags?.partyName || CaseUserNames.RESPONDENT;
       }
-    } catch {
+    } catch (error) {
+      logger.error('Failed to link user to case via system event', { caseNumber, error });
       return res.render(ViewNames.Error);
     }
 
