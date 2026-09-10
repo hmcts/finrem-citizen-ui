@@ -137,9 +137,10 @@ export default function (app: Application): void {
         const documentType = req.body.documentType as string;
         const returnUrl = GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL;
         const uploadedFiles = getUploadedFiles(req);
+        const caseId = req.session.caseNumber;
 
         // Validate uploaded file
-        const validationError = await validateUploadedFile(uploadedFiles);
+        const validationError = await validateUploadedFile(uploadedFiles, caseId);
         if (validationError) {
           return redirectWithError(req, res, next, documentType, returnUrl, validationError);
         }
