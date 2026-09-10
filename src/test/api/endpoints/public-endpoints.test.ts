@@ -97,4 +97,12 @@ describe('Public Endpoints (No Authentication Required)', () => {
       }
     }
   });
+
+  test('GET /cookies returns cookie settings page', async () => {
+    const res = await request(app).get(PublicRoutes.cookies);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/text\/html/i);
+    expect(res.text).toContain('Cookies on Dividing your money and property');
+  });
 });

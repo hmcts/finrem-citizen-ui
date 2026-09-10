@@ -4,6 +4,7 @@ export const PublicRoutes = {
   callbackUrl: '/oauth2/callback',
   csrfError: '/csrf-error',
   config: '/config',
+  cookies: '/cookies',
   health: '/health',
   info: '/info',
   login: '/login',
@@ -35,6 +36,7 @@ export const RouteNames = {
 } as const;
 
 export const ViewNames = {
+  Cookies: 'cookies',
   Dashboard: 'dashboard',
   EnterCaseNumber: 'enter-case-number',
   EnterAccessCode: 'enter-access-code',
