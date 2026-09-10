@@ -8674,10 +8674,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-uri@npm: 3.1.6":
-  version: 3.1.6
-  resolution: "fast-uri@npm:3.1.6"
-  checksum: 10/de34fceafd3a1d917989a1116b092d9b6ebe6fa3c9e908a308b988a6455449fa0a0256b6ef628aa7da80f1f84031d704c290d6ba0ea4c6f4c42b7974a3bd43ae
+"fast-uri@npm:4.1.4":
+  version: 4.1.4
+  resolution: "fast-uri@npm:4.1.4"
+  checksum: 10/7d7f8af7362d085d66a7c699a0e189adacda03ada59251a6d239b6ebf445e5d81142bc7ad4ebfd970c022562a51903b455f2ea79933adeec38c65dacbd40022c
   languageName: node
   linkType: hard
 
