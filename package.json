@@ -144,6 +144,6 @@
     "@opentelemetry/sdk-node": "0.221.0",
     "@opentelemetry/core": "^2.8.0",
     "colord": "^2.9.4",
-    "js-yaml": "^4.3.2"
+    "js-yaml": "^5.0.0"
   }
 }
