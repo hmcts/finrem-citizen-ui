@@ -11,6 +11,8 @@ const URL_PATTERNS = {
   FDR: /\/upload\/fdr/,
 };
 
+const NAVIGATION_TIMEOUT_MS = 25_000;
+
 const EXTERNAL_LINKS = {
   FORM_C8:
     'https://www.gov.uk/government/publications/form-c8-confidential-contact-details-family-procedure-rules-2010-rule-291',
@@ -143,11 +145,17 @@ export class ConfidentialityPage extends BasePage {
       return;
     }
 
-    for (let attempt = 1; attempt <= 2; attempt += 1) {
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
       try {
-        await expect(this.continueButton).toBeVisible({ timeout: 15_000 });
+        await expect(this.continueButton).toBeVisible({ timeout: NAVIGATION_TIMEOUT_MS });
         await this.continueButton.click();
-        await expect(this.page).toHaveURL(URL_PATTERNS.FDR, { timeout: 15_000 });
+        await expect(this.page).toHaveURL(URL_PATTERNS.FDR, { timeout: NAVIGATION_TIMEOUT_MS });
+
+        const bodyText = await this.page.locator('body').innerText().catch(() => '');
+        if (attempt < 3 && isGatewayErrorContent(bodyText)) {
+          throw new Error('Gateway error content rendered on FDR route');
+        }
+
         return;
       } catch {
         if (URL_PATTERNS.FDR.test(this.page.url())) {
@@ -155,7 +163,7 @@ export class ConfidentialityPage extends BasePage {
         }
 
         const bodyText = await this.page.locator('body').innerText().catch(() => '');
-        const shouldRetry = attempt === 1 && (
+        const shouldRetry = attempt < 3 && (
           isGatewayErrorContent(bodyText) || URL_PATTERNS.CONFIDENTIALITY.test(this.page.url())
         );
 
@@ -167,7 +175,12 @@ export class ConfidentialityPage extends BasePage {
 
         if (isGatewayErrorContent(bodyText)) {
           await this.page.reload({ waitUntil: 'domcontentloaded' });
+          await expect(this.page).toHaveURL(URL_PATTERNS.CONFIDENTIALITY, {
+            timeout: NAVIGATION_TIMEOUT_MS,
+          });
         }
+
+        await this.page.waitForTimeout(500 * attempt);
       }
     }
 
