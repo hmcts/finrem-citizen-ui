@@ -1,12 +1,9 @@
-import axios from 'axios';
-import config from 'config';
 import { Response } from 'express';
 import { v4 as generateUuid } from 'uuid';
 import { LoggerInstance } from 'winston';
 
 import { extractDocumentIdFromUrl, getCaseDocumentsByRole } from '../../functions/util/documentAccess';
 import { loadCaseAndReloadSession } from '../../functions/util/homePageUtil';
-import { AppInsights } from '../../modules/appinsights';
 import { getSystemUser } from '../auth/user';
 import { getCaseApi } from '../case/case-api';
 import { CITIZEN_APPLICANT_DOCUMENT, CITIZEN_RESPONDENT_DOCUMENT, EVENT_TYPE } from '../case/case-type';
@@ -16,7 +13,6 @@ import {
   YesOrNo
 } from '../case/definition';
 import type { AppRequest, UserDetails } from '../controller/AppRequest';
-import { sendNotification } from '../notify/govNotify';
 import {
   CaseDocumentManagementClient,
   Classification
@@ -122,13 +118,6 @@ export class DocumentManagerController {
     const systemUser = req.session.user as UserDetails;
     const caseworkerUserApi = getCaseApi(systemUser, this.logger);
 
-    const emailTemplateId = config.get<string>('secrets.finrem.DOCUMENT-UPLOAD-EMAIL-TEMPLATE-ID');
-    const courtName = req.session.caseData?.consentOrderFRCName;
-    const courtEmail = req.session.caseData?.consentOrderFRCEmail;
-    const hearingMode = req.session.caseData?.hearings?.[0]?.value?.hearingMode;
-    // use your hmcts email address for testing purpose
-    const email = req.session.user!.email;
-
     await caseworkerUserApi.triggerEvent(
       req.session.caseNumber,
       {
@@ -148,37 +137,6 @@ export class DocumentManagerController {
       documentCount: updatedDocuments.length,
       isFDR,
     });
-
-    try {
-      await sendNotification(emailTemplateId, email, {
-        caseReferenceNumber: req.session.caseNumber,
-        name: req.session.caseUserName,
-        uploadTime: this.formatUploadTime(),
-        courtName: hearingMode === 'In_Person'
-          ? `Financial Remedies Court: ${courtName}`
-          : '',
-        courtEmail: courtEmail ?? '',
-      });
-
-      this.logger.info('Notification sent to : ', email);
-    } catch (err) {
-      const error = err instanceof Error
-        ? err
-        : new Error('Failed to send email notification for uploading the documents');
-
-      if (axios.isAxiosError(err)) {
-        this.logger.error('GOV Notify error', JSON.stringify(err.response?.data, null, 2));
-      }
-
-      this.logger.error('Error sending notification', error);
-
-      AppInsights.trackException(error, {
-        emailTemplateId,
-        caseNumber: req.session.caseNumber ?? '',
-        email: email ?? '',
-        notifyStatus: axios.isAxiosError(err) ? String(err.response?.status ?? '') : '',
-      });
-    }
   }
 
   public async downloadDocument(
@@ -266,19 +224,6 @@ export class DocumentManagerController {
       const documentUrl = document?.value?.DocumentLink?.document_url;
       return extractDocumentIdFromUrl(documentUrl) === documentId;
     });
-  }
-
-  private formatUploadTime(): string {
-    const now = new Date();
-    const tz = { timeZone: 'Europe/London' };
-    const time = now.toLocaleTimeString('en-GB', {
-      ...tz,
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    }).replace(' ', '').toLowerCase();
-    const date = now.toLocaleDateString('en-GB', { ...tz, day: '2-digit', month: '2-digit', year: 'numeric' });
-    return `${time} on ${date}`;
   }
 
   private getApiClient(user: UserDetails): CaseDocumentManagementClient {
