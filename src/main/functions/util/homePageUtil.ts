@@ -9,52 +9,73 @@ import { CaseRole, CaseType, FinremCaseData } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
 import { CaseUserNames, RouteNames } from '../../constants';
 
-export interface UserDefaultPageDetails {
-  url: string;
+export interface UserCaseContext {
   caseData?: FinremCaseData;
   caseNumber?: string;
 }
 
-export interface HomeOrchestratorResult {
-  url: string;
-  caseData?: FinremCaseData;
-  caseNumber?: string;
+export function resolveHomeUrl(caseContext: UserCaseContext): string {
+  return caseContext.caseNumber?.trim() ? RouteNames.dashboard : RouteNames.enterCaseNumber;
 }
 
-export async function getHomePageForUser(userDetails: UserDetails): Promise<UserDefaultPageDetails> {
-  const logger: LoggerInstance = console as unknown as LoggerInstance;
-
-  const caseApi = getCaseApi(userDetails, logger);
-  const caseId = await caseApi.getExistingUserCase(CASE_TYPE);
-  logger.info('caseId returned is ', caseId);
-
-  if (caseId?.trim()) {
-    const systemUser = await getSystemUser();
-    const caseworkerUserApi = getCaseApi(systemUser, logger);
-    const caseData = await caseworkerUserApi.getCaseById(caseId);
-
-    logger.info('Routing to : ', RouteNames.dashboard);
-    return { caseData, caseNumber: caseId, url: RouteNames.dashboard };
-  } else {
-    logger.info('Routing to : ', RouteNames.enterCaseNumber);
-    return { url: RouteNames.enterCaseNumber };
-  }
-}
-
-export async function orchestrateHome(
+export async function fetchUserCaseContext(
   user: UserDetails,
   logger: LoggerInstance,
-): Promise<HomeOrchestratorResult> {
+): Promise<UserCaseContext> {
+  const caseApi = getCaseApi(user, logger);
 
   if (user.hasNFDCase === undefined) {
-    const caseApi = getCaseApi(user, logger);
-    const nfdCase = await caseApi.getExistingUserCase(CaseType.NFD);
-    user.hasNFDCase = nfdCase !== undefined;
+    const nfdCaseId = await caseApi.getExistingUserCase(CaseType.NFD);
+    user.hasNFDCase = nfdCaseId !== undefined;
   }
-  logger.info('user has NFD case registered : ', user.hasNFDCase);
-  const { url, caseData, caseNumber } = await getHomePageForUser(user);
+  logger.info('User has NFD case registered: ', user.hasNFDCase);
 
-  return { url, caseData, caseNumber };
+  const finremCaseId = await caseApi.getExistingUserCase(CASE_TYPE);
+  logger.info('Financial Remedy caseId is: ', finremCaseId);
+
+  if (finremCaseId?.trim()) {
+    const systemUser = await getSystemUser();
+    const caseworkerUserApi = getCaseApi(systemUser, logger);
+    const caseData = await caseworkerUserApi.getCaseById(finremCaseId);
+    return { caseData, caseNumber: finremCaseId };
+  }
+
+  return {};
+}
+
+export async function hydrateUserSessionWithCaseContext(
+  session: SessionData,
+  logger: LoggerInstance
+): Promise<UserCaseContext> {
+  const user = session.user as UserDetails;
+  const caseContext = await fetchUserCaseContext(user, logger);
+
+  if (caseContext.caseNumber) {
+    session.caseNumber = caseContext.caseNumber;
+    session.caseData = caseContext.caseData;
+    user.caseRole = await fetchUserCaseRole(session, logger);
+    session.caseUserName = resolveCaseUserName(session);
+  } else {
+    delete session.caseNumber;
+    delete session.caseData;
+    delete user.caseRole;
+    delete session.caseUserName;
+  }
+
+  return caseContext;
+}
+
+export function resetCaseContext(session: SessionData): void {
+  delete session.caseContextHydratedUserId;
+  delete session.caseNumber;
+  delete session.caseData;
+  delete session.caseUserName;
+
+  const user = session.user as UserDetails | undefined;
+  if (user) {
+    delete user.caseRole;
+    delete user.hasNFDCase;
+  }
 }
 
 /**
@@ -91,27 +112,50 @@ export async function loadCaseAndReloadSession(
   }
 }
 
-export async function setCaseUserRole(session: SessionData): Promise<void> {
-  const logger: LoggerInstance = console as unknown as LoggerInstance;
+export async function fetchUserCaseRole(
+  session: SessionData,
+  logger: LoggerInstance = console as unknown as LoggerInstance
+): Promise<CaseRole | undefined> {
   const user = session.user as UserDetails;
-  if (session.caseNumber && !user.caseRole) {
-    const caseApi = getCaseApi(user, logger);
-    const caseRole = await caseApi.getUsersRoleOnCase(session.caseNumber, user.id);
-    user.caseRole = caseRole;
+
+  if (user.caseRole) {
+    return user.caseRole;
   }
-  logger.info('case role is ', user.caseRole);
+
+  if (session.caseNumber) {
+    const caseApi = getCaseApi(user, logger);
+    return caseApi.getUsersRoleOnCase(session.caseNumber, user.id);
+  }
+
+  return undefined;
 }
 
 export function setCaseUserName(session: SessionData): void {
   const logger: LoggerInstance = console as unknown as LoggerInstance;
-  const user = session.user as UserDetails;
+  const caseUserName = resolveCaseUserName(session);
 
-  if (user.caseRole && session.caseData && !session.caseUserName) {
-    if (user.caseRole === CaseRole.APPLICANT) {
-      session.caseUserName = session.caseData.applicantFlags?.partyName || CaseUserNames.APPLICANT;
-    } else if (user.caseRole === CaseRole.RESPONDENT) {
-      session.caseUserName = session.caseData.respondentFlags?.partyName || CaseUserNames.RESPONDENT;
-    }
+  if (caseUserName) {
+    session.caseUserName = caseUserName;
     logger.info('case user name set to ', session.caseUserName);
   }
+}
+
+export function resolveCaseUserName(session: SessionData): string | undefined {
+  const user = session.user as UserDetails;
+
+  if (session.caseUserName) {
+    return session.caseUserName;
+  }
+
+  if (user.caseRole && session.caseData) {
+    if (user.caseRole === CaseRole.APPLICANT) {
+      return session.caseData.applicantFlags?.partyName || CaseUserNames.APPLICANT;
+    }
+
+    if (user.caseRole === CaseRole.RESPONDENT) {
+      return session.caseData.respondentFlags?.partyName || CaseUserNames.RESPONDENT;
+    }
+  }
+
+  return undefined;
 }
