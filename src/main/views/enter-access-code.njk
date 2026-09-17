@@ -1,6 +1,8 @@
 {% extends "template.njk" %}
 {% from "macros/form.njk" import form with context %}
 
+{% set pageTitle = "Access code" %}
+
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -32,11 +34,11 @@
               <span class="govuk-visually-hidden">Error:</span> {{ errors.accessCode }}
             </p>
           {% endif %}
-          <input 
-            class="govuk-input {% if errors.accessCode %}govuk-input--error{% endif %}" 
-            id="accessCode" 
-            name="accessCode" 
-            type="text" 
+          <input
+            class="govuk-input {% if errors.accessCode %}govuk-input--error{% endif %}"
+            id="accessCode"
+            name="accessCode"
+            type="text"
             value="{{ accessCode or '' }}"
             aria-describedby="accessCode-hint{% if errors.accessCode %} accessCode-error{% endif %}"
             spellcheck="false"

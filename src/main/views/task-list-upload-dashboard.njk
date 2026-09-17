@@ -6,6 +6,9 @@
 {% from "./macros/back-link.njk" import backLink %}
 
 {% extends "template.njk" %}
+
+{% set pageTitle = "Task list" %}
+
 {% block content %}
   {{ backLink("#") }}
   <div class="govuk-grid-row">

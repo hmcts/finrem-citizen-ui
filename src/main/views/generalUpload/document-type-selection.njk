@@ -5,6 +5,8 @@
 
 {% extends "template.njk" %}
 
+{% set pageTitle = "Document type selection" %}
+
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -27,12 +29,12 @@
       <h1 class="govuk-heading-l">Tell us which documents you want to upload</h1>
 
       <p class="govuk-body">
-        Start typing the document you want to upload (for example, 'payslips') in the box below. 
+        Start typing the document you want to upload (for example, 'payslips') in the box below.
         You will then be able to choose your document.
       </p>
 
       <p class="govuk-body">
-        When you have chosen the document you want to upload, select 'Add document'. 
+        When you have chosen the document you want to upload, select 'Add document'.
         You can add more than one document to upload.
       </p>
 
@@ -57,9 +59,9 @@
         </button>
 
         <h2 class="govuk-heading-m govuk-!-margin-top-6">Documents</h2>
-        
+
         <p class="govuk-body" data-no-document-types>No documents added yet.</p>
-        
+
         <div data-document-types-list></div>
 
         <input type="hidden" name="documentsJson" value='{% if values.documentsJson %}{{ values.documentsJson }}{% elif values.selectedDocumentTypes %}{{ values.selectedDocumentTypes | dump | safe }}{% else %}[]{% endif %}'>
