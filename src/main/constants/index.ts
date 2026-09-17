@@ -21,7 +21,6 @@ export const PrivateRoutes = {
   enterAccessCode: '/enter-access-code',
   taskListUpload: '/task-list-upload-dashboard',
   uploadJourney: '/upload',
-  getCaseRole: '/getCaseRole',
   documents: '/documents',
   documentUpload: '/documents/upload',
   documentSend: '/documents/send',

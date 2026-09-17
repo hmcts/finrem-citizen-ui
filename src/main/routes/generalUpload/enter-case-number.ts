@@ -51,10 +51,6 @@ export function validateCaseNumber(caseNumber: string | undefined): CaseNumberEr
 
 export default function setupEnterCaseNumberRoute(app: Application): void {
   app.get(RouteNames.enterCaseNumber, oidcMiddleware, (req: Request, res: Response) => {
-    if (req.session.user?.caseRole && req.session.caseNumber) {
-      return res.redirect(RouteNames.dashboard);
-    }
-
     // Retrieve any errors from session (set by POST handler)
     const errors = req.session.caseNumberErrors;
     delete req.session.caseNumberErrors;
