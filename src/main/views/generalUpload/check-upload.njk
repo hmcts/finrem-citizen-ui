@@ -2,6 +2,7 @@
 {% from "govuk/components/radios/macro.njk" import govukRadios %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "../macros/form.njk" import form with context %}
 
 {% extends "template.njk" %}
 
@@ -60,7 +61,7 @@
         {% endfor %}
       {% endif %}
 
-      <form method="post" class="govuk-!-margin-top-8">
+      {% call form({ classes: "govuk-!-margin-top-8" }) %}
         {{ govukRadios({
           name: "uploadMore",
           fieldset: {
@@ -90,7 +91,7 @@
         {{ govukButton({
           text: "Continue"
         }) }}
-      </form>
+      {% endcall %}
     </div>
 
     <div class="govuk-grid-column-one-third">

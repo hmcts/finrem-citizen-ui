@@ -1,6 +1,7 @@
 {% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
 
 {% from "../macros/getting-help.njk" import gettingHelp %}
+{% from "../macros/form.njk" import form with context %}
 
 {% extends "template.njk" %}
 
@@ -54,11 +55,11 @@
         iconFallbackText: "Warning"
       }) }}
 
-      <form method="post">
+      {% call form({}) %}
         <button type="submit" class="govuk-button" data-module="govuk-button">
           Continue
         </button>
-      </form>
+      {% endcall %}
     </div>
 
     <div class="govuk-grid-column-one-third">

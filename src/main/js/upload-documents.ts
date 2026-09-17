@@ -4,6 +4,7 @@ import {
   FILE_UPLOAD_MAX_SIZE_LABEL,
   ONE_MEGABYTE_IN_BYTES,
 } from '../constants/file-upload';
+import { getCsrfHeaders } from './csrf';
 import { getLogger } from './logger';
 
 const logger = getLogger('upload-documents');
@@ -172,6 +173,7 @@ export function initUploadedDocuments(): void {
       try {
         const response = await fetch(`/documents/remove/${fileId}`, {
           method: 'DELETE',
+          headers: getCsrfHeaders(),
         });
         
         if (!response.ok) {

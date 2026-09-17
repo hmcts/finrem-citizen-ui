@@ -11,6 +11,7 @@ import type {
 } from '../../app/document/PreviouslyUploadedDocumentClient';
 import { RouteNames } from '../../constants';
 import { FileUploadInputFieldNames } from '../../constants/file-upload';
+import { extractDocumentIdFromUrl, getCaseDocumentsByRole } from '../../functions/util/documentAccess';
 import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../../functions/util/documentUtil';
 import { oidcMiddleware } from '../../middleware';
 import { GENERAL_UPLOAD_BASE_URL, UploadStepId, uploadSteps } from '../../steps/general-upload-sequence';
@@ -37,7 +38,7 @@ function getUploadedFilesByType(req: Request): Record<string, { id: string; file
 
     // Extract document ID from URL and construct download route
     const documentUrl = doc.value?.DocumentLink?.document_url || '';
-    const extractedDocumentId = documentUrl.split('/').pop() || '';
+    const extractedDocumentId = extractDocumentIdFromUrl(documentUrl) || '';
     const downloadUrl = extractedDocumentId ? `/documents/${extractedDocumentId}/download` : '';
 
     if (!uploadedFilesByType[kebabCase]) {
@@ -73,7 +74,7 @@ function getUploadedFilesByCombinedFormat(req: Request): Record<string, { id: st
 
     // Extract document ID from URL and construct download route
     const documentUrl = doc.value?.DocumentLink?.document_url || '';
-    const extractedDocumentId = documentUrl.split('/').pop() || '';
+    const extractedDocumentId = extractDocumentIdFromUrl(documentUrl) || '';
     const downloadUrl = extractedDocumentId ? `/documents/${extractedDocumentId}/download` : '';
 
     // Group by combined PDF format if applicable, otherwise by original document type
@@ -442,32 +443,11 @@ function getPreviouslyUploadedDocumentsByRole(
   caseRole: CaseRole,
   caseData?: PreviouslyUploadedDocumentsCaseData
 ): PreviouslyUploadedDocument[] {
-  if (caseRole === CaseRole.APPLICANT) {
-    return caseData?.citizenApplicantDocument ?? [];
-  } else if (caseRole === CaseRole.RESPONDENT) {
-    return caseData?.citizenRespondentDocument ?? [];
-  } else {
-    throw new Error(`Unsupported case role: ${caseRole}`);
-  }
+  return getCaseDocumentsByRole<PreviouslyUploadedDocument>(caseRole, caseData);
 }
 
 function getDocumentIdFromUrl(documentUrl?: string): string | undefined {
-  if (!documentUrl) {
-    return undefined;
-  }
-
-  let pathname: string;
-  try {
-    pathname = new URL(documentUrl, 'http://localhost').pathname;
-  } catch {
-    return undefined;
-  }
-
-  const pathSegments = pathname.split('/').filter(Boolean);
-  const documentsSegmentIndex = pathSegments.findIndex(segment => segment === 'documents');
-  const documentId = documentsSegmentIndex >= 0
-    ? pathSegments[documentsSegmentIndex + 1]
-    : undefined;
+  const documentId = extractDocumentIdFromUrl(documentUrl);
 
   return documentId && documentIdPattern.test(documentId)
     ? documentId
