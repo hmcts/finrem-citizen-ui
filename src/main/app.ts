@@ -6,7 +6,7 @@ import { glob } from 'glob';
 import * as path from 'path';
 
 import { PrivateRoutes, ViewNames } from './constants';
-import { contactEmailMiddleware, globalErrorHandler } from './middleware';
+import { caseContextMiddleware, contactEmailMiddleware, globalErrorHandler, routeAccessMiddleware } from './middleware';
 import { AppInsights } from './modules/appinsights';
 import { CSRFToken } from './modules/csrf';
 import { Helmet } from './modules/helmet';
@@ -48,6 +48,8 @@ if (config.get<boolean>('useCSRFProtection')) {
 }
 new OIDCModule().enableFor(app);
 
+app.use(caseContextMiddleware);
+app.use(routeAccessMiddleware);
 app.use(Object.values(PrivateRoutes), createDefaultRateLimiter(app.locals.redisClient));
 
 // Add contact email to all templates via res.locals
