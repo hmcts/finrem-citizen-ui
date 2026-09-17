@@ -5,7 +5,7 @@
 
 {% extends "template.njk" %}
 
-{% set pageTitle = "Document type selection" %}
+{% set pageTitle = "Tell us which documents you want to upload" %}
 
 {% block content %}
   <div class="govuk-grid-row">
@@ -26,7 +26,7 @@
         }) }}
       {% endif %}
 
-      <h1 class="govuk-heading-l">Tell us which documents you want to upload</h1>
+      <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
 
       <p class="govuk-body">
         Start typing the document you want to upload (for example, 'payslips') in the box below.

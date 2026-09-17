@@ -1,7 +1,7 @@
 {% extends "template.njk" %}
 {% from "macros/form.njk" import form with context %}
 
-{% set pageTitle = "Access code" %}
+{% set pageTitle = "Enter access code" %}
 
 {% block content %}
   <div class="govuk-grid-row">
@@ -23,7 +23,7 @@
         <div class="govuk-form-group {% if errors.accessCode %}govuk-form-group--error{% endif %}">
           <h1 class="govuk-label-wrapper">
             <label class="govuk-label govuk-label--l" for="accessCode">
-              Enter access code
+              {{ pageTitle }}
             </label>
           </h1>
           <div id="accessCode-hint" class="govuk-hint">

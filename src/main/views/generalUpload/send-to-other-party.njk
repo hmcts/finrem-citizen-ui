@@ -7,7 +7,7 @@
 
 {% extends "template.njk" %}
 
-{% set pageTitle = "Send to other party" %}
+{% set pageTitle = "You need to send these documents to the other party" %}
 
 {% block content %}
   <div class="govuk-grid-row">
@@ -28,7 +28,7 @@
         }) }}
       {% endif %}
 
-      <h1 class="govuk-heading-l">You need to send these documents to the other party</h1>
+      <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
 
       <p class="govuk-body">
         For full transparency between you and the other party, you need to serve these documents on them, or their solicitor if they have one.
