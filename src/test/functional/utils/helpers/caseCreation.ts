@@ -77,10 +77,7 @@ interface ApiConfig {
   };
 }
 
-const isCI = !!process.env.CI
-  || !!process.env.JENKINS_URL
-  || !!process.env.BUILD_ID
-  || !!process.env.JENKINS_HOME;
+const defaultCcdDataStoreApiUrl = 'http://ccd-data-store-api-aat.service.core-compute-aat.internal';
 
 const getEnvironment = (): string => {
   // Check for PR/preview environment
@@ -100,11 +97,7 @@ const getConfig = (): ApiConfig => {
   // Shared services use AAT for both AAT and preview environments
   // Preview apps connect to the same AAT backend services
   const serviceEnv = env === 'preview' ? 'aat' : env;
-  const ccdDataStoreApiUrl = process.env.CCD_DATA_STORE_API_URL
-    || process.env.CCD_URL
-    || (isCI
-      ? `http://ccd-data-store-api-${serviceEnv}.service.core-compute-${serviceEnv}.internal`
-      : `https://ccd-data-store-api-${serviceEnv}.${serviceEnv}.platform.hmcts.net`);
+  const ccdDataStoreApiUrl = process.env.CORE_CASE_DATA_API_URL || defaultCcdDataStoreApiUrl;
 
   return {
     idam: {

@@ -37,7 +37,7 @@
       "secret": "SERVICE_AUTH_SECRET"
     },
     "case": {
-      "url": "CCD_URL"
+      "url": "CORE_CASE_DATA_API_URL"
     },
     "caseDocumentManagement": {
       "url": "CASE_DOCUMENT_MANAGEMENT_URL"
