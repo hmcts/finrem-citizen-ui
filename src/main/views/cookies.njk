@@ -4,10 +4,12 @@
 
 {% extends "template.njk" %}
 
+{% set pageTitle = "Cookies" %}
+
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-l">Cookies</h1>
+      <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
 
       <div class="cookie-preference-success" tabindex="-1">
         {{ govukNotificationBanner({

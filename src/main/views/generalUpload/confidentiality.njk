@@ -6,6 +6,8 @@
 
 {% extends "template.njk" %}
 
+{% set pageTitle = "Keeping information confidential for safety reasons" %}
+
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -15,16 +17,16 @@
         <a href="/dashboard" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
       {% endif %}
 
-      <h1 class="govuk-heading-l">Keeping information confidential for safety reasons</h1>
+      <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
 
       <p class="govuk-body">
-        If you have <a href="https://www.gov.uk/government/publications/form-c8-confidential-contact-details-family-procedure-rules-2010-rule-291" 
-        target="_blank" rel="noopener noreferrer">applied to the court to keep your contact details confidential using form C8 (opens in new tab)</a>, 
+        If you have <a href="https://www.gov.uk/government/publications/form-c8-confidential-contact-details-family-procedure-rules-2010-rule-291"
+        target="_blank" rel="noopener noreferrer">applied to the court to keep your contact details confidential using form C8 (opens in new tab)</a>,
         you must make sure that any document, either submitted now or at a later date, does not contain the information you wish to keep private.
       </p>
 
       <p class="govuk-body">
-        You must redact (black out the text) any such information if you need to keep it 
+        You must redact (black out the text) any such information if you need to keep it
         private from the other party. You can either do this:
       </p>
 
