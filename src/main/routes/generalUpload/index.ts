@@ -382,6 +382,12 @@ export default function setupGeneralUploadRoute(app: Application): void {
 
       // Handle send-to-other-party submission - send documents to CCD
       if (req.params.stepId === 'send-to-other-party') {
+        if (!req.session.documents?.documentDetails?.length) {
+          delete req.session.DocumentSelection;
+          await saveAndRedirectToConfirmationPage(req, res);
+          return;
+        }
+
         // Transfer FDR flag from DocumentSelection to documents
         if (req.session.DocumentSelection?.isFinancialDisputeResolution !== undefined) {
           if (!req.session.documents) {
@@ -404,15 +410,7 @@ export default function setupGeneralUploadRoute(app: Application): void {
         delete req.session.DocumentSelection;
 
         // Save session and redirect to confirmation page
-        await new Promise<void>((resolve, reject) => {
-          req.session.save((err) => {
-            if (err) {
-              return reject(err);
-            }
-            res.redirect(`${RouteNames.uploadJourney}/confirmation`);
-            resolve();
-          });
-        });
+        await saveAndRedirectToConfirmationPage(req, res);
         return;
       }
 
@@ -437,6 +435,18 @@ export default function setupGeneralUploadRoute(app: Application): void {
     res.redirect(`${RouteNames.uploadJourney}/before-you-start`);
   });
 
+}
+
+async function saveAndRedirectToConfirmationPage(req: Request, res: Response): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    req.session.save(err => {
+      if (err) {
+        return reject(err);
+      }
+      res.redirect(`${RouteNames.uploadJourney}/confirmation`);
+      resolve();
+    });
+  });
 }
 
 function getPreviouslyUploadedDocumentsByRole(

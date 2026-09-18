@@ -40,6 +40,15 @@ type PartialRequestWithSession = {
   [key: string]: unknown;
 };
 
+function createValidPdfFile(size = 1024): { originalname: string; size: number; mimetype: string; buffer: Buffer } {
+  return {
+    originalname: 'test.pdf',
+    size,
+    mimetype: 'application/pdf',
+    buffer: Buffer.from('%PDF-1.7\n1 0 obj\n<< /Type /Catalog >>\nendobj'),
+  };
+}
+
 function getRegisteredHandler(mockFn: jest.Mock, route: string): HomeHandler {
   const call = mockFn.mock.calls.find((entry: unknown[]) => entry[0] === route);
 
@@ -353,7 +362,7 @@ describe('Home Routes', () => {
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
-        file: { originalname: 'test.pdf', size: 1024 },
+        file: createValidPdfFile(),
         body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
@@ -380,7 +389,7 @@ describe('Home Routes', () => {
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
-        file: { originalname: 'test.pdf', size: 1024 },
+        file: createValidPdfFile(),
         body: { documentType: 'form-fm1' },
         session: {
           uploadErrors: { 'form-fm1': 'Old error', 'other-doc': 'Other error' },
@@ -407,7 +416,7 @@ describe('Home Routes', () => {
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
-        file: { originalname: 'test.pdf', size: 1024 },
+        file: createValidPdfFile(),
         body: { documentType: 'form-fm1' },
         session: {
           uploadErrors: { 'form-fm1': 'Old error' },
@@ -435,7 +444,7 @@ describe('Home Routes', () => {
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const saveError = new Error('Session save failed');
       const mockReq = {
-        file: { originalname: 'test.pdf', size: 1024 },
+        file: createValidPdfFile(),
         body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb(saveError)),
@@ -485,7 +494,7 @@ describe('Home Routes', () => {
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
-        file: { originalname: 'test.pdf', size: 1024 },
+        file: createValidPdfFile(),
         body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
@@ -511,7 +520,7 @@ describe('Home Routes', () => {
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
-        file: { originalname: 'test.pdf', size: 1024 },
+        file: createValidPdfFile(),
         body: { documentType: CitizenUploadDocumentType.BANK_STATEMENTS },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
@@ -539,7 +548,7 @@ describe('Home Routes', () => {
 
       const handler = getRegisteredHandler(mockPost, RouteNames.documentUpload);
       const mockReq = {
-        file: { originalname: 'large.pdf', size: FILE_UPLOAD_MAX_SIZE_BYTES }, // Exactly max size
+        file: createValidPdfFile(FILE_UPLOAD_MAX_SIZE_BYTES), // Exactly max size
         body: { documentType: 'form-fm1' },
         session: {
           save: jest.fn((cb: (err?: Error) => void) => cb()),
