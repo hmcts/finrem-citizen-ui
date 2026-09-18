@@ -23,8 +23,9 @@ nodejs:
     IDAM_WEB_URL: https://hmcts-access.aat.platform.hmcts.net/o/authorize
     IDAM_TOKEN_URL: https://idam-api.aat.platform.hmcts.net/o/token
     REDIS_CONNECTION_STRING: 'redis://{{ .Release.Name }}-redis-master:6379'
-    CCD_URL: 'http://ccd-data-store-api-aat.service.core-compute-aat.internal'
+    CCD_URL: '${BACKEND_CCD_URL}'
     CASE_DOCUMENT_MANAGEMENT_URL: 'http://ccd-case-document-am-api-aat.service.core-compute-aat.internal'
+    ORCHESTRATION_SERVICE_URL: '${BACKEND_ORCHESTRATION_SERVICE_URL}'
 
 
 redis:
