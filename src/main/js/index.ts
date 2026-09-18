@@ -1,4 +1,5 @@
 import '../assets/scss/main.scss';
+import './disable-upon-submit';
 
 import { initAll } from 'govuk-frontend';
 
