@@ -97,8 +97,9 @@ withPipeline(type, product, component) {
     // CCD_DEFINITIONS_PR=1234 -> ccd-data-store-api-finrem-ccd-definitions-pr-1234.preview.platform.hmcts.net
     // CASE_ORCHESTRATION_PR=5678 -> finrem-cos-pr-5678.preview.platform.hmcts.net
 
-    env.CCD_DEFINITIONS_PR = (env.CCD_DEFINITIONS_PR ?: '').trim()
-    env.CASE_ORCHESTRATION_PR = (env.CASE_ORCHESTRATION_PR ?: '').trim()
+
+    env.CCD_DEFINITIONS_PR = 3532
+    env.CASE_ORCHESTRATION_PR = 3532
     env.JENKINS_BRANCH = "preview"
     env.RUNNING_ENV = "pr-${CHANGE_ID}"
     env.TEST_URL = "https://finrem-citizen-ui-pr-${CHANGE_ID}.preview.platform.hmcts.net"

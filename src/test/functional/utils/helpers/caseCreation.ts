@@ -77,6 +77,11 @@ interface ApiConfig {
   };
 }
 
+const isCI = !!process.env.CI
+  || !!process.env.JENKINS_URL
+  || !!process.env.BUILD_ID
+  || !!process.env.JENKINS_HOME;
+
 const getEnvironment = (): string => {
   // Check for PR/preview environment
   if (process.env.RUNNING_ENV?.startsWith('pr-')) {
@@ -95,6 +100,12 @@ const getConfig = (): ApiConfig => {
   // Shared services use AAT for both AAT and preview environments
   // Preview apps connect to the same AAT backend services
   const serviceEnv = env === 'preview' ? 'aat' : env;
+  const ccdDataStoreApiUrl = process.env.CCD_DATA_STORE_API_URL
+    || process.env.CCD_URL
+    || (isCI
+      ? `http://ccd-data-store-api-${serviceEnv}.service.core-compute-${serviceEnv}.internal`
+      : `https://ccd-data-store-api-${serviceEnv}.${serviceEnv}.platform.hmcts.net`);
+
   return {
     idam: {
       baseUrl: process.env.IDAM_TOKEN_URL || `https://idam-api.${serviceEnv}.platform.hmcts.net`,
@@ -102,7 +113,7 @@ const getConfig = (): ApiConfig => {
       clientSecret: process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET || ''
     },
     ccd: {
-      dataStoreApi: 'https://ccd-data-store-api-finrem-ccd-definitions-pr-3089.preview.platform.hmcts.net'
+      dataStoreApi: ccdDataStoreApiUrl
     }
   };
 };
