@@ -5,6 +5,8 @@ import type { Express, NextFunction, Request, Response } from 'express';
 import type * as OidcClientType from 'openid-client';
 
 import { RouteNames } from '../../constants';
+import { resetCaseContext } from '../../functions/util/homePageUtil';
+import { isProfessionalUser } from '../../functions/util/roleGuardUtil';
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
 
@@ -19,6 +21,8 @@ const getOidcClient = async (): Promise<typeof OidcClientType> => {
 export class OIDCModule {
   private clientConfig: OidcClientType.Configuration | undefined;
   private readonly oidcConfig: OIDCConfig = config.get<OIDCConfig>('oidc');
+  private readonly professionalUserRedirectUrl: string =
+    config.get<string>('services.manageCase.url');
   private readonly logger = Logger.getLogger('oidc');
 
   constructor() {
@@ -135,7 +139,6 @@ export class OIDCModule {
     app.get(RouteNames.login, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
         if (!this.clientConfig) {
-          req.session.returnTo = req.session.returnTo ?? RouteNames.basePath;
           req.session.save(() => {
             res.status(200).type('html').send(`
               <!doctype html>
@@ -236,12 +239,26 @@ export class OIDCModule {
           roles: (claims.roles ?? []) as string[],
         } satisfies UserDetails;
 
+        if (isProfessionalUser(req.session.user.roles)) {
+          const redirectUrl = this.professionalUserRedirectUrl;
+
+          req.session.destroy((err: unknown) => {
+            if (err) {
+              this.logger.error('Session destroy error for professional user redirect:', err);
+            }
+            this.logger.info(`Professional user blocked from CUI and redirected to manage-case: ${claims.uid}`);
+
+            res.redirect(redirectUrl);
+          });
+          return;
+        }
+
+        resetCaseContext(req.session);
+
         req.session.save(() => {
           delete req.session.codeVerifier;
           delete req.session.nonce;
-          const returnTo = req.session.returnTo ?? RouteNames.basePath;
-          delete req.session.returnTo;
-          res.redirect(returnTo);
+          res.redirect(RouteNames.basePath);
         });
       } catch (err: unknown) {
         this.logger.error('OIDC callback error:', err);

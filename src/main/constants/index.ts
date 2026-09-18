@@ -2,7 +2,10 @@
 export const PublicRoutes = {
   basePath: '/',
   callbackUrl: '/oauth2/callback',
+  csrfError: '/csrf-error',
   config: '/config',
+  cookies: '/cookies',
+  favicon: '/favicon.ico',
   health: '/health',
   info: '/info',
   login: '/login',
@@ -20,7 +23,6 @@ export const PrivateRoutes = {
   enterAccessCode: '/enter-access-code',
   taskListUpload: '/task-list-upload-dashboard',
   uploadJourney: '/upload',
-  getCaseRole: '/getCaseRole',
   documents: '/documents',
   documentUpload: '/documents/upload',
   documentSend: '/documents/send',
@@ -34,6 +36,7 @@ export const RouteNames = {
 } as const;
 
 export const ViewNames = {
+  Cookies: 'cookies',
   Dashboard: 'dashboard',
   EnterCaseNumber: 'enter-case-number',
   EnterAccessCode: 'enter-access-code',

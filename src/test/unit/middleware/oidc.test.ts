@@ -48,7 +48,17 @@ describe('oidcMiddleware', () => {
     expect(res.redirect).not.toHaveBeenCalled();
   });
 
-  it('stores returnTo and redirects to /login when session exists but no user', () => {
+  it('calls next for /csrf-error without requiring a session', () => {
+    const req = makeReq({ session: undefined, path: RouteNames.csrfError, originalUrl: RouteNames.csrfError });
+    const res = makeRes();
+
+    oidcMiddleware(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(res.redirect).not.toHaveBeenCalled();
+  });
+
+  it('redirects to /login when session exists but no user', () => {
     const req = {
       path: '/protected',
       originalUrl: '/protected?query=1',
@@ -67,8 +77,7 @@ describe('oidcMiddleware', () => {
     oidcMiddleware(req, res, next);
 
     expect(next).not.toHaveBeenCalled();
-    expect((req.session as { returnTo?: string })!.returnTo).toBe('/protected?query=1');
-    expect(req.session!.save).toHaveBeenCalled(); // Verify save was called
+    expect(req.session!.save).toHaveBeenCalled();
     expect(res.redirect).toHaveBeenCalledWith(RouteNames.login);
   });
 
