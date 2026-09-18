@@ -5,7 +5,8 @@
 def type = "nodejs"
 def product = "finrem"
 def component = "citizen-ui"
-def ccdDataStoreApiUrl = "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
+def defaultCcdDataStoreApiUrl = "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
+def defaultOrchestrationServiceUrl = "http://finrem-cos-aat.service.core-compute-aat.internal"
 
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
@@ -32,6 +33,24 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
     version: '',
     envVariable: envVar
   ]
+}
+
+def resolvePreviewCcdUrl = {
+  String ccdDefinitionsPr = (env.CCD_DEFINITIONS_PR ?: '').trim()
+  if (!ccdDefinitionsPr) {
+    return defaultCcdDataStoreApiUrl
+  }
+
+  return "https://ccd-data-store-api-finrem-ccd-definitions-pr-${ccdDefinitionsPr}.preview.platform.hmcts.net"
+}
+
+def resolvePreviewOrchestrationUrl = {
+  String orchestrationPr = (env.CASE_ORCHESTRATION_PR ?: '').trim()
+  if (!orchestrationPr) {
+    return defaultOrchestrationServiceUrl
+  }
+
+  return "https://finrem-cos-pr-${orchestrationPr}.preview.platform.hmcts.net"
 }
 
 withPipeline(type, product, component) {
@@ -66,13 +85,27 @@ withPipeline(type, product, component) {
   onMaster() {
     env.JENKINS_BRANCH = "master"
     env.RUNNING_ENV = "aat"
-    env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl
+    env.CCD_DATA_STORE_API_URL = defaultCcdDataStoreApiUrl
+    env.CCD_URL = defaultCcdDataStoreApiUrl
+    env.ORCHESTRATION_SERVICE_URL = defaultOrchestrationServiceUrl
+    env.BACKEND_CCD_URL = defaultCcdDataStoreApiUrl
+    env.BACKEND_ORCHESTRATION_SERVICE_URL = defaultOrchestrationServiceUrl
   }
 
   onPR() {
+    // Optional: set backend PR numbers to run frontend CI against backend PRs.
+    // CCD_DEFINITIONS_PR=1234 -> ccd-data-store-api-finrem-ccd-definitions-pr-1234.preview.platform.hmcts.net
+    // CASE_ORCHESTRATION_PR=5678 -> finrem-cos-pr-5678.preview.platform.hmcts.net
+
+    env.CCD_DEFINITIONS_PR = (env.CCD_DEFINITIONS_PR ?: '').trim()
+    env.CASE_ORCHESTRATION_PR = (env.CASE_ORCHESTRATION_PR ?: '').trim()
     env.JENKINS_BRANCH = "preview"
     env.RUNNING_ENV = "pr-${CHANGE_ID}"
     env.TEST_URL = "https://finrem-citizen-ui-pr-${CHANGE_ID}.preview.platform.hmcts.net"
-    env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl
+    env.BACKEND_CCD_URL = resolvePreviewCcdUrl()
+    env.BACKEND_ORCHESTRATION_SERVICE_URL = resolvePreviewOrchestrationUrl()
+    env.CCD_DATA_STORE_API_URL = env.BACKEND_CCD_URL
+    env.CCD_URL = env.BACKEND_CCD_URL
+    env.ORCHESTRATION_SERVICE_URL = env.BACKEND_ORCHESTRATION_SERVICE_URL
   }
 }
