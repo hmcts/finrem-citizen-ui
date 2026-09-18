@@ -36,15 +36,6 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
   ]
 }
 
-def resolvePreviewCcdUrl = {
-  String ccdDefinitionsPr = resolveCcdDefinitionsPr()
-  if (!ccdDefinitionsPr) {
-    return defaultCcdDataStoreApiUrl
-  }
-
-  return "https://ccd-data-store-api-finrem-ccd-definitions-pr-${ccdDefinitionsPr}.preview.platform.hmcts.net"
-}
-
 def resolveCcdDefinitionsPr = {
   def githubApi = new GithubAPI(this)
 
@@ -53,6 +44,15 @@ def resolveCcdDefinitionsPr = {
   }
 
   return ''
+}
+
+def resolvePreviewCcdUrl = {
+  String ccdDefinitionsPr = resolveCcdDefinitionsPr()
+  if (!ccdDefinitionsPr) {
+    return defaultCcdDataStoreApiUrl
+  }
+
+  return "https://ccd-data-store-api-finrem-ccd-definitions-pr-${ccdDefinitionsPr}.preview.platform.hmcts.net"
 }
 
 withPipeline(type, product, component) {
