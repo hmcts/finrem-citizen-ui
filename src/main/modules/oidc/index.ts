@@ -1,9 +1,9 @@
 import { Logger } from '@hmcts/nodejs-logging';
-import { UserDetails } from 'app/controller/AppRequest';
 import config from 'config';
 import type { Express, NextFunction, Request, Response } from 'express';
 import type * as OidcClientType from 'openid-client';
 
+import { UserDetails } from '../../app/controller/AppRequest';
 import { RouteNames } from '../../constants';
 import { resetCaseContext } from '../../functions/util/homePageUtil';
 import { isProfessionalUser } from '../../functions/util/roleGuardUtil';
