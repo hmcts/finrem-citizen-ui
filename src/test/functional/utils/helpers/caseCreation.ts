@@ -97,7 +97,7 @@ const getConfig = (): ApiConfig => {
   const serviceEnv = env === 'preview' ? 'aat' : env;
   return {
     idam: {
-      baseUrl: process.env.IDAM_TOKEN_URL || `https://idam-api.${serviceEnv}.platform.hmcts.net`,
+      baseUrl: process.env.IDAM_TOKEN_URL || `https://idam-web-public.${serviceEnv}.platform.hmcts.net`,
       clientId: process.env.IDAM_CLIENT_ID || 'divorce',
       clientSecret: process.env.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET || ''
     },
@@ -238,12 +238,12 @@ async function getUserId(authToken: string): Promise<string> {
     try {
       const detailsResponse = await axiosRequest<{ id: string }>({
         method: 'get',
-        url: `${config.idam.baseUrl}/details`,
+        url: `${config.idam.baseUrl}/o/userinfo`,
         headers: {
           Authorization: `Bearer ${authToken}`
         }
       });
-      const userId = detailsResponse.data.id;
+      const userId = detailsResponse.data.uid;
       if (userId && isValidUuid(userId)) {
         if (cached) {
           cached.userId = userId;
