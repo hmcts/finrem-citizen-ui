@@ -1,7 +1,11 @@
 import { createReadStream } from 'fs';
 import { open } from 'fs/promises';
+import { LoggerInstance } from 'winston';
 
 import {
+  FILE_EXTENSIONS,
+  FILE_SIGNATURES,
+  FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES,
   FILE_UPLOAD_ALLOWED_EXTENSIONS,
   FILE_UPLOAD_MAX_SIZE_BYTES,
   FILE_UPLOAD_MAX_SIZE_LABEL,
@@ -16,6 +20,8 @@ export const FILE_VALIDATION_ERRORS = {
   PASSWORD_PROTECTED: 'The selected file is password protected',
 } as const;
 
+const logger: LoggerInstance = console as unknown as LoggerInstance;
+
 const PDF_ENCRYPTION_MARKER = Buffer.from('/Encrypt');
 const COMPOUND_FILE_SIGNATURE = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
 const OFFICE_ENCRYPTION_MARKERS = [
@@ -24,16 +30,31 @@ const OFFICE_ENCRYPTION_MARKERS = [
 ];
 const ZIP_END_OF_CENTRAL_DIRECTORY_SIGNATURE = 0x06054b50;
 const ZIP_CENTRAL_DIRECTORY_HEADER_SIGNATURE = 0x02014b50;
+const ZIP_LOCAL_FILE_HEADER_SIGNATURE = 0x04034b50;
+const ZIP_SPANNED_ARCHIVE_SIGNATURE = 0x08074b50;
+const ZIP_FILE_SIGNATURES = new Set<number>([
+  ZIP_LOCAL_FILE_HEADER_SIGNATURE,
+  ZIP_END_OF_CENTRAL_DIRECTORY_SIGNATURE,
+  ZIP_SPANNED_ARCHIVE_SIGNATURE,
+]);
 const ZIP_END_OF_CENTRAL_DIRECTORY_MIN_SIZE = 22;
 const ZIP_MAX_COMMENT_SIZE = 0xffff;
 const ZIP_CENTRAL_DIRECTORY_FIXED_HEADER_SIZE = 46;
 const ZIP_ENCRYPTED_FLAG = 0x1;
+const JPEG_SIGNATURE = Buffer.from([0xff, 0xd8, 0xff]);
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const PDF_SIGNATURE = Buffer.from('%PDF-');
+const OOXML_CONTENT_TYPES_MARKER = Buffer.from('[Content_Types].xml');
+const OOXML_DOCX_MARKER = Buffer.from('word/');
+const OOXML_XLSX_MARKER = Buffer.from('xl/');
+
+type DetectedFileSignature = (typeof FILE_SIGNATURES)[keyof typeof FILE_SIGNATURES];
 
 export function getFileExtension(filename: string): string {
   return filename.substring(filename.lastIndexOf('.')).toLowerCase();
 }
 
-export function isValidFileType(filename: string): boolean {
+export function isValidFileExtension(filename: string): boolean {
   const ext = getFileExtension(filename);
   return FILE_UPLOAD_ALLOWED_EXTENSIONS.includes(ext);
 }
@@ -42,7 +63,10 @@ export function isValidFileSize(sizeInBytes: number): boolean {
   return sizeInBytes > 0 && sizeInBytes <= FILE_UPLOAD_MAX_SIZE_BYTES;
 }
 
-export async function validateUploadedFile(files: Express.Multer.File[] | undefined): Promise<string | null> {
+export async function validateUploadedFile(
+  files: Express.Multer.File[] | undefined,
+  caseId?: string
+): Promise<string | null> {
   if (!files || files.length === 0) {
     return FILE_VALIDATION_ERRORS.NO_FILE;
   }
@@ -53,7 +77,11 @@ export async function validateUploadedFile(files: Express.Multer.File[] | undefi
     return FILE_VALIDATION_ERRORS.EMPTY;
   }
 
-  if (!isValidFileType(file.originalname)) {
+  if (!isValidFileExtension(file.originalname)) {
+    logger.info('Upload rejected: unsupported file extension', {
+      caseId,
+      extension: getFileExtension(file.originalname),
+    });
     return FILE_VALIDATION_ERRORS.INVALID_TYPE;
   }
 
@@ -62,24 +90,136 @@ export async function validateUploadedFile(files: Express.Multer.File[] | undefi
   }
 
   try {
+    if (!(await isValidMimeType(file, caseId))) {
+      return FILE_VALIDATION_ERRORS.INVALID_TYPE;
+    }
+  } catch {
+    logger.info('Upload validation failed during file type checks', { caseId });
+    return FILE_VALIDATION_ERRORS.UPLOAD_FAILED;
+  }
+
+  try {
     if (await isPasswordProtectedFile(file)) {
       return FILE_VALIDATION_ERRORS.PASSWORD_PROTECTED;
     }
   } catch {
+    logger.info('Upload validation failed during password-protection checks', { caseId });
     return FILE_VALIDATION_ERRORS.UPLOAD_FAILED;
   }
 
   return null;
 }
 
+async function isValidMimeType(file: Express.Multer.File, caseId?: string): Promise<boolean> {
+  const fileExtension = getFileExtension(file.originalname);
+  if (!mimeTypeMatchesExtension(fileExtension, file.mimetype)) {
+    logger.info('Upload rejected: MIME type does not match extension', {
+      caseId,
+      extension: fileExtension,
+      mimeType: file.mimetype,
+    });
+
+    return false;
+  }
+
+  const detectedFileSignature = await detectFileSignature(file);
+  if (!signatureMatchesExtension(fileExtension, detectedFileSignature)) {
+    logger.info('Upload rejected: file signature does not match extension', {
+      caseId,
+      extension: fileExtension,
+      detectedFileSignature,
+    });
+
+    return false;
+  }
+
+  if (fileExtension === FILE_EXTENSIONS.DOCX) {
+    const hasDocxMarkers = await fileContainsAllMarkers(file, [OOXML_CONTENT_TYPES_MARKER, OOXML_DOCX_MARKER]);
+    if (!hasDocxMarkers) {
+      logger.info('Upload rejected: docx file is missing expected OOXML markers', {
+        caseId,
+      });
+    }
+
+    return hasDocxMarkers;
+  }
+
+  if (fileExtension === FILE_EXTENSIONS.XLSX) {
+    const hasXlsxMarkers = await fileContainsAllMarkers(file, [OOXML_CONTENT_TYPES_MARKER, OOXML_XLSX_MARKER]);
+    if (!hasXlsxMarkers) {
+      logger.info('Upload rejected: xlsx file is missing expected OOXML markers', {
+        caseId,
+      });
+    }
+
+    return hasXlsxMarkers;
+  }
+
+  return true;
+}
+
+function mimeTypeMatchesExtension(extension: string, mimeType?: string): boolean {
+  if (!mimeType) {
+    return true;
+  }
+
+  const rules = getAllowedTypeRule(extension);
+  if (!rules) {
+    return false;
+  }
+
+  return (rules.mimeTypes as readonly string[]).includes(mimeType.toLowerCase());
+}
+
+async function detectFileSignature(file: Express.Multer.File): Promise<DetectedFileSignature> {
+  const header = await readFileRange(file, 0, 8);
+
+  if (bufferStartsWith(header, JPEG_SIGNATURE)) {
+    return FILE_SIGNATURES.JPG;
+  }
+
+  if (bufferStartsWith(header, PNG_SIGNATURE)) {
+    return FILE_SIGNATURES.PNG;
+  }
+
+  if (bufferStartsWith(header, PDF_SIGNATURE)) {
+    return FILE_SIGNATURES.PDF;
+  }
+
+  if (header.length >= 4) {
+    const zipSignature = header.readUInt32LE(0);
+    if (ZIP_FILE_SIGNATURES.has(zipSignature)) {
+      return FILE_SIGNATURES.ZIP;
+    }
+  }
+
+  return FILE_SIGNATURES.UNKNOWN;
+}
+
+function signatureMatchesExtension(extension: string, signature: DetectedFileSignature): boolean {
+  const fileSignatureRule = getAllowedTypeRule(extension);
+
+  if (!fileSignatureRule) {
+    return false;
+  }
+
+  return (fileSignatureRule.signatures as readonly string[]).includes(signature);
+}
+
+function getAllowedTypeRule(extension: string) {
+  return FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES[
+    extension as keyof typeof FILE_UPLOAD_ALLOWED_EXTENSION_TYPE_RULES
+  ];
+}
+
 async function isPasswordProtectedFile(file: Express.Multer.File): Promise<boolean> {
   const ext = getFileExtension(file.originalname);
 
-  if (ext === '.pdf') {
+  if (ext === FILE_EXTENSIONS.PDF) {
     return fileContainsAllMarkers(file, [PDF_ENCRYPTION_MARKER]);
   }
 
-  if (ext === '.docx' || ext === '.xlsx') {
+  if (ext === FILE_EXTENSIONS.DOCX || ext === FILE_EXTENSIONS.XLSX) {
     return isPasswordProtectedOfficeFile(file);
   }
 

@@ -2,6 +2,7 @@
 {% from "../macros/autocomplete.njk" import autocomplete %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "../macros/form-submit-button.njk" import formSubmitButton %}
+{% from "../macros/form.njk" import form with context %}
 
 {% extends "template.njk" %}
 
@@ -36,7 +37,7 @@
         You can add more than one document to upload.
       </p>
 
-      <form method="post" data-document-type-selection>
+      {% call form({ attributes: { "data-document-type-selection": true } }) %}
         {{ autocomplete(
           id="document-type",
           name="documentType",
@@ -68,7 +69,7 @@
           text: "Continue",
           classes: "govuk-!-margin-top-6"
         }) }}
-      </form>
+      {% endcall %}
     </div>
 
     <div class="govuk-grid-column-one-third">

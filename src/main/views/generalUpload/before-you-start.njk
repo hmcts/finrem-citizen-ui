@@ -1,5 +1,6 @@
 {% from "../macros/getting-help.njk" import gettingHelp %}
 {% from "../macros/form-submit-button.njk" import formSubmitButton %}
+{% from "../macros/form.njk" import form with context %}
 
 {% extends "template.njk" %}
 
@@ -65,12 +66,12 @@
         </div>
       </details>
 
-      <form method="post">
+      {% call form({}) %}
         {{ formSubmitButton({
           text: "Start now",
           isStartButton: true
         }) }}
-      </form>
+      {% endcall %}
     </div>
 
     <div class="govuk-grid-column-one-third">

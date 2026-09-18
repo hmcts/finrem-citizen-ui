@@ -1,5 +1,6 @@
 {% extends "template.njk" %}
-{% from "./macros/form-submit-button.njk" import formSubmitButton %}
+{% from "macros/form-submit-button.njk" import formSubmitButton %}
+{% from "macros/form.njk" import form with context %}
 
 {% block content %}
   <div class="govuk-grid-row">
@@ -17,7 +18,7 @@
         </div>
       {% endif %}
 
-      <form method="post" novalidate>
+      {% call form({ novalidate: true }) %}
         <div class="govuk-form-group {% if errors.accessCode %}govuk-form-group--error{% endif %}">
           <h1 class="govuk-label-wrapper">
             <label class="govuk-label govuk-label--l" for="accessCode">
@@ -45,7 +46,7 @@
         </div>
 
         {{ formSubmitButton({ text: "Continue" }) }}
-      </form>
+      {% endcall %}
     </div>
   </div>
 {% endblock %}

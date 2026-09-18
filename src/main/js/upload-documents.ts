@@ -4,6 +4,7 @@ import {
   FILE_UPLOAD_MAX_SIZE_LABEL,
   ONE_MEGABYTE_IN_BYTES,
 } from '../constants/file-upload';
+import { getCsrfHeaders } from './csrf';
 import { getLogger } from './logger';
 
 const logger = getLogger('upload-documents');
@@ -15,7 +16,7 @@ function getFileExtension(filename: string): string {
   return filename.substring(filename.lastIndexOf('.')).toLowerCase();
 }
 
-function isValidFileType(filename: string): boolean {
+function isValidFileExtension(filename: string): boolean {
   const ext = getFileExtension(filename);
   return FILE_UPLOAD_ALLOWED_EXTENSIONS.includes(ext);
 }
@@ -108,7 +109,7 @@ export function initUploadValidation(): void {
       }
       
       // Check file type first
-      if (!isValidFileType(file.name)) {
+      if (!isValidFileExtension(file.name)) {
         logger.warn(`Invalid file type: ${file.name}`);
         showClientError(form, input, ERROR_MESSAGE_TYPE);
         input.value = '';
@@ -137,7 +138,7 @@ export function initUploadValidation(): void {
       }
       
       // Check file type
-      if (!isValidFileType(file.name)) {
+      if (!isValidFileExtension(file.name)) {
         e.preventDefault();
         logger.warn(`Invalid file type on submit: ${file.name}`);
         showClientError(form, input, ERROR_MESSAGE_TYPE);
@@ -172,6 +173,7 @@ export function initUploadedDocuments(): void {
       try {
         const response = await fetch(`/documents/remove/${fileId}`, {
           method: 'DELETE',
+          headers: getCsrfHeaders(),
         });
         
         if (!response.ok) {
