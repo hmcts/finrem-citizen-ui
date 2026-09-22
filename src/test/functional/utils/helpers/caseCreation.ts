@@ -77,7 +77,7 @@ interface ApiConfig {
   };
 }
 
-const defaultCcdDataStoreApiUrl = 'http://ccd-data-store-api-aat.service.core-compute-aat.internal';
+const DEFAULT_CCD_DATA_STORE_URL = 'http://ccd-data-store-api-aat.service.core-compute-aat.internal';
 
 const getEnvironment = (): string => {
   // Check for PR/preview environment
@@ -97,7 +97,7 @@ const getConfig = (): ApiConfig => {
   // Shared services use AAT for both AAT and preview environments
   // Preview apps connect to the same AAT backend services
   const serviceEnv = env === 'preview' ? 'aat' : env;
-  const ccdDataStoreApiUrl = process.env.CCD_URL || defaultCcdDataStoreApiUrl;
+  const ccdDataStoreApiUrl = process.env.CCD_URL || DEFAULT_CCD_DATA_STORE_URL;
 
   return {
     idam: {

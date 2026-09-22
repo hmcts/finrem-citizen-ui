@@ -30,10 +30,7 @@ import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
 dotenv.config({ quiet: true });
 
 function getConfiguredCcdUrl(): string {
-  return (
-    process.env.CCD_URL
-    || ''
-  ).trim();
+  return (process.env.CCD_URL || '').trim();
 }
 
 function isPreviewOrAatTarget(): boolean {

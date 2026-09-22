@@ -112,14 +112,14 @@ PLAYWRIGHT_SOLICITOR_PSWD=
 ```
 
 ### Running Frontend CI against Backend Preview
-Frontend pull request CI can optionally be run against backend preview by using the PR number of a finrem-ccd-definitions PR with the `use-ccd-defs-pr-{number}` label:
+Frontend CI can be run against backend preview by using the `use-ccd-defs-pr-{number}` PR label, where "number" is the finrem-ccd-definitions GitHub PR number.
 
 ```dotenv
 # Add this label to the frontend PR:
 # use-ccd-defs-pr-1234
 ```
 
-When that label is set on a frontend PR, preview deploy/test routing becomes:
+When the label is set on a frontend PR, preview deploy/test routing becomes:
 
 - `CCD_URL` -> `https://ccd-data-store-api-finrem-ccd-definitions-pr-<label-number>.preview.platform.hmcts.net`
 

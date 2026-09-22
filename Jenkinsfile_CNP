@@ -8,6 +8,7 @@ def type = "nodejs"
 def product = "finrem"
 def component = "citizen-ui"
 def defaultCcdDataStoreApiUrl = "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
+def backendPullRequestLabelPrefix = "use-ccd-defs-pr-"
 
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
@@ -39,8 +40,8 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 def resolveCcdDefinitionsPr = {
   def githubApi = new GithubAPI(this)
 
-  for (label in githubApi.getLabelsbyPattern(env.BRANCH_NAME, 'use-ccd-defs-pr-')) {
-    return label.minus('use-ccd-defs-pr-').trim()
+  for (label in githubApi.getLabelsbyPattern(env.BRANCH_NAME, backendPullRequestLabelPrefix)) {
+    return label.minus(backendPullRequestLabelPrefix).trim()
   }
 
   return ''
@@ -91,10 +92,6 @@ withPipeline(type, product, component) {
   }
 
   onPR() {
-    // Optional backend PR override for preview CI:
-    // GitHub label on the frontend PR -> use-ccd-defs-pr-1234
-    // Routes CCD_URL to ccd-data-store-api-finrem-ccd-definitions-pr-1234.preview.platform.hmcts.net
-
     env.JENKINS_BRANCH = "preview"
     env.RUNNING_ENV = "pr-${CHANGE_ID}"
     env.TEST_URL = "https://finrem-citizen-ui-pr-${CHANGE_ID}.preview.platform.hmcts.net"

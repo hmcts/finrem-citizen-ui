@@ -101,14 +101,22 @@ const pickCaseworkerPassword = (): string => {
 };
 
 // CCD Data Store API URL
+// - In pipeline (CI): use internal AAT URL (accessible from cluster)
+// - Locally: use external AAT URL unless overridden
 const getCcdUrl = (): string => {
+  // Explicit override takes priority (support common env var names)
   const ccdUrl = process.env.CCD_URL;
 
   if (ccdUrl) {
     return ccdUrl;
   }
 
-  return 'http://ccd-data-store-api-aat.service.core-compute-aat.internal';
+  // In CI/pipeline, use internal AAT URL
+  if (isCI) {
+    return 'http://ccd-data-store-api-aat.service.core-compute-aat.internal';
+  }
+  // Local development: use external AAT URL
+  return 'https://ccd-data-store-api-aat.aat.platform.hmcts.net';
 };
 
 const config = {
