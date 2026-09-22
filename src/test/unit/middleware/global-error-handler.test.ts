@@ -43,6 +43,7 @@ function makeReq(overrides: Partial<Request> = {}): Request {
     method: 'GET',
     originalUrl: '/problem?x=1',
     url: '/problem?x=1',
+    session: { id: 'session-id', user: { id: 'user-id' }, caseNumber: '12345' },
     ...overrides,
   } as unknown as Request;
 }
@@ -73,16 +74,20 @@ describe('globalErrorHandler', () => {
     trackExceptionSpy = jest.spyOn(AppInsights, 'trackException').mockImplementation(() => undefined);
   });
 
-  it('renders the error page and tracks Error instances in AppInsights', () => {
+  it('renders the error page and tracks Error instances in AppInsight with session data', () => {
     process.env.NODE_ENV = 'production';
     const error = Object.assign(new Error('Request failed'), { status: 400 });
-    const req = makeReq({ method: 'POST', originalUrl: '/submit', url: '/submit' });
+    const req = makeReq({ method: 'POST', originalUrl: '/submit', url: '/submit'});
     const res = makeRes();
 
     globalErrorHandler(error, req, res, next);
 
     expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Request failed'));
     expect(trackExceptionSpy).toHaveBeenCalledWith(error, {
+      errorId: expect.any(String),
+      idamUserId: 'user-id',
+      caseReference: '12345',
+      sessionId: 'session-id',
       method: 'POST',
       statusCode: '400',
       url: '/submit',
@@ -94,9 +99,34 @@ describe('globalErrorHandler', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
+  it('renders the error page and tracks Error instances in AppInsight without session data', () => {
+    process.env.NODE_ENV = 'production';
+    const error = Object.assign(new Error('Request failed'), { status: 403 });
+    const req = makeReq({ method: 'POST', originalUrl: '/login', url: '/login', session: undefined });
+    const res = makeRes();
+
+    globalErrorHandler(error, req, res, next);
+
+    expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Request failed'));
+    expect(trackExceptionSpy).toHaveBeenCalledWith(error, {
+      errorId: expect.any(String),
+      idamUserId: 'not-available',
+      caseReference: 'not-available',
+      sessionId: 'not-available',
+      method: 'POST',
+      statusCode: '403',
+      url: '/login',
+    });
+    expect(res.locals.message).toBe('Request failed');
+    expect(res.locals.error).toEqual({});
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.render).toHaveBeenCalledWith(ViewNames.Error);
+    expect(next).not.toHaveBeenCalled();
+  });
+
   it('normalises error-like objects and keeps them visible in development', () => {
     process.env.NODE_ENV = 'development';
-    const req = makeReq({ method: 'PATCH' });
+    const req = makeReq({ method: 'PATCH'});
     const res = makeRes();
 
     globalErrorHandler(
@@ -110,8 +140,13 @@ describe('globalErrorHandler', () => {
       next
     );
 
-    expect(mockLogger.error).toHaveBeenCalledWith('Object stack');
+    expect(mockLogger.error).toHaveBeenNthCalledWith(1, expect.stringContaining('Object stack'));
+    expect(mockLogger.error).toHaveBeenNthCalledWith(2, expect.stringContaining('context='));
     expect(trackExceptionSpy).toHaveBeenCalledWith(expect.any(Error), {
+      errorId: expect.any(String),
+      idamUserId: 'user-id',
+      caseReference: '12345',
+      sessionId: 'session-id',
       method: 'PATCH',
       statusCode: '503',
       url: '/problem?x=1',
@@ -129,9 +164,13 @@ describe('globalErrorHandler', () => {
     globalErrorHandler({ status: 200 }, req, res, next);
 
     expect(trackExceptionSpy).toHaveBeenCalledWith(expect.any(Error), {
+      errorId: expect.any(String),
+      idamUserId: 'user-id',
+      caseReference: '12345',
       method: 'GET',
       statusCode: '500',
       url: '/fallback-url',
+      sessionId: 'session-id',
     });
     expect(res.locals.message).toBe('Unexpected error');
     expect(res.status).toHaveBeenCalledWith(500);
@@ -145,9 +184,13 @@ describe('globalErrorHandler', () => {
     globalErrorHandler('String failure', req, res, next);
 
     expect(trackExceptionSpy).toHaveBeenCalledWith(expect.any(Error), {
+      errorId: expect.any(String),
+      idamUserId: 'user-id',
+      caseReference: '12345',
       method: 'GET',
       statusCode: '500',
       url: '/problem?x=1',
+      sessionId: 'session-id',
     });
     expect(res.locals.message).toBe('String failure');
     expect(res.status).toHaveBeenCalledWith(500);
@@ -161,9 +204,13 @@ describe('globalErrorHandler', () => {
     globalErrorHandler(error, req, res, next);
 
     expect(trackExceptionSpy).toHaveBeenCalledWith(error, {
+      errorId: expect.any(String),
+      idamUserId: 'user-id',
+      caseReference: '12345',
       method: 'GET',
       statusCode: '500',
       url: '/problem?x=1',
+      sessionId: 'session-id',
     });
     expect(next).toHaveBeenCalledWith(error);
     expect(res.status).not.toHaveBeenCalled();

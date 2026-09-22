@@ -1,5 +1,5 @@
+import { randomUUID } from 'crypto';
 import { NextFunction, Request, Response } from 'express';
-
 import { ViewNames } from '../constants';
 import { AppInsights } from '../modules/appinsights';
 
@@ -47,25 +47,35 @@ function getStatusCode(error: unknown): number {
     return 500;
   }
 
-  const status = Number(error.status || error.statusCode);
+  const rawStatus = error.status ?? error.statusCode;
+  const status = Number(rawStatus);
 
-  return status >= 400 && status < 600 ? status : 500;
+  return Number.isInteger(status) && status >= 400 && status < 600 ? status : 500;
 }
 
-function getTelemetryProperties(req: Request, statusCode: number): Record<string, string> {
+function getTelemetryProperties(req: Request, statusCode: number, errorId: string): Record<string, string> {
   return {
+    errorId,
     method: req.method,
     statusCode: statusCode.toString(),
     url: req.originalUrl || req.url,
+    idamUserId: req.session?.user?.id || 'not-available',
+    caseReference: req.session?.caseNumber?.trim() || 'not-available',
+    sessionId: req.session?.id || 'not-available',
   };
 }
 
 export function globalErrorHandler(error: unknown, req: Request, res: Response, next: NextFunction): void {
   const normalisedError = toError(error);
   const statusCode = getStatusCode(error);
+  const errorId = randomUUID();
 
-  logger.error(normalisedError.stack || normalisedError.message);
-  AppInsights.trackException(normalisedError, getTelemetryProperties(req, statusCode));
+  const telemetryProperties = getTelemetryProperties(req, statusCode, errorId);
+
+  logger.error(`[${errorId}] ${normalisedError.stack || normalisedError.message}`);
+  logger.error(`[${errorId}] context=${JSON.stringify(telemetryProperties)}`);
+
+  AppInsights.trackException(normalisedError, telemetryProperties);
 
   if (res.headersSent) {
     next(normalisedError);
@@ -74,6 +84,8 @@ export function globalErrorHandler(error: unknown, req: Request, res: Response, 
 
   res.locals.message = normalisedError.message;
   res.locals.error = process.env.NODE_ENV === 'development' ? normalisedError : {};
+  res.locals.errorId = errorId; 
+
   res.status(statusCode);
   res.render(ViewNames.Error);
 }
