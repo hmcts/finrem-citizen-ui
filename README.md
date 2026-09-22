@@ -112,16 +112,14 @@ PLAYWRIGHT_SOLICITOR_PSWD=
 ```
 
 ### Running Frontend CI against Backend Preview
-Frontend CI can be run against backend preview by using the `use-ccd-defs-pr-{number}` PR label, where "number" is the finrem-ccd-definitions GitHub PR number.
+Frontend CI can be run against backend preview by adding the `use-ccd-defs-pr-{number}` label, where `number` is from the `finrem-ccd-definitions` PR used to create the backend preview environment.
 
+For example, to run frontend CI against the backend preview deployment created by https://github.com/hmcts/finrem-ccd-definitions/pull/1234:
 ```dotenv
 # Add this label to the frontend PR:
-# use-ccd-defs-pr-1234
+
+use-ccd-defs-pr-1234
 ```
-
-When the label is set on a frontend PR, preview deploy/test routing becomes:
-
-- `CCD_URL` -> `https://ccd-data-store-api-finrem-ccd-definitions-pr-<label-number>.preview.platform.hmcts.net`
 
 ### Local Functional Testing (with Mock CCD API)
 
@@ -183,7 +181,7 @@ Enable only one target block at a time:
 
 Switch targets by uncommenting the block you want and commenting out the other target blocks.
 
-This target selection controls `CCD_URL` used by local runs and CI.
+This target selection controls the `CCD_URL` used by local runs.
 
 The active target lines are:
 
