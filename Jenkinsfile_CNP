@@ -1,11 +1,14 @@
 #!groovy
 
+import uk.gov.hmcts.contino.GithubAPI
+
 @Library("Infrastructure@2.5.1")
 
 def type = "nodejs"
 def product = "finrem"
 def component = "citizen-ui"
-def ccdDataStoreApiUrl = "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
+def defaultCcdDataStoreApiUrl = "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
+def backendPullRequestLabelPrefix = "use-ccd-defs-pr-"
 
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
@@ -32,6 +35,25 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
     version: '',
     envVariable: envVar
   ]
+}
+
+def resolveCcdDefinitionsPr = {
+  def githubApi = new GithubAPI(this)
+
+  for (label in githubApi.getLabelsbyPattern(env.BRANCH_NAME, backendPullRequestLabelPrefix)) {
+    return label.minus(backendPullRequestLabelPrefix).trim()
+  }
+
+  return ''
+}
+
+def resolvePreviewCcdUrl = {
+  String ccdDefinitionsPr = resolveCcdDefinitionsPr()
+  if (!ccdDefinitionsPr) {
+    return defaultCcdDataStoreApiUrl
+  }
+
+  return "https://ccd-data-store-api-finrem-ccd-definitions-pr-${ccdDefinitionsPr}.preview.platform.hmcts.net"
 }
 
 withPipeline(type, product, component) {
@@ -66,13 +88,13 @@ withPipeline(type, product, component) {
   onMaster() {
     env.JENKINS_BRANCH = "master"
     env.RUNNING_ENV = "aat"
-    env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl
+    env.CCD_URL = defaultCcdDataStoreApiUrl
   }
 
   onPR() {
     env.JENKINS_BRANCH = "preview"
     env.RUNNING_ENV = "pr-${CHANGE_ID}"
     env.TEST_URL = "https://finrem-citizen-ui-pr-${CHANGE_ID}.preview.platform.hmcts.net"
-    env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl
+    env.CCD_URL = resolvePreviewCcdUrl()
   }
 }

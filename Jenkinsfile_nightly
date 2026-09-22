@@ -47,7 +47,7 @@ withNightlyPipeline(type, product, component) {
   env.UNIT_TESTS_COMMAND = "yarn test:coverage && yarn lint && yarn test:api"
   env.RUNNING_ENV = "aat"
   env.TEST_URL = params.URL_TO_TEST
-  env.CCD_DATA_STORE_API_URL = ccdDataStoreApiUrl
+  env.CCD_URL = ccdDataStoreApiUrl
   loadVaultSecrets(secrets)
 
   // TODO: Enable and implement when these tests are planned and written

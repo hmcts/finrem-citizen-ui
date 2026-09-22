@@ -4,7 +4,7 @@ import { expectAuthenticated, runA11yAudit } from '../journeyHelpers/specAsserti
 
 if (shouldRunRealCcdIntegrationSuite()) {
   const isLocalMockCcd = /https?:\/\/(localhost|127\.0\.0\.1):4100\b/i.test(
-    (process.env.CCD_URL || process.env.CCD_DATA_STORE_API_URL || '').trim()
+    (process.env.CCD_URL || '').trim()
   );
 
   test.describe('[integration-happy-path] Beta banner feedback link across journey pages', () => {
