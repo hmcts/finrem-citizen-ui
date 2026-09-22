@@ -408,7 +408,7 @@ Mock test rules:
 
 Local full-suite behavior:
 
-- when `CORE_CASE_DATA_API_URL` points to `http://localhost:4100`, integration suites are registered on local
+- when `CCD_URL` points to `http://localhost:4100`, integration suites are registered on local
 - local integration fixtures use mock-seeded case and access-code data, so local runs do not depend on shared-environment CCD/IDAM/S2S stability
 - if local mock prerequisites are not met (CCD URL or test-support route mismatch), affected mock-dependent flows are skipped with an explicit reason
 
@@ -419,7 +419,7 @@ Test-support route gating prevents mock-only tests from accidentally running aga
 How the gate works:
 
 - mock suites opt in with `test.use({ useMockTestSupport: true })`
-- the auto fixture `mockTestSupport` validates that `CORE_CASE_DATA_API_URL` targets local mock CCD (`http://localhost:4100`)
+- the auto fixture `mockTestSupport` validates that `CCD_URL` targets local mock CCD (`http://localhost:4100`)
 - the same fixture checks that `/__test/inject-case-session` exists and is not returning 404
 - if either check fails, tests are skipped with an explicit reason rather than failing mid-journey
 
@@ -437,7 +437,7 @@ How real-CCD suites are selected:
 
 - `shouldRunRealCcdIntegrationSuite()` controls registration of CCD-backed integration suites
 - default enabled targets: preview, AAT, perftest, ITHC (including `pr-*`)
-- local is enabled when mock CCD is configured (`CORE_CASE_DATA_API_URL` -> `http://localhost:4100`)
+- local is enabled when mock CCD is configured (`CCD_URL` -> `http://localhost:4100`)
 - demo is always skipped for real CCD-backed suites
 - local without mock CCD remains skipped to avoid false failures
 
@@ -598,7 +598,7 @@ Issue B: CCD endpoint reachability and topology mismatch
 - Impact:
   - integration setup fails, often reported as generic API errors
 - What to confirm:
-  1. `RUNNING_ENV`, `TEST_URL`, `IDAM_*`, `CORE_CASE_DATA_API_URL`, and `SERVICE_AUTH_PROVIDER_URL` all point to the same target
+  1. `RUNNING_ENV`, `TEST_URL`, `IDAM_*`, `CCD_URL`, and `SERVICE_AUTH_PROVIDER_URL` all point to the same target
   2. the machine/agent can resolve and reach those endpoints
 
 Issue C: S2S token generation failures
@@ -660,7 +660,7 @@ yarn test:functional -- src/test/functional/specFiles/integration/
 CCD target not reachable:
 
 ```bash
-echo $CORE_CASE_DATA_API_URL
+echo $CCD_URL
 ```
 
 Access codes not visible after issue application:
@@ -928,7 +928,7 @@ Practical expectations for contributors:
 - `ENABLE_TEST_SUPPORT_ROUTES`
 - `TEST_URL`
 - `RUNNING_ENV`
-- `CORE_CASE_DATA_API_URL`
+- `CCD_URL`
 - `ACCESS_CODE_MAX_TOTAL_RUNTIME_MS`
 - `ACCESS_CODE_FETCH_ATTEMPTS_PER_CASE`
 - `ACCESS_CODE_FETCH_INITIAL_DELAY_MS`

@@ -111,6 +111,18 @@ PLAYWRIGHT_SOLICITOR_USERNAME=
 PLAYWRIGHT_SOLICITOR_PSWD=
 ```
 
+### Running Frontend CI against Backend Preview
+Frontend pull request CI can optionally be run against backend preview by using the PR number of a finrem-ccd-definitions PR with the `use-ccd-defs-pr-{number}` label:
+
+```dotenv
+# Add this label to the frontend PR:
+# use-ccd-defs-pr-1234
+```
+
+When that label is set on a frontend PR, preview deploy/test routing becomes:
+
+- `CCD_URL` -> `https://ccd-data-store-api-finrem-ccd-definitions-pr-<label-number>.preview.platform.hmcts.net`
+
 ### Local Functional Testing (with Mock CCD API)
 
 For local functional testing with mock infrastructure, run:
@@ -131,7 +143,6 @@ yarn test:functional:quick
 
 Before running local functional tests, ensure `.env` uses local target values:
 - `CCD_URL=http://localhost:4100`
-- `CCD_DATA_STORE_API_URL=http://localhost:4100`
 
 Why this local setup is important:
 - local mock integration and mock suites reseed access-code session data before tests that submit access codes
@@ -172,14 +183,13 @@ Enable only one target block at a time:
 
 Switch targets by uncommenting the block you want and commenting out the other target blocks.
 
-This target selection controls both `CCD_URL` and `CCD_DATA_STORE_API_URL` used by local runs.
+This target selection controls `CCD_URL` used by local runs and CI.
 
 The active target lines are:
 
 - `TEST_URL`
 - `RUNNING_ENV`
 - `CCD_URL`
-- `CCD_DATA_STORE_API_URL`
 
 Playwright target resolution order:
 
@@ -208,7 +218,6 @@ Required for normal app startup and functional test targeting:
 
 - `RUNNING_ENV` (`local`, `pr-xxx`, `aat`)
 - `CCD_URL`
-- `CCD_DATA_STORE_API_URL`
 
 Optional (highest precedence for Playwright target URL):
 
@@ -240,7 +249,6 @@ Use this for local app, plus local mock CCD API:
 TEST_URL=http://localhost:3100
 RUNNING_ENV=local
 CCD_URL=http://localhost:4100
-CCD_DATA_STORE_API_URL=http://localhost:4100
 ```
 
 ### Preview Block
@@ -252,7 +260,6 @@ Use this pattern for preview environments (for example, `pr-423`), then uncommen
 #TEST_URL=
 #RUNNING_ENV=pr-423
 #CCD_URL=
-#CCD_DATA_STORE_API_URL=
 ```
 
 ### AAT Block
@@ -263,7 +270,6 @@ Use this for AAT-backed runs:
 # TEST_URL=
 RUNNING_ENV=aat
 CCD_URL=XXXX
-CCD_DATA_STORE_API_URL=XXXX
 ```
 
 ## Run with Docker

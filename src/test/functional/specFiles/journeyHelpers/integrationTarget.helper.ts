@@ -20,10 +20,7 @@ function isLocalTarget(runningEnv: string, testUrl: string): boolean {
 }
 
 export function isLocalMockCcdConfigured(): boolean {
-  const configuredCcdUrl = (
-    process.env.CORE_CASE_DATA_API_URL
-    || ''
-  ).toLowerCase().trim();
+  const configuredCcdUrl = (process.env.CCD_URL || '').toLowerCase().trim();
 
   return /https?:\/\/(localhost|127\.0\.0\.1):4100\b/.test(configuredCcdUrl);
 }

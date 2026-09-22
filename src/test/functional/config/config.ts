@@ -102,7 +102,7 @@ const pickCaseworkerPassword = (): string => {
 
 // CCD Data Store API URL
 const getCcdUrl = (): string => {
-  const ccdUrl = process.env.CORE_CASE_DATA_API_URL;
+  const ccdUrl = process.env.CCD_URL;
 
   if (ccdUrl) {
     return ccdUrl;

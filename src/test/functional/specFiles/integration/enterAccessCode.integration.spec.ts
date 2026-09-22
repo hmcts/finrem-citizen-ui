@@ -6,9 +6,9 @@ import { expectAuthenticated, runA11yAudit } from '../journeyHelpers/specAsserti
 import { navigateToAccessCodeStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
 function getRequiredCcdUrl(): string {
-  const ccd = process.env.CORE_CASE_DATA_API_URL?.trim();
+  const ccd = process.env.CCD_URL?.trim();
   if (!ccd) {
-    throw new Error('[integration-preflight] Set CORE_CASE_DATA_API_URL');
+    throw new Error('[integration-preflight] Set CCD_URL');
   }
 
   return ccd;
@@ -42,7 +42,7 @@ export async function assertIntegrationPreflight(): Promise<void> {
  * In local mock runs, fixture data is mock-seeded; in shared envs, cases are created/progressed via APIs.
  * 
  * Runs on: preview/AAT/perftest/ITHC by default, plus local when mock CCD is configured.
- * Default: skipped on demo; local runs require CORE_CASE_DATA_API_URL -> http://localhost:4100.
+ * Default: skipped on demo; local runs require CCD_URL -> http://localhost:4100.
  * ACCESS_CODE_REAL_INTEGRATION=false is treated as legacy local default and
  * does not disable known real-CCD targets.
  */
@@ -51,7 +51,7 @@ export async function assertIntegrationPreflight(): Promise<void> {
 // a CCD event. These tests require a real case + real access-code integration.
 if (shouldRunRealCcdIntegrationSuite()) {
   const isLocalMockCcd = /https?:\/\/(localhost|127\.0\.0\.1):4100\b/i.test(
-    (process.env.CORE_CASE_DATA_API_URL || '').trim()
+    (process.env.CCD_URL || '').trim()
   );
 
   test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
@@ -166,7 +166,7 @@ if (shouldRunRealCcdIntegrationSuite()) {
 
 if (shouldRunRealCcdIntegrationSuite()) {
   const isLocalMockCcd = /https?:\/\/(localhost|127\.0\.0\.1):4100\b/i.test(
-    (process.env.CORE_CASE_DATA_API_URL || '').trim()
+    (process.env.CCD_URL || '').trim()
   );
 
   test.describe('[integration-happy-path] Enter Access Code - Full Journey', () => {

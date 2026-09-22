@@ -31,7 +31,7 @@ dotenv.config({ quiet: true });
 
 function getConfiguredCcdUrl(): string {
   return (
-    process.env.CORE_CASE_DATA_API_URL
+    process.env.CCD_URL
     || ''
   ).trim();
 }
@@ -233,7 +233,7 @@ export const test = base.extend<MyFixtures & MockOptions>({
     const configuredCcdUrl = getConfiguredCcdUrl();
     base.skip(
       !isLocalMockCcdUrl(configuredCcdUrl),
-      '[mock] tests require CORE_CASE_DATA_API_URL set to http://localhost:4100'
+      '[mock] tests require CCD_URL set to http://localhost:4100'
     );
 
     const response = await request.get('/__test/inject-case-session');

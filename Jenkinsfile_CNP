@@ -1,5 +1,7 @@
 #!groovy
 
+import uk.gov.hmcts.contino.GithubAPI
+
 @Library("Infrastructure@2.5.1")
 
 def type = "nodejs"
@@ -34,8 +36,18 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
   ]
 }
 
+def resolveCcdDefinitionsPr = {
+  def githubApi = new GithubAPI(this)
+
+  for (label in githubApi.getLabelsbyPattern(env.BRANCH_NAME, 'use-ccd-defs-pr-')) {
+    return label.minus('use-ccd-defs-pr-').trim()
+  }
+
+  return ''
+}
+
 def resolvePreviewCcdUrl = {
-  String ccdDefinitionsPr = (env.CCD_DEFINITIONS_PR ?: '').trim()
+  String ccdDefinitionsPr = resolveCcdDefinitionsPr()
   if (!ccdDefinitionsPr) {
     return defaultCcdDataStoreApiUrl
   }
@@ -75,15 +87,17 @@ withPipeline(type, product, component) {
   onMaster() {
     env.JENKINS_BRANCH = "master"
     env.RUNNING_ENV = "aat"
-    env.CORE_CASE_DATA_API_URL = defaultCcdDataStoreApiUrl
+    env.CCD_URL = defaultCcdDataStoreApiUrl
   }
 
   onPR() {
+    // Optional backend PR override for preview CI:
+    // GitHub label on the frontend PR -> use-ccd-defs-pr-1234
+    // Routes CCD_URL to ccd-data-store-api-finrem-ccd-definitions-pr-1234.preview.platform.hmcts.net
+
     env.JENKINS_BRANCH = "preview"
     env.RUNNING_ENV = "pr-${CHANGE_ID}"
     env.TEST_URL = "https://finrem-citizen-ui-pr-${CHANGE_ID}.preview.platform.hmcts.net"
-    env.CORE_CASE_DATA_API_URL = resolvePreviewCcdUrl()
-    // Optional: set backend PR number to run frontend CI against backend preview.
-    env.CCD_DEFINITIONS_PR="3532"
+    env.CCD_URL = resolvePreviewCcdUrl()
   }
 }

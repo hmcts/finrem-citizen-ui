@@ -97,7 +97,7 @@ const getConfig = (): ApiConfig => {
   // Shared services use AAT for both AAT and preview environments
   // Preview apps connect to the same AAT backend services
   const serviceEnv = env === 'preview' ? 'aat' : env;
-  const ccdDataStoreApiUrl = process.env.CORE_CASE_DATA_API_URL || defaultCcdDataStoreApiUrl;
+  const ccdDataStoreApiUrl = process.env.CCD_URL || defaultCcdDataStoreApiUrl;
 
   return {
     idam: {
