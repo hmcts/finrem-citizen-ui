@@ -73,6 +73,8 @@ describe('buildFeedbackSurveyUrl', () => {
 
     expect(res.locals.feedbackSurveyUrl).toBe(expectedSurveyUrl);
     expect(res.locals.pagePath).toBe('/test-page');
+    expect(res.locals.appRoutes).toBeDefined();
+    expect(res.locals.appRoutes.cookies).toBe('/cookies');
     expect(nextCalled).toBe(true);
   });
 
