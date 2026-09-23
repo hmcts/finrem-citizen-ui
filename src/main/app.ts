@@ -33,16 +33,14 @@ new Helmet(developmentMode).enableFor(app);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(
-  express.static(path.join(__dirname, 'public'), {
-    setHeaders: setStaticCachingPolicy,
-  })
-);
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: setStaticCachingPolicy,
+}));
+app.use(setNoStoreForHtmlRequests);
 
 app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));
 });
-app.use(setNoStoreForHtmlRequests);
 
 new Session().enableFor(app);
 if (config.get<boolean>('useCSRFProtection')) {

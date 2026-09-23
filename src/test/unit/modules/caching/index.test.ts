@@ -4,45 +4,39 @@ import type { NextFunction, Request, Response } from 'express';
 import { setNoStoreForHtmlRequests, setStaticCachingPolicy } from '../../../../main/modules/caching';
 
 describe('setStaticCachingPolicy', () => {
-  it('sets cache header for configured static asset extensions', () => {
-    const res = {
-      setHeader: jest.fn(),
-    } as unknown as Response;
+  it.each([
+    '/public/styles.css',
+    '/public/javascsript.js',
+    '/public/font.woff2',
+    '/public/font.otf',
+    '/public/font.ttf',
+    '/public/font.eot',
+    '/public/icon.svg',
+    '/public/image.jpeg',
+    '/public/image.jpg',
+    '/public/image.png',
+  ])('Caches static assets %s', filePath => {
+    const res = { setHeader: jest.fn() } as unknown as Response;
 
-    setStaticCachingPolicy(res, '/public/main.123abc.css');
+    setStaticCachingPolicy(res, filePath);
 
     expect(res.setHeader).toHaveBeenCalledWith('Cache-Control', 'max-age=604800');
   });
 
-  it('sets cache header for jpeg assets', () => {
-    const res = {
-      setHeader: jest.fn(),
-    } as unknown as Response;
+  it.each(['/public/view.html'])('does not set cache header for non-cached asset %s', filePath => {
+      const res = { setHeader: jest.fn() } as unknown as Response;
 
-    setStaticCachingPolicy(res, '/public/hero-image.jpeg');
+      setStaticCachingPolicy(res, filePath);
 
-    expect(res.setHeader).toHaveBeenCalledWith('Cache-Control', 'max-age=604800');
-  });
-
-  it('does not set cache header for non-configured extensions', () => {
-    const res = {
-      setHeader: jest.fn(),
-    } as unknown as Response;
-
-    setStaticCachingPolicy(res, '/public/config.json');
-
-    expect(res.setHeader).not.toHaveBeenCalled();
-  });
+      expect(res.setHeader).not.toHaveBeenCalled();
+    }
+  );
 });
 
 describe('setNoStoreForHtmlRequests', () => {
   it('sets no-store when request accepts html', () => {
-    const req = {
-      accepts: jest.fn().mockReturnValue('html'),
-    } as unknown as Request;
-    const res = {
-      setHeader: jest.fn(),
-    } as unknown as Response;
+    const req = { accepts: jest.fn().mockReturnValue('html') } as unknown as Request;
+    const res = { setHeader: jest.fn() } as unknown as Response;
     const next = jest.fn() as NextFunction;
 
     setNoStoreForHtmlRequests(req, res, next);
@@ -52,12 +46,8 @@ describe('setNoStoreForHtmlRequests', () => {
   });
 
   it('does not set no-store when request does not accept html', () => {
-    const req = {
-      accepts: jest.fn().mockReturnValue(false),
-    } as unknown as Request;
-    const res = {
-      setHeader: jest.fn(),
-    } as unknown as Response;
+    const req = { accepts: jest.fn().mockReturnValue(false) } as unknown as Request;
+    const res = { setHeader: jest.fn() } as unknown as Response;
     const next = jest.fn() as NextFunction;
 
     setNoStoreForHtmlRequests(req, res, next);
