@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import type { Application, NextFunction, Request, Response } from 'express';
 
-import { RouteNames } from '../../../../main/constants';
-
 type CsrfSyncOptions = {
   ignoredMethods: string[];
   getTokenFromRequest: (req: Request) => string | undefined;
@@ -118,7 +116,7 @@ describe('CSRFToken module', () => {
     expect(next).toHaveBeenCalled();
   });
 
-  it('redirects token validation errors to CSRF error route', () => {
+    it('normalises token validation errors and passes them to next(error)', () => {
     const middleware = getErrorMiddleware();
 
     const res = {
@@ -127,27 +125,31 @@ describe('CSRFToken module', () => {
 
     const next = jest.fn() as NextFunction;
 
-    middleware(
-      { code: 'EBADCSRFTOKEN', stack: 'token validation failed' },
-      makeReq(),
-      res,
-      next
-    );
+    const error = { code: 'EBADCSRFTOKEN', stack: 'token validation failed' };
 
-    expect(res.redirect).toHaveBeenCalledWith(RouteNames.csrfError);
-    expect(next).not.toHaveBeenCalled();
+    middleware(error, makeReq(), res, next);
+
+    expect(res.redirect).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: CSRFToken.VALIDATION_ERROR_CODE,
+        status: 403,
+        statusCode: 403,
+      })
+    );
   });
 
-  it('delegates non-CSRF errors to next middleware', () => {
+  it('passes non-CSRF errors to next(error)', () => {
     const middleware = getErrorMiddleware();
 
     const res = { redirect: jest.fn() } as unknown as Response;
 
     const next = jest.fn() as NextFunction;
+    const error = new Error('some other error');
 
-    middleware(new Error('some other error'), makeReq(), res, next);
+    middleware(error, makeReq(), res, next);
 
     expect(res.redirect).not.toHaveBeenCalled();
-    expect(next).toHaveBeenCalledWith();
+    expect(next).toHaveBeenCalledWith(error);
   });
 });

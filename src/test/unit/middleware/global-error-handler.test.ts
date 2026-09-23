@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import type { NextFunction, Request, Response } from 'express';
 
-import { ViewNames } from '../../../main/constants';
+import { RouteNames, ViewNames } from '../../../main/constants';
 import { globalErrorHandler } from '../../../main/middleware/global-error-handler';
 import { AppInsights } from '../../../main/modules/appinsights';
 
@@ -22,6 +22,7 @@ type MockResponse = Response & {
   locals: Record<string, unknown>;
   status: jest.MockedFunction<(statusCode: number) => Response>;
   render: jest.MockedFunction<(view: string) => void>;
+  redirect: jest.MockedFunction<(url: string) => void>;
 };
 
 type MockLogger = {
@@ -54,6 +55,7 @@ function makeRes(headersSent = false): MockResponse {
     locals: {},
     status: jest.fn(),
     render: jest.fn(),
+    redirect: jest.fn(),
   } as unknown as MockResponse;
 
   res.status.mockReturnValue(res);
@@ -215,5 +217,26 @@ describe('globalErrorHandler', () => {
     expect(next).toHaveBeenCalledWith(error);
     expect(res.status).not.toHaveBeenCalled();
     expect(res.render).not.toHaveBeenCalled();
+  });
+
+  it('redirects to the CSRF error page for CSRF validation errors', () => {
+    const req = makeReq({ method: 'POST', originalUrl: '/submit', url: '/submit' });
+    const res = makeRes();
+
+    globalErrorHandler({ code: 'EBADCSRFTOKEN', status: 403, message: 'invalid csrf token' }, req, res, next);
+
+    expect(trackExceptionSpy).toHaveBeenCalledWith(expect.any(Error), {
+      errorId: expect.any(String),
+      idamUserId: 'user-id',
+      caseReference: '12345',
+      sessionId: 'session-id',
+      method: 'POST',
+      statusCode: '403',
+      url: '/submit',
+    });
+    expect(res.redirect).toHaveBeenCalledWith(RouteNames.csrfError);
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.render).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 });

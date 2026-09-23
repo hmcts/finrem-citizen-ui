@@ -1,7 +1,8 @@
 import { randomUUID } from 'crypto';
 import { NextFunction, Request, Response } from 'express';
-import { ViewNames } from '../constants';
+import { RouteNames, ViewNames } from '../constants';
 import { AppInsights } from '../modules/appinsights';
+import { CSRFToken } from '../modules/csrf';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -14,10 +15,15 @@ type ErrorLike = {
   stack?: unknown;
   status?: unknown;
   statusCode?: unknown;
+  code?: unknown;
 };
 
 function isErrorLike(error: unknown): error is ErrorLike {
   return typeof error === 'object' && error !== null;
+}
+
+function isCsrfValidationError(error: unknown): boolean {
+  return isErrorLike(error) && error.code === CSRFToken.VALIDATION_ERROR_CODE;
 }
 
 function getErrorMessage(error: unknown): string {
@@ -79,6 +85,11 @@ export function globalErrorHandler(error: unknown, req: Request, res: Response, 
 
   if (res.headersSent) {
     next(normalisedError);
+    return;
+  }
+
+  if (isCsrfValidationError(error)) {
+    res.redirect(RouteNames.csrfError);
     return;
   }
 
