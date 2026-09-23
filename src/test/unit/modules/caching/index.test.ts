@@ -14,6 +14,16 @@ describe('setStaticCachingPolicy', () => {
     expect(res.setHeader).toHaveBeenCalledWith('Cache-Control', 'max-age=604800');
   });
 
+  it('sets cache header for jpeg assets', () => {
+    const res = {
+      setHeader: jest.fn(),
+    } as unknown as Response;
+
+    setStaticCachingPolicy(res, '/public/hero-image.jpeg');
+
+    expect(res.setHeader).toHaveBeenCalledWith('Cache-Control', 'max-age=604800');
+  });
+
   it('does not set cache header for non-configured extensions', () => {
     const res = {
       setHeader: jest.fn(),

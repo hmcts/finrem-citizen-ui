@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import * as path from 'path';
 
-const CACHED_ASSET_FILE_TYPES = /\.(woff2?|ttf|otf|eot|svg|png|css|js)$/i;
+const CACHED_ASSET_FILE_TYPES = /\.(woff2?|ttf|otf|eot|svg|png|jpe?g|css|js)$/i;
 const CACHED_ASSET_CACHE_MAX_AGE_SECONDS = 604800;
 
 export function setStaticCachingPolicy(res: Response, filePath: string): void {
