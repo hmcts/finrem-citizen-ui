@@ -22,6 +22,10 @@
   "appInsights": {
     "connectionString": "APPLICATIONINSIGHTS_CONNECTION_STRING"
   },
+  "dynatrace": {
+    "enabled": "DYNATRACE_ENABLED",
+    "url": "DYNATRACE_URL"
+  },
   "services": {
     "idam": {
       "clientID": "IDAM_CLIENT_ID",
