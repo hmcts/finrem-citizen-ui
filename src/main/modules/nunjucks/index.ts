@@ -1,6 +1,7 @@
 import * as express from 'express';
 import * as nunjucks from 'nunjucks';
 import * as path from 'path';
+import config from 'config';
 
 import { RouteNames } from '../../constants';
 import { offsetDate } from '../../functions/task-list/calculate-offset-date';
@@ -38,6 +39,11 @@ export const buildFeedbackSurveyUrl = (req: express.Request): string =>
 export const addNunjucksLocals: express.RequestHandler = (req, res, next) => {
   res.locals.pagePath = req.path;
   res.locals.feedbackSurveyUrl = buildFeedbackSurveyUrl(req);
+  res.locals.globals = {
+    enableTracking: config.get<string>('googleAnalytics.enableTracking'),
+    googleTagManagerId: config.get<string>('googleAnalytics.googleTagManagerId'),
+    nonce: config.has('nonce') ? config.get<string>('nonce') : '',
+  };
   res.locals.appRoutes = {
     cookies: RouteNames.cookies,
   };

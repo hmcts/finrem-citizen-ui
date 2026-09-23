@@ -22,6 +22,10 @@
   "appInsights": {
     "connectionString": "APPLICATIONINSIGHTS_CONNECTION_STRING"
   },
+  "googleAnalytics": {
+    "enableTracking": "ENABLE_TRACKING",
+    "googleTagManagerId": "GOOGLE_TAG_MANAGER_ID"
+  },
   "services": {
     "idam": {
       "clientID": "IDAM_CLIENT_ID",

@@ -17,6 +17,8 @@ export class PropertiesVolume {
       this.setSecret('secrets.finrem.finrem-system-update-password', 'services.idam.systemPassword');
       this.setSecret('secrets.finrem.finrem-citizen-ui-idam-client-secret', 'services.idam.clientSecret');
     }
+
+    set(config, 'nonce', crypto.randomUUID().replace(/-/g, ''));
   }
 
   private setSecret(fromPath: string, toPath: string): void {

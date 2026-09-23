@@ -5,6 +5,15 @@
 
 {% block head %}
   {% include "webpack/css.njk" %}
+  {% if globals.enableTracking == "true" %}
+    {% include "partials/google-tag-manager-head.njk" %}
+  {% endif %}
+{% endblock %}
+
+{% block bodyStart %}
+  {% if globals.enableTracking == "true" %}
+    {% include "partials/google-tag-manager-body.njk" %}
+  {% endif %}
 {% endblock %}
 
 {% block header %}

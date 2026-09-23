@@ -1,7 +1,10 @@
 import * as express from 'express';
+import config from 'config';
 import helmet from 'helmet';
 
 const googleAnalyticsDomain = '*.google-analytics.com';
+const googleTagManagerDomain = '*.googletagmanager.com';
+const googleDomain = 'www.google.com';
 const self = "'self'";
 
 /**
@@ -15,11 +18,17 @@ export class Helmet {
 
   public enableFor(app: express.Express): void {
     // include default helmet functions
+    const nonceDirective = config.has('nonce') ? `'nonce-${config.get<string>('nonce')}'` : undefined;
     const scriptSrc = [
       self,
       googleAnalyticsDomain,
+      googleTagManagerDomain,
       "'sha256-GUQ5ad8JK5KmEWmROf3LZd9ge94daqNvd8xy9YS1iDw='", // GOV.UK Frontend v6.1.0 inline script
     ];
+
+    if (nonceDirective) {
+      scriptSrc.push(nonceDirective);
+    }
 
     if (this.developmentMode) {
       // Uncaught EvalError: Refused to evaluate a string as JavaScript because 'unsafe-eval'
@@ -33,10 +42,10 @@ export class Helmet {
       helmet({
         contentSecurityPolicy: {
           directives: {
-            connectSrc: [self],
+            connectSrc: [self, googleTagManagerDomain, googleDomain],
             defaultSrc: ["'none'"],
             fontSrc: [self, 'data:'],
-            imgSrc: [self, googleAnalyticsDomain],
+            imgSrc: [self, googleAnalyticsDomain, googleTagManagerDomain],
             manifestSrc: [self],
             objectSrc: [self],
             scriptSrc,

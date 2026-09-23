@@ -3,6 +3,10 @@
   "appInsights": {
     "connectionString": false
   },
+  "googleAnalytics": {
+    "enableTracking": true,
+    "googleTagManagerId": "GTM-N2TBV3X8"
+  },
   "security": {
     "referrerPolicy": "same-origin",
     "hsts": {
