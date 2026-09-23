@@ -2,9 +2,6 @@ import { describe, expect, it, jest } from '@jest/globals';
 import type { NextFunction, Request, Response } from 'express';
 
 const passThroughMiddleware = (_req: Request, _res: Response, next: NextFunction): void => next();
-const noopModuleClass = class {
-  public enableFor(): void {}
-};
 
 type AppMiddlewareStack = { handle: unknown }[];
 type AppWithStack = {
@@ -22,9 +19,7 @@ jest.mock('config', () => ({
 }));
 
 jest.mock('glob', () => ({
-  glob: {
-    sync: jest.fn(() => []),
-  },
+  glob: { sync: jest.fn(() => []) },
 }));
 
 jest.mock('../../../main/development', () => ({
@@ -38,39 +33,19 @@ jest.mock('../../../main/middleware', () => ({
   routeAccessMiddleware: passThroughMiddleware,
 }));
 
+const dummyModule = class { public enableFor(): void {} };
 jest.mock('../../../main/modules/appinsights', () => ({
   AppInsights: class {
     public enable(): void {}
   },
 }));
-
-jest.mock('../../../main/modules/nunjucks', () => ({
-  Nunjucks: noopModuleClass,
-}));
-
-jest.mock('../../../main/modules/helmet', () => ({
-  Helmet: noopModuleClass,
-}));
-
-jest.mock('../../../main/modules/properties-volume', () => ({
-  PropertiesVolume: noopModuleClass,
-}));
-
-jest.mock('../../../main/modules/session', () => ({
-  Session: noopModuleClass,
-}));
-
-jest.mock('../../../main/modules/csrf', () => ({
-  CSRFToken: noopModuleClass,
-}));
-
-jest.mock('../../../main/modules/oidc', () => ({
-  OIDCModule: noopModuleClass,
-}));
-
-jest.mock('../../../main/modules/rate-limiter', () => ({
-  createDefaultRateLimiter: jest.fn(() => passThroughMiddleware),
-}));
+jest.mock('../../../main/modules/nunjucks', () => ({ Nunjucks: dummyModule }));
+jest.mock('../../../main/modules/helmet', () => ({ Helmet: dummyModule }));
+jest.mock('../../../main/modules/properties-volume', () => ({ PropertiesVolume: dummyModule }));
+jest.mock('../../../main/modules/session', () => ({ Session: dummyModule }));
+jest.mock('../../../main/modules/csrf', () => ({ CSRFToken: dummyModule }));
+jest.mock('../../../main/modules/oidc', () => ({ OIDCModule: dummyModule }));
+jest.mock('../../../main/modules/rate-limiter', () => ({ createDefaultRateLimiter: jest.fn(() => passThroughMiddleware) }));
 
 describe('app wiring', () => {
   it('configures static middleware with the static caching policy', async () => {
