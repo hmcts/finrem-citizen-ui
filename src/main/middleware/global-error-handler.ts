@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { NextFunction, Request, Response } from 'express';
+
 import { RouteNames, ViewNames } from '../constants';
 import { AppInsights } from '../modules/appinsights';
 import { CSRFToken } from '../modules/csrf';

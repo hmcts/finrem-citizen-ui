@@ -24,7 +24,7 @@ export class CSRFToken {
       },
       getTokenFromState: req => req.session?.csrfToken,
       storeTokenInState: (req, token) => {
-        if (req.session) req.session.csrfToken = token;
+        if (req.session) {req.session.csrfToken = token;}
       },
     });
 
@@ -42,7 +42,7 @@ export class CSRFToken {
       const csrfError = error as CsrfLikeError;
 
       const isCsrf =
-        csrfError?.code === CSRFToken.VALIDATION_ERROR_CODE
+        csrfError?.code === CSRFToken.VALIDATION_ERROR_CODE;
 
       if (isCsrf) {
         csrfError.code = CSRFToken.VALIDATION_ERROR_CODE;

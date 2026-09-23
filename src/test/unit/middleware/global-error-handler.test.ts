@@ -79,7 +79,7 @@ describe('globalErrorHandler', () => {
   it('renders the error page and tracks Error instances in AppInsight with session data', () => {
     process.env.NODE_ENV = 'production';
     const error = Object.assign(new Error('Request failed'), { status: 400 });
-    const req = makeReq({ method: 'POST', originalUrl: '/submit', url: '/submit'});
+    const req = makeReq({ method: 'POST', originalUrl: '/submit', url: '/submit' });
     const res = makeRes();
 
     globalErrorHandler(error, req, res, next);
@@ -128,7 +128,7 @@ describe('globalErrorHandler', () => {
 
   it('normalises error-like objects and keeps them visible in development', () => {
     process.env.NODE_ENV = 'development';
-    const req = makeReq({ method: 'PATCH'});
+    const req = makeReq({ method: 'PATCH' });
     const res = makeRes();
 
     globalErrorHandler(
