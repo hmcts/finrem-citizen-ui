@@ -55,7 +55,7 @@ const defaultConfig: Record<string, unknown> = {
   'session.cookieName': 'finrem_session',
   'session.prefix': 'finrem-session',
   'session.store': SESSION_STORE_IN_MEMORY,
-  'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
+  'secrets.finrem.azure-managed-redis-connection-string': 'redis://localhost:6379',
 };
 
 function mockConfig(overrides: Record<string, unknown> = {}): void {

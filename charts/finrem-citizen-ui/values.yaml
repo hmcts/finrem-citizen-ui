@@ -19,7 +19,8 @@ nodejs:
         - finrem-system-update-password
         - finrem-citizen-ui-idam-client-secret
         - name: finrem-citizen-s2s-client-secret
-        - finrem-citizen-ui-redis-connection-string
+        - name: azure-managed-redis-connection-string
+          alias: REDIS_CONNECTION_STRING
         - session-secret
         - name: gov-uk-notification-key
           alias: GOVUK_NOTIFY_API_KEY

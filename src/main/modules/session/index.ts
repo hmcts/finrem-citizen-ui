@@ -100,7 +100,7 @@ export class Session {
       return;
     }
 
-    const redisConnectionString = config.get<string>('secrets.finrem.finrem-citizen-ui-redis-connection-string');
+    const redisConnectionString = config.get<string>('secrets.finrem.azure-managed-redis-connection-string');
     const redis = new Redis(redisConnectionString);
 
     // c8 ignore next 30
