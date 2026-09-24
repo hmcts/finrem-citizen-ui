@@ -2,8 +2,9 @@ import { Logger } from '@hmcts/nodejs-logging';
 import config from 'config';
 import express from 'express';
 import rateLimit, { ipKeyGenerator, type Options } from 'express-rate-limit';
-import type { Redis } from 'ioredis';
 import { type RedisReply, RedisStore } from 'rate-limit-redis';
+
+import type { RedisClient } from '../redis/client';
 
 import { HttpStatusCodes } from '../../constants/http-status-codes';
 
@@ -20,7 +21,7 @@ const RATE_LIMIT_HEADER_FORMAT: Options['standardHeaders'] = 'draft-8';
 
 type RateLimiterStore = Options['store'];
 
-export const createDefaultRateLimiter = (redisClient?: Redis): ReturnType<typeof rateLimit> => {
+export const createDefaultRateLimiter = (redisClient?: RedisClient): ReturnType<typeof rateLimit> => {
   const windowMs = readRateLimitConfig(RATE_LIMIT_WINDOW_MS_CONFIG_KEY, DEFAULT_RATE_LIMIT_WINDOW_MS);
   const maxRequests = readRateLimitConfig(RATE_LIMIT_MAX_REQUESTS_CONFIG_KEY, DEFAULT_RATE_LIMIT_MAX_REQUESTS);
   const store = redisClient ? createRedisRateLimitStore(redisClient) : undefined;
@@ -28,7 +29,7 @@ export const createDefaultRateLimiter = (redisClient?: Redis): ReturnType<typeof
   return createRateLimiter(windowMs, maxRequests, store);
 };
 
-export const createRedisRateLimitStore = (redisClient: Redis): RateLimiterStore => {
+export const createRedisRateLimitStore = (redisClient: RedisClient): RateLimiterStore => {
   return new RedisStore({
     prefix: readRateLimitRedisPrefix(),
     sendCommand: (command: string, ...args: string[]) => redisClient.call(command, ...args) as Promise<RedisReply>,

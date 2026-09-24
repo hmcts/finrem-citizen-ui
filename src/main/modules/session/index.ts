@@ -3,7 +3,8 @@ import config from 'config';
 import { RedisStore } from 'connect-redis';
 import type { Express } from 'express';
 import session = require('express-session');
-import { Redis } from 'ioredis';
+
+import { createRedisClient, type RedisClient } from '../redis/client';
 
 const logger = Logger.getLogger('session');
 
@@ -52,7 +53,7 @@ export function getSessionStoreType(): SessionStoreType {
 
 type AppWithRedis = Express & {
   locals: Express['locals'] & {
-    redisClient?: Redis;
+    redisClient?: RedisClient;
   };
 };
 
@@ -101,7 +102,7 @@ export class Session {
     }
 
     const redisConnectionString = config.get<string>('secrets.finrem.azure-managed-redis-connection-string');
-    const redis = new Redis(redisConnectionString);
+    const redis = createRedisClient(redisConnectionString);
 
     // c8 ignore next 30
     redis.on('ready', async () => {
