@@ -4,9 +4,8 @@ import express from 'express';
 import rateLimit, { ipKeyGenerator, type Options } from 'express-rate-limit';
 import { type RedisReply, RedisStore } from 'rate-limit-redis';
 
-import type { RedisClient } from '../redis/client';
-
 import { HttpStatusCodes } from '../../constants/http-status-codes';
+import type { RedisClient } from '../redis/client';
 
 const logger = Logger.getLogger('rate-limiter');
 
