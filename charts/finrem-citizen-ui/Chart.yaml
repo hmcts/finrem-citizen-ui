@@ -11,6 +11,6 @@ dependencies:
     version: 3.3.1
     repository: 'oci://hmctsprod.azurecr.io/helm'
   - name: redis
-    version: 27.0.17
+    version: 28.2.3
     repository: 'oci://registry-1.docker.io/bitnamicharts'
     condition: redis.enabled
