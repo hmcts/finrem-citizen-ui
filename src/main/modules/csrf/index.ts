@@ -45,7 +45,6 @@ export class CSRFToken {
         csrfError?.code === CSRFToken.VALIDATION_ERROR_CODE;
 
       if (isCsrf) {
-        csrfError.code = CSRFToken.VALIDATION_ERROR_CODE;
         csrfError.status = 403;
         csrfError.statusCode = 403;
       }
