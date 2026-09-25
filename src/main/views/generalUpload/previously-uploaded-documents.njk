@@ -4,6 +4,8 @@
 
 {% extends "template.njk" %}
 
+{% set pageTitle = "Previously uploaded documents" %}
+
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -11,7 +13,7 @@
         Back
       </a>
 
-      <h1 class="govuk-heading-l">Previously uploaded documents</h1>
+      <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
 
       <p class="govuk-body">
         You can download your previously uploaded documents on this page.
