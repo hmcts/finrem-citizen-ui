@@ -218,8 +218,8 @@ function createDefaultSeedCase(): MockCaseRecord {
 
 function resolveStateFromEvent(eventId: string | undefined, fallbackState: string): string {
   switch (eventId) {
-    case 'CUI_invalidateApplicantAccessCode':
-    case 'CUI_invalidateRespondentAccessCode':
+    case 'CUI_linkApplicantToCase':
+    case 'CUI_linkRespondentToCase':
       return 'AccessCodeUsed';
     default:
       return fallbackState;
