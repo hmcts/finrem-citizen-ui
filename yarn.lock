@@ -8681,10 +8681,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-uri@npm: 3.1.6":
-  version: 3.1.6
-  resolution: "fast-uri@npm:3.1.6"
-  checksum: 10/de34fceafd3a1d917989a1116b092d9b6ebe6fa3c9e908a308b988a6455449fa0a0256b6ef628aa7da80f1f84031d704c290d6ba0ea4c6f4c42b7974a3bd43ae
+"fast-uri@npm:4.2.1":
+  version: 4.2.1
+  resolution: "fast-uri@npm:4.2.1"
+  checksum: 10/38fa9522a1c070601ce6970397e58a35ce461bd43e76e031330289d743819e0c2fec917dfb12a8fd5bac2390daa4d56348a8100cf66ed0ebbe52c857e9a831db
   languageName: node
   linkType: hard
 
