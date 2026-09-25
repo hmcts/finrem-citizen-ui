@@ -200,8 +200,6 @@ async function getUserToken(): Promise<string> {
 async function getUserId(authToken: string): Promise<string> {
   const config = getConfig();
   const cacheKey = 'default_user';
-  // UUID format: 8-4-4-4-12 hex characters
-  const isValidUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
   // First check if userId is in cache
   const tokenCache = await readTokenCache();
   const cached = tokenCache.get(cacheKey);
@@ -232,50 +230,29 @@ async function getUserId(authToken: string): Promise<string> {
     return envUserId;
   }
 
-  // Fetch from IDAM - try /details first (returns UUID), then /o/userinfo
-  try {
-    // Try /details endpoint first
+  // Fetch from IDAM - /o/userinfo
     try {
-      const detailsResponse = await axiosRequest<{ id: string }>({
+      const response = await axiosRequest<{ uid: string }>({
         method: 'get',
         url: `${config.idam.baseUrl}/o/userinfo`,
         headers: {
           Authorization: `Bearer ${authToken}`
         }
       });
-      const userId = detailsResponse.data.uid;
-      if (userId && isValidUuid(userId)) {
-        if (cached) {
-          cached.userId = userId;
-          await writeTokenCache(tokenCache);
-        }
-        return userId;
-      }
-    } catch {
-      // Fall through to /o/userinfo
-    }
-    // Fallback to /o/userinfo - use 'uid' field only (sub is email address)
-    const response = await axiosRequest<{ uid: string }>({
-      method: 'get',
-      url: `${config.idam.baseUrl}/o/userinfo`,
-      headers: {
-        Authorization: `Bearer ${authToken}`
-      }
-    });
 
-    const userId = response.data.uid;
-      // eslint-disable-next-line no-console
-    console.log(`✓ Got user ID from IDAM: ${userId}`);
-    // Update cache with userId
-    if (cached) {
-      cached.userId = userId;
-      await writeTokenCache(tokenCache);
+      const userId = response.data.uid;
+      console.log(`✓ Got user ID from IDAM: ${userId}`);
+
+      if (cached) {
+        cached.userId = userId;
+        await writeTokenCache(tokenCache);
+      }
+
+      return userId;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to get user ID: ${message}`);
     }
-    return userId;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get user ID: ${message}`);
-  }
 }
 
 async function getServiceToken(): Promise<string> {
