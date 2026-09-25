@@ -37,7 +37,7 @@ describe('createRedisClient', () => {
 
     const client = createRedisClient(connectionString) as unknown as {
       kind: string;
-      nodes: Array<{ host: string; port: number }>;
+      nodes: { host: string; port: number }[];
       options: { redisOptions: { username: string; password: string; tls: { servername: string } } };
     };
 
