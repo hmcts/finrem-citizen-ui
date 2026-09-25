@@ -110,7 +110,7 @@ describe('OIDCModule', () => {
       if (key === 'services.manageCase.url') {
         return 'https://manage-case.example.com' as T;
       }
-      if (key === 'secrets.finrem.finrem-citizen-ui-redis-connection-string') {
+      if (key === 'secrets.finrem.azure-managed-redis-connection-string') {
         return 'redis://mocked-connection' as T;
       }
       if (key === 'secrets.finrem.session-secret') {
@@ -124,7 +124,7 @@ describe('OIDCModule', () => {
         'services.idam.clientSecret',
         'secrets.finrem.finrem-citizen-ui-idam-client-secret',
         'secrets.finrem.FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET',
-        'secrets.finrem.finrem-citizen-ui-redis-connection-string',
+        'secrets.finrem.azure-managed-redis-connection-string',
         'secrets.finrem.session-secret',
       ];
       return validKeys.includes(key);
@@ -276,7 +276,7 @@ describe('OIDCModule', () => {
       if (key === 'secrets.finrem.finrem-citizen-ui-idam-client-secret') {
         return 'secret-from-config' as T;
       }
-      if (key === 'secrets.finrem.finrem-citizen-ui-redis-connection-string') {
+      if (key === 'secrets.finrem.azure-managed-redis-connection-string') {
         return 'redis://mocked-connection' as T;
       }
       if (key === 'secrets.finrem.session-secret') {

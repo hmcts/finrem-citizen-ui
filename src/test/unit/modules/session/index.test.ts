@@ -25,6 +25,10 @@ jest.mock('ioredis', () => ({
     on: redisOnMock,
     quit: redisQuitMock,
   })),
+  Cluster: jest.fn().mockImplementation(() => ({
+    on: redisOnMock,
+    quit: redisQuitMock,
+  })),
 }));
 
 jest.mock('express-session', () => {
@@ -39,7 +43,7 @@ jest.mock('config', () => ({
 
 const mockSessionMiddleware = jest.requireMock('express-session') as jest.Mock;
 const configGetMock = (jest.requireMock('config') as { get: jest.MockedFunction<(key: string) => unknown> }).get;
-const redisModule = jest.requireMock('ioredis') as { Redis: jest.Mock };
+const redisModule = jest.requireMock('ioredis') as { Redis: jest.Mock; Cluster: jest.Mock };
 
 import {
   parseSessionSecret,
@@ -55,7 +59,7 @@ const defaultConfig: Record<string, unknown> = {
   'session.cookieName': 'finrem_session',
   'session.prefix': 'finrem-session',
   'session.store': SESSION_STORE_IN_MEMORY,
-  'secrets.finrem.finrem-citizen-ui-redis-connection-string': 'redis://localhost:6379',
+  'secrets.finrem.azure-managed-redis-connection-string': 'redis://localhost:6379',
 };
 
 function mockConfig(overrides: Record<string, unknown> = {}): void {
@@ -228,9 +232,9 @@ describe('Session.enableFor', () => {
     process.env.NODE_ENV = originalEnv;
   });
 
-  it('stores redis client on app.locals outside test environment', () => {
+  it('Initialises Redis-backed session middleware in non-test environments', () => {
     const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    process.env.NODE_ENV = 'aat';
     mockConfig({ 'session.store': SESSION_STORE_REDIS });
 
     const session = new Session();
@@ -239,6 +243,13 @@ describe('Session.enableFor', () => {
     session.enableFor(app);
 
     expect(app.locals.redisClient).toBeDefined();
+    expect(mockSessionMiddleware).toHaveBeenCalledWith(
+      expect.objectContaining({
+        store: expect.anything(),
+      })
+    );
+    expect(redisOnMock).toHaveBeenCalledWith('ready', expect.any(Function));
+    expect(redisOnMock).toHaveBeenCalledWith('error', expect.any(Function));
 
     process.env.NODE_ENV = originalEnv;
   });
