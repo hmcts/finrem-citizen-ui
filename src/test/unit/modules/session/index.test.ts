@@ -25,6 +25,10 @@ jest.mock('ioredis', () => ({
     on: redisOnMock,
     quit: redisQuitMock,
   })),
+  Cluster: jest.fn().mockImplementation(() => ({
+    on: redisOnMock,
+    quit: redisQuitMock,
+  })),
 }));
 
 jest.mock('express-session', () => {
@@ -39,7 +43,7 @@ jest.mock('config', () => ({
 
 const mockSessionMiddleware = jest.requireMock('express-session') as jest.Mock;
 const configGetMock = (jest.requireMock('config') as { get: jest.MockedFunction<(key: string) => unknown> }).get;
-const redisModule = jest.requireMock('ioredis') as { Redis: jest.Mock };
+const redisModule = jest.requireMock('ioredis') as { Redis: jest.Mock; Cluster: jest.Mock };
 
 import {
   parseSessionSecret,
@@ -239,6 +243,54 @@ describe('Session.enableFor', () => {
     session.enableFor(app);
 
     expect(app.locals.redisClient).toBeDefined();
+
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  it('uses Redis.Cluster for azure managed redis endpoint', () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+    mockConfig({
+      'session.store': SESSION_STORE_REDIS,
+      'secrets.finrem.azure-managed-redis-connection-string':
+        'rediss://default:password@finrem-citizen-ui-aat.uksouth.redis.azure.net:10000',
+    });
+
+    const session = new Session();
+    const app = express();
+
+    session.enableFor(app);
+
+    expect(redisModule.Cluster).toHaveBeenCalledWith(
+      [{ host: 'finrem-citizen-ui-aat.uksouth.redis.azure.net', port: 10000 }],
+      {
+        redisOptions: {
+          username: 'default',
+          password: 'password',
+          tls: { servername: 'finrem-citizen-ui-aat.uksouth.redis.azure.net' },
+        },
+      }
+    );
+    expect(redisModule.Redis).not.toHaveBeenCalled();
+
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  it('uses Redis standalone for non-managed redis endpoint', () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+    mockConfig({
+      'session.store': SESSION_STORE_REDIS,
+      'secrets.finrem.azure-managed-redis-connection-string': 'redis://localhost:6379',
+    });
+
+    const session = new Session();
+    const app = express();
+
+    session.enableFor(app);
+
+    expect(redisModule.Cluster).not.toHaveBeenCalled();
+    expect(redisModule.Redis).toHaveBeenCalledWith('redis://localhost:6379');
 
     process.env.NODE_ENV = originalEnv;
   });
