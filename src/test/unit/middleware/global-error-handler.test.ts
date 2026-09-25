@@ -142,8 +142,8 @@ describe('globalErrorHandler', () => {
       next
     );
 
-    expect(mockLogger.error).toHaveBeenNthCalledWith(1, expect.stringContaining('Object stack'));
-    expect(mockLogger.error).toHaveBeenNthCalledWith(2, expect.stringContaining('context='));
+    expect(mockLogger.error).toHaveBeenNthCalledWith(1, 
+      expect.stringContaining('Object stack') && expect.stringContaining('context='));
     expect(trackExceptionSpy).toHaveBeenCalledWith(expect.any(Error), {
       errorId: expect.any(String),
       idamUserId: 'user-id',

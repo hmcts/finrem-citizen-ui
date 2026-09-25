@@ -72,6 +72,11 @@ function getTelemetryProperties(req: Request, statusCode: number, errorId: strin
   };
 }
 
+function buildErrorLogMessage(errorId: string, error: Error, context: Record<string, string>): string {
+  const summary = error.stack || error.message || DEFAULT_ERROR_MESSAGE;
+  return `[${errorId}] ${summary} | context=${JSON.stringify(context)}`;
+}
+
 export function globalErrorHandler(error: unknown, req: Request, res: Response, next: NextFunction): void {
   const normalisedError = toError(error);
   const statusCode = getStatusCode(error);
@@ -79,9 +84,8 @@ export function globalErrorHandler(error: unknown, req: Request, res: Response, 
 
   const telemetryProperties = getTelemetryProperties(req, statusCode, errorId);
 
-  logger.error(`[${errorId}] ${normalisedError.stack || normalisedError.message}`);
-  logger.error(`[${errorId}] context=${JSON.stringify(telemetryProperties)}`);
-
+  logger.error(buildErrorLogMessage(errorId, normalisedError, telemetryProperties));
+  
   AppInsights.trackException(normalisedError, telemetryProperties);
 
   if (res.headersSent) {
