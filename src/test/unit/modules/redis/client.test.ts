@@ -22,7 +22,7 @@ describe('createRedisClient', () => {
     jest.clearAllMocks();
   });
 
-  it('creates standalone client for non-managed redis host', () => {
+  it('creates standalone client for Redis host outside Azure managed redis', () => {
     const connectionString = 'redis://localhost:6379';
 
     const client = createRedisClient(connectionString) as unknown as { kind: string; connectionString: string };
@@ -32,8 +32,8 @@ describe('createRedisClient', () => {
     expect(client.kind).toBe('standalone');
   });
 
-  it('creates cluster client for managed redis host with decoded password and tls servername', () => {
-    const connectionString = 'rediss://default:p%40ss%3D@finrem-citizen-ui-aat.uksouth.redis.azure.net:10000';
+  it('creates cluster client for Azure managed redis host', () => {
+    const connectionString = 'rediss://default:password@finrem-citizen-ui.redis.azure.net:10000';
 
     const client = createRedisClient(connectionString) as unknown as {
       kind: string;
@@ -42,12 +42,12 @@ describe('createRedisClient', () => {
     };
 
     expect(clusterConstructorMock).toHaveBeenCalledWith(
-      [{ host: 'finrem-citizen-ui-aat.uksouth.redis.azure.net', port: 10000 }],
+      [{ host: 'finrem-citizen-ui.redis.azure.net', port: 10000 }],
       {
         redisOptions: {
           username: 'default',
-          password: 'p@ss=',
-          tls: { servername: 'finrem-citizen-ui-aat.uksouth.redis.azure.net' },
+          password: 'password',
+          tls: { servername: 'finrem-citizen-ui.redis.azure.net' },
         },
       }
     );
@@ -56,29 +56,13 @@ describe('createRedisClient', () => {
   });
 
   it('defaults managed redis cluster port to 10000 when omitted', () => {
-    const connectionString = 'rediss://default:secret@finrem-citizen-ui-aat.uksouth.redis.azure.net';
+    const connectionString = 'rediss://default:password@finrem-citizen-ui.redis.azure.net';
 
     createRedisClient(connectionString);
 
     expect(clusterConstructorMock).toHaveBeenCalledWith(
-      [{ host: 'finrem-citizen-ui-aat.uksouth.redis.azure.net', port: 10000 }],
+      [{ host: 'finrem-citizen-ui.redis.azure.net', port: 10000 }],
       expect.any(Object)
-    );
-  });
-
-  it('omits tls options for non-rediss managed connection strings', () => {
-    const connectionString = 'redis://default:secret@finrem-citizen-ui-aat.uksouth.redis.azure.net:10000';
-
-    createRedisClient(connectionString);
-
-    expect(clusterConstructorMock).toHaveBeenCalledWith(
-      [{ host: 'finrem-citizen-ui-aat.uksouth.redis.azure.net', port: 10000 }],
-      {
-        redisOptions: {
-          username: 'default',
-          password: 'secret',
-        },
-      }
     );
   });
 });

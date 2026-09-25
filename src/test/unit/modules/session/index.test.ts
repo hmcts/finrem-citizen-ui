@@ -232,9 +232,9 @@ describe('Session.enableFor', () => {
     process.env.NODE_ENV = originalEnv;
   });
 
-  it('stores redis client on app.locals outside test environment', () => {
+  it('Initialises Redis-backed session middleware in non-test environments', () => {
     const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    process.env.NODE_ENV = 'aat';
     mockConfig({ 'session.store': SESSION_STORE_REDIS });
 
     const session = new Session();
@@ -243,54 +243,13 @@ describe('Session.enableFor', () => {
     session.enableFor(app);
 
     expect(app.locals.redisClient).toBeDefined();
-
-    process.env.NODE_ENV = originalEnv;
-  });
-
-  it('uses Redis.Cluster for azure managed redis endpoint', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
-    mockConfig({
-      'session.store': SESSION_STORE_REDIS,
-      'secrets.finrem.azure-managed-redis-connection-string':
-        'rediss://default:password@finrem-citizen-ui-aat.uksouth.redis.azure.net:10000',
-    });
-
-    const session = new Session();
-    const app = express();
-
-    session.enableFor(app);
-
-    expect(redisModule.Cluster).toHaveBeenCalledWith(
-      [{ host: 'finrem-citizen-ui-aat.uksouth.redis.azure.net', port: 10000 }],
-      {
-        redisOptions: {
-          username: 'default',
-          password: 'password',
-          tls: { servername: 'finrem-citizen-ui-aat.uksouth.redis.azure.net' },
-        },
-      }
+    expect(mockSessionMiddleware).toHaveBeenCalledWith(
+      expect.objectContaining({
+        store: expect.anything(),
+      })
     );
-    expect(redisModule.Redis).not.toHaveBeenCalled();
-
-    process.env.NODE_ENV = originalEnv;
-  });
-
-  it('uses Redis standalone for non-managed redis endpoint', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
-    mockConfig({
-      'session.store': SESSION_STORE_REDIS,
-      'secrets.finrem.azure-managed-redis-connection-string': 'redis://localhost:6379',
-    });
-
-    const session = new Session();
-    const app = express();
-
-    session.enableFor(app);
-
-    expect(redisModule.Cluster).not.toHaveBeenCalled();
-    expect(redisModule.Redis).toHaveBeenCalledWith('redis://localhost:6379');
+    expect(redisOnMock).toHaveBeenCalledWith('ready', expect.any(Function));
+    expect(redisOnMock).toHaveBeenCalledWith('error', expect.any(Function));
 
     process.env.NODE_ENV = originalEnv;
   });

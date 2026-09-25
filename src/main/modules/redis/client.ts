@@ -1,6 +1,7 @@
 import { Cluster, Redis, type RedisOptions } from 'ioredis';
 
 const AZURE_MANAGED_REDIS_HOST = 'azure.net';
+const REDIS_PROTOCOL = 'rediss:';
 const DEFAULT_REDIS_PORT = 10_000;
 
 export type RedisClient = Redis | Cluster;
@@ -23,7 +24,7 @@ function createClusterRedisClient(connectionString: string) {
   const redisOptions: RedisOptions = {
     ...(url.username && { username: url.username }),
     ...(url.password && { password: decodeURIComponent(url.password) }),
-    ...(url.protocol === 'rediss:' && {
+    ...(url.protocol === REDIS_PROTOCOL && {
       tls: { servername: url.hostname },
     }),
   };
