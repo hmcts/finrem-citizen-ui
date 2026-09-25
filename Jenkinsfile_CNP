@@ -6,6 +6,7 @@ def type = "nodejs"
 def product = "finrem"
 def component = "citizen-ui"
 def ccdDataStoreApiUrl = "http://ccd-data-store-api-aat.service.core-compute-aat.internal"
+def branchesToSync = ['demo', 'perftest', 'ithc']
 
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
@@ -39,6 +40,7 @@ withPipeline(type, product, component) {
   env.UNIT_TESTS_COMMAND = "yarn test:coverage && yarn lint && yarn test:api"
 
   loadVaultSecrets(secrets)
+  syncBranchesWithMaster(branchesToSync)
 
   afterSuccess('build') {
     yarnBuilder.yarn('build')
