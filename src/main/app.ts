@@ -8,6 +8,7 @@ import * as path from 'path';
 import { PrivateRoutes, ViewNames } from './constants';
 import { caseContextMiddleware, contactEmailMiddleware, globalErrorHandler, routeAccessMiddleware } from './middleware';
 import { AppInsights } from './modules/appinsights';
+import { setNoStoreForHtmlRequests, setStaticCachingPolicy } from './modules/caching';
 import { CSRFToken } from './modules/csrf';
 import { Helmet } from './modules/helmet';
 import { Nunjucks } from './modules/nunjucks';
@@ -32,14 +33,13 @@ new Helmet(developmentMode).enableFor(app);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: setStaticCachingPolicy,
+}));
+app.use(setNoStoreForHtmlRequests);
 
 app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));
-});
-app.use((req, res, next) => {
-  res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate, no-store');
-  next();
 });
 
 new Session().enableFor(app);
