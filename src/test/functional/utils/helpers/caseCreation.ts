@@ -241,8 +241,10 @@ async function getUserId(authToken: string): Promise<string> {
       });
 
       const userId = response.data.uid;
+      // eslint-disable-next-line no-console
       console.log(`✓ Got user ID from IDAM: ${userId}`);
 
+      // Update cache with userId
       if (cached) {
         cached.userId = userId;
         await writeTokenCache(tokenCache);
