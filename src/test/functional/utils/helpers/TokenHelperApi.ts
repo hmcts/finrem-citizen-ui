@@ -88,7 +88,7 @@ export async function getServiceToken(): Promise<string> {
 
   const s2sSecret = process.env.SERVICE_AUTH_SECRET
     || process.env.S2S_SECRET;
-  
+
   if (!s2sSecret) {
     throw new Error(
       'Missing S2S secret. Set SERVICE_AUTH_SECRET or S2S_SECRET'
@@ -134,7 +134,7 @@ export async function getServiceToken(): Promise<string> {
 export async function getUserToken(username: string, password: string): Promise<string> {
   const cacheKey = `user:${username}`;
   const cached = tokenCache[cacheKey];
-  
+
   if (cached && Date.now() < cached.expiry - TOKEN_BUFFER_MS) {
     return cached.token;
   }
@@ -143,7 +143,7 @@ export async function getUserToken(username: string, password: string): Promise<
   try {
     response = await axiosRequest<{ access_token: string; expires_in: number }>({
       method: 'post',
-      url: `${config.idamApi}/o/token`,
+      url: `${config.idamOidcUrl}/o/userinfo`,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
@@ -187,7 +187,7 @@ export async function getUserToken(username: string, password: string): Promise<
 export async function getUserId(accessToken: string, _email?: string): Promise<string> {
   const response = await axiosRequest<{ uid: string }>({
     method: 'get',
-    url: `${config.idamApi}/o/userinfo`,
+    url: `${config.idamOidcUrl}/o/userinfo`,
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

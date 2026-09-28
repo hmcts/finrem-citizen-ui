@@ -131,8 +131,8 @@ const config = {
       : isCI || isPerftestTarget,
 
   // IDAM endpoints - derived from target block unless explicitly overridden
-  idamApi:  process.env.IDAM_API_URL
-    || `https://idam-api.${serviceEnv}.platform.hmcts.net`,
+  idamOidcUrl: process.env.IDAM_OIDC_URL
+    || `https://idam-web-public.${serviceEnv}.platform.hmcts.net`,
   idamWebUrl: process.env.IDAM_WEB_URL
    || `https://idam-web-public.${serviceEnv}.platform.hmcts.net`,
 
