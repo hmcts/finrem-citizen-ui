@@ -1,9 +1,9 @@
 import { Logger } from '@hmcts/nodejs-logging';
 import config from 'config';
 import { Application } from 'express';
-import { Redis } from 'ioredis';
 
 import { app as myApp } from '../app';
+import type { RedisClient } from '../modules/redis/client';
 import { getSessionStoreType, SESSION_STORE_REDIS } from '../modules/session';
 
 const healthcheck = require('@hmcts/nodejs-healthcheck');
@@ -11,7 +11,7 @@ const healthcheck = require('@hmcts/nodejs-healthcheck');
 type AppWithRedis = Application & {
   locals: Application['locals'] & {
     shutdown?: boolean;
-    redisClient?: Redis;
+    redisClient?: RedisClient;
   };
 };
 
