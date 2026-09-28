@@ -125,7 +125,7 @@ describe('CSRFToken module', () => {
 
     const next = jest.fn() as NextFunction;
 
-    const error = { code: 'EBADCSRFTOKEN', stack: 'token validation failed', status: 403, statusCode: 403 };
+    const error = { code: 'EBADCSRFTOKEN', stack: 'token validation failed'};
 
     middleware(error, makeReq(), res, next);
 
