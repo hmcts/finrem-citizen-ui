@@ -1,7 +1,7 @@
+import config from 'config';
 import * as express from 'express';
 import * as nunjucks from 'nunjucks';
 import * as path from 'path';
-import config from 'config';
 
 import { RouteNames } from '../../constants';
 import { offsetDate } from '../../functions/task-list/calculate-offset-date';

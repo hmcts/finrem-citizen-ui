@@ -1,5 +1,5 @@
-import * as express from 'express';
 import config from 'config';
+import * as express from 'express';
 import helmet from 'helmet';
 
 const googleAnalyticsDomain = '*.google-analytics.com';
