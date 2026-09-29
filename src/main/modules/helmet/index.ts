@@ -42,7 +42,7 @@ export class Helmet {
       helmet({
         contentSecurityPolicy: {
           directives: {
-            connectSrc: [self, googleTagManagerDomain, googleDomain],
+            connectSrc: [self, googleAnalyticsDomain, googleTagManagerDomain, googleDomain],
             defaultSrc: ["'none'"],
             fontSrc: [self, 'data:'],
             imgSrc: [self, googleAnalyticsDomain, googleTagManagerDomain],
