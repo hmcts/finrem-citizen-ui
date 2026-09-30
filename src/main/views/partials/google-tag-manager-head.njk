@@ -3,7 +3,7 @@
 <script nonce="{{ globals.nonce }}">
   window.dataLayer = window.dataLayer || [];
 
-  const userPreferenceCookie = document.cookie.match(new RegExp('(^| )' + 'cookie-preferences' + '=([^;]+)'));
+  const userPreferenceCookie = document.cookie.match(new RegExp('(^| )' + '{{ globals.cookiePreferencesCookieName }}' + '=([^;]+)'));
 
   if (userPreferenceCookie) {
     const cookiePreferences = JSON.parse(decodeURIComponent(userPreferenceCookie[2]));

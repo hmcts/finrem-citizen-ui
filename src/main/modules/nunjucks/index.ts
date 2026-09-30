@@ -3,6 +3,7 @@ import * as express from 'express';
 import * as nunjucks from 'nunjucks';
 import * as path from 'path';
 
+import { COOKIE_PREFERENCES_COOKIE_NAME } from '../../constants/cookies';
 import { RouteNames } from '../../constants';
 import { offsetDate } from '../../functions/task-list/calculate-offset-date';
 import { taskListFormItems } from '../../functions/task-list/task-list-form-items';
@@ -53,6 +54,7 @@ export const addNunjucksLocals: express.RequestHandler = (req, res, next) => {
   res.locals.pagePath = req.path;
   res.locals.feedbackSurveyUrl = buildFeedbackSurveyUrl(req);
   res.locals.globals = {
+    cookiePreferencesCookieName: COOKIE_PREFERENCES_COOKIE_NAME,
     nonce: config.has('nonce') ? config.get<string>('nonce') : '',
   };
   res.locals.googleAnalytics = {

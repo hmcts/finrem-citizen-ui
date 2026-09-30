@@ -4,6 +4,7 @@ import type { NextFunction, Request, Response } from 'express';
 import * as nunjucks from 'nunjucks';
 import * as path from 'path';
 
+import { COOKIE_PREFERENCES_COOKIE_NAME } from '../../../../main/constants/cookies';
 import { addNunjucksLocals, buildFeedbackSurveyUrl } from '../../../../main/modules/nunjucks';
 
 const DUMMY_DYNATRACE_URL = 'https://example.test/dynatrace.js';
@@ -185,6 +186,7 @@ describe('buildFeedbackSurveyUrl', () => {
       googleTagManagerId: 'GTM-TEST123',
     });
     expect(res.locals.globals).toEqual({
+      cookiePreferencesCookieName: COOKIE_PREFERENCES_COOKIE_NAME,
       nonce: 'nonce123',
     });
 
