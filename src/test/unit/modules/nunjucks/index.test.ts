@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, it, jest } from '@jest/globals';
+import { afterAll, afterEach, describe, expect, it, jest } from '@jest/globals';
 import config from 'config';
 import type { NextFunction, Request, Response } from 'express';
 import * as nunjucks from 'nunjucks';
@@ -28,6 +28,10 @@ describe('buildFeedbackSurveyUrl', () => {
 
   afterAll(() => {
     process.env.NODE_ENV = originalNodeEnv;
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('uses forwarded headers to build the current page URL for deployed environments', () => {
@@ -70,6 +74,9 @@ describe('buildFeedbackSurveyUrl', () => {
       if (key === 'dynatrace.url') {
         return DUMMY_DYNATRACE_URL;
       }
+      if (key === 'googleAnalytics.enableTracking') {
+        return true;
+      }
       return originalConfigGet(key);
     }) as typeof config.get);
 
@@ -105,7 +112,6 @@ describe('buildFeedbackSurveyUrl', () => {
     });
     expect(nextCalled).toBe(true);
 
-    configGetSpy.mockRestore();
   });
 
   it('enables dynatrace script settings when dynatrace is enabled in config', () => {
@@ -117,6 +123,9 @@ describe('buildFeedbackSurveyUrl', () => {
       }
       if (key === 'dynatrace.url') {
         return DUMMY_DYNATRACE_URL;
+      }
+      if (key === 'googleAnalytics.enableTracking') {
+        return true;
       }
       return originalConfigGet(key);
     }) as typeof config.get);
@@ -134,7 +143,49 @@ describe('buildFeedbackSurveyUrl', () => {
       enabled: true,
     });
 
-    configGetSpy.mockRestore();
+  });
+
+  it('sets Google analytics globals and disables analytics when enabled flag is set to false', () => {
+    const originalConfigGet = config.get.bind(config);
+    const originalConfigHas = config.has.bind(config);
+    const configGetSpy = jest.spyOn(config, 'get');
+    const configHasSpy = jest.spyOn(config, 'has');
+
+    configGetSpy.mockImplementation(((key: string) => {
+      if (key === 'googleAnalytics.enableTracking') {
+        return false;
+      }
+      if (key === 'googleAnalytics.googleTagManagerId') {
+        return 'GTM-TEST123';
+      }
+      if (key === 'nonce') {
+        return 'nonce123';
+      }
+
+      return originalConfigGet(key);
+    }) as typeof config.get);
+
+    configHasSpy.mockImplementation(((key: string) => {
+      if (key === 'nonce') {
+        return true;
+      }
+
+      return originalConfigHas(key);
+    }) as typeof config.has);
+
+    const req = makeReq({ path: '/home' });
+    const res = { locals: {} } as Response;
+
+    addNunjucksLocals(req, res, (() => undefined) as NextFunction);
+
+    expect(res.locals.googleAnalytics).toEqual({
+      enabled: false,
+    });
+    expect(res.locals.globals).toEqual({
+      googleTagManagerId: 'GTM-TEST123',
+      nonce: 'nonce123',
+    });
+
   });
 
   it('renders the survey link in the shared beta banner', () => {
