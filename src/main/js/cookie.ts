@@ -1,4 +1,5 @@
 import cookieManager from '@hmcts/cookie-manager';
+
 import { COOKIE_PREFERENCES_COOKIE_NAME } from '../constants/cookies';
 
 const COOKIE_PREFERENCE_ON = 'on';
