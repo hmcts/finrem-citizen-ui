@@ -5,6 +5,9 @@
 
 {% block head %}
   {% include "webpack/css.njk" %}
+  {% if dynatrace and dynatrace.enabled %}
+    <script type="text/javascript" src="{{ dynatrace.url }}" crossorigin="anonymous"></script>
+  {% endif %}
 {% endblock %}
 
 {% block header %}
