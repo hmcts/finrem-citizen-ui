@@ -16,6 +16,11 @@ function isDynatraceEnabled(): boolean {
   return configValue === true || configValue === 'true';
 }
 
+function isGoogleAnalyticsEnabled(): boolean {
+  const configValue = config.get<unknown>('googleAnalytics.enableTracking');
+  return configValue === true || configValue === 'true';
+}
+
 const formatCaseNumber = (caseNumber: string): string => {
   if (!caseNumber) {
     return '';
@@ -43,13 +48,16 @@ export const buildFeedbackSurveyUrl = (req: express.Request): string =>
 
 export const addNunjucksLocals: express.RequestHandler = (req, res, next) => {
   const dynatraceEnabled = isDynatraceEnabled();
+  const googleAnalyticsEnabled = isGoogleAnalyticsEnabled();
 
   res.locals.pagePath = req.path;
   res.locals.feedbackSurveyUrl = buildFeedbackSurveyUrl(req);
   res.locals.globals = {
-    enableTracking: config.get<string>('googleAnalytics.enableTracking'),
     googleTagManagerId: config.get<string>('googleAnalytics.googleTagManagerId'),
     nonce: config.has('nonce') ? config.get<string>('nonce') : '',
+  };
+  res.locals.googleAnalytics = {
+    enabled: googleAnalyticsEnabled,
   };
   res.locals.appRoutes = {
     cookies: RouteNames.cookies,

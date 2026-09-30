@@ -100,6 +100,9 @@ describe('buildFeedbackSurveyUrl', () => {
       enabled: false,
       url: '',
     });
+    expect(res.locals.googleAnalytics).toEqual({
+      enabled: true,
+    });
     expect(nextCalled).toBe(true);
 
     configGetSpy.mockRestore();
@@ -126,6 +129,9 @@ describe('buildFeedbackSurveyUrl', () => {
     expect(res.locals.dynatrace).toEqual({
       enabled: true,
       url: DUMMY_DYNATRACE_URL,
+    });
+    expect(res.locals.googleAnalytics).toEqual({
+      enabled: true,
     });
 
     configGetSpy.mockRestore();
