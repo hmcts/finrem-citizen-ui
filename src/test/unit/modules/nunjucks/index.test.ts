@@ -109,6 +109,7 @@ describe('buildFeedbackSurveyUrl', () => {
     });
     expect(res.locals.googleAnalytics).toEqual({
       enabled: true,
+      googleTagManagerId: 'GTM-N2TBV3X8',
     });
     expect(nextCalled).toBe(true);
 
@@ -141,6 +142,7 @@ describe('buildFeedbackSurveyUrl', () => {
     });
     expect(res.locals.googleAnalytics).toEqual({
       enabled: true,
+      googleTagManagerId: 'GTM-N2TBV3X8',
     });
 
   });
@@ -180,9 +182,9 @@ describe('buildFeedbackSurveyUrl', () => {
 
     expect(res.locals.googleAnalytics).toEqual({
       enabled: false,
+      googleTagManagerId: 'GTM-TEST123',
     });
     expect(res.locals.globals).toEqual({
-      googleTagManagerId: 'GTM-TEST123',
       nonce: 'nonce123',
     });
 

@@ -53,11 +53,11 @@ export const addNunjucksLocals: express.RequestHandler = (req, res, next) => {
   res.locals.pagePath = req.path;
   res.locals.feedbackSurveyUrl = buildFeedbackSurveyUrl(req);
   res.locals.globals = {
-    googleTagManagerId: config.get<string>('googleAnalytics.googleTagManagerId'),
     nonce: config.has('nonce') ? config.get<string>('nonce') : '',
   };
   res.locals.googleAnalytics = {
     enabled: googleAnalyticsEnabled,
+    googleTagManagerId: config.get<string>('googleAnalytics.googleTagManagerId'),
   };
   res.locals.appRoutes = {
     cookies: RouteNames.cookies,
