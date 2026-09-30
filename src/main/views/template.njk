@@ -14,6 +14,10 @@
   {% if globals.enableTracking == true or globals.enableTracking == "true" %}
     {% include "partials/google-tag-manager-body.njk" %}
   {% endif %}
+
+  {% if dynatrace and dynatrace.enabled %}
+    <script type="text/javascript" src="{{ dynatrace.url }}" crossorigin="anonymous"></script>
+  {% endif %}
 {% endblock %}
 
 {% block header %}

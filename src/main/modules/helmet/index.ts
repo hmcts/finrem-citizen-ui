@@ -5,6 +5,7 @@ import helmet from 'helmet';
 const googleAnalyticsDomain = '*.google-analytics.com';
 const googleTagManagerDomain = '*.googletagmanager.com';
 const googleDomain = 'www.google.com';
+const dynatraceDomain = '*.dynatrace.com';
 const self = "'self'";
 
 /**
@@ -23,6 +24,7 @@ export class Helmet {
       self,
       googleAnalyticsDomain,
       googleTagManagerDomain,
+      dynatraceDomain,
       "'sha256-GUQ5ad8JK5KmEWmROf3LZd9ge94daqNvd8xy9YS1iDw='", // GOV.UK Frontend v6.1.0 inline script
     ];
 
@@ -42,10 +44,10 @@ export class Helmet {
       helmet({
         contentSecurityPolicy: {
           directives: {
-            connectSrc: [self, googleAnalyticsDomain, googleTagManagerDomain, googleDomain],
+            connectSrc: [self, dynatraceDomain, googleAnalyticsDomain, googleTagManagerDomain, googleDomain],
             defaultSrc: ["'none'"],
             fontSrc: [self, 'data:'],
-            imgSrc: [self, googleAnalyticsDomain, googleTagManagerDomain],
+            imgSrc: [self, dynatraceDomain, googleAnalyticsDomain, googleTagManagerDomain],
             manifestSrc: [self],
             objectSrc: [self],
             scriptSrc,
