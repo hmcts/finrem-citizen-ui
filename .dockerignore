@@ -4,6 +4,8 @@
 
 # exceptions from `exclude all` rule
 !docker
+!docker/**
+
 !package.json
 !yarn.lock
 
