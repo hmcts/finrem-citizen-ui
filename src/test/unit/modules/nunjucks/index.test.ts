@@ -150,9 +150,7 @@ describe('buildFeedbackSurveyUrl', () => {
 
   it('sets Google analytics globals and disables analytics when enabled flag is set to false', () => {
     const originalConfigGet = config.get.bind(config);
-    const originalConfigHas = config.has.bind(config);
     const configGetSpy = jest.spyOn(config, 'get');
-    const configHasSpy = jest.spyOn(config, 'has');
 
     configGetSpy.mockImplementation(((key: string) => {
       if (key === 'googleAnalytics.enableTracking') {
@@ -161,23 +159,12 @@ describe('buildFeedbackSurveyUrl', () => {
       if (key === 'googleAnalytics.googleTagManagerId') {
         return 'GTM-TEST123';
       }
-      if (key === 'nonce') {
-        return 'nonce123';
-      }
 
       return originalConfigGet(key);
     }) as typeof config.get);
 
-    configHasSpy.mockImplementation(((key: string) => {
-      if (key === 'nonce') {
-        return true;
-      }
-
-      return originalConfigHas(key);
-    }) as typeof config.has);
-
     const req = makeReq({ path: '/home' });
-    const res = { locals: {} } as Response;
+    const res = { locals: { nonce: 'nonce123' } } as unknown as Response;
 
     addNunjucksLocals(req, res, (() => undefined) as NextFunction);
 

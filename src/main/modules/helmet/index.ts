@@ -1,4 +1,5 @@
-import config from 'config';
+import type { IncomingMessage, ServerResponse } from 'http';
+
 import * as express from 'express';
 import helmet from 'helmet';
 
@@ -19,18 +20,14 @@ export class Helmet {
 
   public enableFor(app: express.Express): void {
     // include default helmet functions
-    const nonceDirective = config.has('nonce') ? `'nonce-${config.get<string>('nonce')}'` : undefined;
     const scriptSrc = [
       self,
       googleAnalyticsDomain,
       googleTagManagerDomain,
       dynatraceDomain,
       "'sha256-GUQ5ad8JK5KmEWmROf3LZd9ge94daqNvd8xy9YS1iDw='", // GOV.UK Frontend v6.1.0 inline script
+      (_req: IncomingMessage, res: ServerResponse) => `'nonce-${(res as express.Response).locals.nonce}'`,
     ];
-
-    if (nonceDirective) {
-      scriptSrc.push(nonceDirective);
-    }
 
     if (this.developmentMode) {
       // Uncaught EvalError: Refused to evaluate a string as JavaScript because 'unsafe-eval'

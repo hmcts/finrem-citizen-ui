@@ -55,7 +55,7 @@ export const addNunjucksLocals: express.RequestHandler = (req, res, next) => {
   res.locals.feedbackSurveyUrl = buildFeedbackSurveyUrl(req);
   res.locals.globals = {
     cookiePreferencesCookieName: COOKIE_PREFERENCES_COOKIE_NAME,
-    nonce: config.has('nonce') ? config.get<string>('nonce') : '',
+    nonce: (res.locals.nonce as string),
   };
   res.locals.googleAnalytics = {
     enabled: googleAnalyticsEnabled,
