@@ -1,7 +1,6 @@
-import type { IncomingMessage, ServerResponse } from 'http';
-
 import * as express from 'express';
 import helmet from 'helmet';
+import type { IncomingMessage, ServerResponse } from 'http';
 
 const googleAnalyticsDomain = '*.google-analytics.com';
 const googleTagManagerDomain = '*.googletagmanager.com';
