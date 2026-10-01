@@ -3,11 +3,12 @@
 *
 
 # exceptions from `exclude all` rule
-
+!docker
 !package.json
 !yarn.lock
 
 !version
+!.yarn
 !.yarn/**
 !.yarnrc.yml
 !.pnp.cjs
@@ -18,8 +19,6 @@
 !webpack/**
 !src/main/**
 !config/**
+!public
 !webpack.config.js
 !app
-!public
-!.yarn
-!docker
