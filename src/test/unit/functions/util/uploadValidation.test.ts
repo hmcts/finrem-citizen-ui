@@ -6,12 +6,24 @@ import { FILE_UPLOAD_MAX_SIZE_BYTES } from '../../../../main/constants/file-uplo
 import {
   FILE_VALIDATION_ERRORS,
   getFileExtension,
+  isValidFileExtension,
   isValidFileSize,
-  isValidFileType,
   validateUploadedFile,
 } from '../../../../main/functions/util/uploadValidation';
 
 describe('uploadValidation', () => {
+  function createPdfBuffer(): Buffer {
+    return Buffer.from('%PDF-1.7\n1 0 obj\n<< /Type /Catalog >>\nendobj');
+  }
+
+  function createJpegBuffer(): Buffer {
+    return Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01]);
+  }
+
+  function createPngBuffer(): Buffer {
+    return Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d]);
+  }
+
   function createZipBufferWithCentralDirectory(encrypted: boolean): Buffer {
     const localHeader = Buffer.alloc(30);
     localHeader.writeUInt32LE(0x04034b50, 0);
@@ -28,6 +40,14 @@ describe('uploadValidation', () => {
     endOfCentralDirectory.writeUInt32LE(localHeader.length, 16);
 
     return Buffer.concat([localHeader, centralDirectoryHeader, endOfCentralDirectory]);
+  }
+
+  function createOoxmlBuffer(type: 'docx' | 'xlsx', encrypted = false): Buffer {
+    const markers = type === 'docx'
+      ? Buffer.from('[Content_Types].xml word/document.xml word/')
+      : Buffer.from('[Content_Types].xml xl/workbook.xml xl/');
+
+    return Buffer.concat([createZipBufferWithCentralDirectory(encrypted), markers]);
   }
 
   describe('FILE_VALIDATION_ERRORS', () => {
@@ -58,33 +78,33 @@ describe('uploadValidation', () => {
     });
   });
 
-  describe('isValidFileType', () => {
+  describe('isValidFileExtension', () => {
     it('should return true for valid file types', () => {
-      expect(isValidFileType('file.jpg')).toBe(true);
-      expect(isValidFileType('file.jpeg')).toBe(true);
-      expect(isValidFileType('file.png')).toBe(true);
-      expect(isValidFileType('file.pdf')).toBe(true);
-      expect(isValidFileType('file.docx')).toBe(true);
-      expect(isValidFileType('file.xlsx')).toBe(true);
+      expect(isValidFileExtension('file.jpg')).toBe(true);
+      expect(isValidFileExtension('file.jpeg')).toBe(true);
+      expect(isValidFileExtension('file.png')).toBe(true);
+      expect(isValidFileExtension('file.pdf')).toBe(true);
+      expect(isValidFileExtension('file.docx')).toBe(true);
+      expect(isValidFileExtension('file.xlsx')).toBe(true);
     });
 
     it('should return true for uppercase extensions', () => {
-      expect(isValidFileType('file.PDF')).toBe(true);
-      expect(isValidFileType('file.DOCX')).toBe(true);
-      expect(isValidFileType('FILE.JPEG')).toBe(true);
+      expect(isValidFileExtension('file.PDF')).toBe(true);
+      expect(isValidFileExtension('file.DOCX')).toBe(true);
+      expect(isValidFileExtension('FILE.JPEG')).toBe(true);
     });
 
     it('should return false for invalid file types', () => {
-      expect(isValidFileType('file.txt')).toBe(false);
-      expect(isValidFileType('file.exe')).toBe(false);
-      expect(isValidFileType('file.zip')).toBe(false);
-      expect(isValidFileType('file.doc')).toBe(false);
-      expect(isValidFileType('file.xls')).toBe(false);
-      expect(isValidFileType('file.csv')).toBe(false);
+      expect(isValidFileExtension('file.txt')).toBe(false);
+      expect(isValidFileExtension('file.exe')).toBe(false);
+      expect(isValidFileExtension('file.zip')).toBe(false);
+      expect(isValidFileExtension('file.doc')).toBe(false);
+      expect(isValidFileExtension('file.xls')).toBe(false);
+      expect(isValidFileExtension('file.csv')).toBe(false);
     });
 
     it('should return false for files with no extension', () => {
-      expect(isValidFileType('noextension')).toBe(false);
+      expect(isValidFileExtension('noextension')).toBe(false);
     });
   });
 
@@ -143,7 +163,7 @@ describe('uploadValidation', () => {
         {
           originalname: 'document.txt',
           size: 1024,
-          buffer: Buffer.from('%PDF-1.7\n1 0 obj\n<< /Encrypt 2 0 R >>\nendobj'),
+          buffer: createPdfBuffer(),
         } as Express.Multer.File,
       ];
 
@@ -166,6 +186,7 @@ describe('uploadValidation', () => {
         {
           originalname: 'test.pdf',
           size: 1024,
+          mimetype: 'application/pdf',
           buffer: Buffer.from('%PDF-1.7\n1 0 obj\n<< /Encrypt 2 0 R >>\nendobj'),
         } as Express.Multer.File,
       ];
@@ -183,6 +204,7 @@ describe('uploadValidation', () => {
           {
             originalname: 'encrypted.pdf',
             size: 1024,
+            mimetype: 'application/pdf',
             path: filePath,
           } as Express.Multer.File,
         ];
@@ -193,39 +215,31 @@ describe('uploadValidation', () => {
       }
     });
 
-    it('should return PASSWORD_PROTECTED error for encrypted Office compound files', async () => {
+    it('should return PASSWORD_PROTECTED error for encrypted OOXML docx files', async () => {
       const files = [
         {
           originalname: 'document.docx',
           size: 1024,
-          buffer: Buffer.concat([
-            Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]),
-            Buffer.from('EncryptedPackage', 'utf16le'),
-            Buffer.from('EncryptionInfo', 'utf16le'),
-          ]),
+          mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          buffer: createOoxmlBuffer('docx', true),
         } as Express.Multer.File,
       ];
       expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.PASSWORD_PROTECTED);
     });
 
-    it('should return PASSWORD_PROTECTED error for encrypted Office compound files read from disk', async () => {
+    it('should return PASSWORD_PROTECTED error for encrypted OOXML docx files read from disk', async () => {
       const tempDirectory = await mkdtemp(join(tmpdir(), 'upload-validation-'));
       const filePath = join(tempDirectory, 'encrypted.docx');
 
       try {
-        await writeFile(
-          filePath,
-          Buffer.concat([
-            Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]),
-            Buffer.from('EncryptedPackage', 'utf16le'),
-            Buffer.from('EncryptionInfo', 'utf16le'),
-          ])
-        );
+        const encryptedDocxBuffer = createOoxmlBuffer('docx', true);
+        await writeFile(filePath, encryptedDocxBuffer);
 
         const files = [
           {
             originalname: 'encrypted.docx',
             size: 1024,
+            mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             path: filePath,
           } as Express.Multer.File,
         ];
@@ -241,7 +255,8 @@ describe('uploadValidation', () => {
         {
           originalname: 'spreadsheet.xlsx',
           size: 1024,
-          buffer: createZipBufferWithCentralDirectory(true),
+          mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          buffer: createOoxmlBuffer('xlsx', true),
         } as Express.Multer.File,
       ];
       expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.PASSWORD_PROTECTED);
@@ -249,14 +264,14 @@ describe('uploadValidation', () => {
 
     it('should return null for valid PDF files', async () => {
       const files = [
-        { originalname: 'test.pdf', size: 1024, buffer: Buffer.from('test') } as Express.Multer.File,
+        { originalname: 'test.pdf', size: 1024, mimetype: 'application/pdf', buffer: createPdfBuffer() } as Express.Multer.File,
       ];
       expect(await validateUploadedFile(files)).toBeNull();
     });
 
     it('should return null for valid image files', async () => {
       const files = [
-        { originalname: 'image.jpg', size: 2048, buffer: Buffer.from('test') } as Express.Multer.File,
+        { originalname: 'image.jpg', size: 2048, mimetype: 'image/jpeg', buffer: createJpegBuffer() } as Express.Multer.File,
       ];
       expect(await validateUploadedFile(files)).toBeNull();
     });
@@ -266,7 +281,8 @@ describe('uploadValidation', () => {
         {
           originalname: 'document.docx',
           size: 5 * 1024 * 1024,
-          buffer: createZipBufferWithCentralDirectory(false),
+          mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          buffer: createOoxmlBuffer('docx', false),
         } as Express.Multer.File,
       ];
       expect(await validateUploadedFile(files)).toBeNull();
@@ -274,14 +290,19 @@ describe('uploadValidation', () => {
 
     it('should return null for valid spreadsheet files', async () => {
       const files = [
-        { originalname: 'spreadsheet.xlsx', size: 10 * 1024 * 1024, buffer: Buffer.from('test') } as Express.Multer.File,
+        {
+          originalname: 'spreadsheet.xlsx',
+          size: 10 * 1024 * 1024,
+          mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          buffer: createOoxmlBuffer('xlsx', false),
+        } as Express.Multer.File,
       ];
       expect(await validateUploadedFile(files)).toBeNull();
     });
 
     it('should validate only the first file when multiple files provided', async () => {
       const files = [
-        { originalname: 'valid.pdf', size: 1024, buffer: Buffer.from('test') } as Express.Multer.File,
+        { originalname: 'valid.pdf', size: 1024, buffer: createPdfBuffer() } as Express.Multer.File,
         { originalname: 'invalid.txt', size: 1024, buffer: Buffer.from('test') } as Express.Multer.File,
       ];
       expect(await validateUploadedFile(files)).toBeNull();
@@ -289,7 +310,7 @@ describe('uploadValidation', () => {
 
     it('should validate only the first file even if a later file is password protected', async () => {
       const files = [
-        { originalname: 'valid.pdf', size: 1024, buffer: Buffer.from('test') } as Express.Multer.File,
+        { originalname: 'valid.pdf', size: 1024, buffer: createPdfBuffer() } as Express.Multer.File,
         {
           originalname: 'encrypted.pdf',
           size: 1024,
@@ -322,23 +343,86 @@ describe('uploadValidation', () => {
 
     it('should handle mixed case file extensions', async () => {
       const files = [
-        { originalname: 'Document.PdF', size: 1024, buffer: Buffer.from('test') } as Express.Multer.File,
+        { originalname: 'Document.PdF', size: 1024, buffer: createPdfBuffer() } as Express.Multer.File,
       ];
       expect(await validateUploadedFile(files)).toBeNull();
     });
 
     it('should validate JPEG files', async () => {
       const files = [
-        { originalname: 'photo.jpeg', size: 2048, buffer: Buffer.from('test') } as Express.Multer.File,
+        { originalname: 'photo.jpeg', size: 2048, buffer: createJpegBuffer() } as Express.Multer.File,
       ];
       expect(await validateUploadedFile(files)).toBeNull();
     });
 
     it('should validate PNG files', async () => {
       const files = [
-        { originalname: 'screenshot.png', size: 3072, buffer: Buffer.from('test') } as Express.Multer.File,
+        { originalname: 'screenshot.png', size: 3072, buffer: createPngBuffer() } as Express.Multer.File,
       ];
       expect(await validateUploadedFile(files)).toBeNull();
+    });
+
+    it('should reject executable content renamed as .pdf', async () => {
+      const files = [
+        { originalname: 'malicious.pdf', size: 2048, mimetype: 'application/pdf', buffer: Buffer.from('MZ\u0000\u0002payload') } as Express.Multer.File,
+      ];
+
+      expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.INVALID_TYPE);
+    });
+
+    it('should reject script content renamed as .jpg', async () => {
+      const files = [
+        { originalname: 'payload.jpg', size: 2048, mimetype: 'image/jpeg', buffer: Buffer.from('#!/bin/bash\necho hacked') } as Express.Multer.File,
+      ];
+
+      expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.INVALID_TYPE);
+    });
+
+    it('should reject script content renamed as .docx', async () => {
+      const files = [
+        {
+          originalname: 'payload.docx',
+          size: 2048,
+          mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          buffer: Buffer.from('<script>alert(1)</script>'),
+        } as Express.Multer.File,
+      ];
+
+      expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.INVALID_TYPE);
+    });
+
+    it('should reject executable content renamed as .xlsx', async () => {
+      const files = [
+        {
+          originalname: 'payload.xlsx',
+          size: 2048,
+          mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          buffer: Buffer.from('MZ\u0000\u0002payload'),
+        } as Express.Multer.File,
+      ];
+
+      expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.INVALID_TYPE);
+    });
+
+    it('should reject mismatch between extension and MIME type', async () => {
+      const files = [
+        { originalname: 'document.pdf', size: 1024, mimetype: 'image/jpeg', buffer: createPdfBuffer() } as Express.Multer.File,
+      ];
+
+      expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.INVALID_TYPE);
+    });
+
+    it('should reject mismatch between extension and signature for OOXML formats', async () => {
+      const files = [
+        {
+          originalname: 'document.docx',
+          size: 1024,
+          mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          buffer: createPdfBuffer(),
+        } as Express.Multer.File,
+      ];
+
+      expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.INVALID_TYPE);
     });
 
     it('should return UPLOAD_FAILED when disk-backed PDF cannot be read', async () => {
@@ -363,6 +447,7 @@ describe('uploadValidation', () => {
           {
             originalname: 'plain.pdf',
             size: 1024,
+            mimetype: 'application/pdf',
             path: filePath,
           } as Express.Multer.File,
         ];
@@ -373,33 +458,34 @@ describe('uploadValidation', () => {
       }
     });
 
-    it('should return null for docx buffer with no ZIP end-of-central-directory signature', async () => {
+    it('should return INVALID_TYPE for docx buffer with no ZIP signature', async () => {
       const files = [
         {
           originalname: 'document.docx',
           size: 100,
+          mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           buffer: Buffer.alloc(100),
         } as Express.Multer.File,
       ];
-      expect(await validateUploadedFile(files)).toBeNull();
+      expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.INVALID_TYPE);
     });
 
-    it('should return null for docx with zero central directory size in EOCD', async () => {
+    it('should return INVALID_TYPE for docx with missing OOXML markers', async () => {
       const buffer = Buffer.alloc(100);
-      buffer.writeUInt32LE(0x06054b50, 78); // EOCD signature at byte 78 (leaves room for 22-byte EOCD)
-      // centralDirectorySize at eocdOffset+12 = byte 90: left as 0 by Buffer.alloc
+      buffer.writeUInt32LE(0x04034b50, 0); // ZIP local header signature
 
       const files = [
         {
           originalname: 'document.docx',
           size: 100,
+          mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           buffer,
         } as Express.Multer.File,
       ];
-      expect(await validateUploadedFile(files)).toBeNull();
+      expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.INVALID_TYPE);
     });
 
-    it('should return null for docx with invalid central directory entry signature', async () => {
+    it('should return INVALID_TYPE for docx with invalid central directory entry signature', async () => {
       const centralDirectory = Buffer.alloc(46);
       centralDirectory.writeUInt32LE(0xdeadbeef, 0); // wrong signature (expected 0x02014b50)
 
@@ -414,10 +500,11 @@ describe('uploadValidation', () => {
         {
           originalname: 'document.docx',
           size: buffer.length,
+          mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           buffer,
         } as Express.Multer.File,
       ];
-      expect(await validateUploadedFile(files)).toBeNull();
+      expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.INVALID_TYPE);
     });
 
     it('should detect password protected xlsx from disk path', async () => {
@@ -426,12 +513,14 @@ describe('uploadValidation', () => {
 
       try {
         const zipBuffer = createZipBufferWithCentralDirectory(true);
-        await writeFile(filePath, zipBuffer);
+        const encryptedXlsxBuffer = Buffer.concat([zipBuffer, Buffer.from('[Content_Types].xml xl/workbook.xml xl/')]);
+        await writeFile(filePath, encryptedXlsxBuffer);
 
         const files = [
           {
             originalname: 'encrypted.xlsx',
-            size: zipBuffer.length,
+            size: encryptedXlsxBuffer.length,
+            mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             path: filePath,
           } as Express.Multer.File,
         ];
@@ -447,13 +536,14 @@ describe('uploadValidation', () => {
       const filePath = join(tempDirectory, 'plain.xlsx');
 
       try {
-        const zipBuffer = createZipBufferWithCentralDirectory(false);
-        await writeFile(filePath, zipBuffer);
+        const plainXlsxBuffer = createOoxmlBuffer('xlsx', false);
+        await writeFile(filePath, plainXlsxBuffer);
 
         const files = [
           {
             originalname: 'plain.xlsx',
-            size: zipBuffer.length,
+            size: plainXlsxBuffer.length,
+            mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             path: filePath,
           } as Express.Multer.File,
         ];
@@ -464,14 +554,14 @@ describe('uploadValidation', () => {
       }
     });
 
-    it('should return null for docx with neither buffer nor path', async () => {
+    it('should return INVALID_TYPE for docx with neither buffer nor path', async () => {
       const files = [
         {
           originalname: 'document.docx',
           size: 1024,
         } as Express.Multer.File,
       ];
-      expect(await validateUploadedFile(files)).toBeNull();
+      expect(await validateUploadedFile(files)).toBe(FILE_VALIDATION_ERRORS.INVALID_TYPE);
     });
   });
 });

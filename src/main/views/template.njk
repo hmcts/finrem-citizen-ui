@@ -1,12 +1,17 @@
 {% from "govuk/components/phase-banner/macro.njk" import govukPhaseBanner %}
+{% from "govuk/components/footer/macro.njk" import govukFooter %}
 
 {% extends "govuk/template.njk" %}
 
 {% block head %}
   {% include "webpack/css.njk" %}
+  {% if dynatrace and dynatrace.enabled %}
+    <script type="text/javascript" src="{{ dynatrace.url }}" crossorigin="anonymous"></script>
+  {% endif %}
 {% endblock %}
 
 {% block header %}
+  {% include "macros/cookie-banner.njk" %}
   {{ govukHeader({
     homepageUrl: "/",
     containerClasses: "govuk-width-container"
@@ -20,6 +25,19 @@
         text: "Sign out"
       }
     ]
+  }) }}
+{% endblock %}
+
+{% block govukFooter %}
+  {{ govukFooter({
+    meta: {
+      items: [
+        {
+          href: appRoutes.cookies,
+          text: "Cookies"
+        }
+      ]
+    }
   }) }}
 {% endblock %}
 

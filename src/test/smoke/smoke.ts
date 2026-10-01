@@ -24,6 +24,7 @@ const pages: SmokePage[] = [
   { name: 'Home', path: PublicRoutes.basePath, expectsLoginRedirect: true },
   { name: 'Health', path: PublicRoutes.health, expectedStatuses: [200, 503], responseKind: 'json' },
   { name: 'Info', path: PublicRoutes.info, responseKind: 'json' },
+  { name: 'Cookies', path: PublicRoutes.cookies },
   { name: 'Autocomplete', path: PrivateRoutes.autocomplete, expectsLoginRedirect: true },
   { name: 'Enter Case Number', path: PrivateRoutes.enterCaseNumber, expectsLoginRedirect: true },
   { name: 'Enter Access Code', path: PrivateRoutes.enterAccessCode, expectsLoginRedirect: true },

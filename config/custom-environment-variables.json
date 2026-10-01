@@ -14,11 +14,15 @@
     "finrem": {
       "finrem-citizen-ui-idam-client-secret": "FINREM_CITIZEN_UI_IDAM_CLIENT_SECRET",
       "session-secret": "SESSION_SECRET",
-      "finrem-citizen-ui-redis-connection-string": "REDIS_CONNECTION_STRING"
+      "azure-managed-redis-connection-string": "REDIS_CONNECTION_STRING"
     }
   },
   "appInsights": {
     "connectionString": "APPLICATIONINSIGHTS_CONNECTION_STRING"
+  },
+  "dynatrace": {
+    "enabled": "DYNATRACE_ENABLED",
+    "url": "DYNATRACE_URL"
   },
   "services": {
     "idam": {

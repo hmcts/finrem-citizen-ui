@@ -45,7 +45,7 @@ const { Logger } = require('@hmcts/nodejs-logging');
 const mockLogger = Logger.getLogger('enter-case-number');
 
 type SessionLike = {
-  user?: { accessToken?: string };
+  user?: { accessToken?: string; caseRole?: string };
   caseNumber?: string;
   caseNumberErrors?: { caseNumber?: string };
   tempCaseNumber?: string;
