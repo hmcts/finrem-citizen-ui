@@ -23,4 +23,3 @@
 !config/**
 !public
 !webpack.config.js
-!app
