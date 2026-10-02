@@ -55,14 +55,14 @@
     "@types/nunjucks": "3.2.6",
     "accessible-autocomplete": "^3.0.1",
     "applicationinsights": "^3.14.0",
-    "axios": "1.18.1",
+    "axios": "1.20.0",
     "body-parser": "2.3.0",
     "config": "4.4.2",
     "connect-redis": "^8.1.0",
     "cookie-parser": "1.4.7",
     "csrf-sync": "^4.2.1",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.6.0",
+    "express-rate-limit": "^8.7.0",
     "express-session": "1.19.0",
     "fs-extra": "^11.3.4",
     "glob": "13.0.6",
@@ -71,7 +71,7 @@
     "ioredis": "^5.10.0",
     "jwt-decode": "4.0.0",
     "lodash": "4.18.1",
-    "multer": "^2.3.0",
+    "multer": "^2.4.0",
     "node-cache": "5.1.2",
     "notifications-node-client": "^8.3.2",
     "nunjucks": "3.2.4",
@@ -138,13 +138,14 @@
   },
   "packageManager": "yarn@4.17.1",
   "resolutions": {
-    "fast-uri": " 3.1.6",
+    "fast-uri": "3.1.8",
     "postcss-selector-parser": "^7.1.5",
     "qs": "6.16.0",
     "uuid": "14.0.1",
     "@opentelemetry/sdk-node": "0.221.0",
     "@opentelemetry/core": "^2.8.0",
     "colord": "^2.9.4",
-    "js-yaml": "^4.3.2"
+    "js-yaml": "^4.3.2",
+    "ip-address": "10.7.2"
   }
 }
