@@ -5,8 +5,18 @@
 
 {% block head %}
   {% include "webpack/css.njk" %}
+  {% if googleAnalytics and googleAnalytics.enabled %}
+    {% include "partials/google-tag-manager-head.njk" %}
+  {% endif %}
+{% endblock %}
+
+{% block bodyStart %}
+  {% if googleAnalytics and googleAnalytics.enabled %}
+    {% include "partials/google-tag-manager-body.njk" %}
+  {% endif %}
+
   {% if dynatrace and dynatrace.enabled %}
-    <script type="text/javascript" src="{{ dynatrace.url }}" crossorigin="anonymous"></script>
+    {% include "partials/dynatrace.njk" %}
   {% endif %}
 {% endblock %}
 

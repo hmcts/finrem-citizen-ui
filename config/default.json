@@ -7,6 +7,10 @@
     "enabled": false,
     "url": "https://js-cdn.dynatrace.com/jstag/17177a07246/bf24054dsx/8a1b271a7454c49a_complete.js"
   },
+  "googleAnalytics": {
+    "enableTracking": false,
+    "googleTagManagerId": "GTM-N2TBV3X8"
+  },
   "security": {
     "referrerPolicy": "same-origin",
     "hsts": {
