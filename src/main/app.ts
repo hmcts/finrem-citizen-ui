@@ -9,6 +9,7 @@ import { PrivateRoutes, ViewNames } from './constants';
 import { caseContextMiddleware, contactEmailMiddleware, globalErrorHandler, routeAccessMiddleware } from './middleware';
 import { AppInsights } from './modules/appinsights';
 import { setNoStoreForHtmlRequests, setStaticCachingPolicy } from './modules/caching';
+import { setCspNonce } from './modules/csp-nonce';
 import { CSRFToken } from './modules/csrf';
 import { Helmet } from './modules/helmet';
 import { Nunjucks } from './modules/nunjucks';
@@ -24,6 +25,8 @@ const developmentMode = env === 'development';
 
 export const app = express();
 app.locals.ENV = env;
+
+app.use(setCspNonce);
 
 new PropertiesVolume().enableFor(app);
 new AppInsights().enable();

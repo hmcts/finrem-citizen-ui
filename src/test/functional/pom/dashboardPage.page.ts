@@ -40,7 +40,7 @@ export class DashboardPage extends BasePage {
       { exact: false }
     );
     this.warningText = this.page.getByText(
-      'Do not use this service to submit applications or anything else that needs a court response.',
+      'You cannot use this service to submit applications such as the D11, or anything else that needs a court response,',
       { exact: false }
     );
     this.goToDocumentUploadButton = this.page.getByRole('button', { name: 'Go to document upload' });
