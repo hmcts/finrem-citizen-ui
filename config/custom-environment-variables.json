@@ -24,6 +24,10 @@
     "enabled": "DYNATRACE_ENABLED",
     "url": "DYNATRACE_URL"
   },
+  "googleAnalytics": {
+    "enableTracking": "GOOGLE_ANALYTICS_TRACKING_ENABLED",
+    "googleTagManagerId": "GOOGLE_TAG_MANAGER_ID"
+  },
   "services": {
     "idam": {
       "clientID": "IDAM_CLIENT_ID",
