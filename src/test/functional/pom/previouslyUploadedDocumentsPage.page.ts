@@ -24,8 +24,14 @@ export class PreviouslyUploadedDocumentsPage extends BasePage {
     super(page);
 
     this.heading = page.getByRole('heading', { name: 'Previously uploaded documents' });
-    this.introText = page.getByText('You can download your previously uploaded documents on this page.', { exact: true });
-    this.readOnlyText = page.getByText('You cannot delete any documents that have already been uploaded. They have already been saved to your case.', { exact: true });
+    this.introText = page.getByText(
+      'You can view and download documents you have previously uploaded on this page. Any documents submitted in a different way will not be shown here.',
+      { exact: true }
+    );
+    this.readOnlyText = page.getByText(
+      'These documents have been saved to your case. You cannot delete any documents yourself. If you have uploaded the wrong document, contact the court directly.',
+      { exact: true }
+    );
     this.uploadMoreText = page.getByText('You can upload an updated version of a previously uploaded document, or any additional documentation, if you need to.', { exact: true });
 
     this.dateAddedHeader = page.getByRole('columnheader', { name: 'Date added' });
