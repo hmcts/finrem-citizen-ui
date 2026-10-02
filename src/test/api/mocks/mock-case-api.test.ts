@@ -73,7 +73,7 @@ describe('[MOCK] Case API endpoints', () => {
   });
 
   test('GET /cases/:caseId/event-triggers/:eventId returns a token', async () => {
-    const eventId = 'CUI_invalidateApplicantAccessCode';
+    const eventId = 'CUI_linkApplicantToCase';
     const res = await request(app).get(`/cases/${seededCaseId}/event-triggers/${eventId}`);
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ token: `mock-token-${seededCaseId}-${eventId}` });
@@ -84,7 +84,7 @@ describe('[MOCK] Case API endpoints', () => {
     const res = await request(app)
       .post(`/cases/${seededCaseId}/events`)
       .send({
-        event: { id: 'CUI_invalidateApplicantAccessCode' },
+        event: { id: 'CUI_linkApplicantToCase' },
         event_token: 'mock-token',
         data: {
           applicantAccessCodes: [

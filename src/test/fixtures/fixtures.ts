@@ -30,11 +30,7 @@ import { IdamApiService } from '../functional/utils/helpers/idamCreateUser';
 dotenv.config({ quiet: true });
 
 function getConfiguredCcdUrl(): string {
-  return (
-    process.env.CCD_URL
-    || process.env.CCD_DATA_STORE_API_URL
-    || ''
-  ).trim();
+  return (process.env.CCD_URL || '').trim();
 }
 
 function isPreviewOrAatTarget(): boolean {
@@ -234,7 +230,7 @@ export const test = base.extend<MyFixtures & MockOptions>({
     const configuredCcdUrl = getConfiguredCcdUrl();
     base.skip(
       !isLocalMockCcdUrl(configuredCcdUrl),
-      '[mock] tests require CCD_URL (or CCD_DATA_STORE_API_URL) set to http://localhost:4100'
+      '[mock] tests require CCD_URL set to http://localhost:4100'
     );
 
     const response = await request.get('/__test/inject-case-session');
