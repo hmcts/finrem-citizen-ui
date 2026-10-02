@@ -105,8 +105,7 @@ const pickCaseworkerPassword = (): string => {
 // - Locally: use external AAT URL unless overridden
 const getCcdUrl = (): string => {
   // Explicit override takes priority (support common env var names)
-  const ccdUrl = process.env.CCD_DATA_STORE_API_URL
-    || process.env.CCD_URL;
+  const ccdUrl = process.env.CCD_URL;
 
   if (ccdUrl) {
     return ccdUrl;
