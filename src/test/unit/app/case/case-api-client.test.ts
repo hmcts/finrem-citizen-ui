@@ -227,7 +227,7 @@ describe('CaseApiClient.sendEvent', () => {
   let api: CaseApiClient;
 
   const CASE_ID = '123456';
-  const EVENT_NAME = EVENT_TYPE.INVALIDATE_APPLICANT_ACCESS_CODE;
+  const EVENT_NAME = EVENT_TYPE.LINK_APPLICANT_TO_CASE;
 
   
 const applicantAccessCodes = [

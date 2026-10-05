@@ -13,7 +13,7 @@ const URL_PATTERNS = {
 
 const EXTERNAL_LINKS = {
   FORM_C8:
-    'https://www.gov.uk/government/publications/form-c8-confidential-contact-details-family-procedure-rules-2010-rule-291',
+    'https://www.gov.uk/government/publications/apply-to-keep-your-contact-details-confidential-form-c8',
 };
 
 export class ConfidentialityPage extends BasePage {
@@ -35,32 +35,32 @@ export class ConfidentialityPage extends BasePage {
   constructor(readonly page: Page) {
     super(page);
     this.pageHeader = this.page.getByRole('heading', {
-      name: 'Keeping information confidential for safety reasons',
+      name: 'Removing your contact details to keep them private from the other party',
     });
     this.backLink = this.page.getByRole('link', { name: 'Back', exact: true });
     this.formC8Link = this.page.getByRole('link', {
-      name: 'applied to the court to keep your contact details confidential using form C8 (opens in new tab)',
+      name: 'applied to the court to keep your contact details private using form C8 (opens in new tab)',
     });
     this.redactionInstructions = this.page.getByText(
-      'You must redact (black out the text) any such information if you need to keep it private from the other party.',
+      'It is your responsibility to redact (black out the text of) any information you want to keep private from the other party.',
       { exact: false }
     );
     this.courtStaffDisclaimer = this.page.getByText(
-      'Court staff are not able to check any documents you submit to the court for any unintentional disclosure of your details.',
+      'Court staff cannot check any documents you submit to the court to make sure you have redacted all the information you wanted.',
       { exact: false }
     );
     this.confidentialExamplesIntro = this.page.getByText(
-      'Confidential information could be, for example:',
+      'The information you can keep private includes:',
       { exact: true }
     );
 
     const confidentialExamplesList = this.page
       .getByRole('main')
       .getByRole('list')
-      .filter({ hasText: 'addresses' })
+      .filter({ hasText: 'your address' })
       .first();
 
-    this.exampleAddresses = confidentialExamplesList.getByRole('listitem').filter({ hasText: 'addresses' });
+    this.exampleAddresses = confidentialExamplesList.getByRole('listitem').filter({ hasText: 'your address' });
     this.exampleLocationDetails = confidentialExamplesList
       .getByRole('listitem')
       .filter({ hasText: 'any specific location details shown on bank statements or other documents' });
@@ -70,7 +70,7 @@ export class ConfidentialityPage extends BasePage {
       { exact: true }
     );
     this.warningMessage = this.page.getByText(
-      'Once you submit your documents they will be on the court record. They could be seen by the other party or referred to in a hearing.',
+      'Once you submit your documents they will be on the court record. They could be referred to in a hearing.',
       { exact: false }
     );
     this.continueButton = this.page.getByRole('button', { name: 'Continue' });

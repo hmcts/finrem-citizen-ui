@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test';
 
 import { PublicRoutes } from '../../../../main/constants';
+import { COOKIE_PREFERENCES_COOKIE_NAME } from '../../../../main/constants/cookies';
 import { expect, test } from '../../../fixtures/fixtures';
 
 const clearCookiePreferences = async (page: Page): Promise<void> => {
@@ -29,7 +30,7 @@ test.describe('[integration] Cookie banner behavior', () => {
 
     const cookies = await page.context().cookies();
     const preferenceCookie = cookies.find(
-      cookie => cookie.name === 'cookie-preferences' || cookie.name === 'finrem-cookie-preferences'
+      cookie => cookie.name === COOKIE_PREFERENCES_COOKIE_NAME || cookie.name === 'finrem-cookie-preferences'
     );
     expect(preferenceCookie).toBeDefined();
   });

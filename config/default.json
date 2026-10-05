@@ -7,6 +7,10 @@
     "enabled": false,
     "url": "https://js-cdn.dynatrace.com/jstag/17177a07246/bf24054dsx/8a1b271a7454c49a_complete.js"
   },
+  "googleAnalytics": {
+    "enableTracking": false,
+    "googleTagManagerId": "GTM-N2TBV3X8"
+  },
   "security": {
     "referrerPolicy": "same-origin",
     "hsts": {
@@ -60,9 +64,7 @@
     "finrem": {
       "finrem-citizen-ui-idam-client-secret": "AAAAAAAAAAAA",
       "session-secret": "finrem-local-dev-secret",
-      "azure-managed-redis-connection-string": "redis://localhost:6379",
-      "GOV-UK-NOTIFICATION-KEY": "GOVUK_NOTIFY_API_KEY",
-      "DOCUMENT-UPLOAD-EMAIL-TEMPLATE-ID": "FINREM_CITIZEN_UI_TEMPLATE_ID"
+      "azure-managed-redis-connection-string": "redis://localhost:6379"
     }
   },
   "rateLimit": {

@@ -1,4 +1,5 @@
 {% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
+{% from "govuk/components/inset-text/macro.njk" import govukInsetText %}
 
 {% from "../macros/getting-help.njk" import gettingHelp %}
 {% from "../macros/form-submit-button.njk" import formSubmitButton %}
@@ -15,44 +16,41 @@
         <a href="/dashboard" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
       {% endif %}
 
-      <h1 class="govuk-heading-l">Keeping information confidential for safety reasons</h1>
+      <h1 class="govuk-heading-l">Removing your contact details to keep them private from the other party</h1>
 
       <p class="govuk-body">
-        If you have <a href="https://www.gov.uk/government/publications/form-c8-confidential-contact-details-family-procedure-rules-2010-rule-291" 
-        target="_blank" rel="noopener noreferrer">applied to the court to keep your contact details confidential using form C8 (opens in new tab)</a>, 
-        you must make sure that any document, either submitted now or at a later date, does not contain the information you wish to keep private.
+        If you have <a href="https://www.gov.uk/government/publications/apply-to-keep-your-contact-details-confidential-form-c8" 
+        target="_blank" rel="noopener noreferrer">applied to the court to keep your contact details private using form C8 (opens in new tab)</a>, 
+        you must make sure that any document you submit does not contain information you want to keep private.
       </p>
 
-      <p class="govuk-body">
-        You must redact (black out the text) any such information if you need to keep it 
-        private from the other party. You can either do this:
-      </p>
-
+      <h2 class="govuk-heading-m">Information you can make private</h2>
+      <p class="govuk-body">The information you can keep private includes:</p>
       <ul class="govuk-list govuk-list--bullet">
-        <li>by hand, and then scanning or taking a photo of the redacted document and uploading it</li>
-        <li>using a dedicated digital permanent redaction tool</li>
-      </ul>
-
-      <p class="govuk-body">
-        Court staff are not able to check any documents you submit to the court for any unintentional disclosure of your details.
-      </p>
-
-      <p class="govuk-body">
-        Confidential information could be, for example:
-      </p>
-
-      <ul class="govuk-list govuk-list--bullet">
-        <li>addresses</li>
+        <li>your address</li>
+        <li>the name or contact details of any child in the case</li>
         <li>any specific location details shown on bank statements or other documents</li>
         <li>phone numbers</li>
       </ul>
 
+      <h2 class="govuk-heading-m">Make sure you hide your details</h2>
+      <p class="govuk-body">
+        It is your responsibility to redact (black out the text of) any information you want to keep  private from the other party. You can either do this:
+      </p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>by hand, and then scanning or uploading a photo of the redacted document</li>
+        <li>using a dedicated digital permanent redaction tool</li>
+      </ul>
       <p class="govuk-body">
         Do not redact any financial amounts or payee details.
       </p>
 
+      {{ govukInsetText({
+        text: "Court staff cannot check any documents you submit to the court to make sure you have redacted all the information you wanted."
+      }) }}
+
       {{ govukWarningText({
-        text: "Once you submit your documents they will be on the court record. They could be seen by the other party or referred to in a hearing.",
+        text: "Once you submit your documents they will be on the court record. They could be referred to in a hearing.",
         iconFallbackText: "Warning"
       }) }}
 
