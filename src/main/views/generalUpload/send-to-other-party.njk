@@ -7,6 +7,8 @@
 
 {% extends "template.njk" %}
 
+{% set pageTitle = "You need to send these documents to the other party" %}
+
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -26,7 +28,7 @@
         }) }}
       {% endif %}
 
-      <h1 class="govuk-heading-l">You need to send these documents to the other party</h1>
+      <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
 
       <p class="govuk-body">
         You must send these documents to the other party, or their solicitor if they have one.
