@@ -7,6 +7,8 @@
 
 {% extends "template.njk" %}
 
+{% set pageTitle = "Removing your contact details to keep them private from the other party" %}
+
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -16,7 +18,7 @@
         <a href="/dashboard" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
       {% endif %}
 
-      <h1 class="govuk-heading-l">Removing your contact details to keep them private from the other party</h1>
+      <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
 
       <p class="govuk-body">
         If you have <a href="https://www.gov.uk/government/publications/apply-to-keep-your-contact-details-confidential-form-c8" 
