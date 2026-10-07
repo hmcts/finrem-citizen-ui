@@ -2,6 +2,8 @@
 
 {% extends "template.njk" %}
 
+{% set pageTitle = "Dashboard" %}
+
 {% block content %}
   <h2 class="govuk-heading-l">{{ userName or 'Your financial remedy case' }}</h2>
   <p class="govuk-body">Case number {{ (caseNumber | formatCaseNumber) or 'Not available' }}</p>

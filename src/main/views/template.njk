@@ -3,6 +3,12 @@
 
 {% extends "govuk/template.njk" %}
 
+{% set serviceName = "Dividing your money and property" %}
+
+{% block pageTitle %}
+  {% if errors and errors.length %}Error: {% endif %}{{ pageTitle }} - {{ serviceName }} - GOV.UK
+{% endblock %}
+
 {% block head %}
   {% include "webpack/css.njk" %}
   {% if googleAnalytics and googleAnalytics.enabled %}
@@ -27,7 +33,7 @@
     containerClasses: "govuk-width-container"
   }) }}
   {{ govukServiceNavigation({
-    serviceName: "Dividing your money and property",
+    serviceName: serviceName,
     serviceUrl: "/",
     navigation: [
       {

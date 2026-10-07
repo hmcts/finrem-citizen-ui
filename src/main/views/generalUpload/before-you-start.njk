@@ -4,6 +4,8 @@
 
 {% extends "template.njk" %}
 
+{% set pageTitle = "Before you start" %}
+
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -13,7 +15,7 @@
         <a href="/dashboard" class="govuk-back-link govuk-!-margin-top-0 govuk-!-margin-bottom-6">Back</a>
       {% endif %}
 
-      <h1 class="govuk-heading-l">Before you start</h1>
+      <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
 
       <p class="govuk-body">You should:</p>
 
@@ -25,7 +27,7 @@
       <h2 class="govuk-heading-m">Naming your documents</h2>
 
       <p class="govuk-body">
-        To help the court identify and assess your documents, make sure you name them appropriately, 
+        To help the court identify and assess your documents, make sure you name them appropriately,
         for example, [name]-bankstatement-[month][year].
       </p>
 
@@ -37,8 +39,8 @@
       <h2 class="govuk-heading-m">After you have submitted</h2>
 
       <p class="govuk-body">
-        Once you have uploaded your documents, they will be added to your case file and the court 
-        will be able to view them. You will receive an email confirmation that they have been added 
+        Once you have uploaded your documents, they will be added to your case file and the court
+        will be able to view them. You will receive an email confirmation that they have been added
         to your case.
       </p>
 
