@@ -36,11 +36,11 @@ export class DocumentSelectionPage extends BasePage {
       name: 'Tell us which documents you want to upload',
     });
     this.introText = this.page.getByText(
-      "Start typing the document you want to upload (for example, 'payslips') in the box below. You will then be able to choose your document.",
+      'Start typing the document you want to upload in the box below. You will then be able to choose your document.',
       { exact: true }
     );
     this.instructionText = this.page.getByText(
-      "When you have chosen the document you want to upload, select 'Add document'. You can add more than one document to upload.",
+      'When you have chosen the document you want to upload, select ‘Add document’. You can add more than one document to upload.',
       { exact: true }
     );
     this.documentTypeLabel = this.page.getByText('What do you want to upload?', { exact: true });

@@ -1,27 +1,37 @@
 import cookieManager from '@hmcts/cookie-manager';
 
-const preferencesCookieName = 'cookie-preferences';
+import { COOKIE_PREFERENCES_COOKIE_NAME } from '../constants/cookies';
+
+const COOKIE_PREFERENCE_ON = 'on';
+
+function setDynatraceConsent(preferences: { apm?: string }): void {
+  const dtrum = window.dtrum;
+
+  if (dtrum === undefined) {
+    return;
+  }
+
+  if (preferences.apm === COOKIE_PREFERENCE_ON) {
+    dtrum.enable();
+    dtrum.enableSessionReplay();
+    return;
+  }
+
+  dtrum.disableSessionReplay();
+  dtrum.disable();
+}
 
 cookieManager.on('UserPreferencesLoaded', preferences => {
   const dataLayer = window.dataLayer || [];
   dataLayer.push({ event: 'Cookie Preferences', cookiePreferences: preferences });
+  setDynatraceConsent(preferences);
 });
 
 cookieManager.on('UserPreferencesSaved', preferences => {
   const dataLayer = window.dataLayer || [];
-  const dtrum = window.dtrum;
 
   dataLayer.push({ event: 'Cookie Preferences', cookiePreferences: preferences });
-
-  if (dtrum !== undefined) {
-    if (preferences.apm === 'on') {
-      dtrum.enable();
-      dtrum.enableSessionReplay();
-    } else {
-      dtrum.disableSessionReplay();
-      dtrum.disable();
-    }
-  }
+  setDynatraceConsent(preferences);
 });
 
 cookieManager.on('PreferenceFormSubmitted', () => {
@@ -39,14 +49,14 @@ cookieManager.on('PreferenceFormSubmitted', () => {
 export function initCookieBanner(): void {
   cookieManager.init({
     userPreferences: {
-      cookieName: preferencesCookieName,
+      cookieName: COOKIE_PREFERENCES_COOKIE_NAME,
       cookieSecure: window.location.protocol === 'https:',
     },
     cookieManifest: [
       {
         categoryName: 'essential',
         optional: false,
-        cookies: [preferencesCookieName],
+        cookies: [COOKIE_PREFERENCES_COOKIE_NAME],
       },
       {
         categoryName: 'analytics',

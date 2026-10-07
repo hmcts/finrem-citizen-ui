@@ -1,14 +1,26 @@
+import config from 'config';
 import * as express from 'express';
 import * as nunjucks from 'nunjucks';
 import * as path from 'path';
 
 import { RouteNames } from '../../constants';
+import { COOKIE_PREFERENCES_COOKIE_NAME } from '../../constants/cookies';
 import { offsetDate } from '../../functions/task-list/calculate-offset-date';
 import { taskListFormItems } from '../../functions/task-list/task-list-form-items';
 import { taskListWarningMessage } from '../../functions/task-list/task-list-warning-message';
 import { taskStatus } from '../../functions/task-list/task-status';
 
 const FEEDBACK_SURVEY_BASE_URL = 'https://www.smartsurvey.co.uk/s/CFR_feedback/?pageurl=';
+
+function isDynatraceEnabled(): boolean {
+  const configValue = config.get<unknown>('dynatrace.enabled');
+  return configValue === true || configValue === 'true';
+}
+
+function isGoogleAnalyticsEnabled(): boolean {
+  const configValue = config.get<unknown>('googleAnalytics.enableTracking');
+  return configValue === true || configValue === 'true';
+}
 
 const formatCaseNumber = (caseNumber: string): string => {
   if (!caseNumber) {
@@ -36,10 +48,25 @@ export const buildFeedbackSurveyUrl = (req: express.Request): string =>
   `${FEEDBACK_SURVEY_BASE_URL}${encodeURIComponent(getCurrentUrl(req).href)}`;
 
 export const addNunjucksLocals: express.RequestHandler = (req, res, next) => {
+  const dynatraceEnabled = isDynatraceEnabled();
+  const googleAnalyticsEnabled = isGoogleAnalyticsEnabled();
+
   res.locals.pagePath = req.path;
   res.locals.feedbackSurveyUrl = buildFeedbackSurveyUrl(req);
+  res.locals.globals = {
+    cookiePreferencesCookieName: COOKIE_PREFERENCES_COOKIE_NAME,
+    nonce: (res.locals.nonce as string),
+  };
+  res.locals.googleAnalytics = {
+    enabled: googleAnalyticsEnabled,
+    googleTagManagerId: config.get<string>('googleAnalytics.googleTagManagerId'),
+  };
   res.locals.appRoutes = {
     cookies: RouteNames.cookies,
+  };
+  res.locals.dynatrace = {
+    enabled: dynatraceEnabled,
+    url: dynatraceEnabled ? config.get<string>('dynatrace.url') : '',
   };
   next();
 };

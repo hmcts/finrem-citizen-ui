@@ -30,19 +30,18 @@
       <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
 
       <p class="govuk-body">
-        Start typing the document you want to upload (for example, 'payslips') in the box below.
-        You will then be able to choose your document.
+        Start typing the document you want to upload in the box below. You will then be able to choose your document.
       </p>
 
       <p class="govuk-body">
-        When you have chosen the document you want to upload, select 'Add document'.
-        You can add more than one document to upload.
+        When you have chosen the document you want to upload, select ‘Add document’. You can add more than one document to upload.
       </p>
 
       {% call form({ attributes: { "data-document-type-selection": true } }) %}
         {{ autocomplete(
           id="document-type",
           name="documentType",
+          hint="Enter the document type, such as payslips, questionnaire, or bank statement.",
           label="What do you want to upload?",
           apiUrl="/autocomplete",
           eventName="document:selected",

@@ -11,6 +11,19 @@
 
 {% block head %}
   {% include "webpack/css.njk" %}
+  {% if googleAnalytics and googleAnalytics.enabled %}
+    {% include "partials/google-tag-manager-head.njk" %}
+  {% endif %}
+{% endblock %}
+
+{% block bodyStart %}
+  {% if googleAnalytics and googleAnalytics.enabled %}
+    {% include "partials/google-tag-manager-body.njk" %}
+  {% endif %}
+
+  {% if dynatrace and dynatrace.enabled %}
+    {% include "partials/dynatrace.njk" %}
+  {% endif %}
 {% endblock %}
 
 {% block header %}
