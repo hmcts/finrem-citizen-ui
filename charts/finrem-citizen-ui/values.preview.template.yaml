@@ -22,18 +22,5 @@ nodejs:
     OAUTH_CALLBACK_URL: 'https://${SERVICE_FQDN}/oauth2/callback'
     IDAM_WEB_URL: https://hmcts-access.aat.platform.hmcts.net/o/authorize
     IDAM_TOKEN_URL: https://idam-api.aat.platform.hmcts.net/o/token
-    REDIS_CONNECTION_STRING: 'redis://{{ .Release.Name }}-redis-master:6379'
     CCD_URL: '${CCD_URL}'
     CASE_DOCUMENT_MANAGEMENT_URL: 'http://ccd-case-document-am-api-aat.service.core-compute-aat.internal'
-
-redis:
-  enabled: true
-  architecture: standalone
-  auth:
-    enabled: false
-  master:
-    persistence:
-      enabled: false
-  image:
-    registry: hmctsprod.azurecr.io
-    repository: imported/bitnami/redis
