@@ -15,6 +15,7 @@ import { extractDocumentIdFromUrl, getCaseDocumentsByRole } from '../../function
 import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../../functions/util/documentUtil';
 import { oidcMiddleware } from '../../middleware';
 import { GENERAL_UPLOAD_BASE_URL, UploadStepId, uploadSteps } from '../../steps/general-upload-sequence';
+import { formatUploadDate } from '../../functions/util/dateUtils';
 
 const previouslyUploadedDocumentsRoute = `${GENERAL_UPLOAD_BASE_URL}/previously-uploaded-documents`;
 const documentIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -489,20 +490,3 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#39;');
 }
 
-function formatUploadDate(timestamp: string): string {
-  const date = new Date(timestamp);
-
-  const formatted = date.toLocaleString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-
-  return formatted
-    .replace(',', ' at')
-    .replace(' am', 'am')
-    .replace(' pm', 'pm');
-}
