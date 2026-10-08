@@ -1,4 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
+
 import { formatUploadDate } from '../../../../main/functions/util/dateUtils';
 
   describe('formatUploadDate', () => {
