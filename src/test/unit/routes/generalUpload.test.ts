@@ -1743,7 +1743,7 @@ describe('General Upload Routes', () => {
   });
 
   describe('GET /upload/previously-uploaded-documents', () => {
-    it('should render all previously uploaded documents from all CUI party collections', async () => {
+    it('should render all previously uploaded documents from all CUI party collections in descending order of upload timestamp', async () => {
       const mockResponse = {
         case_details: {
           case_data: {
@@ -1803,6 +1803,17 @@ describe('General Upload Routes', () => {
                   DocumentFileName: 'Test-hearing.docx',
                 },
               },
+              {
+                value: {
+                  DocumentLink: {
+                    document_url:
+                      'http://dm-store/documents/678',
+                    document_filename: 'Test-hearing-null-timestamp.docx',
+                  },
+                  DocumentType: 'Some hearing doc with null timestamp',
+                  DocumentFileName: 'Test-hearing-null-timestamp.docx',
+                },
+              }
             ],
           },
         },
@@ -1855,48 +1866,29 @@ describe('General Upload Routes', () => {
         {
           documentRows: [
             [
-              {
-                text: '15 June 2026 at 11:00am',
-              },
-              {
-                text: 'Statement of issues',
-              },
-              {
-                text: 'Test-Demo.docx',
-              },
+              { text: '17 June 2026 at 8:00am' },
+              { text: 'Some hearing doc' },
+              { text: 'Test-hearing.docx' },
             ],
             [
-              {
-                text: '15 June 2026 at 10:00am',
-              },
-              {
-                text: 'Some FDR doc',
-              },
-              {
-                text: 'Test-FDR.docx',
-              },
+              { text: '16 June 2026 at 9:00am' },
+              { text: 'Some divorce doc' },
+              { text: 'Test-Divorce.docx' },
             ],
             [
-              {
-                text: '16 June 2026 at 9:00am',
-              },
-              {
-                text: 'Some divorce doc',
-              },
-              {
-                text: 'Test-Divorce.docx',
-              },
+              { text: '15 June 2026 at 11:00am' },
+              { text: 'Statement of issues' },
+              { text: 'Test-Demo.docx' },
             ],
             [
-              {
-                text: '17 June 2026 at 8:00am',
-              },
-              {
-                text: 'Some hearing doc',
-              },
-              {
-                text: 'Test-hearing.docx',
-              },
+              { text: '15 June 2026 at 10:00am' },
+              { text: 'Some FDR doc' },
+              { text: 'Test-FDR.docx' },
+            ],
+              [
+              { text: "" },
+              { text: 'Some hearing doc with null timestamp' },
+              { text: 'Test-hearing-null-timestamp.docx' },
             ],
           ],
         }

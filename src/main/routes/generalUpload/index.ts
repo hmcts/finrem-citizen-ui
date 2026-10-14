@@ -239,7 +239,19 @@ export default function setupGeneralUploadRoute(app: Application): void {
         const caseData = response?.case_details?.case_data;
         const documents = getPreviouslyUploadedDocumentsByRole(caseRole, caseData);
 
-        const documentRows = documents.map(document => {
+        // descending (newest first), null uploads are treated as the oldest
+        const sortedDocuments = [...documents].sort((a, b) => {
+          const aTime = a.value?.DocumentLink?.upload_timestamp
+            ? Date.parse(a.value.DocumentLink.upload_timestamp)
+            : Number.NEGATIVE_INFINITY;
+          const bTime = b.value?.DocumentLink?.upload_timestamp
+            ? Date.parse(b.value.DocumentLink.upload_timestamp)
+            : Number.NEGATIVE_INFINITY;
+
+          return bTime - aTime; 
+        });
+
+        const documentRows = sortedDocuments.map(document => {
           const value = document.value;
           const documentLink = value?.DocumentLink;
           const documentId = getDocumentIdFromUrl(documentLink?.document_url);
