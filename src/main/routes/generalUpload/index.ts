@@ -2,6 +2,7 @@ import type { Application, NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { LoggerInstance } from 'winston';
 
+import config from 'config';
 import { CaseRole, CitizenUploadDocument, ListValue } from '../../app/case/definition';
 import { AppRequest } from '../../app/controller/AppRequest';
 import { DocumentManagerController } from '../../app/document/DocumentManagerController';
@@ -574,10 +575,8 @@ function getDocumentGroupsForCheckPage(req: Request): {
   }[];
   willCombine: boolean;
 }[] {
-
   // pt todo - needs a test
-  // pt todo - needs to be an env var.
-  const isCombiningEnabled = false;
+  const isCombiningEnabled = config.get<boolean>('documentUpload.combiningEnabled');
 
   return isCombiningEnabled
     ? getCategorisedDocumentGroupsForCheckPage(req)
