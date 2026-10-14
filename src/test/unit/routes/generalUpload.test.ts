@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { Application, NextFunction, Request, Response } from 'express';
 
+import config from 'config';
 import { CaseRole } from '../../../main/app/case/definition';
 import { DocumentManagerController } from '../../../main/app/document/DocumentManagerController';
 import { RouteNames, UploadStepNames } from '../../../main/constants';
@@ -2206,6 +2207,97 @@ describe('General Upload Routes', () => {
         );
 
         expect(next).not.toHaveBeenCalled();
+      }
+    );
+    // Each document type is tested with combining enabled and disabled.
+    // When enabled, confirm render parameter includes a group key of SupportingFinancialDocuments.
+    // When disabled, it keeps its own document type as the group key.
+    it.each(
+      [
+        { documentType: 'loan-statement', label: 'Loan statement' },
+        { documentType: 'p60', label: 'P60' },
+        { documentType: 'p45', label: 'P45' },
+      ].flatMap(({ documentType, label }) =>
+        [true, false].map(combiningEnabled => ({
+          documentType,
+          label,
+          combiningEnabled,
+          expectedGroupKey: combiningEnabled
+            ? 'SupportingFinancialDocuments'
+            : documentType,
+        }))
+      )
+    )(
+      'should render $documentType as $expectedGroupKey when combiningEnabled is $combiningEnabled',
+      ({ documentType, label, combiningEnabled, expectedGroupKey }) => {
+        const configSpy = jest
+          .spyOn(config, 'get')
+          .mockReturnValue(combiningEnabled);
+
+        try {
+          const handler = getRegisteredHandler(
+            mockGet,
+            `${RouteNames.uploadJourney}/:stepId`
+          );
+
+          const filename = `${documentType}.pdf`;
+          const mockReq = {
+            params: { stepId: UploadStepNames.CheckUpload },
+            session: {
+              DocumentSelection: {
+                documentDetails: [
+                  { id: 'doc-1', value: { DocumentType: documentType } },
+                ],
+              },
+              documents: {
+                documentDetails: [
+                  {
+                    id: 'file-1',
+                    value: {
+                      DocumentType: documentType,
+                      DocumentFileName: filename,
+                    },
+                  },
+                ],
+              },
+            },
+          } as PartialRequestWithSession;
+
+          const mockRes = {
+            render: jest.fn(),
+          } as Partial<Response>;
+
+          handler(mockReq as unknown as Request, mockRes as Response);
+
+          expect(configSpy).toHaveBeenCalledWith(
+            'documentUpload.combiningEnabled'
+          );
+
+          expect(mockRes.render).toHaveBeenCalledWith(
+            'generalUpload/check-upload',
+            expect.objectContaining({
+              data: expect.objectContaining({
+                documentGroups: [
+                  {
+                    groupKey: expectedGroupKey,
+                    label,
+                    willCombine: combiningEnabled,
+                    files: [
+                      {
+                        id: 'file-1',
+                        filename,
+                        displayFilename: filename,
+                        url: '',
+                      },
+                    ],
+                  },
+                ],
+              }),
+            })
+          );
+        } finally {
+          configSpy.mockRestore();
+        }
       }
     );
   });
