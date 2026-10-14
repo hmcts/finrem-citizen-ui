@@ -2,6 +2,8 @@
 {% from "macros/form-submit-button.njk" import formSubmitButton %}
 {% from "macros/form.njk" import form with context %}
 
+{% set pageTitle = "Enter access code" %}
+
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -22,7 +24,7 @@
         <div class="govuk-form-group {% if errors.accessCode %}govuk-form-group--error{% endif %}">
           <h1 class="govuk-label-wrapper">
             <label class="govuk-label govuk-label--l" for="accessCode">
-              Enter access code
+              {{ pageTitle }}
             </label>
           </h1>
           <div id="accessCode-hint" class="govuk-hint">
@@ -33,11 +35,11 @@
               <span class="govuk-visually-hidden">Error:</span> {{ errors.accessCode }}
             </p>
           {% endif %}
-          <input 
-            class="govuk-input {% if errors.accessCode %}govuk-input--error{% endif %}" 
-            id="accessCode" 
-            name="accessCode" 
-            type="text" 
+          <input
+            class="govuk-input {% if errors.accessCode %}govuk-input--error{% endif %}"
+            id="accessCode"
+            name="accessCode"
+            type="text"
             value="{{ accessCode or '' }}"
             aria-describedby="accessCode-hint{% if errors.accessCode %} accessCode-error{% endif %}"
             spellcheck="false"

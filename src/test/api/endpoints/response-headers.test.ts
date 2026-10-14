@@ -64,6 +64,30 @@ describe('Response Headers & Session Management', () => {
       expect(res.headers['x-frame-options']).toMatch(/DENY|SAMEORIGIN/i);
     });
 
+    test('CSP nonce differs between responses', async () => {
+      const first = await request(app).get(PublicRoutes.login);
+      const second = await request(app).get(PublicRoutes.login);
+
+      expect([200, 302, 303]).toContain(first.status);
+      expect([200, 302, 303]).toContain(second.status);
+
+      const firstPolicy = first.headers['content-security-policy'];
+      const secondPolicy = second.headers['content-security-policy'];
+
+      expect(firstPolicy).toEqual(expect.any(String));
+      expect(secondPolicy).toEqual(expect.any(String));
+
+      const noncePattern = /'nonce-([^']+)'/;
+      const firstNonce = firstPolicy.match(noncePattern)?.[1];
+      const secondNonce = secondPolicy.match(noncePattern)?.[1];
+
+      expect(firstNonce).toEqual(expect.any(String));
+      expect(secondNonce).toEqual(expect.any(String));
+      expect(firstNonce).not.toContain('-');
+      expect(secondNonce).not.toContain('-');
+      expect(firstNonce).not.toBe(secondNonce);
+    });
+
     test('Protected routes require authentication or redirect', async () => {
       const res = await request(app).post(PrivateRoutes.enterAccessCode).send({});
 

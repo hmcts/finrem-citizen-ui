@@ -67,7 +67,7 @@ export class CheckUploadPage extends BasePage {
       hasText: 'uploaded the correct documents',
     });
     this.cannotDeleteWarning = this.page.getByText(
-      'You should carefully check all of the documents you want to upload. You will not be able to delete any documents once you submit. If you need to remove or replace a document now, go back to the previous page.',
+      'You should carefully check all of the documents you want to upload. You will not be able to delete any documents once you submit them. If you need to remove or replace a document now, go back to the previous page.',
       { exact: true }
     );
     this.uploadMoreQuestion = this.page.getByText('Do you want to upload any other documents?', { exact: true });
@@ -98,7 +98,7 @@ export class CheckUploadPage extends BasePage {
       exact: true,
     });
     this.sendToOtherPartyIntro = this.page.getByText(
-      'For full transparency between you and the other party, you need to serve these documents on them, or their solicitor if they have one.',
+      'You must send these documents to the other party, or their solicitor if they have one.',
       { exact: true }
     );
     this.sendToOtherPartyCourtOrderText = this.page.getByText(
@@ -139,7 +139,7 @@ export class CheckUploadPage extends BasePage {
       { exact: false }
     );
     this.confirmationJudgeReviewText = this.page.getByText(
-      'ready for the judge to review at your hearing',
+      'ready for the judge to review.',
       { exact: false }
     );
     this.confirmationViewFromAccountLink = this.page.getByRole('link', {

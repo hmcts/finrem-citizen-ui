@@ -6,6 +6,8 @@
 
 {% extends "template.njk" %}
 
+{% set pageTitle = "Check your uploaded documents" %}
+
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -27,7 +29,7 @@
         }) }}
       {% endif %}
 
-      <h1 class="govuk-heading-l">Check your uploaded documents</h1>
+      <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
 
       <p class="govuk-body">Make sure you have:</p>
       <ul class="govuk-list govuk-list--bullet">
@@ -36,7 +38,7 @@
       </ul>
 
       <p class="govuk-body">
-        You should carefully check all of the documents you want to upload. You will not be able to delete any documents once you submit. If you need to remove or replace a document now, go back to the previous page.
+        You should carefully check all of the documents you want to upload. You will not be able to delete any documents once you submit them. If you need to remove or replace a document now, go back to the previous page.
       </p>
 
       {% if data.documentGroups and data.documentGroups.length > 0 %}

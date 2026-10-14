@@ -10,7 +10,7 @@ describe('Upload confirmation view contract tests', () => {
     expect(confirmationTemplate).toContain('Documents uploaded');
     expect(confirmationTemplate).toContain('What happens next');
     expect(confirmationTemplate).toContain('Your documents have been uploaded and have been saved to your case');
-    expect(confirmationTemplate).toContain('ready for the judge to review at your hearing');
+    expect(confirmationTemplate).toContain('ready for the judge to review.');
     expect(confirmationTemplate).toContain('You can come back anytime to upload more documents.');
     expect(confirmationTemplate).toContain('You will receive an email to confirm that the upload was successful.');
   });

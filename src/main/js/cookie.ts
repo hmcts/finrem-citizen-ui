@@ -1,6 +1,7 @@
 import cookieManager from '@hmcts/cookie-manager';
 
-const preferencesCookieName = 'cookie-preferences';
+import { COOKIE_PREFERENCES_COOKIE_NAME } from '../constants/cookies';
+
 const COOKIE_PREFERENCE_ON = 'on';
 
 function setDynatraceConsent(preferences: { apm?: string }): void {
@@ -48,14 +49,14 @@ cookieManager.on('PreferenceFormSubmitted', () => {
 export function initCookieBanner(): void {
   cookieManager.init({
     userPreferences: {
-      cookieName: preferencesCookieName,
+      cookieName: COOKIE_PREFERENCES_COOKIE_NAME,
       cookieSecure: window.location.protocol === 'https:',
     },
     cookieManifest: [
       {
         categoryName: 'essential',
         optional: false,
-        cookies: [preferencesCookieName],
+        cookies: [COOKIE_PREFERENCES_COOKIE_NAME],
       },
       {
         categoryName: 'analytics',

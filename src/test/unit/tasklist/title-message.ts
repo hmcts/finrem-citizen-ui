@@ -10,7 +10,7 @@ describe('Task list title message component tests', () => {
 
     expect(output).toContain('Documents to submit before your hearing on 22 January 2026');
     expect(output).toContain(
-      "You must complete and submit all the documents listed below by the stated dates. Once submitted, the documents will be added to your case, ready for the judge to review at your hearing. The related task on this list will be marked as 'done'."
+      "You must complete and submit all the documents listed below by the stated dates. Once submitted, the documents will be added to your case, ready for the judge to review. The related task on this list will be marked as 'done'."
     );
   });
 });

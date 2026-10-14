@@ -45,14 +45,17 @@ export class BeforeYouStartPage extends BasePage {
     this.backLink = this.page.getByRole('link', { name: 'Back', exact: true });
     this.youShouldIntro = this.page.getByText('You should:', { exact: true });
     this.courtOrderBullet = this.page.getByText('check the court order you have received', { exact: true });
-    this.prepareDocumentsBullet = this.page.getByText('prepare all of the documents you wish to upload', { exact: true });
+    this.prepareDocumentsBullet = this.page.getByText(
+      'prepare all the documents the court order says you must send to the court',
+      { exact: true }
+    );
     this.namingDocumentsHeader = this.page.getByRole('heading', { name: 'Naming your documents' });
     this.namingGuidanceText = this.page.getByText(
       'To help the court identify and assess your documents, make sure you name them appropriately, for example, [name]-bankstatement-[month][year].',
       { exact: false }
     );
     this.namingRenameText = this.page.getByText(
-      'Some of your documents may be automatically renamed when you upload them. We will tell you if your document will be renamed as you upload them.',
+      'Some of your documents may be automatically renamed when you upload them. We will tell you if your documents will be renamed as you upload them.',
       { exact: false }
     );
     this.afterSubmittedHeader = this.page.getByRole('heading', { name: 'After you have submitted' });
@@ -65,7 +68,7 @@ export class BeforeYouStartPage extends BasePage {
       { exact: false }
     );
     this.transparencyResponsibilitiesText = this.page.getByText(
-      'For full transparency between you and the other party, you will need to send any documents you upload here to them, or to their solicitor if they have one.',
+      'You must send the documents you upload here to the other party, or their solicitor if they have one.',
       { exact: false }
     );
     this.unableToSendDetails = this.page.locator('details').filter({
