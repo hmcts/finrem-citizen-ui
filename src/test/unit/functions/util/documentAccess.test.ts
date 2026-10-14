@@ -19,12 +19,12 @@ describe('documentAccess', () => {
       const result = getCaseDocumentsByRole(CaseRole.APPLICANT, {
         applicantDocCollection: applicantDocs,
         respondentDocCollection: respondentDocs,
-        fdrApplicantDocCollection: fdrApplicantDocCollection,
-        fdrRespondentDocCollection: fdrRespondentDocCollection,
-        divorceApplicantDocCollection: divorceApplicantDocCollection,
-        divorceRespondentDocCollection: divorceRespondentDocCollection,
-        hearingApplicantDocCollection: hearingApplicantDocCollection,
-        hearingRespondentDocCollection: hearingRespondentDocCollection,
+        fdrApplicantDocCollection,
+        fdrRespondentDocCollection,
+        divorceApplicantDocCollection,
+        divorceRespondentDocCollection,
+        hearingApplicantDocCollection,
+        hearingRespondentDocCollection,
       });
 
       expect(result).toEqual(applicantDocs.concat(fdrApplicantDocCollection, divorceApplicantDocCollection, hearingApplicantDocCollection));
@@ -34,12 +34,12 @@ describe('documentAccess', () => {
       const result = getCaseDocumentsByRole(CaseRole.RESPONDENT, {
         applicantDocCollection: applicantDocs,
         respondentDocCollection: respondentDocs,
-        fdrApplicantDocCollection: fdrApplicantDocCollection,
-        fdrRespondentDocCollection: fdrRespondentDocCollection,
-        divorceApplicantDocCollection: divorceApplicantDocCollection,
-        divorceRespondentDocCollection: divorceRespondentDocCollection,
-        hearingApplicantDocCollection: hearingApplicantDocCollection,
-        hearingRespondentDocCollection: hearingRespondentDocCollection,
+        fdrApplicantDocCollection,
+        fdrRespondentDocCollection,
+        divorceApplicantDocCollection,
+        divorceRespondentDocCollection,
+        hearingApplicantDocCollection,
+        hearingRespondentDocCollection,
       });
 
       expect(result).toEqual(respondentDocs.concat(fdrRespondentDocCollection, divorceRespondentDocCollection, hearingRespondentDocCollection));

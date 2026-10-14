@@ -1886,7 +1886,7 @@ describe('General Upload Routes', () => {
               { text: 'Test-FDR.docx' },
             ],
               [
-              { text: "" },
+              { text: '' },
               { text: 'Some hearing doc with null timestamp' },
               { text: 'Test-hearing-null-timestamp.docx' },
             ],

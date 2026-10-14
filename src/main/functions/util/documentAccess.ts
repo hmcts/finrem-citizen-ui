@@ -18,7 +18,7 @@ export function getCaseDocumentsByRole<T>(
   caseRole: CaseRole,
   caseData?: CaseRoleDocumentCollections<T>
 ): T[] {
-  var previousDocs: Array<T> = [];
+  var previousDocs: T[] = [];
   if (caseRole === CaseRole.APPLICANT) {
     return previousDocs.concat(
       caseData?.applicantDocCollection ?? [], 
