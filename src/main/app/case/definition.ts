@@ -866,7 +866,6 @@ export interface FinremCaseData extends HasCaseDocument {
   divorceRespondentDocCollection: CitizenDocumentCollection[];
   hearingApplicantDocCollection: CitizenDocumentCollection[];
   hearingRespondentDocCollection: CitizenDocumentCollection[];
-
   ChildSupportAgencyCalculationMade: YesOrNo;
   ChildSupportAgencyCalculationReason: string;
   otherCollection: OtherDocumentCollection[];
