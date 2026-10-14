@@ -12,7 +12,7 @@ import type {
 import { RouteNames } from '../../constants';
 import { FileUploadInputFieldNames } from '../../constants/file-upload';
 import { extractDocumentIdFromUrl, getCaseDocumentsByRole } from '../../functions/util/documentAccess';
-import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../../functions/util/documentUtil';
+import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey } from '../../functions/util/documentUtil';
 import { oidcMiddleware } from '../../middleware';
 import { GENERAL_UPLOAD_BASE_URL, UploadStepId, uploadSteps } from '../../steps/general-upload-sequence';
 
@@ -97,7 +97,10 @@ function getUploadedFilesByCombinedFormat(req: Request): Record<string, { id: st
   return uploadedFilesByCombinedFormat;
 }
 
-function getDocumentGroupsForCheckPage(req: Request): { groupKey: string; label: string; files: { id: string; filename: string; url: string; displayFilename: string }[]; willCombine: boolean }[] {
+// This has bug,  see workaround implemented in DFR-5760.
+// When combined files are enabled, the groupKey in the result must reflect the categorisation group.
+// At the moment, on 'Check your uploaded documents' the first file in the group is chosen, and the label for that used.
+function getCategorisedDocumentGroupsForCheckPage(req: Request): { groupKey: string; label: string; files: { id: string; filename: string; url: string; displayFilename: string }[]; willCombine: boolean }[] {
   const filesByCombinedFormat = getUploadedFilesByCombinedFormat(req);
   const selectedDocumentTypes = getSelectedDocumentTypesForDisplay(req);
 
@@ -132,6 +135,50 @@ function getDocumentGroupsForCheckPage(req: Request): { groupKey: string; label:
         displayFilename: f.displayFilename,
       })),
       willCombine: isCombinedFormat,
+    });
+  });
+
+  return groups;
+}
+
+/**
+ * Builds document groups for display on the check page.
+ *
+ * Groups are the selected document type labels, falling back to the document group name when no
+ * label is available. Preserves file details and sets willCombine to false, as combined files not supported yet.
+ * Workround for DFR-5760.  
+ *
+ * @param req - Express request containing uploaded files and selected document types.
+ * @returns Document groups with their keys, labels, file details, and combination flags.
+ */
+function getDocumentLabelsForCheckPage(req: Request): { groupKey: string; label: string; files: { id: string; filename: string; url: string; displayFilename: string }[]; willCombine: boolean }[] {
+  const filesByCombinedFormat = getUploadedFilesByType(req);
+  const selectedDocumentTypes = getSelectedDocumentTypesForDisplay(req);
+
+  const labelMap = new Map<string, string>();
+  selectedDocumentTypes.forEach(docType => {
+    labelMap.set(docType.value, docType.label);
+  });
+
+  const groups: { groupKey: string; label: string; files: { id: string; filename: string; url: string; displayFilename: string }[]; willCombine: boolean }[] = [];
+
+  // Process each group
+  Object.entries(filesByCombinedFormat).forEach(([groupKey, files]) => {
+    // Check if this is a combined format or original document type
+    let label: string;
+    // For non-combined, use the original document type label
+    label = labelMap.get(groupKey) || groupKey;
+
+    groups.push({
+      groupKey,
+      label,
+      files: files.map(f => ({
+        id: f.id,
+        filename: f.filename,
+        url: f.url,
+        displayFilename: f.displayFilename,
+      })),
+      willCombine: false,
     });
   });
 
@@ -186,7 +233,7 @@ export default function setupGeneralUploadRoute(app: Application): void {
         // removedDocType is already kebab-case from DocumentSelection
         // but uploaded DocumentType is an enum value, so normalize it
         const removedDocTypeKey = toDocumentTypeKey(removedDocType);
-                       req.session.documents.documentDetails =
+        req.session.documents.documentDetails =
           req.session.documents.documentDetails.filter(doc => {
             const uploadedDocTypeKey = doc.value?.DocumentType
               ? toDocumentTypeKey(doc.value.DocumentType)
@@ -505,4 +552,34 @@ function formatUploadDate(timestamp: string): string {
     .replace(',', ' at')
     .replace(' am', 'am')
     .replace(' pm', 'pm');
+}
+
+/**
+ * Gets document groups for display on the check page.  Outcome largely influenced by isCombiningEnabled.
+ *
+ * Returns group categories when document combining is enabled, like "supporting financial documents".
+ * otherwise, returns groups that relate to the document type, like "P60".
+ *
+ * @param req - Express request containing uploaded files and selected document types.
+ * @returns Document groups with their keys, labels, file details, and combination flags.
+ */
+function getDocumentGroupsForCheckPage(req: Request): {
+  groupKey: string;
+  label: string;
+  files: {
+    id: string;
+    filename: string;
+    url: string;
+    displayFilename: string;
+  }[];
+  willCombine: boolean;
+}[] {
+
+  // pt todo - needs a test
+  // pt todo - needs to be an env var.
+  const isCombiningEnabled = false;
+
+  return isCombiningEnabled
+    ? getCategorisedDocumentGroupsForCheckPage(req)
+    : getDocumentLabelsForCheckPage(req);
 }
