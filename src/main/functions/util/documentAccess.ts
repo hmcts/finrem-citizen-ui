@@ -18,21 +18,20 @@ export function getCaseDocumentsByRole<T>(
   caseRole: CaseRole,
   caseData?: CaseRoleDocumentCollections<T>
 ): T[] {
-  var previousDocs: T[] = [];
   if (caseRole === CaseRole.APPLICANT) {
-    return previousDocs.concat(
-      caseData?.applicantDocCollection ?? [], 
-      caseData?.fdrApplicantDocCollection ?? [], 
-      caseData?.divorceApplicantDocCollection ?? [], 
-      caseData?.hearingApplicantDocCollection ?? []
-    );
+    return [
+      ...(caseData?.applicantDocCollection ?? []),
+      ...(caseData?.fdrApplicantDocCollection ?? []),
+      ...(caseData?.divorceApplicantDocCollection ?? []),
+      ...(caseData?.hearingApplicantDocCollection ?? [])
+    ];
   } else if (caseRole === CaseRole.RESPONDENT) {
-    return previousDocs.concat(
-      caseData?.respondentDocCollection ?? [], 
-      caseData?.fdrRespondentDocCollection ?? [], 
-      caseData?.divorceRespondentDocCollection ?? [], 
-      caseData?.hearingRespondentDocCollection ?? []
-    );
+    return [
+      ...(caseData?.respondentDocCollection ?? []),
+      ...(caseData?.fdrRespondentDocCollection ?? []),
+      ...(caseData?.divorceRespondentDocCollection ?? []),
+      ...(caseData?.hearingRespondentDocCollection ?? [])
+    ];
   }
 
   throw new Error(`Unsupported case role: ${caseRole}`);
