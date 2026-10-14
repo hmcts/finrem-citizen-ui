@@ -5,33 +5,49 @@ import { extractDocumentIdFromUrl, getCaseDocumentsByRole } from '../../../../ma
 
 describe('documentAccess', () => {
   describe('getCaseDocumentsByRole', () => {
-    it('returns applicant documents for applicant role', () => {
-      const applicantDocs = [{ id: 'a1' }, { id: 'a2' }];
-      const respondentDocs = [{ id: 'r1' }];
 
+    const applicantDocs = [{ id: 'a1' }, { id: 'a2' }];
+    const respondentDocs = [{ id: 'r1' }];
+    const fdrApplicantDocCollection = [{ id: 'fdr-a1' }];
+    const fdrRespondentDocCollection = [{ id: 'fdr-r1' }];
+    const divorceApplicantDocCollection = [{ id: 'divorce-a1' }];
+    const divorceRespondentDocCollection = [{ id: 'divorce-r1' }];
+    const hearingApplicantDocCollection = [{ id: 'hearing-a1' }];
+    const hearingRespondentDocCollection = [{ id: 'hearing-r1' }];
+    
+    it('returns applicant documents for applicant role', () => {
       const result = getCaseDocumentsByRole(CaseRole.APPLICANT, {
-        citizenApplicantDocument: applicantDocs,
-        citizenRespondentDocument: respondentDocs,
+        applicantDocCollection: applicantDocs,
+        respondentDocCollection: respondentDocs,
+        fdrApplicantDocCollection: fdrApplicantDocCollection,
+        fdrRespondentDocCollection: fdrRespondentDocCollection,
+        divorceApplicantDocCollection: divorceApplicantDocCollection,
+        divorceRespondentDocCollection: divorceRespondentDocCollection,
+        hearingApplicantDocCollection: hearingApplicantDocCollection,
+        hearingRespondentDocCollection: hearingRespondentDocCollection,
       });
 
-      expect(result).toEqual(applicantDocs);
+      expect(result).toEqual(applicantDocs.concat(fdrApplicantDocCollection, divorceApplicantDocCollection, hearingApplicantDocCollection));
     });
 
     it('returns respondent documents for respondent role', () => {
-      const applicantDocs = [{ id: 'a1' }];
-      const respondentDocs = [{ id: 'r1' }, { id: 'r2' }];
-
       const result = getCaseDocumentsByRole(CaseRole.RESPONDENT, {
-        citizenApplicantDocument: applicantDocs,
-        citizenRespondentDocument: respondentDocs,
+        applicantDocCollection: applicantDocs,
+        respondentDocCollection: respondentDocs,
+        fdrApplicantDocCollection: fdrApplicantDocCollection,
+        fdrRespondentDocCollection: fdrRespondentDocCollection,
+        divorceApplicantDocCollection: divorceApplicantDocCollection,
+        divorceRespondentDocCollection: divorceRespondentDocCollection,
+        hearingApplicantDocCollection: hearingApplicantDocCollection,
+        hearingRespondentDocCollection: hearingRespondentDocCollection,
       });
 
-      expect(result).toEqual(respondentDocs);
+      expect(result).toEqual(respondentDocs.concat(fdrRespondentDocCollection, divorceRespondentDocCollection, hearingRespondentDocCollection));
     });
 
     it('returns empty array when role collection is missing', () => {
       const result = getCaseDocumentsByRole(CaseRole.APPLICANT, {
-        citizenRespondentDocument: [{ id: 'r1' }],
+        respondentDocCollection: [{ id: 'r1' }],
       });
 
       expect(result).toEqual([]);

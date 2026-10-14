@@ -4,18 +4,35 @@ const DUMMY_BASE_URL = 'http://localhost';
 const DOCUMENT_PATH_SEGMENT = 'documents';
 
 type CaseRoleDocumentCollections<T> = {
-  citizenApplicantDocument?: T[];
-  citizenRespondentDocument?: T[];
+  applicantDocCollection?: T[];
+  respondentDocCollection?: T[];
+  fdrApplicantDocCollection?: T[];
+  fdrRespondentDocCollection?: T[];
+  divorceApplicantDocCollection?: T[];
+  divorceRespondentDocCollection?: T[];
+  hearingApplicantDocCollection?: T[];
+  hearingRespondentDocCollection?: T[];
 };
 
 export function getCaseDocumentsByRole<T>(
   caseRole: CaseRole,
   caseData?: CaseRoleDocumentCollections<T>
 ): T[] {
+  var previousDocs: Array<T> = [];
   if (caseRole === CaseRole.APPLICANT) {
-    return caseData?.citizenApplicantDocument ?? [];
+    return previousDocs.concat(
+      caseData?.applicantDocCollection ?? [], 
+      caseData?.fdrApplicantDocCollection ?? [], 
+      caseData?.divorceApplicantDocCollection ?? [], 
+      caseData?.hearingApplicantDocCollection ?? []
+    );
   } else if (caseRole === CaseRole.RESPONDENT) {
-    return caseData?.citizenRespondentDocument ?? [];
+    return previousDocs.concat(
+      caseData?.respondentDocCollection ?? [], 
+      caseData?.fdrRespondentDocCollection ?? [], 
+      caseData?.divorceRespondentDocCollection ?? [], 
+      caseData?.hearingRespondentDocCollection ?? []
+    );
   }
 
   throw new Error(`Unsupported case role: ${caseRole}`);

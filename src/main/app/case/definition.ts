@@ -856,8 +856,17 @@ export interface FinremCaseData extends HasCaseDocument {
   PBAPaymentReference: string;
   applicantAccessCodes: AccessCodeCollection[];
   respondentAccessCodes: AccessCodeCollection[];
-  citizenApplicantDocument: CitizenDocumentCollection[];
-  citizenRespondentDocument: CitizenDocumentCollection[];
+  uploadedCuiApplicantDocuments: CitizenDocumentCollection[];
+  uploadedCuiRespondentDocuments: CitizenDocumentCollection[];
+  applicantDocCollection: CitizenDocumentCollection[];
+  respondentDocCollection: CitizenDocumentCollection[];
+  fdrApplicantDocCollection: CitizenDocumentCollection[];
+  fdrRespondentDocCollection: CitizenDocumentCollection[];
+  divorceApplicantDocCollection: CitizenDocumentCollection[];
+  divorceRespondentDocCollection: CitizenDocumentCollection[];
+  hearingApplicantDocCollection: CitizenDocumentCollection[];
+  hearingRespondentDocCollection: CitizenDocumentCollection[];
+
   ChildSupportAgencyCalculationMade: YesOrNo;
   ChildSupportAgencyCalculationReason: string;
   otherCollection: OtherDocumentCollection[];
