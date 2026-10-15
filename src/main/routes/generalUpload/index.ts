@@ -1,8 +1,8 @@
+import config from 'config';
 import type { Application, NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { LoggerInstance } from 'winston';
 
-import config from 'config';
 import { CaseRole, CitizenUploadDocument, ListValue } from '../../app/case/definition';
 import { AppRequest } from '../../app/controller/AppRequest';
 import { DocumentManagerController } from '../../app/document/DocumentManagerController';

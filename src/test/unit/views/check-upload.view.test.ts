@@ -60,7 +60,7 @@ describe('check-upload view', () => {
             '<h3 class="govuk-heading-m govuk-!-margin-top-6">P60</h3>'
         );
 
-        expect(html).toContain('These documents will be combined into one document called')
+        expect(html).toContain('These documents will be combined into one document called');
         expect(html).toContain('loan-statement.pdf');
         expect(html).toContain('p45.pdf');
         expect(html).toContain('p60.pdf');
