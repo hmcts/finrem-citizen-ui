@@ -8008,10 +8008,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dotenv@npm:^17.3.1":
-  version: 17.4.2
-  resolution: "dotenv@npm:17.4.2"
-  checksum: 10/ca1b6f54d58e39914901e1518958e86083aca8deb5aa2e7f2a51acd53291d97852479b0ab26ed949b6a45a0e9adcc7b0d1c3c72375e8ea670f7005e341c6daba
+"dotenv@npm:^18.0.0":
+  version: 18.0.7
+  resolution: "dotenv@npm:18.0.7"
+  bin:
+    dotenv: dist/index.cjs
+  checksum: 10/c29709df340c67bd795a646952be837c61974eb158a395edba2e69aaac33bcc6710e9eb4f1d40e5d2db8550e1bd436a7f776210e594ee4202777c8d85edbd0f0
   languageName: node
   linkType: hard
 
@@ -8958,7 +8960,7 @@ __metadata:
     csrf-sync: "npm:^4.2.1"
     css-loader: "npm:7.1.4"
     debug: "npm:4.4.3"
-    dotenv: "npm:^17.3.1"
+    dotenv: "npm:^18.0.0"
     eslint: "npm:^10.2.0"
     eslint-plugin-jest: "npm:^29.0.0"
     eslint-plugin-simple-import-sort: "npm:^14.0.0"
