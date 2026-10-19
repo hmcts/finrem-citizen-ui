@@ -340,12 +340,22 @@ describe('CaseDocumentManagementClient', () => {
   describe('file renaming', () => {
     beforeEach(() => {
       jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] });
-      jest.setSystemTime(new Date('2026-06-23T14:00:00.000Z'));
+      jest.setSystemTime(new Date(2026, 5, 23, 14, 0));
     });
 
     afterEach(() => {
       jest.useRealTimers();
     });
+
+    const getUploadedFilenames = (): string[] => {
+      const formData = mockAxios.post.mock.calls[0][1] as FormData;
+      const body = formData.getBuffer().toString('utf8');
+
+      return Array.from(
+        body.matchAll(/Content-Disposition: form-data; name="files"; filename="([^"]+)"/g),
+        match => match[1]
+      );
+    };
 
     test('renames files for auto-rename document types', async () => {
       mockAxios.post.mockResolvedValue({
@@ -392,6 +402,7 @@ describe('CaseDocumentManagementClient', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026.pdf');
+      expect(getUploadedFilenames()).toEqual(['JohnSmith-FormFM1-23-06-2026.pdf']);
     });
 
     test('does not rename files when documentType is not provided', async () => {
@@ -428,6 +439,7 @@ describe('CaseDocumentManagementClient', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].originalDocumentName).toBe('original-file.pdf');
+      expect(getUploadedFilenames()).toEqual(['original-file.pdf']);
     });
 
     test('does not rename files for document types without rename format', async () => {
@@ -466,6 +478,7 @@ describe('CaseDocumentManagementClient', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].originalDocumentName).toBe('bank-statement.pdf');
+      expect(getUploadedFilenames()).toEqual(['bank-statement.pdf']);
     });
 
     test('appends counter to duplicate filenames', async () => {
@@ -473,7 +486,7 @@ describe('CaseDocumentManagementClient', () => {
         data: {
           documents: [
             {
-              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026-1.pdf',
+              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026 14-00 (1).pdf',
               size: 100,
               mimeType: 'application/pdf',
               createdOn: '2024-01-01',
@@ -513,7 +526,12 @@ describe('CaseDocumentManagementClient', () => {
       });
 
       expect(result).toHaveLength(1);
-      expect(result[0].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026-1.pdf');
+      expect(result[0].originalDocumentName).toBe(
+        'JohnSmith-FormFM1-23-06-2026 14-00 (1).pdf'
+      );
+      expect(getUploadedFilenames()).toEqual([
+        'JohnSmith-FormFM1-23-06-2026 14-00 (1).pdf',
+      ]);
     });
 
     test('handles multiple files in same upload with duplicate names', async () => {
@@ -525,11 +543,11 @@ describe('CaseDocumentManagementClient', () => {
               _links: {},
             },
             {
-              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026-1.pdf',
+              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026 14-00 (1).pdf',
               _links: {},
             },
             {
-              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026-2.pdf',
+              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026 14-00 (2).pdf',
               _links: {},
             },
           ],
@@ -584,8 +602,48 @@ describe('CaseDocumentManagementClient', () => {
 
       expect(result).toHaveLength(3);
       expect(result[0].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026.pdf');
-      expect(result[1].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026-1.pdf');
-      expect(result[2].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026-2.pdf');
+      expect(result[1].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026 14-00 (1).pdf');
+      expect(result[2].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026 14-00 (2).pdf');
+      expect(getUploadedFilenames()).toEqual([
+        'JohnSmith-FormFM1-23-06-2026.pdf',
+        'JohnSmith-FormFM1-23-06-2026 14-00 (1).pdf',
+        'JohnSmith-FormFM1-23-06-2026 14-00 (2).pdf',
+      ]);
+    });
+
+    test('continues numbering when existing filenames have different timestamps', async () => {
+      mockAxios.post.mockResolvedValue({ data: { documents: [] } });
+
+      const files: Express.Multer.File[] = [
+        {
+          fieldname: 'files',
+          originalname: 'my-document.pdf',
+          encoding: '7bit',
+          mimetype: 'application/pdf',
+          size: 4,
+          buffer: Buffer.from('file'),
+          stream: Readable.from([]),
+          destination: '',
+          filename: '',
+          path: '',
+        },
+      ];
+
+      await client.create({
+        files,
+        classification: Classification.Public,
+        documentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
+        caseUserName: 'JohnSmith',
+        existingFilenames: [
+          'JohnSmith-FormFM1-23-06-2026.pdf',
+          'JohnSmith-FormFM1-23-06-2026 13-10 (1).pdf',
+          'JohnSmith-FormFM1-23-06-2026 13-50 (2).pdf',
+        ],
+      });
+
+      expect(getUploadedFilenames()).toEqual([
+        'JohnSmith-FormFM1-23-06-2026 14-00 (3).pdf',
+      ]);
     });
   });
 });
