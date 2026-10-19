@@ -45,11 +45,16 @@ export class DocumentManagerController {
     const uploadedFiles = [uploadedFile];
     const originalFilenames = [uploadedFile.originalname];
 
+    const existingFilenames = (req.session.documents?.documentDetails ?? [])
+      .map(document => document.value?.DocumentFileName)
+      .filter((filename): filename is string => Boolean(filename));
+
     const filesCreated = await this.getApiClient(user).create({
       files: uploadedFiles,
       classification: Classification.Public,
       documentType,
       caseUserName: req.session.caseUserName,
+      existingFilenames,
     });
 
     const newUploads: ListValue<Partial<CitizenUploadDocument> | null>[] =
