@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import type { NextFunction, Request, Response } from 'express';
 
-import { ViewNames } from '../../../main/constants';
+import { RouteNames, ViewNames } from '../../../main/constants';
 import { globalErrorHandler } from '../../../main/middleware/global-error-handler';
 import { AppInsights } from '../../../main/modules/appinsights';
 
@@ -22,6 +22,7 @@ type MockResponse = Response & {
   locals: Record<string, unknown>;
   status: jest.MockedFunction<(statusCode: number) => Response>;
   render: jest.MockedFunction<(view: string) => void>;
+  redirect: jest.MockedFunction<(url: string) => void>;
 };
 
 type MockLogger = {
@@ -43,6 +44,7 @@ function makeReq(overrides: Partial<Request> = {}): Request {
     method: 'GET',
     originalUrl: '/problem?x=1',
     url: '/problem?x=1',
+    session: { id: 'session-id', user: { id: 'user-id' }, caseNumber: '12345' },
     ...overrides,
   } as unknown as Request;
 }
@@ -53,6 +55,7 @@ function makeRes(headersSent = false): MockResponse {
     locals: {},
     status: jest.fn(),
     render: jest.fn(),
+    redirect: jest.fn(),
   } as unknown as MockResponse;
 
   res.status.mockReturnValue(res);
@@ -73,7 +76,7 @@ describe('globalErrorHandler', () => {
     trackExceptionSpy = jest.spyOn(AppInsights, 'trackException').mockImplementation(() => undefined);
   });
 
-  it('renders the error page and tracks Error instances in AppInsights', () => {
+  it('renders the error page and tracks Error instances in AppInsight with session data', () => {
     process.env.NODE_ENV = 'production';
     const error = Object.assign(new Error('Request failed'), { status: 400 });
     const req = makeReq({ method: 'POST', originalUrl: '/submit', url: '/submit' });
@@ -83,6 +86,10 @@ describe('globalErrorHandler', () => {
 
     expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Request failed'));
     expect(trackExceptionSpy).toHaveBeenCalledWith(error, {
+      errorId: expect.any(String),
+      idamUserId: 'user-id',
+      caseReference: '12345',
+      sessionId: 'session-id',
       method: 'POST',
       statusCode: '400',
       url: '/submit',
@@ -90,6 +97,31 @@ describe('globalErrorHandler', () => {
     expect(res.locals.message).toBe('Request failed');
     expect(res.locals.error).toEqual({});
     expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.render).toHaveBeenCalledWith(ViewNames.Error);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('renders the error page and tracks Error instances in AppInsight without session data', () => {
+    process.env.NODE_ENV = 'production';
+    const error = Object.assign(new Error('Request failed'), { status: 403 });
+    const req = makeReq({ method: 'POST', originalUrl: '/login', url: '/login', session: undefined });
+    const res = makeRes();
+
+    globalErrorHandler(error, req, res, next);
+
+    expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Request failed'));
+    expect(trackExceptionSpy).toHaveBeenCalledWith(error, {
+      errorId: expect.any(String),
+      idamUserId: 'not-available',
+      caseReference: 'not-available',
+      sessionId: 'not-available',
+      method: 'POST',
+      statusCode: '403',
+      url: '/login',
+    });
+    expect(res.locals.message).toBe('Request failed');
+    expect(res.locals.error).toEqual({});
+    expect(res.status).toHaveBeenCalledWith(403);
     expect(res.render).toHaveBeenCalledWith(ViewNames.Error);
     expect(next).not.toHaveBeenCalled();
   });
@@ -110,8 +142,13 @@ describe('globalErrorHandler', () => {
       next
     );
 
-    expect(mockLogger.error).toHaveBeenCalledWith('Object stack');
+    expect(mockLogger.error).toHaveBeenNthCalledWith(1, 
+      expect.stringContaining('Object stack') && expect.stringContaining('context='));
     expect(trackExceptionSpy).toHaveBeenCalledWith(expect.any(Error), {
+      errorId: expect.any(String),
+      idamUserId: 'user-id',
+      caseReference: '12345',
+      sessionId: 'session-id',
       method: 'PATCH',
       statusCode: '503',
       url: '/problem?x=1',
@@ -129,9 +166,13 @@ describe('globalErrorHandler', () => {
     globalErrorHandler({ status: 200 }, req, res, next);
 
     expect(trackExceptionSpy).toHaveBeenCalledWith(expect.any(Error), {
+      errorId: expect.any(String),
+      idamUserId: 'user-id',
+      caseReference: '12345',
       method: 'GET',
       statusCode: '500',
       url: '/fallback-url',
+      sessionId: 'session-id',
     });
     expect(res.locals.message).toBe('Unexpected error');
     expect(res.status).toHaveBeenCalledWith(500);
@@ -145,9 +186,13 @@ describe('globalErrorHandler', () => {
     globalErrorHandler('String failure', req, res, next);
 
     expect(trackExceptionSpy).toHaveBeenCalledWith(expect.any(Error), {
+      errorId: expect.any(String),
+      idamUserId: 'user-id',
+      caseReference: '12345',
       method: 'GET',
       statusCode: '500',
       url: '/problem?x=1',
+      sessionId: 'session-id',
     });
     expect(res.locals.message).toBe('String failure');
     expect(res.status).toHaveBeenCalledWith(500);
@@ -161,12 +206,37 @@ describe('globalErrorHandler', () => {
     globalErrorHandler(error, req, res, next);
 
     expect(trackExceptionSpy).toHaveBeenCalledWith(error, {
+      errorId: expect.any(String),
+      idamUserId: 'user-id',
+      caseReference: '12345',
       method: 'GET',
       statusCode: '500',
       url: '/problem?x=1',
+      sessionId: 'session-id',
     });
     expect(next).toHaveBeenCalledWith(error);
     expect(res.status).not.toHaveBeenCalled();
     expect(res.render).not.toHaveBeenCalled();
+  });
+
+  it('redirects to the CSRF error page for CSRF validation errors', () => {
+    const req = makeReq({ method: 'POST', originalUrl: '/submit', url: '/submit' });
+    const res = makeRes();
+
+    globalErrorHandler({ code: 'EBADCSRFTOKEN', status: 403, message: 'invalid csrf token' }, req, res, next);
+
+    expect(trackExceptionSpy).toHaveBeenCalledWith(expect.any(Error), {
+      errorId: expect.any(String),
+      idamUserId: 'user-id',
+      caseReference: '12345',
+      sessionId: 'session-id',
+      method: 'POST',
+      statusCode: '403',
+      url: '/submit',
+    });
+    expect(res.redirect).toHaveBeenCalledWith(RouteNames.csrfError);
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.render).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 });
