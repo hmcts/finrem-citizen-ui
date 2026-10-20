@@ -73,6 +73,6 @@
     "redisPrefix": "finrem-rate-limit:"
   },
   "documentUpload": {
-    "combiningEnabled": true
+    "combiningEnabled": false
   }
 }
