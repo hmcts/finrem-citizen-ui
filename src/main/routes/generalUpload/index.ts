@@ -558,7 +558,6 @@ function getDocumentGroupsForCheckPage(req: Request): {
   }[];
   willCombine: boolean;
 }[] {
-  // pt todo - needs a test
   const isCombiningEnabled = config.get<boolean>('documentUpload.combiningEnabled');
 
   return isCombiningEnabled
