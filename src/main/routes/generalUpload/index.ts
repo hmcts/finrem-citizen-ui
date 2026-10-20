@@ -11,6 +11,7 @@ import type {
 } from '../../app/document/PreviouslyUploadedDocumentClient';
 import { RouteNames } from '../../constants';
 import { FileUploadInputFieldNames } from '../../constants/file-upload';
+import { formatUploadDate } from '../../functions/util/dateUtils';
 import { extractDocumentIdFromUrl, getCaseDocumentsByRole } from '../../functions/util/documentAccess';
 import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey  } from '../../functions/util/documentUtil';
 import { oidcMiddleware } from '../../middleware';
@@ -489,20 +490,3 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#39;');
 }
 
-function formatUploadDate(timestamp: string): string {
-  const date = new Date(timestamp);
-
-  const formatted = date.toLocaleString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-
-  return formatted
-    .replace(',', ' at')
-    .replace(' am', 'am')
-    .replace(' pm', 'pm');
-}
