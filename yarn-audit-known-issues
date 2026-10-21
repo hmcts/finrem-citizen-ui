@@ -1,0 +1,6 @@
+[  
+  { "id": "@opentelemetry/propagator-jaeger" },
+  { "id": "@opentelemetry/sdk-trace-node" },
+  { "id": "@opentelemetry/sdk-trace-base" },
+  { "id": "@opentelemetry/sdk-trace-web" }
+]
