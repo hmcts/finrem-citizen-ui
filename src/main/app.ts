@@ -32,6 +32,9 @@ new PropertiesVolume().enableFor(app);
 new AppInsights().enable();
 new Nunjucks(developmentMode).enableFor(app);
 new Helmet(developmentMode).enableFor(app);
+new Session().enableFor(app);
+
+setupDev(app, developmentMode);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -45,7 +48,6 @@ app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));
 });
 
-new Session().enableFor(app);
 if (config.get<boolean>('useCSRFProtection')) {
   new CSRFToken().enableFor(app);
 }
@@ -62,8 +64,6 @@ glob
   .sync(__dirname + '/routes/**/*.+(ts|js)')
   .map(filename => require(filename))
   .forEach(route => route.default(app));
-
-setupDev(app, developmentMode);
 
 app.use((req, res) => {
   res.status(404);
