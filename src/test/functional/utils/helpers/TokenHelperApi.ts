@@ -143,7 +143,7 @@ export async function getUserToken(username: string, password: string): Promise<
   try {
     response = await axiosRequest<{ access_token: string; expires_in: number }>({
       method: 'post',
-      url: `${config.idamOidcUrl}/o/userinfo`,
+      url: `${config.idamOidcUrl}/o/token`,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
