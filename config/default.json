@@ -71,6 +71,8 @@
     "windowMs": 900000,
     "maxRequests": 100,
     "redisPrefix": "finrem-rate-limit:"
+  },
+  "documentUpload": {
+    "combiningEnabled": false
   }
-
 }
