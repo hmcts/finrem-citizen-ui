@@ -86,15 +86,66 @@ export function generateRenamedFilename(documentTypeValue: string, originalFilen
   if (preview) {
     return `${userName}-${format}-DD-MM-YYYY`;
   }
-  
+
   let baseFilename = `${userName}-${format}-${dateStr}`;
   let finalFilename = `${baseFilename}${extension}`;
-  
+
   let counter = 1;
   while (existingFilenames.includes(finalFilename)) {
     finalFilename = `${baseFilename}-${counter}${extension}`;
     counter++;
   }
-  
+
   return finalFilename;
+}
+
+export function makeFilenameUnique(baseFilename: string, existingFilenames: ReadonlySet<string>, now: Date = new Date()): string {
+  const dotIndex = baseFilename.lastIndexOf('.');
+
+  const stem = dotIndex === -1
+    ? baseFilename
+    : baseFilename.slice(0, dotIndex);
+
+  const extension = dotIndex === -1
+    ? ''
+    : baseFilename.slice(dotIndex);
+
+  //match previously numbered files, regardless of their timestamp.
+  //also recognise legacy filenames without parentheses.
+  const pattern = new RegExp(
+    `^${escapeRegExp(stem)} \\d{2}-\\d{2} (?:\\((\\d+)\\)|(\\d+))${escapeRegExp(extension)}$`
+  );
+
+  let hasMatchingFilename = existingFilenames.has(baseFilename);
+  let highestSuffix = 0;
+
+  for (const filename of existingFilenames) {
+    const match = filename.match(pattern);
+
+    if (match) {
+      hasMatchingFilename = true;
+
+      highestSuffix = Math.max(
+        highestSuffix,
+        Number(match[1] ?? match[2])
+      );
+    }
+  }
+
+  //keep the original naming convention for the first file.
+  if (!hasMatchingFilename) {
+    return baseFilename;
+  }
+
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const timestamp = `${hours}-${minutes}`;
+
+  const nextSuffix = highestSuffix + 1;
+
+  return `${stem} ${timestamp} (${nextSuffix})${extension}`;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
