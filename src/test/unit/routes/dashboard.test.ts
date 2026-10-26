@@ -197,4 +197,61 @@ describe('Dashboard Route', () => {
       })
     );
   });
+
+  it('should set isRepresented to true when user has representation case ', async () => {
+    const { res } = await callHandler({
+      caseNumber: '1234-5678-9012-3456',
+      user: {    caseRole: CaseRole.APPLICANT, hasNFDCase: true, isRepresented: true },
+      caseUserName: 'John Smith',
+      caseData: {
+        applicantFlags: { partyName: 'John Smith' },
+      },
+    });
+
+    expect(res.render).toHaveBeenCalledWith(
+      ViewNames.Dashboard,
+      expect.objectContaining({
+        isRepresented: true,
+        showPreviouslyUploaded: true,
+      })
+    );
+  });
+
+  it('should set isRepresented to false when user is not represented', async () => {
+    const { res } = await callHandler({
+      caseNumber: '1234-5678-9012-3456',
+      user: { caseRole: CaseRole.RESPONDENT, hasNFDCase: false, isRepresented: false },
+      caseUserName: 'Jane Doe',
+      caseData: {
+        respondentFlags: { partyName: 'Jane Doe' },
+      },
+    });
+
+    expect(res.render).toHaveBeenCalledWith(
+      ViewNames.Dashboard,
+      expect.objectContaining({
+        isRepresented: false,
+        hasDivorceCase: false,
+        showPreviouslyUploaded: true,
+      })
+    );
+  });
+
+  it('should default isRepresented to false when user object is missing', async () => {
+    const { res } = await callHandler({
+      caseNumber: '1234-5678-9012-3456',
+      caseUserName: 'Test User',
+      user: {
+        caseRole: CaseRole.APPLICANT,
+      },
+    });
+
+    expect(res.render).toHaveBeenCalledWith(
+      ViewNames.Dashboard,
+      expect.objectContaining({
+        isRepresented: false,
+        showPreviouslyUploaded: true,
+      })
+    );
+  });
 });

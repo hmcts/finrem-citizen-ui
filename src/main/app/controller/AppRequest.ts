@@ -27,4 +27,5 @@ export interface UserDetails {
   [key: string]: unknown;
   hasNFDCase?: boolean;
   caseRole?: CaseRole;
+  isRepresented?: boolean;
 }
