@@ -254,4 +254,22 @@ describe('Dashboard Route', () => {
       })
     );
   });
+
+  it('should set latestCaseUpdateTemplate to closed when case state is close', async () => {
+    const { res } = await callHandler({
+      caseNumber: '1234-5678-9012-3456',
+      user: { caseRole: CaseRole.APPLICANT, isRepresented: false },
+      caseUserName: 'Test User',
+      caseData: {
+        state: 'close',
+      },
+    });
+
+    expect(res.render).toHaveBeenCalledWith(
+      ViewNames.Dashboard,
+      expect.objectContaining({
+        latestCaseUpdateTemplate: 'closed',
+      })
+    );
+  });
 });

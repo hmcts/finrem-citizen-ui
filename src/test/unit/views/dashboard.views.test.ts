@@ -25,6 +25,7 @@ const renderDashboard = (overrides: Record<string, unknown> = {}): string =>
     userName: 'Test User',
     caseNumber: 'CASE123',
     isRepresented: false,
+    latestCaseUpdateTemplate: 'active',
     hasDivorceCase: false,
     showPreviouslyUploaded: true,
     contactEmail: 'test@example.com',
@@ -55,17 +56,24 @@ describe('Dashboard Views', () => {
   });
 
   test('shows represented message and hides upload CTA when isRepresented is true', () => {
-    const output = renderDashboard({ isRepresented: true });
+    const output = renderDashboard({ latestCaseUpdateTemplate: 'represented' });
 
     expect(output).toContain('You no longer have access to this case');
     expect(output).not.toContain('Go to document upload');
   });
 
   test('shows upload CTA when isRepresented is false', () => {
-    const output = renderDashboard({ isRepresented: false });
+    const output = renderDashboard({ latestCaseUpdateTemplate: 'active' });
 
     expect(output).toContain('Go to document upload');
     expect(output).not.toContain('You no longer have access to this case');
+  });
+
+  test('shows closed case message and hides upload CTA for closed template', () => {
+    const output = renderDashboard({ latestCaseUpdateTemplate: 'closed' });
+
+    expect(output).toContain('This case is now closed. You do not need to upload any more documents.');
+    expect(output).not.toContain('Go to document upload');
   });
 
   test('shows previously uploaded documents link when enabled', () => {

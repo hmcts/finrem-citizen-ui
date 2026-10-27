@@ -24,38 +24,8 @@
 
       <h2 class="govuk-heading-m">Latest information</h2>
 
-      {% if isRepresented %}
-        <p class="govuk-body">
-            You no longer have access to this case because you have informed the court that you are represented by a solicitor. Please contact your solicitor if you need information about your case or wish to discuss your next steps.  
-        </p>
-
-        <h2 class="govuk-heading-m">If you need help</h2>
-
-        <p class="govuk-body">
-            Court staff can assist you with questions about your application, but they cannot provide legal advice. For legal advice, please contact your solicitor or an independent legal adviser.  
-        </p>
-      {% elif isRepresented === false %}
-        <div class="finrem-dashboard-panel">
-          <p class="govuk-body">
-            You are involved in a contested financial remedy case. You may need to prepare some documents and upload them for the court before your next hearing. All documents you upload for the court must be emailed to other parties in the case.
-          </p>
-
-          <p class="govuk-body">
-            You will find instructions about which documents to prepare on the order you received from the court.
-          </p>
-
-          <div class="govuk-warning-text">
-            <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-            <strong class="govuk-warning-text__text">
-              <span class="govuk-visually-hidden">Warning</span>
-              You cannot use this service to submit applications such as the D11, or anything else that needs a court response, such as asking for an update from the court. You should email these to the court.
-            </strong>
-          </div>
-
-          <a href="/upload/before-you-start" role="button" draggable="false" class="govuk-button" data-module="govuk-button">
-            Go to document upload
-          </a>
-        </div>
+      {% if latestCaseUpdateTemplate %}
+        {% include "./partials/dashboard/latest-case-update/" + latestCaseUpdateTemplate + ".njk" %}
       {% endif %}
 
       <br>
