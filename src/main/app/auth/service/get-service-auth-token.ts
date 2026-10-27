@@ -36,7 +36,7 @@ export const initAuthToken = async (): Promise<void> => {
     getTokenFromApi().catch(error => {
       logger.error('Failed to refresh service authorisation token', error);
     });
-  }, 1000 * 60 * 60);
+  }, 1000 * 60); 
 };
 
 export const getServiceAuthToken = (): string => {
