@@ -19,7 +19,6 @@ export default function setupDashboardRoute(app: Application): void {
       res.render(ViewNames.Dashboard, {
         userName: req.session.caseUserName,
         caseNumber: req.session.caseNumber,
-        isRepresented,
         hasDivorceCase: user?.hasNFDCase ?? false,
         latestCaseUpdateTemplate,
         showPreviouslyUploaded: true,

@@ -198,7 +198,7 @@ describe('Dashboard Route', () => {
     );
   });
 
-  it('should set isRepresented to true when user has representation case ', async () => {
+  it('should set latestCaseUpdateTemplate to represented when user is represented', async () => {
     const { res } = await callHandler({
       caseNumber: '1234-5678-9012-3456',
       user: {    caseRole: CaseRole.APPLICANT, hasNFDCase: true, isRepresented: true },
@@ -211,13 +211,13 @@ describe('Dashboard Route', () => {
     expect(res.render).toHaveBeenCalledWith(
       ViewNames.Dashboard,
       expect.objectContaining({
-        isRepresented: true,
+        latestCaseUpdateTemplate: 'represented',
         showPreviouslyUploaded: true,
       })
     );
   });
 
-  it('should set isRepresented to false when user is not represented', async () => {
+  it('should set latestCaseUpdateTemplate to active when user is not represented', async () => {
     const { res } = await callHandler({
       caseNumber: '1234-5678-9012-3456',
       user: { caseRole: CaseRole.RESPONDENT, hasNFDCase: false, isRepresented: false },
@@ -230,14 +230,14 @@ describe('Dashboard Route', () => {
     expect(res.render).toHaveBeenCalledWith(
       ViewNames.Dashboard,
       expect.objectContaining({
-        isRepresented: false,
+        latestCaseUpdateTemplate: 'active',
         hasDivorceCase: false,
         showPreviouslyUploaded: true,
       })
     );
   });
 
-  it('should default isRepresented to false when user object is missing', async () => {
+  it('should set latestCaseUpdateTemplate to active when represented flag is missing', async () => {
     const { res } = await callHandler({
       caseNumber: '1234-5678-9012-3456',
       caseUserName: 'Test User',
@@ -249,7 +249,7 @@ describe('Dashboard Route', () => {
     expect(res.render).toHaveBeenCalledWith(
       ViewNames.Dashboard,
       expect.objectContaining({
-        isRepresented: false,
+        latestCaseUpdateTemplate: 'active',
         showPreviouslyUploaded: true,
       })
     );
