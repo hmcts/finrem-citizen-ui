@@ -2,7 +2,7 @@ import { Application, Request, Response } from 'express';
 
 import { UserDetails } from '../../app/controller/AppRequest';
 import { RouteNames, ViewNames } from '../../constants';
-import { getDashboardLatestUpdateTemplate } from '../../functions/util/dashboard-template-selector';
+import { getDashboardLatestCaseUpdateTemplate } from '../../functions/util/dashboard-template-selector';
 import { oidcMiddleware } from '../../middleware';
 
 export default function setupDashboardRoute(app: Application): void {
@@ -14,7 +14,7 @@ export default function setupDashboardRoute(app: Application): void {
       const isRepresented = user?.isRepresented ?? false;
       const caseState = req.session.caseData?.state;
 
-      const latestCaseUpdateTemplate = getDashboardLatestUpdateTemplate(isRepresented, caseState);
+      const latestCaseUpdateTemplate = getDashboardLatestCaseUpdateTemplate(isRepresented, caseState);
 
       res.render(ViewNames.Dashboard, {
         userName: req.session.caseUserName,

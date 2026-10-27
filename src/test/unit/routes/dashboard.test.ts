@@ -3,6 +3,7 @@ import type { Application, NextFunction, Request, Response } from 'express';
 
 import { CaseRole } from '../../../main/app/case/definition';
 import { RouteNames, ViewNames } from '../../../main/constants';
+import { DashboardLatestCaseUpdateTemplates } from '../../../main/functions/util/dashboard-template-selector';
 import setupDashboardRoute from '../../../main/routes/generalUpload/dashboard';
 
 jest.mock('../../../main/middleware', () => ({
@@ -211,7 +212,7 @@ describe('Dashboard Route', () => {
     expect(res.render).toHaveBeenCalledWith(
       ViewNames.Dashboard,
       expect.objectContaining({
-        latestCaseUpdateTemplate: 'represented',
+        latestCaseUpdateTemplate: DashboardLatestCaseUpdateTemplates.REPRESENTED,
         showPreviouslyUploaded: true,
       })
     );
@@ -230,7 +231,7 @@ describe('Dashboard Route', () => {
     expect(res.render).toHaveBeenCalledWith(
       ViewNames.Dashboard,
       expect.objectContaining({
-        latestCaseUpdateTemplate: 'active',
+        latestCaseUpdateTemplate: DashboardLatestCaseUpdateTemplates.ACTIVE,
         hasDivorceCase: false,
         showPreviouslyUploaded: true,
       })
@@ -249,7 +250,7 @@ describe('Dashboard Route', () => {
     expect(res.render).toHaveBeenCalledWith(
       ViewNames.Dashboard,
       expect.objectContaining({
-        latestCaseUpdateTemplate: 'active',
+        latestCaseUpdateTemplate: DashboardLatestCaseUpdateTemplates.ACTIVE,
         showPreviouslyUploaded: true,
       })
     );
@@ -268,7 +269,7 @@ describe('Dashboard Route', () => {
     expect(res.render).toHaveBeenCalledWith(
       ViewNames.Dashboard,
       expect.objectContaining({
-        latestCaseUpdateTemplate: 'closed',
+        latestCaseUpdateTemplate: DashboardLatestCaseUpdateTemplates.CLOSED,
       })
     );
   });
