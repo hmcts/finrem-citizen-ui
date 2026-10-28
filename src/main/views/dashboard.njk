@@ -25,7 +25,9 @@
       <h2 class="govuk-heading-m">Latest information</h2>
 
       {% if latestCaseUpdateTemplate %}
-        {% include "./partials/dashboard/latest-case-update/" + latestCaseUpdateTemplate + ".njk" %}
+        <div class="finrem-dashboard-panel">
+          {% include "./partials/dashboard/latest-case-update/" + latestCaseUpdateTemplate + ".njk" %}
+        </div>
       {% endif %}
 
       <br>

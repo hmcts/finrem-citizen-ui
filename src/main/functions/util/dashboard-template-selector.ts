@@ -1,24 +1,22 @@
 import { State } from '../../app/case/definition';
 
-export const DashboardLatestCaseUpdateTemplates = {
+export const DashboardLatestUpdateTemplates = {
   REPRESENTED: 'represented',
   CLOSED: 'closed',
   ACTIVE: 'active',
 } as const;
 
 export type DashboardLatestCaseUpdateTemplate =
-  (typeof DashboardLatestCaseUpdateTemplates)[keyof typeof DashboardLatestCaseUpdateTemplates];
+  (typeof DashboardLatestUpdateTemplates)[keyof typeof DashboardLatestUpdateTemplates];
 
-export function getDashboardLatestCaseUpdateTemplate(
-  isRepresented: boolean, caseState: string | undefined
-): DashboardLatestCaseUpdateTemplate {
+export function getDashboardLatestCaseUpdateTemplate(isRepresented: boolean, caseState?: string): DashboardLatestCaseUpdateTemplate {
   if (isRepresented) {
-    return DashboardLatestCaseUpdateTemplates.REPRESENTED;
+    return DashboardLatestUpdateTemplates.REPRESENTED;
   }
 
   if (caseState === State.CLOSE) {
-    return DashboardLatestCaseUpdateTemplates.CLOSED;
+    return DashboardLatestUpdateTemplates.CLOSED;
   }
 
-  return DashboardLatestCaseUpdateTemplates.ACTIVE;
+  return DashboardLatestUpdateTemplates.ACTIVE;
 }

@@ -46,6 +46,7 @@ describe('CaseApi', () => {
   test('Should return case for caseId passed', async () => {
     mockedAxios.get.mockResolvedValue({
       data: {
+        state: 'close',
         data: {
           id: '1234',
           accessCode: 'NFSDCLV3',
@@ -54,7 +55,7 @@ describe('CaseApi', () => {
     });
 
     const userCase = await api.getCaseById('1234');
-    expect(userCase).toStrictEqual({ id: '1234', accessCode: 'NFSDCLV3' });
+    expect(userCase).toStrictEqual({ id: '1234', accessCode: 'NFSDCLV3', state: 'close' });
   });
 
   test('Should throw error when case could not be fetched', async () => {

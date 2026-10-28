@@ -3,7 +3,7 @@ import type { Application, NextFunction, Request, Response } from 'express';
 
 import { CaseRole } from '../../../main/app/case/definition';
 import { RouteNames, ViewNames } from '../../../main/constants';
-import { DashboardLatestCaseUpdateTemplates } from '../../../main/functions/util/dashboard-template-selector';
+import { DashboardLatestUpdateTemplates } from '../../../main/functions/util/dashboard-template-selector';
 import setupDashboardRoute from '../../../main/routes/generalUpload/dashboard';
 
 jest.mock('../../../main/middleware', () => ({
@@ -212,7 +212,7 @@ describe('Dashboard Route', () => {
     expect(res.render).toHaveBeenCalledWith(
       ViewNames.Dashboard,
       expect.objectContaining({
-        latestCaseUpdateTemplate: DashboardLatestCaseUpdateTemplates.REPRESENTED,
+        latestCaseUpdateTemplate: DashboardLatestUpdateTemplates.REPRESENTED,
         showPreviouslyUploaded: true,
       })
     );
@@ -231,7 +231,7 @@ describe('Dashboard Route', () => {
     expect(res.render).toHaveBeenCalledWith(
       ViewNames.Dashboard,
       expect.objectContaining({
-        latestCaseUpdateTemplate: DashboardLatestCaseUpdateTemplates.ACTIVE,
+        latestCaseUpdateTemplate: DashboardLatestUpdateTemplates.ACTIVE,
         hasDivorceCase: false,
         showPreviouslyUploaded: true,
       })
@@ -250,7 +250,7 @@ describe('Dashboard Route', () => {
     expect(res.render).toHaveBeenCalledWith(
       ViewNames.Dashboard,
       expect.objectContaining({
-        latestCaseUpdateTemplate: DashboardLatestCaseUpdateTemplates.ACTIVE,
+        latestCaseUpdateTemplate: DashboardLatestUpdateTemplates.ACTIVE,
         showPreviouslyUploaded: true,
       })
     );
@@ -269,7 +269,7 @@ describe('Dashboard Route', () => {
     expect(res.render).toHaveBeenCalledWith(
       ViewNames.Dashboard,
       expect.objectContaining({
-        latestCaseUpdateTemplate: DashboardLatestCaseUpdateTemplates.CLOSED,
+        latestCaseUpdateTemplate: DashboardLatestUpdateTemplates.CLOSED,
       })
     );
   });

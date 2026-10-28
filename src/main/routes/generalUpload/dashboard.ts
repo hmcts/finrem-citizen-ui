@@ -5,6 +5,10 @@ import { RouteNames, ViewNames } from '../../constants';
 import { getDashboardLatestCaseUpdateTemplate } from '../../functions/util/dashboard-template-selector';
 import { oidcMiddleware } from '../../middleware';
 
+const { Logger } = require('@hmcts/nodejs-logging');
+
+const logger = Logger.getLogger('server');
+
 export default function setupDashboardRoute(app: Application): void {
   app.get(
     RouteNames.dashboard,
@@ -13,6 +17,11 @@ export default function setupDashboardRoute(app: Application): void {
       const user = req.session.user as UserDetails | undefined;
       const isRepresented = user?.isRepresented ?? false;
       const caseState = req.session.caseData?.state;
+
+      logger.info('CASE STATE:');
+      logger.info(caseState);
+      logger.info(req.session.caseData);
+      logger.info(req.session);
 
       const latestCaseUpdateTemplate = getDashboardLatestCaseUpdateTemplate(isRepresented, caseState);
 
