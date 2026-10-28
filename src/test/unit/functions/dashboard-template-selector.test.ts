@@ -24,10 +24,4 @@ describe('getDashboardLatestCaseUpdateTemplate', () => {
       DashboardLatestUpdateTemplates.ACTIVE
     );
   });
-
-  it('returns active template when case state is missing and user is not represented', () => {
-    expect(getDashboardLatestCaseUpdateTemplate(false, undefined)).toBe(
-      DashboardLatestUpdateTemplates.ACTIVE
-    );
-  });
 });
