@@ -18,7 +18,10 @@ app.locals.shutdown = false;
 const port: number = parseInt(process.env.PORT || '3100', 10);
 
 async function startServer() {
+  logger.info('Starting authentication initialisation');
   await new AuthProvider().enable();
+  logger.info('Authentication initialisation completed');
+
   if (config.get<boolean>('use-ssl')) {
     const sslDirectory = path.join(__dirname, 'resources', 'localhost-ssl');
     const sslOptions = {
@@ -29,7 +32,9 @@ async function startServer() {
     httpsServer.listen(port, () => {
       logger.info(`Application started: https://localhost:${port}`);
     });
-  } else {
+    } else {
+    logger.info(`Attempting to listen on port ${port}`);
+
     app.listen(port, () => {
       logger.info(`Application started: http://localhost:${port}`);
     });
