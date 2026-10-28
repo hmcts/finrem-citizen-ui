@@ -13,13 +13,10 @@ export const getTokenFromApi = async (): Promise<void> => {
   const url: string = config.get('services.authProvider.url') + '/lease';
   const microservice: string = config.get('services.authProvider.microservice');
   const secret: string = config.get('services.authProvider.secret');
-  const oneTimePassword = await generate ( { secret });
+  const oneTimePassword = await generate({ secret });
 
   try {
-    const response = await axios.post(url, {
-      microservice,
-      oneTimePassword,
-    });
+    const response = await axios.post(url, { microservice, oneTimePassword }, { timeout: 10000 });
 
     token = response.data;
     logger.info('Service authorisation token obtained successfully');
@@ -32,11 +29,14 @@ export const getTokenFromApi = async (): Promise<void> => {
 export const initAuthToken = async (): Promise<void> => {
   await getTokenFromApi();
 
-  setInterval(() => {
-    getTokenFromApi().catch(error => {
-      logger.error('Failed to refresh service authorisation token', error);
-    });
-  }, 1000 * 60 * 60);
+  setInterval(
+    () => {
+      getTokenFromApi().catch(error => {
+        logger.error('Failed to refresh service authorisation token', error);
+      });
+    },
+    1000 * 60 * 60
+  );
 };
 
 export const getServiceAuthToken = (): string => {
