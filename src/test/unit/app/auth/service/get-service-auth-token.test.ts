@@ -44,7 +44,8 @@ describe('initAuthToken', () => {
       {
         microservice: 'finrem_citizen_ui',
         oneTimePassword: expect.anything(),
-      }
+      }, 
+      { timeout: 10000 }
     );
   });
 
