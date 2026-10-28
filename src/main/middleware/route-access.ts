@@ -1,7 +1,7 @@
+import { State } from 'app/case/definition';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 
 import { PublicRoutes, RouteNames } from '../constants';
-import { State } from 'app/case/definition';
 
 const NEW_USER_CASE_LINKING_ROUTES: ReadonlySet<string> = new Set([
   RouteNames.enterCaseNumber,
