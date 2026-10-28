@@ -146,6 +146,7 @@
     "colord": "^2.9.4",
     "js-yaml": "^4.3.2",
     "ip-address": "10.7.4",
-    "follow-redirects": "^1.16.1"
+    "follow-redirects": "^1.16.1",
+    "@azure/msal-node": "^7.1.0"
   }
 }
