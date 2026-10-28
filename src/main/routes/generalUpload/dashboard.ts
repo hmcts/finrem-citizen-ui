@@ -19,7 +19,7 @@ export default function setupDashboardRoute(app: Application): void {
 
       const latestCaseUpdateTemplate = getDashboardLatestCaseUpdateTemplate(isRepresented, caseState);
 
-      logger.info('Dashboard template selected',
+      logger.info('Dashboard latest case update template selected',
         {
           latestCaseUpdateTemplate,
           caseId: req.session.caseNumber,
