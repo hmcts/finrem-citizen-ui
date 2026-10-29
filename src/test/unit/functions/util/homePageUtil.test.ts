@@ -16,8 +16,8 @@ import {
   loadCaseAndReloadSession,
   resetCaseContext,
   resolveCaseUserName,
-  resolveIsUserRepresented,
   resolveHomeUrl,
+  resolveIsUserRepresented,
 } from '../../../../main/functions/util/homePageUtil';
 
 jest.mock('config', () => ({
