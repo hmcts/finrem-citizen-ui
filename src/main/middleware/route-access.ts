@@ -1,3 +1,4 @@
+import { State } from 'app/case/definition';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 
 import { PublicRoutes, RouteNames } from '../constants';
@@ -28,12 +29,10 @@ export const routeAccessMiddleware: RequestHandler = (req: Request, res: Respons
     return res.redirect(RouteNames.enterCaseNumber);
   }
 
-  const isRepresented = req.session?.user?.isRepresented === true;
   const isUploadRoute =
     requestPath === RouteNames.uploadJourney ||
     requestPath.startsWith(`${RouteNames.uploadJourney}/`);
-
-  if (isRepresented && isUploadRoute) {
+  if (userCannotUploadDocuments(req) && isUploadRoute) {
     return res.redirect(RouteNames.dashboard);
   }
 
@@ -45,6 +44,13 @@ function hasCaseNumberAndRole(req: Request): boolean {
   const caseRole = req.session?.user?.caseRole || req.session?.caseRole;
 
   return Boolean(caseNumber && caseRole);
+}
+
+function userCannotUploadDocuments(req: Request): boolean {
+  const isRepresented = req.session?.user?.isRepresented === true;
+  const caseIsClosed = req.session.caseData?.state === State.CLOSE;
+
+  return isRepresented || caseIsClosed;
 }
 
 function isAccessingCaseLinkingRoutes(requestPath: string): boolean {
