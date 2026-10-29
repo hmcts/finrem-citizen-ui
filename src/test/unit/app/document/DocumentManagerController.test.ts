@@ -512,7 +512,7 @@ describe('DocumentManagerController', () => {
           user: userDetails,
           caseNumber: '123',
           caseData: {
-            citizenApplicantDocument: [
+            applicantDocCollection: [
               {
                 id: 'doc-item-1',
                 value: {
@@ -522,7 +522,7 @@ describe('DocumentManagerController', () => {
                 },
               },
             ],
-            citizenRespondentDocument: [],
+            respondentDocCollection: [],
           },
         },
       } as unknown as AppRequest;
@@ -680,6 +680,7 @@ describe('DocumentManagerController', () => {
       );
     });
   });
+
   test('throws an error when case role is unsupported', async () => {
     const req = {
       session: {
@@ -697,6 +698,7 @@ describe('DocumentManagerController', () => {
       controller.previouslyUploadedDocuments(req, res, '123')
     ).rejects.toThrow('Unsupported case role');
   });
+
   test('sets isFDR to NO on each uploaded case document when isFinancialDisputeResolution is false or undefined', async () => {
     const triggerEventMock = jest.fn().mockResolvedValue({});
 
@@ -724,7 +726,7 @@ describe('DocumentManagerController', () => {
     expect(triggerEventMock).toHaveBeenCalledWith(
       '123',
       expect.objectContaining({
-        citizenApplicantDocument: [
+        uploadedCuiApplicantDocuments: [
           expect.objectContaining({
             value: expect.objectContaining({
               existing: 'field',
@@ -794,7 +796,7 @@ describe('DocumentManagerController', () => {
     expect(triggerEventMock).toHaveBeenCalledWith(
       '123',
       expect.objectContaining({
-        citizenApplicantDocument: [
+        uploadedCuiApplicantDocuments: [
           expect.objectContaining({
             value: expect.objectContaining({
               existing: 'field',
