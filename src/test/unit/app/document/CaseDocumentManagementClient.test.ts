@@ -352,7 +352,7 @@ describe('CaseDocumentManagementClient', () => {
         data: {
           documents: [
             {
-              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026.pdf',
+              originalDocumentName: 'JohnSmith-FormFM5-23-06-2026.pdf',
               size: 100,
               mimeType: 'application/pdf',
               createdOn: '2024-01-01',
@@ -386,12 +386,12 @@ describe('CaseDocumentManagementClient', () => {
       const result = await client.create({
         files,
         classification: Classification.Public,
-        documentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
+        documentType: 'Statement of position on non-court dispute resolution (NCDR): Form FM5',
         caseUserName: 'JohnSmith',
       });
 
       expect(result).toHaveLength(1);
-      expect(result[0].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026.pdf');
+      expect(result[0].originalDocumentName).toBe('JohnSmith-FormFM5-23-06-2026.pdf');
     });
 
     test('does not rename files when documentType is not provided', async () => {
@@ -473,7 +473,7 @@ describe('CaseDocumentManagementClient', () => {
         data: {
           documents: [
             {
-              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026-1.pdf',
+              originalDocumentName: 'JohnSmith-FormFM5-23-06-2026-1.pdf',
               size: 100,
               mimeType: 'application/pdf',
               createdOn: '2024-01-01',
@@ -507,13 +507,13 @@ describe('CaseDocumentManagementClient', () => {
       const result = await client.create({
         files,
         classification: Classification.Public,
-        documentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
+        documentType: 'Statement of position on non-court dispute resolution (NCDR): Form FM5',
         caseUserName: 'JohnSmith',
-        existingFilenames: ['JohnSmith-FormFM1-23-06-2026.pdf'],
+        existingFilenames: ['JohnSmith-FormFM5-23-06-2026.pdf'],
       });
 
       expect(result).toHaveLength(1);
-      expect(result[0].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026-1.pdf');
+      expect(result[0].originalDocumentName).toBe('JohnSmith-FormFM5-23-06-2026-1.pdf');
     });
 
     test('handles multiple files in same upload with duplicate names', async () => {
@@ -521,15 +521,15 @@ describe('CaseDocumentManagementClient', () => {
         data: {
           documents: [
             {
-              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026.pdf',
+              originalDocumentName: 'JohnSmith-FormFM5-23-06-2026.pdf',
               _links: {},
             },
             {
-              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026-1.pdf',
+              originalDocumentName: 'JohnSmith-FormFM5-23-06-2026-1.pdf',
               _links: {},
             },
             {
-              originalDocumentName: 'JohnSmith-FormFM1-23-06-2026-2.pdf',
+              originalDocumentName: 'JohnSmith-FormFM5-23-06-2026-2.pdf',
               _links: {},
             },
           ],
@@ -578,14 +578,14 @@ describe('CaseDocumentManagementClient', () => {
       const result = await client.create({
         files,
         classification: Classification.Public,
-        documentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
+        documentType: 'Statement of position on non-court dispute resolution (NCDR): Form FM5',
         caseUserName: 'JohnSmith',
       });
 
       expect(result).toHaveLength(3);
-      expect(result[0].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026.pdf');
-      expect(result[1].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026-1.pdf');
-      expect(result[2].originalDocumentName).toBe('JohnSmith-FormFM1-23-06-2026-2.pdf');
+      expect(result[0].originalDocumentName).toBe('JohnSmith-FormFM5-23-06-2026.pdf');
+      expect(result[1].originalDocumentName).toBe('JohnSmith-FormFM5-23-06-2026-1.pdf');
+      expect(result[2].originalDocumentName).toBe('JohnSmith-FormFM5-23-06-2026-2.pdf');
     });
   });
 });
