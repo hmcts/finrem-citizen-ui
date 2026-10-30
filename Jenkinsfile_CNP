@@ -56,11 +56,14 @@ def resolvePreviewCcdUrl = {
   return "https://ccd-data-store-api-finrem-ccd-definitions-pr-${ccdDefinitionsPr}.preview.platform.hmcts.net"
 }
 
+def branchesToSync = ['demo', 'perftest']
+
 withPipeline(type, product, component) {
   // test:coverage executes unit + route tests via jest.config roots.
   env.UNIT_TESTS_COMMAND = "yarn test:coverage && yarn lint && yarn test:api"
 
   loadVaultSecrets(secrets)
+  syncBranchesWithMaster(branchesToSync)
 
   afterSuccess('build') {
     yarnBuilder.yarn('build')
