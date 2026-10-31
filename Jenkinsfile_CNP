@@ -2,7 +2,7 @@
 
 import uk.gov.hmcts.contino.GithubAPI
 
-@Library("Infrastructure@2.12.1")
+@Library("Infrastructure@2.13.4")
 
 def type = "nodejs"
 def product = "finrem"
