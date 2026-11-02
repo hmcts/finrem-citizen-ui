@@ -5,7 +5,12 @@ import FormData from 'form-data';
 import { createReadStream } from 'fs';
 
 import { UrlEndPoints } from '../../constants';
-import { generateRenamedFilename, shouldAutoRename, toDocumentTypeKey } from '../../functions/util/documentUtil';
+import {
+  generateRenamedFilename,
+  makeFilenameUnique,
+  shouldAutoRename,
+  toDocumentTypeKey,
+} from '../../functions/util/documentUtil';
 import { getServiceAuthToken } from '../auth/service/get-service-auth-token';
 import { CASE_DOCUMENT_MANAGEMENT_SERVICE_URL, CASE_TYPE, JURISDICTION } from '../case/case-type';
 import type { UserDetails } from '../controller/AppRequest';
@@ -44,6 +49,7 @@ export class CaseDocumentManagementClient {
     formData.append('classification', classification);
 
     const uploadedFilenames: string[] = [...existingFilenames];
+    const usedFilenames = new Set(existingFilenames);
 
     for (const file of getUploadedFiles(files)) {
       let uploadFilename = file.originalname;
@@ -51,9 +57,13 @@ export class CaseDocumentManagementClient {
       if (documentType) {
         const documentTypeKey = toDocumentTypeKey(documentType);
         if (shouldAutoRename(documentTypeKey)) {
-          uploadFilename = generateRenamedFilename(documentTypeKey, file.originalname, caseUserName, false, uploadedFilenames);
+          const generatedFilename = generateRenamedFilename(documentTypeKey, file.originalname, caseUserName);
+
+          uploadFilename = makeFilenameUnique(generatedFilename, usedFilenames);
         }
       }
+
+      usedFilenames.add(uploadFilename);
 
       uploadedFilenames.push(uploadFilename);
 

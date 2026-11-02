@@ -115,6 +115,11 @@ describe('DocumentManagerController', () => {
 
     expect(req.session.documents?.documentDetails).toHaveLength(1);
     expect(req.session.documents?.documentDetails?.[0].id).toBe('mock-uuid');
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        existingFilenames: [],
+      })
+    );
   });
 
   test('stores generalDocumentUploadDateTime as an ISO timestamp', async () => {
@@ -210,15 +215,35 @@ describe('DocumentManagerController', () => {
       session: {
         user: userDetails,
         documents: {
-          documentDetails: [{ id: 'existing', value: {} }],
+          documentDetails: [
+            {
+              id: 'existing-1',
+              value: {
+                DocumentFileName: 'JohnSmith-FormFM1-15-10-2026.pdf',
+              },
+            },
+            {
+              id: 'existing-2',
+              value: {
+                DocumentFileName: 'JohnSmith-FormFM1-15-10-2026 15-35 (1).pdf',
+              },
+            },
+          ],
         },
       } as unknown as AppRequest['session'],
     });
 
     await controller.uploadDocumentToEvidenceStore(req, 'BANK_STATEMENTS' as never);
 
-    expect(req.session.documents?.documentDetails).toHaveLength(2);
-  });
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        existingFilenames: [
+          'JohnSmith-FormFM1-15-10-2026.pdf',
+          'JohnSmith-FormFM1-15-10-2026 15-35 (1).pdf',
+        ],
+      })
+    );
+    expect(req.session.documents?.documentDetails).toHaveLength(3);  });
 
   test('throws when no case number', async () => {
     const req = buildRequest({
