@@ -56,6 +56,8 @@ export class CheckUploadPage extends BasePage {
   readonly confirmationReturnLaterText: Locator;
   readonly confirmationEmailText: Locator;
   readonly confirmationReturnToAccountButton: Locator;
+  readonly bankStatementHeading: Locator;
+  readonly payslipHeading: Locator;
 
   constructor(readonly page: Page) {
     super(page);
@@ -156,6 +158,14 @@ export class CheckUploadPage extends BasePage {
     );
     this.confirmationReturnToAccountButton = this.page.getByRole('button', {
       name: 'Close and return to your account',
+      exact: true,
+    });
+    this.bankStatementHeading = this.page.getByRole('heading', {
+      name: 'Bank statements',
+      exact: true,
+    });
+    this.payslipHeading = this.page.getByRole('heading', {
+      name: 'Payslips',
       exact: true,
     });
   }

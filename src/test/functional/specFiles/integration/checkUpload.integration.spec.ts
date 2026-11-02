@@ -316,9 +316,14 @@ if (shouldRunRealCcdIntegrationSuite()) {
     await documentUploadPage.clickContinue();
 
     await checkUploadPage.ensureCheckUploadPageLoaded();
-    await expect(checkUploadPage.combineInformation).toBeVisible();
-    await expect(checkUploadPage.combinedDocumentName).toContainText('-SupportingFinancialDocuments-DD-MM-YYYY');
     await expect(checkUploadPage.uploadedDocumentLinks).toHaveCount(2);
+    await expect(checkUploadPage.bankStatementHeading).toBeVisible();
+    await expect(checkUploadPage.payslipHeading).toBeVisible();
+
+    // When document combining re-renabled, the tests below need to change to check for appropriate content again.
+    await expect(checkUploadPage.combineInformation).toBeHidden(); // change be toBeVisible();
+    await expect(checkUploadPage.combinedDocumentName).toHaveCount(0); // change to check locator says '-SupportingFinancialDocuments-DD-MM-YYYY'
+
     await runA11yAudit(axeUtils);
   });
 

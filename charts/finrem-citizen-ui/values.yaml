@@ -39,3 +39,4 @@ nodejs:
     IDAM_CLIENT_ID: 'finrem-citizen-ui'
     SESSION_STORE: 'redis'
     RATE_LIMIT_WINDOW_MS: 900000
+    DOCUMENT_COMBINING_ENABLED: 'false'
