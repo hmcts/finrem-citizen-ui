@@ -5,7 +5,7 @@ import express from 'express';
 import { glob } from 'glob';
 import * as path from 'path';
 
-import { PrivateRoutes, ViewNames } from './constants';
+import { PrivateRoutes, RouteNames, ViewNames } from './constants';
 import { caseContextMiddleware, contactEmailMiddleware, globalErrorHandler, routeAccessMiddleware } from './middleware';
 import { AppInsights } from './modules/appinsights';
 import { setNoStoreForHtmlRequests, setStaticCachingPolicy } from './modules/caching';
@@ -46,6 +46,14 @@ app.use(setNoStoreForHtmlRequests);
 
 app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));
+});
+
+app.use(Object.values(PrivateRoutes), (req, res, next) => {
+  if (!req.session?.user) {
+    return res.redirect(303, RouteNames.login);
+  }
+
+  next();
 });
 
 if (config.get<boolean>('useCSRFProtection')) {
