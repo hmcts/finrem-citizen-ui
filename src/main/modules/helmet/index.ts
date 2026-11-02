@@ -1,3 +1,4 @@
+import config from 'config';
 import * as express from 'express';
 import helmet from 'helmet';
 import type { IncomingMessage, ServerResponse } from 'http';
@@ -28,6 +29,8 @@ export class Helmet {
       (_req: IncomingMessage, res: ServerResponse) => `'nonce-${(res as express.Response).locals.nonce}'`,
     ];
 
+    const idamOrigin = new URL(config.get<string>('oidc.issuer')).origin;
+
     if (this.developmentMode) {
       // Uncaught EvalError: Refused to evaluate a string as JavaScript because 'unsafe-eval'
       // is not an allowed source of script in the following Content Security Policy directive:
@@ -40,6 +43,8 @@ export class Helmet {
       helmet({
         contentSecurityPolicy: {
           directives: {
+            formAction: [self, idamOrigin],
+            upgradeInsecureRequests: this.developmentMode ? null : [],
             connectSrc: [self, dynatraceDomain, googleAnalyticsDomain, googleTagManagerDomain, googleDomain],
             defaultSrc: ["'none'"],
             fontSrc: [self, 'data:'],
