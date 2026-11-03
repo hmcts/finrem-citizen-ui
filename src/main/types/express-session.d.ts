@@ -21,5 +21,6 @@ declare module 'express-session' {
     documents?: UserDocumentSelection;
     uploadErrors?: Record<string, string>;
     preservedContactEmail?: string;
+    returnTo?: string;
   }
 }
