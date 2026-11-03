@@ -151,3 +151,13 @@ export const DOCUMENT_COMBINED_PDF_FORMATS: Record<string, string> = {
   'business-valuation': 'SupportingFinancialDocuments',
   'management-accounts': 'SupportingFinancialDocuments',
 };
+
+export const SESSION_RETURN_PAGES: ReadonlySet<string> = new Set([
+  RouteNames.dashboard,
+  RouteNames.enterCaseNumber,
+  RouteNames.enterAccessCode,
+  RouteNames.taskListUpload,
+  ...Object.values(UploadStepNames)
+    .filter(step => step !== UploadStepNames.Confirmation)
+    .map(step => `${RouteNames.uploadJourney}/${step}`),
+]);
