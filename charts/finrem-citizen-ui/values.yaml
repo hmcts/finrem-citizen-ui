@@ -7,8 +7,12 @@ nodejs:
   cpuRequests: 2500m
   memoryLimits: 2048Mi
   cpuLimits: 2500m
-  readinessDelay: 130
-  livenessDelay: 130
+  readinessDelay: 45
+  readinessTimeout: 5
+  readinessPeriod: 15
+  livenessDelay: 45
+  livenessTimeout: 5
+  livenessPeriod: 15
 
   keyVaults:
     finrem:
