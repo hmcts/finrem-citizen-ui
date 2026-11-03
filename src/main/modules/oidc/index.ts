@@ -4,12 +4,11 @@ import type { Express, NextFunction, Request, Response } from 'express';
 import type * as OidcClientType from 'openid-client';
 
 import { UserDetails } from '../../app/controller/AppRequest';
-import { RouteNames } from '../../constants';
+import { RouteNames, SESSION_RETURN_PAGES } from '../../constants';
 import { resetCaseContext } from '../../functions/util/homePageUtil';
 import { isProfessionalUser } from '../../functions/util/roleGuardUtil';
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
-
 
 const getOidcClient = async (): Promise<typeof OidcClientType> => {
   if (process.env.JEST_WORKER_ID !== undefined || process.env.NODE_ENV === 'test') {
@@ -255,10 +254,21 @@ export class OIDCModule {
 
         resetCaseContext(req.session);
 
-        req.session.save(() => {
-          delete req.session.codeVerifier;
-          delete req.session.nonce;
-          res.redirect(RouteNames.basePath);
+        const returnTo = req.session.returnTo;
+        const destination = returnTo && SESSION_RETURN_PAGES.has(returnTo)
+          ? returnTo
+          : RouteNames.basePath;
+
+        delete req.session.returnTo;
+        delete req.session.codeVerifier;
+        delete req.session.nonce;
+
+        req.session.save(err => {
+          if (err) {
+            return next(err);
+          }
+
+          res.redirect(destination);
         });
       } catch (err: unknown) {
         this.logger.error('OIDC callback error:', err);
