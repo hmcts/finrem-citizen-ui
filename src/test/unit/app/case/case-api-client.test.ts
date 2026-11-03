@@ -153,7 +153,7 @@ describe('CaseApi.addCaseUserRoles', () => {
   });
 });
 
-describe('CaseApiClient.findExistingUserCases', () => {
+describe('CaseApiClient.findUserCaseRefs', () => {
   let mockAxios: jest.Mocked<Pick<typeof axios, 'post' | 'get'>>;
   let mockLogger: LoggerInstance;
   let api: CaseApiClient;
@@ -174,6 +174,11 @@ describe('CaseApiClient.findExistingUserCases', () => {
 
   const CASE_TYPE = 'FinancialRemedyContested';
 
+  const query = JSON.stringify({
+    query: { match_all: {} },
+    size: 2,
+  });
+
   test('should return cases when search is successful', async () => {
     const cases = [{ id: '1', state: 'Draft', case_data: {} }];
 
@@ -181,7 +186,7 @@ describe('CaseApiClient.findExistingUserCases', () => {
       data: { cases, total: 1 },
     });
 
-    const result = await api.findExistingUserCases(CASE_TYPE);
+    const result = await api.findUserCaseRefs(CASE_TYPE, query);
 
     expect(mockAxios.post).toHaveBeenCalledWith(
       UrlEndPoints.SearchCases(CASE_TYPE),
@@ -195,7 +200,7 @@ describe('CaseApiClient.findExistingUserCases', () => {
       response: { status: 404 },
     });
 
-    const result = await api.findExistingUserCases(CASE_TYPE);
+    const result = await api.findUserCaseRefs(CASE_TYPE, query);
 
     expect(result).toBe(false);
     expect(mockLogger.error).not.toHaveBeenCalled();
@@ -207,7 +212,7 @@ describe('CaseApiClient.findExistingUserCases', () => {
       response: { status: 500, data: { error: 'bad' } },
     });
 
-    await expect(api.findExistingUserCases(CASE_TYPE))
+    await expect(api.findUserCaseRefs(CASE_TYPE, query))
       .rejects.toThrow('Case could not be retrieved.');
 
     expect(mockLogger.error).toHaveBeenCalledWith(
