@@ -20,13 +20,12 @@ export class CaseApi {
     return this.apiClient.getCaseById(caseId);
   }
 
-  public async getExistingExistingNFDCase(): Promise<string | undefined> {
+  public async getExistingNfdCase(): Promise<string | undefined> {
     const userCases = await this.apiClient.findUserCaseRefs(
       CaseType.NFD,
       JSON.stringify({
         query: { match_all: {} },
         size: 2, // only need 0/1/many
-        _source: false, // do not return case_data payload
       })
     );
 
@@ -50,7 +49,7 @@ export class CaseApi {
       CaseType.CONTESTED,
       JSON.stringify({
         query: { match_all: {} },
-        sort: [{ created_date: { order: 'desc' } }],
+        size: 2, // only need 0/1/many,
       })
     );
 

@@ -3,7 +3,7 @@ import { SessionData } from 'express-session';
 import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../../app/auth/user';
-import { CaseApi, getCaseApi } from '../../app/case/case-api';
+import { getCaseApi } from '../../app/case/case-api';
 import { CaseRole, FinremCaseData } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
 import { CaseUserNames, RouteNames } from '../../constants';
@@ -27,8 +27,7 @@ export async function fetchUserCaseContext(
   logger.info('Financial Remedy caseId is: ', finremCaseId);
 
   if (finremCaseId?.trim()) {
-
-    await userHasNfdCase(user, caseApi);
+    await refreshUserNfdCaseFlag(user, logger);
     const systemUser = await getSystemUser();
     const caseworkerUserApi = getCaseApi(systemUser, logger);
     const caseData = await caseworkerUserApi.getCaseById(finremCaseId);
@@ -152,11 +151,7 @@ export function resolveCaseUserName(session: SessionData): string | undefined {
   return undefined;
 }
 
-export async function userHasNfdCase(user: UserDetails, caseApi: CaseApi): Promise<boolean> {
-  if (user.hasNFDCase === undefined) {
-    const nfdCaseId = await caseApi.getExistingExistingNFDCase();
+export async function refreshUserNfdCaseFlag(user: UserDetails, logger: LoggerInstance): Promise<void> {
+    const nfdCaseId = await getCaseApi(user, logger).getExistingNfdCase();
     user.hasNFDCase = nfdCaseId !== undefined;
-  }
-
-  return !!user.hasNFDCase;
 }
