@@ -5,7 +5,7 @@ import express from 'express';
 import { glob } from 'glob';
 import * as path from 'path';
 
-import { PrivateRoutes, RouteNames, ViewNames } from './constants';
+import { PrivateRoutes, RouteNames, SESSION_RETURN_PAGES, ViewNames } from './constants';
 import { caseContextMiddleware, contactEmailMiddleware, globalErrorHandler, routeAccessMiddleware } from './middleware';
 import { AppInsights } from './modules/appinsights';
 import { setNoStoreForHtmlRequests, setStaticCachingPolicy } from './modules/caching';
@@ -39,9 +39,11 @@ setupDev(app, developmentMode);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public'), {
-  setHeaders: setStaticCachingPolicy,
-}));
+app.use(
+  express.static(path.join(__dirname, 'public'), {
+    setHeaders: setStaticCachingPolicy,
+  })
+);
 app.use(setNoStoreForHtmlRequests);
 
 app.get('/favicon.ico', (req, res) => {
@@ -50,7 +52,19 @@ app.get('/favicon.ico', (req, res) => {
 
 app.use(Object.values(PrivateRoutes), (req, res, next) => {
   if (!req.session?.user) {
-    return res.redirect(303, RouteNames.login);
+    const returnPage = req.originalUrl.split('?')[0];
+
+    if (SESSION_RETURN_PAGES.has(returnPage)) {
+      req.session.returnTo = returnPage;
+    }
+
+    return req.session.save(err => {
+      if (err) {
+        return next(err);
+      }
+
+      res.redirect(303, RouteNames.login);
+    });
   }
 
   next();
