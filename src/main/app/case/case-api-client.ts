@@ -62,15 +62,20 @@ export class CaseApiClient {
     }
   }
 
-  public async findExistingUserCases(caseType: string): Promise<CcdV1Response[] | false> {
-    const query = {
-      query: { match_all: {} },
-      sort: [{ created_date: { order: 'desc' } }],
-    };
-    return this.findUserCases(caseType, JSON.stringify(query));
+  public async findUserCaseRefs(caseType: string, query: string): Promise<CcdCaseRefResponse[] | false> {
+  try {
+    const response = await this.server.post<ESCaseRefs>(UrlEndPoints.SearchCases(caseType), query);
+    return response.data.cases;
+  } catch (err) {
+    if (err.response?.status === 404) {
+      return false;
+    }
+    this.logError(err);
+    throw new Error('Case could not be retrieved.');
   }
+}
 
-  private async findUserCases(caseType: string, query: string): Promise<CcdV1Response[] | false> {
+  public async findUserCases(caseType: string, query: string): Promise<CcdV1Response[] | false> {
     try {
       const response = await this.server.post<ES<CcdV1Response>>(UrlEndPoints.SearchCases(caseType), query);
       return response.data.cases;
@@ -195,7 +200,6 @@ export const getCaseApiClient = (userDetails: UserDetails, logger: LoggerInstanc
 
 interface ES<T> {
   cases: T[];
-  total: number;
 }
 
 export interface CcdV1Response {
@@ -210,6 +214,16 @@ interface CcdV2Response {
   id: string;
   state: State;
   data: FinremCaseData;
+}
+interface CcdCaseRefResponse {
+  id: string;
+  state: State;
+  created_date: string;
+}
+
+interface ESCaseRefs {
+  cases: CcdCaseRefResponse[];
+  total?: number;
 }
 
 interface CcdTokenResponse {
