@@ -74,5 +74,8 @@
   },
   "documentUpload": {
     "combiningEnabled": false
+  },
+  "uploadDraft": {
+    "ttlInSeconds": 86400
   }
 }
