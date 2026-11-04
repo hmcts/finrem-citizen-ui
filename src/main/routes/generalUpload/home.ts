@@ -19,6 +19,7 @@ import {
 import { resolveHomeUrl } from '../../functions/util/homePageUtil';
 import { FILE_VALIDATION_ERRORS, validateUploadedFile } from '../../functions/util/uploadValidation';
 import { oidcMiddleware } from '../../middleware';
+import { deleteUploadDraft, saveUploadDraft } from '../../modules/upload-draft';
 import { GENERAL_UPLOAD_DOCUMENT_REDIRECT_URL } from '../../steps/general-upload-sequence';
 
 export default function (app: Application): void {
@@ -171,6 +172,8 @@ export default function (app: Application): void {
           }
         }
 
+        await saveUploadDraft(req);
+
         req.session.save((err) => {
           if (err) {
             return next(err);
@@ -211,7 +214,7 @@ export default function (app: Application): void {
   app.delete(
     RouteNames.documentRemove,
     oidcMiddleware,
-    (req, res, next) => {
+    async (req, res, next) => {
       try {
         const appReq = req as AppRequest;
         const { fileId } = req.params;
@@ -224,6 +227,8 @@ export default function (app: Application): void {
           appReq.session.documents.documentDetails.filter(
             doc => doc.id !== fileId
           );
+
+        await saveUploadDraft(req);
 
         logger.info('Document removed from session', { fileId });
 
@@ -254,7 +259,17 @@ export default function (app: Application): void {
 
         await documentController.LinkDocumentsToCase(appReq);
 
-        res.redirect(RouteNames.documents);
+        delete appReq.session.DocumentSelection;
+
+        await deleteUploadDraft(req);
+
+        appReq.session.save(err => {
+          if (err) {
+            return next(err);
+          }
+
+          res.redirect(RouteNames.documents);
+        });
       } catch (error) {
         next(error);
       }

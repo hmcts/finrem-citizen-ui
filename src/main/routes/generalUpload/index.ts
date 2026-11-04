@@ -16,7 +16,9 @@ import { formatUploadDate } from '../../functions/util/dateUtils';
 import { extractDocumentIdFromUrl, getCaseDocumentsByRole } from '../../functions/util/documentAccess';
 import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey } from '../../functions/util/documentUtil';
 import { oidcMiddleware } from '../../middleware';
+import { deleteUploadDraft, saveUploadDraft } from '../../modules/upload-draft';
 import { GENERAL_UPLOAD_BASE_URL, UploadStepId, uploadSteps } from '../../steps/general-upload-sequence';
+
 
 const previouslyUploadedDocumentsRoute = `${GENERAL_UPLOAD_BASE_URL}/previously-uploaded-documents`;
 const documentIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -148,7 +150,7 @@ function getCategorisedDocumentGroupsForCheckPage(req: Request): { groupKey: str
  *
  * Groups are the selected document type labels, falling back to the document group name when no
  * label is available. Preserves file details and sets willCombine to false, as combined files not supported yet.
- * Workround for DFR-5760.  
+ * Workround for DFR-5760.
  *
  * @param req - Express request containing uploaded files and selected document types.
  * @returns Document groups with their keys, labels, file details, and combination flags.
@@ -189,77 +191,93 @@ function getDocumentLabelsForCheckPage(req: Request): { groupKey: string; label:
 
 export default function setupGeneralUploadRoute(app: Application): void {
   // POST /upload/document-type-selection/add - Add a document type to selection
-  app.post(`${RouteNames.uploadJourney}/document-type-selection/add`, oidcMiddleware, (req: Request, res: Response) => {
-    if (!req.session.DocumentSelection) {
-      req.session.DocumentSelection = {};
+  app.post(
+    `${RouteNames.uploadJourney}/document-type-selection/add`,
+    oidcMiddleware,
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        if (!req.session.DocumentSelection) {
+          req.session.DocumentSelection = {};
+        }
+
+        const documentDetails =
+          req.session.DocumentSelection.documentDetails || [];
+
+        const newDocument: ListValue<Partial<CitizenUploadDocument>> = {
+          id: uuidv4(),
+          value: {
+            DocumentType: req.body.value,
+          },
+        };
+
+        documentDetails.push(newDocument);
+        req.session.DocumentSelection.documentDetails = documentDetails;
+
+        await saveUploadDraft(req);
+
+        const displayDocs = getSelectedDocumentTypesForDisplay(req);
+        res.json({ success: true, documents: displayDocs });
+      } catch (error) {
+        next(error);
+      }
     }
-
-    const documentDetails = req.session.DocumentSelection.documentDetails || [];
-
-    const newDocument: ListValue<Partial<CitizenUploadDocument>> = {
-      id: uuidv4(),
-      value: {
-        DocumentType: req.body.value,
-      },
-    };
-
-    documentDetails.push(newDocument);
-    req.session.DocumentSelection.documentDetails = documentDetails;
-
-    // Map to display format for frontend
-    const displayDocs = getSelectedDocumentTypesForDisplay(req);
-
-    res.json({ success: true, documents: displayDocs });
-  });
+  );
 
   // DELETE /upload/document-type-selection/remove/:index - Remove a document type from selection
-  app.delete(`${RouteNames.uploadJourney}/document-type-selection/remove/:index`, oidcMiddleware, (req: Request, res: Response) => {
-    const documentDetails = req.session.DocumentSelection?.documentDetails || [];
-    const indexParam = Array.isArray(req.params.index) ? req.params.index[0] : req.params.index;
-    const index = parseInt(indexParam, 10);
+  app.delete(
+    `${RouteNames.uploadJourney}/document-type-selection/remove/:index`,
+    oidcMiddleware,
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const documentDetails =
+          req.session.DocumentSelection?.documentDetails || [];
+        const indexParam = Array.isArray(req.params.index)
+          ? req.params.index[0]
+          : req.params.index;
+        const index = parseInt(indexParam, 10);
 
-    if (index >= 0 && index < documentDetails.length) {
-      // Capture the document type being removed
-      const removedDocType = documentDetails[index]?.value?.DocumentType;
+        if (index >= 0 && index < documentDetails.length) {
+          const removedDocType = documentDetails[index]?.value?.DocumentType;
 
-      // Remove from DocumentSelection
-      documentDetails.splice(index, 1);
+          documentDetails.splice(index, 1);
 
-      if (req.session.DocumentSelection) {
-        req.session.DocumentSelection.documentDetails = documentDetails;
-      }
+          if (req.session.DocumentSelection) {
+            req.session.DocumentSelection.documentDetails = documentDetails;
+          }
 
-      // Clean up uploaded files for this document type
-      if (removedDocType && req.session.documents?.documentDetails) {
-        // Normalize both document types to kebab-case for comparison
-        // removedDocType is already kebab-case from DocumentSelection
-        // but uploaded DocumentType is an enum value, so normalize it
-        const removedDocTypeKey = toDocumentTypeKey(removedDocType);
-        req.session.documents.documentDetails =
-          req.session.documents.documentDetails.filter(doc => {
-            const uploadedDocTypeKey = doc.value?.DocumentType
-              ? toDocumentTypeKey(doc.value.DocumentType)
-              : '';
-            return uploadedDocTypeKey !== removedDocTypeKey;
-          });
-      }
+          if (removedDocType && req.session.documents?.documentDetails) {
+            const removedDocTypeKey = toDocumentTypeKey(removedDocType);
 
-      // Clear upload errors for this document type
-      if (removedDocType && req.session.uploadErrors) {
-        delete req.session.uploadErrors[removedDocType];
+            req.session.documents.documentDetails =
+              req.session.documents.documentDetails.filter(doc => {
+                const uploadedDocTypeKey = doc.value?.DocumentType
+                  ? toDocumentTypeKey(doc.value.DocumentType)
+                  : '';
+
+                return uploadedDocTypeKey !== removedDocTypeKey;
+              });
+          }
+
+          if (removedDocType && req.session.uploadErrors) {
+            delete req.session.uploadErrors[removedDocType];
+          }
+        }
+
+        await saveUploadDraft(req);
+
+        req.session.save(err => {
+          if (err) {
+            return next(err);
+          }
+
+          const displayDocs = getSelectedDocumentTypesForDisplay(req);
+          res.json({ success: true, documents: displayDocs });
+        });
+      } catch (error) {
+        next(error);
       }
     }
-
-    req.session.save((err) => {
-      if (err) {
-        return res.status(500).json({ success: false, error: 'Failed to save session' });
-      }
-
-      // Map to display format for frontend
-      const displayDocs = getSelectedDocumentTypesForDisplay(req);
-      res.json({ success: true, documents: displayDocs });
-    });
-  });
+  );
 
   app.get(
     previouslyUploadedDocumentsRoute,
@@ -432,9 +450,9 @@ export default function setupGeneralUploadRoute(app: Application): void {
       // Handle send-to-other-party submission - send documents to CCD
       if (req.params.stepId === 'send-to-other-party') {
         if (!req.session.documents?.documentDetails?.length) {
-          delete req.session.DocumentSelection;
-          await saveAndRedirectToConfirmationPage(req, res);
-          return;
+          return res.redirect(
+            `${RouteNames.uploadJourney}/document-type-selection`
+          );
         }
 
         // Transfer FDR flag from DocumentSelection to documents
@@ -458,6 +476,8 @@ export default function setupGeneralUploadRoute(app: Application): void {
         // Delete DocumentSelection after successful submission
         delete req.session.DocumentSelection;
 
+        await deleteUploadDraft(req);
+
         // Save session and redirect to confirmation page
         await saveAndRedirectToConfirmationPage(req, res);
         return;
@@ -467,6 +487,8 @@ export default function setupGeneralUploadRoute(app: Application): void {
       const redirectUrl = nextStep
         ? `${RouteNames.uploadJourney}/${nextStep}`
         : `${RouteNames.uploadJourney}/${req.params.stepId}`;
+
+      await saveUploadDraft(req);
 
       req.session.save((err) => {
         if (err) {

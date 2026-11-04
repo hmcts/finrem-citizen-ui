@@ -17,6 +17,12 @@ jest.mock('../../../main/app/document/DocumentManagerController', () => ({
   })),
 }));
 
+jest.mock('../../../main/modules/upload-draft', () => ({
+  saveUploadDraft: jest.fn(async () => {}),
+  restoreUploadDraft: jest.fn(async () => {}),
+  deleteUploadDraft: jest.fn(async () => {}),
+}));
+
 type MockSession = {
   documents?: {
     documentDetails?: {
@@ -32,7 +38,7 @@ type MockSession = {
   [key: string]: unknown;
 };
 
-type HomeHandler = (req: Request, res: Response, next?: (error?: unknown) => void) => void;
+type HomeHandler = (req: Request, res: Response, next?: (error?: unknown) => void) => void | Promise<void>;
 type PartialRequestWithSession = {
   params?: Record<string, string>;
   body?: unknown;
@@ -82,7 +88,7 @@ describe('Home Routes', () => {
   });
 
   describe('DELETE /documents/remove/:fileId', () => {
-    it('should remove document from session', () => {
+    it('should remove document from session', async () => {
       const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
@@ -102,8 +108,11 @@ describe('Home Routes', () => {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const mockNext = jest.fn();
 
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockNext).not.toHaveBeenCalled();
       expect(mockReq.session?.documents?.documentDetails).toHaveLength(1);
       expect(mockReq.session?.documents?.documentDetails?.[0].id).toBe('file-456');
       expect(mockRes.json).toHaveBeenCalledWith({
@@ -113,7 +122,7 @@ describe('Home Routes', () => {
       });
     });
 
-    it('should handle missing session gracefully', () => {
+    it('should handle missing session gracefully', async () => {
       const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
@@ -126,15 +135,18 @@ describe('Home Routes', () => {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const mockNext = jest.fn();
 
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockNext).not.toHaveBeenCalled();
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         documents: [],
       });
     });
 
-    it('should handle non-existent fileId', () => {
+    it('should handle non-existent fileId', async () => {
       const homeRoutes = require('../../../main/routes/generalUpload/home').default;
       homeRoutes(app);
 
@@ -154,8 +166,11 @@ describe('Home Routes', () => {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const mockNext = jest.fn();
 
+      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+
+      expect(mockNext).not.toHaveBeenCalled();
       expect(mockReq.session?.documents?.documentDetails).toHaveLength(2);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,

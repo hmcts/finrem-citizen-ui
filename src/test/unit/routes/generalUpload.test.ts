@@ -5,12 +5,19 @@ import { Application, NextFunction, Request, Response } from 'express';
 import { CaseRole } from '../../../main/app/case/definition';
 import { DocumentManagerController } from '../../../main/app/document/DocumentManagerController';
 import { RouteNames, UploadStepNames } from '../../../main/constants';
+import { deleteUploadDraft, saveUploadDraft, } from '../../../main/modules/upload-draft';
 import setupGeneralUploadRoute from '../../../main/routes/generalUpload';
 
 jest.mock('../../../main/app/document/DocumentManagerController', () => ({
   DocumentManagerController: jest.fn().mockImplementation(() => ({
     previouslyUploadedDocuments: jest.fn(),
   })),
+}));
+
+jest.mock('../../../main/modules/upload-draft', () => ({
+  saveUploadDraft: jest.fn(async () => {}),
+  restoreUploadDraft: jest.fn(async () => {}),
+  deleteUploadDraft: jest.fn(async () => {}),
 }));
 
 type MockSession = {
@@ -21,13 +28,13 @@ type MockSession = {
   };
   documents?: {
     isFinancialDisputeResolution?: boolean;
-    documentDetails?: { 
-      id?: string; 
-      value?: { 
+    documentDetails?: {
+      id?: string;
+      value?: {
         DocumentType?: string;
         DocumentFileName?: string;
         DocumentLink?: { document_url?: string };
-      } 
+      }
     }[];
   };
   uploadErrors?: Record<string, string>;
@@ -64,6 +71,9 @@ describe('General Upload Routes', () => {
   let mockDelete: jest.Mock;
 
   beforeEach(() => {
+    jest.mocked(saveUploadDraft).mockClear();
+    jest.mocked(deleteUploadDraft).mockClear();
+
     (DocumentManagerController as unknown as jest.Mock).mockReset();
     (DocumentManagerController as unknown as jest.Mock).mockImplementation(() => ({
       previouslyUploadedDocuments: jest.fn(),
@@ -711,7 +721,7 @@ describe('General Upload Routes', () => {
   });
 
   describe('POST /upload/:stepId', () => {
-    it('should return 404 for invalid step', () => {
+    it('should return 404 for invalid step', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: 'invalid-step' },
@@ -725,12 +735,14 @@ describe('General Upload Routes', () => {
         send: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockRes.status).toHaveBeenCalledWith(404);
     });
 
-    it('should redirect to next step from before-you-start', () => {
+    it('should redirect to next step from before-you-start', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.BeforeYouStart },
@@ -746,19 +758,21 @@ describe('General Upload Routes', () => {
         send: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confidentiality`);
     });
 
-    it('should redirect to next step from FDR', () => {
+    it('should redirect to next step from FDR', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
         session: {
           save: jest.fn((callback: (err?: Error) => void) => callback()),
         },
-        body: { fdrHearing: 'yes' },
+        body: { fdrHearing: 'true' },
       } as PartialRequestWithSession;
       const mockRes = {
         render: jest.fn(),
@@ -767,12 +781,14 @@ describe('General Upload Routes', () => {
         send: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
     });
 
-    it('should handle validation errors', () => {
+    it('should handle validation errors', async () => {
       const { uploadSteps } = require('../../../main/steps/general-upload-sequence');
       uploadSteps[UploadStepNames.Confidentiality].validate = () => ({ error: 'Test error' });
 
@@ -787,14 +803,16 @@ describe('General Upload Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockRes.render).toHaveBeenCalled();
 
       delete uploadSteps[UploadStepNames.Confidentiality].validate;
     });
 
-    it('should include uploaded files when rendering validation errors', () => {
+    it('should include uploaded files when rendering validation errors', async () => {
       const { uploadSteps } = require('../../../main/steps/general-upload-sequence');
       uploadSteps[UploadStepNames.UploadDocuments].validate = () => ({ error: 'Test error' });
 
@@ -829,8 +847,10 @@ describe('General Upload Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockRes.render).toHaveBeenCalledWith('generalUpload/upload-documents', expect.objectContaining({
         data: expect.objectContaining({
           uploadedFiles: {
@@ -845,7 +865,7 @@ describe('General Upload Routes', () => {
       delete uploadSteps[UploadStepNames.UploadDocuments].validate;
     });
 
-    it('should store fdrHearing in session', () => {
+    it('should store fdrHearing in session', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
@@ -859,13 +879,15 @@ describe('General Upload Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockReq.session?.DocumentSelection?.isFinancialDisputeResolution).toBe(true);
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
     });
 
-    it('should handle missing session', () => {
+    it('should handle missing session', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.BeforeYouStart },
@@ -878,12 +900,14 @@ describe('General Upload Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalled();
     });
 
-    it('should persist FDR hearing selection', () => {
+    it('should persist FDR hearing selection', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
@@ -896,13 +920,17 @@ describe('General Upload Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
+      expect(saveUploadDraft).toHaveBeenCalledTimes(1);
+      expect(saveUploadDraft).toHaveBeenCalledWith(mockReq as unknown as Request);
       expect(mockReq.session?.DocumentSelection?.isFinancialDisputeResolution).toBe(true);
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
     });
 
-    it('should persist FDR hearing selection as no', () => {
+    it('should persist FDR hearing selection as no', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.FDR },
@@ -915,13 +943,17 @@ describe('General Upload Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
+      expect(saveUploadDraft).toHaveBeenCalledTimes(1);
+      expect(saveUploadDraft).toHaveBeenCalledWith(mockReq as unknown as Request);
       expect(mockReq.session?.DocumentSelection?.isFinancialDisputeResolution).toBe(false);
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
     });
 
-    it('should render validation error with fdrHearing value from body', () => {
+    it('should render validation error with fdrHearing value from body', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.DocumentTypeSelection },
@@ -933,8 +965,10 @@ describe('General Upload Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockRes.render).toHaveBeenCalledWith(
         'generalUpload/document-type-selection',
         expect.objectContaining({
@@ -945,7 +979,7 @@ describe('General Upload Routes', () => {
       );
     });
 
-    it('should clear referrer when leaving document-type-selection with valid submission', () => {
+    it('should clear referrer when leaving document-type-selection with valid submission', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.DocumentTypeSelection },
@@ -964,13 +998,15 @@ describe('General Upload Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockReq.session?.DocumentSelection?.documentTypeSelectionReferrer).toBeUndefined();
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/upload-documents`);
     });
 
-    it('should not error when clearing referrer if DocumentSelection does not exist', () => {
+    it('should not error when clearing referrer if DocumentSelection does not exist', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.DocumentTypeSelection },
@@ -984,13 +1020,15 @@ describe('General Upload Routes', () => {
         render: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       // Should render validation error (no documents selected)
       expect(mockRes.render).toHaveBeenCalled();
     });
 
-    it('should render validation error when uploadMore is missing on check-upload', () => {
+    it('should render validation error when uploadMore is missing on check-upload', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.CheckUpload },
@@ -1002,8 +1040,10 @@ describe('General Upload Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockRes.render).toHaveBeenCalledWith(
         'generalUpload/check-upload',
         expect.objectContaining({
@@ -1018,7 +1058,7 @@ describe('General Upload Routes', () => {
       expect(mockRes.redirect).not.toHaveBeenCalled();
     });
 
-    it('should redirect to document-type-selection when user selects yes on check-upload', () => {
+    it('should redirect to document-type-selection when user selects yes on check-upload', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.CheckUpload },
@@ -1032,14 +1072,16 @@ describe('General Upload Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
       expect(mockRes.render).not.toHaveBeenCalled();
       expect(mockReq.session?.DocumentSelection?.documentTypeSelectionReferrer).toBe('check-upload');
     });
 
-    it('should set referrer when DocumentSelection does not exist in session', () => {
+    it('should set referrer when DocumentSelection does not exist in session', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.CheckUpload },
@@ -1053,14 +1095,16 @@ describe('General Upload Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockReq.session?.DocumentSelection).toBeDefined();
       expect(mockReq.session?.DocumentSelection?.documentTypeSelectionReferrer).toBe('check-upload');
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/document-type-selection`);
     });
 
-    it('should redirect to send-to-other-party when user selects no on check-upload', () => {
+    it('should redirect to send-to-other-party when user selects no on check-upload', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.CheckUpload },
@@ -1074,13 +1118,15 @@ describe('General Upload Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/send-to-other-party`);
       expect(mockRes.render).not.toHaveBeenCalled();
     });
 
-    it('should render check-upload with uploadMore value when validation fails', () => {
+    it('should render check-upload with uploadMore value when validation fails', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
       const mockReq = {
         params: { stepId: UploadStepNames.CheckUpload },
@@ -1107,8 +1153,10 @@ describe('General Upload Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockRes.render).toHaveBeenCalledWith(
         'generalUpload/check-upload',
         expect.objectContaining({
@@ -1125,7 +1173,7 @@ describe('General Upload Routes', () => {
       );
     });
 
-    it('should redirect to same step when no next step is defined', () => {
+    it('should redirect to same step when no next step is defined', async () => {
       const { uploadSteps } = require('../../../main/steps/general-upload-sequence');
       const originalNext = uploadSteps[UploadStepNames.CheckUpload].next;
       uploadSteps[UploadStepNames.CheckUpload].next = null;
@@ -1143,8 +1191,10 @@ describe('General Upload Routes', () => {
         redirect: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/${UploadStepNames.CheckUpload}`);
 
       uploadSteps[UploadStepNames.CheckUpload].next = originalNext;
@@ -1206,6 +1256,8 @@ describe('General Upload Routes', () => {
 
       await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
 
+      expect(deleteUploadDraft).toHaveBeenCalledTimes(1);
+      expect(deleteUploadDraft).toHaveBeenCalledWith(mockReq as unknown as Request);
       expect(mockLinkDocumentsToCase).toHaveBeenCalledWith(mockReq);
       expect(mockReq.session?.documents?.isFinancialDisputeResolution).toBe(true);
       expect(mockReq.session?.DocumentSelection).toBeUndefined();
@@ -1330,60 +1382,57 @@ describe('General Upload Routes', () => {
       expect(mockNext).toHaveBeenCalledWith(new Error('CCD submission failed'));
     });
 
-    it('should skip CCD event trigger when documents have already been linked to case', async () => {
-      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
-      const mockReq = {
-        params: { stepId: 'send-to-other-party' },
-        session: {
-          documents: {
-            documentDetails: [],
+    it.each([
+      ['empty', { documentDetails: [] }],
+      ['missing', undefined],
+    ])(
+      'should preserve answers and redirect when documents are %s',
+      async (_description, documents) => {
+        const handler = getRegisteredHandler(
+          mockPost,
+          `${RouteNames.uploadJourney}/:stepId`
+        );
+
+        const mockReq = {
+          params: { stepId: 'send-to-other-party' },
+          session: {
+            DocumentSelection: {
+              isFinancialDisputeResolution: true,
+            },
+            documents,
+            save: jest.fn((callback: (err?: Error) => void) => callback()),
           },
-          save: jest.fn((callback: (err?: Error) => void) => callback()),
-        },
-        body: { understand: 'yes' },
-      } as PartialRequestWithSession;
-      const mockRes = {
-        redirect: jest.fn(),
-      } as Partial<Response>;
-      const mockNext = jest.fn();
+          body: { understand: 'yes' },
+        } as PartialRequestWithSession;
 
-      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+        const mockRes = {
+          redirect: jest.fn(),
+        } as Partial<Response>;
 
-      expect(mockReq.session?.DocumentSelection).toBeUndefined();
-      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
-    });
+        const next = jest.fn();
 
-    it('should skip CCD event trigger when documents object does not exist', async () => {
-      // @ts-ignore - Jest mock typing issue
-      const mockLinkDocumentsToCase = jest.fn().mockResolvedValue(undefined) as jest.Mock;
-      (DocumentManagerController as unknown as jest.Mock).mockImplementationOnce(() => ({
-        LinkDocumentsToCase: mockLinkDocumentsToCase,
-      }));
+        const controllerMock =
+          DocumentManagerController as unknown as jest.Mock;
+        controllerMock.mockClear();
 
-      const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/:stepId`);
-      const mockReq = {
-        params: { stepId: 'send-to-other-party' },
-        session: {
-          DocumentSelection: {
-            isFinancialDisputeResolution: true,
-          },
-          // No documents object
-          save: jest.fn((callback: (err?: Error) => void) => callback()),
-        },
-        body: { understand: 'yes' },
-      } as PartialRequestWithSession;
-      const mockRes = {
-        redirect: jest.fn(),
-      } as Partial<Response>;
-      const mockNext = jest.fn();
+        await handler(
+          mockReq as unknown as Request,
+          mockRes as Response,
+          next
+        );
 
-      await handler(mockReq as unknown as Request, mockRes as Response, mockNext);
+        expect(next).not.toHaveBeenCalled();
+        expect(controllerMock).not.toHaveBeenCalled();
 
-      expect(mockReq.session?.documents).toBeUndefined();
-      expect(mockReq.session?.DocumentSelection).toBeUndefined();
-      expect(mockLinkDocumentsToCase).not.toHaveBeenCalled();
-      expect(mockRes.redirect).toHaveBeenCalledWith(`${RouteNames.uploadJourney}/confirmation`);
-    });
+        expect(mockReq.session?.DocumentSelection).toEqual({
+          isFinancialDisputeResolution: true,
+        });
+
+        expect(mockRes.redirect).toHaveBeenCalledWith(
+          `${RouteNames.uploadJourney}/document-type-selection`
+        );
+      }
+    );
 
     it('should throw error when session save fails after submission', async () => {
       // @ts-ignore - Jest mock typing issue
@@ -1433,7 +1482,7 @@ describe('General Upload Routes', () => {
   });
 
   describe('POST /upload/document-type-selection/add', () => {
-    it('should add document to session', () => {
+    it('should add document to session', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/document-type-selection/add`);
       const mockReq = {
         session: {},
@@ -1443,8 +1492,12 @@ describe('General Upload Routes', () => {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
+      expect(saveUploadDraft).toHaveBeenCalledTimes(1);
+      expect(saveUploadDraft).toHaveBeenCalledWith(mockReq as unknown as Request);
       expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
       expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('payslips');
       expect(mockRes.json).toHaveBeenCalledWith({
@@ -1453,7 +1506,7 @@ describe('General Upload Routes', () => {
       });
     });
 
-    it('should append to existing documents', () => {
+    it('should append to existing documents', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/document-type-selection/add`);
       const mockReq = {
         session: {
@@ -1467,8 +1520,10 @@ describe('General Upload Routes', () => {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(2);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
@@ -1480,7 +1535,7 @@ describe('General Upload Routes', () => {
     });
 
     // Edge case: handles malformed session data where DocumentType is missing
-    it('should handle documents with missing DocumentType', () => {
+    it('should handle documents with missing DocumentType', async () => {
       const handler = getRegisteredHandler(mockPost, `${RouteNames.uploadJourney}/document-type-selection/add`);
       const mockReq = {
         session: {
@@ -1494,8 +1549,10 @@ describe('General Upload Routes', () => {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         documents: expect.arrayContaining([
@@ -1507,7 +1564,7 @@ describe('General Upload Routes', () => {
   });
 
   describe('DELETE /upload/document-type-selection/remove/:index', () => {
-    it('should remove document from session', () => {
+    it('should remove document from session', async () => {
       const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
       const mockSave = jest.fn((callback: (err?: Error) => void) => callback());
       const mockReq = {
@@ -1526,8 +1583,12 @@ describe('General Upload Routes', () => {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
+      expect(saveUploadDraft).toHaveBeenCalledTimes(1);
+      expect(saveUploadDraft).toHaveBeenCalledWith(mockReq as unknown as Request);
       expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
       expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('BANK_STATEMENTS');
       expect(mockRes.json).toHaveBeenCalledWith({
@@ -1536,7 +1597,7 @@ describe('General Upload Routes', () => {
       });
     });
 
-    it('should handle invalid index', () => {
+    it('should handle invalid index', async () => {
       const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
       const mockSave = jest.fn((callback: (err?: Error) => void) => callback());
       const mockReq = {
@@ -1552,13 +1613,15 @@ describe('General Upload Routes', () => {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
       expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].value?.DocumentType).toBe('PAYSLIPS');
     });
 
-    it('should handle when DocumentSelection is undefined', () => {
+    it('should handle when DocumentSelection is undefined', async () => {
       const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
       const mockSave = jest.fn((callback: (err?: Error) => void) => callback());
       const mockReq = {
@@ -1571,15 +1634,17 @@ describe('General Upload Routes', () => {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         documents: [],
       });
     });
 
-    it('should update session when removing document with valid DocumentSelection', () => {
+    it('should update session when removing document with valid DocumentSelection', async () => {
       const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
       const mockSave = jest.fn((callback: (err?: Error) => void) => callback());
       const documentDetails = [
@@ -1599,8 +1664,10 @@ describe('General Upload Routes', () => {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockReq.session?.DocumentSelection?.documentDetails).toHaveLength(1);
       expect(mockReq.session?.DocumentSelection?.documentDetails?.[0].id).toBe('uuid-2');
       expect(mockRes.json).toHaveBeenCalledWith({
@@ -1615,7 +1682,7 @@ describe('General Upload Routes', () => {
       });
     });
 
-    it('should remove uploaded files for the removed document type', () => {
+    it('should remove uploaded files for the removed document type', async () => {
       const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
       const mockSave = jest.fn((callback: (err?: Error) => void) => callback());
       const mockReq = {
@@ -1640,14 +1707,16 @@ describe('General Upload Routes', () => {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockReq.session?.documents?.documentDetails).toHaveLength(1);
       expect(mockReq.session?.documents?.documentDetails?.[0].value?.DocumentType).toBe('Bank statements');
       expect(mockSave).toHaveBeenCalled();
     });
 
-    it('should clear upload errors for the removed document type', () => {
+    it('should clear upload errors for the removed document type', async () => {
       const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
       const mockSave = jest.fn((callback: (err?: Error) => void) => callback());
       const mockReq = {
@@ -1669,14 +1738,16 @@ describe('General Upload Routes', () => {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(mockReq.session?.uploadErrors?.['Mortgage statements']).toBeUndefined();
       expect(mockReq.session?.uploadErrors?.['Other']).toBe('Another error');
       expect(mockSave).toHaveBeenCalled();
     });
 
-    it('should remove all uploaded files for a document type with multiple files', () => {
+    it('should remove all uploaded files for a document type with multiple files', async () => {
       const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
       const mockSave = jest.fn((callback: (err?: Error) => void) => callback());
       const mockReq = {
@@ -1705,16 +1776,18 @@ describe('General Upload Routes', () => {
         json: jest.fn(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
       // Should remove all 3 Chronology files, leaving only Bank statements and Mortgage statements
       expect(mockReq.session?.documents?.documentDetails).toHaveLength(2);
       expect(mockReq.session?.documents?.documentDetails?.[0].value?.DocumentType).toBe('Bank statements');
       expect(mockReq.session?.documents?.documentDetails?.[1].value?.DocumentType).toBe('Mortgage statements');
       expect(mockSave).toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
     });
 
-    it('should handle session save errors', () => {
+    it('should handle session save errors', async () => {
       const handler = getRegisteredHandler(mockDelete, `${RouteNames.uploadJourney}/document-type-selection/remove/:index`);
       const mockSave = jest.fn((callback: (err?: Error) => void) => callback(new Error('Save failed')));
       const mockReq = {
@@ -1733,13 +1806,13 @@ describe('General Upload Routes', () => {
         status: jest.fn().mockReturnThis(),
       } as Partial<Response>;
 
-      handler(mockReq as unknown as Request, mockRes as Response);
+      const next = jest.fn();
+      await handler(mockReq as unknown as Request, mockRes as Response, next);
 
-      expect(mockRes.status).toHaveBeenCalledWith(500);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Failed to save session',
-      });
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Save failed' })
+      );
+      expect(mockRes.json).not.toHaveBeenCalled();
     });
   });
 
