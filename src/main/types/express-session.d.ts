@@ -22,5 +22,6 @@ declare module 'express-session' {
     uploadErrors?: Record<string, string>;
     preservedContactEmail?: string;
     returnTo?: string;
+    uploadDraftRestoredFor?: string;
   }
 }
