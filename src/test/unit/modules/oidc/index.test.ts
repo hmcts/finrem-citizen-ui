@@ -49,9 +49,10 @@ type SessionUser = {
 type SessionLike = {
   codeVerifier?: string;
   nonce?: string;
+  returnTo?: string;
   user?: SessionUser;
   destroy: (callback: (err?: unknown) => void) => void;
-  save: (callback: () => void) => void;
+  save: (callback: (err?: Error) => void) => void;
 };
 
 type RequestLike = {
@@ -698,7 +699,7 @@ describe('OIDCModule', () => {
       sub: 'user-123',
       email: 'user-123',
       familyName: '',
-      givenName: 'Lexi',   
+      givenName: 'Lexi',
       id: undefined,
       roles: [],
       accessToken: 'access-123',
@@ -806,6 +807,59 @@ describe('OIDCModule', () => {
 
     const redirectMock = (res as unknown as ResponseLike).redirect;
     expect(redirectMock).toHaveBeenCalledWith(RouteNames.basePath);
+  });
+
+  it.each([
+    ['/upload/document-type-selection', '/upload/document-type-selection'],
+    ['https://external.example.com', RouteNames.basePath],
+    ['/autocomplete', RouteNames.basePath],
+  ])('callback handles returnTo %s', async (returnTo, destination) => {
+    const app = makeApp();
+    const module = new OIDCModule();
+    setClientConfig(module, {} as oidcClient.Configuration);
+    mockedOidc.authorizationCodeGrant.mockResolvedValue({
+      id_token: 'id-token',
+      access_token: 'access-token',
+      claims: () => ({ sub: 'citizen@example.com', uid: 'user-1', roles: ['citizen'] }),
+    } as unknown as Awaited<ReturnType<typeof oidcClient.authorizationCodeGrant>>);
+    module.enableFor(app as unknown as Express);
+
+    const req = makeReq();
+    req.session.returnTo = returnTo;
+    const res = makeRes();
+    const next = jest.fn();
+
+    await app.__routes[RouteNames.callbackUrl](req, res, next);
+
+    expect(res.redirect).toHaveBeenCalledWith(destination);
+    expect(req.session.returnTo).toBeUndefined();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('callback forwards session save errors without redirecting', async () => {
+    const app = makeApp();
+    const module = new OIDCModule();
+    setClientConfig(module, {} as oidcClient.Configuration);
+    mockedOidc.authorizationCodeGrant.mockResolvedValue({
+      id_token: 'id-token',
+      access_token: 'access-token',
+      claims: () => ({ sub: 'citizen@example.com', uid: 'user-1', roles: ['citizen'] }),
+    } as unknown as Awaited<ReturnType<typeof oidcClient.authorizationCodeGrant>>);
+    module.enableFor(app as unknown as Express);
+
+    const req = makeReq();
+    const error = new Error('Session save failed');
+    req.session.save = callback => {
+      callback?.(error);
+      return req.session;
+    };
+    const res = makeRes();
+    const next = jest.fn();
+
+    await app.__routes[RouteNames.callbackUrl](req, res, next);
+
+    expect(next).toHaveBeenCalledWith(error);
+    expect(res.redirect).not.toHaveBeenCalled();
   });
 
   it('callback passes through OIDCCallbackError when no ID token is returned', async () => {
