@@ -41,10 +41,7 @@ describe('CaseApi', () => {
 
   let api: CaseApi;
   beforeEach(() => {
-    api = new CaseApi(
-      mockApiClient as unknown as caseApiClient.CaseApiClient,
-      mockLogger as unknown as LoggerInstance
-    );
+    api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient, mockLogger as unknown as LoggerInstance);
   });
 
   afterEach(() => {
@@ -82,7 +79,10 @@ test('Should call addCaseUserRoles with assignments', async () => {
     info: jest.fn().mockImplementation((msg: string) => msg),
   } as unknown as LoggerInstance;
 
-  const api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient, mockLogger as unknown as LoggerInstance);
+  const api = new CaseApi(
+    mockApiClient as unknown as caseApiClient.CaseApiClient,
+    mockLogger as unknown as LoggerInstance
+  );
 
   const assignments = [{ case_id: '1234', user_id: 'user1', case_role: CaseRole.APPLICANT }];
 
@@ -108,10 +108,7 @@ describe('CaseApi.getExistingFRUserCase', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    api = new CaseApi(
-      mockApiClient as unknown as caseApiClient.CaseApiClient,
-      mockLogger as unknown as LoggerInstance
-    );
+    api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient, mockLogger as unknown as LoggerInstance);
   });
 
   test('returns undefined when user has no FR cases', async () => {
@@ -120,10 +117,7 @@ describe('CaseApi.getExistingFRUserCase', () => {
     const result = await api.getExistingFRUserCase();
 
     expect(mockApiClient.findUserCases).toHaveBeenCalledTimes(1);
-    expect(mockApiClient.findUserCases).toHaveBeenCalledWith(
-      CaseType.CONTESTED,
-      expect.any(String)
-    );
+    expect(mockApiClient.findUserCases).toHaveBeenCalledWith(CaseType.CONTESTED, expect.any(String));
 
     const query = mockApiClient.findUserCases.mock.calls[0][1] as string;
     expect(JSON.parse(query)).toEqual({
@@ -136,9 +130,7 @@ describe('CaseApi.getExistingFRUserCase', () => {
   });
 
   test('returns case id as string when exactly one FR case exists', async () => {
-    mockApiClient.findUserCases.mockResolvedValue([
-      { id: 987654321, state: 'Submitted' },
-    ]);
+    mockApiClient.findUserCases.mockResolvedValue([{ id: 987654321, state: 'Submitted' }]);
 
     const result = await api.getExistingFRUserCase();
 
@@ -184,10 +176,7 @@ describe('CaseApi.triggerEvent', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    api = new CaseApi(
-      mockApiClient as unknown as caseApiClient.CaseApiClient,
-      mockLogger
-    );
+    api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient, mockLogger);
   });
 
   test('should call apiClient.sendEvent and return the result', async () => {
@@ -209,11 +198,7 @@ describe('CaseApi.triggerEvent', () => {
     const result = await api.triggerEvent(caseId, userData, eventName);
 
     expect(mockApiClient.sendEvent).toHaveBeenCalledTimes(1);
-    expect(mockApiClient.sendEvent).toHaveBeenCalledWith(
-      caseId,
-      userData,
-      eventName
-    );
+    expect(mockApiClient.sendEvent).toHaveBeenCalledWith(caseId, userData, eventName);
     expect(result).toEqual(expectedResult);
   });
 
@@ -221,13 +206,9 @@ describe('CaseApi.triggerEvent', () => {
     const caseId = '123456';
     const eventName = EVENT_TYPE.LINK_APPLICANT_TO_CASE;
 
-    mockApiClient.sendEvent.mockRejectedValue(
-      new Error('Case could not be updated.')
-    );
+    mockApiClient.sendEvent.mockRejectedValue(new Error('Case could not be updated.'));
 
-    await expect(
-      api.triggerEvent(caseId, {}, eventName)
-    ).rejects.toThrow('Case could not be updated.');
+    await expect(api.triggerEvent(caseId, {}, eventName)).rejects.toThrow('Case could not be updated.');
 
     expect(mockApiClient.sendEvent).toHaveBeenCalledTimes(1);
   });
@@ -247,10 +228,7 @@ describe('CaseApi.getUsersRoleOnCase', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    api = new CaseApi(
-      mockApiClient as unknown as caseApiClient.CaseApiClient,
-      mockLogger
-    );
+    api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient, mockLogger);
   });
 
   test('returns the user case role when one exists', async () => {
@@ -335,16 +313,12 @@ describe('triggerSystemEvent', () => {
     jest.mocked(getSystemUser).mockResolvedValue(systemUser);
     jest.spyOn(caseApiModule, 'getCaseApi').mockReturnValue(caseApi);
 
-    await expect(
-      triggerSystemEvent('123456', {}, EVENT_TYPE.LINK_RESPONDENT_TO_CASE, mockLogger)
-    ).rejects.toThrow('CCD error');
+    await expect(triggerSystemEvent('123456', {}, EVENT_TYPE.LINK_RESPONDENT_TO_CASE, mockLogger)).rejects.toThrow(
+      'CCD error'
+    );
 
     expect(getSystemUser).toHaveBeenCalledTimes(1);
     expect(caseApiModule.getCaseApi).toHaveBeenCalledWith(systemUser, mockLogger);
-    expect(triggerEvent).toHaveBeenCalledWith(
-      '123456',
-      {},
-      EVENT_TYPE.LINK_RESPONDENT_TO_CASE
-    );
+    expect(triggerEvent).toHaveBeenCalledWith('123456', {}, EVENT_TYPE.LINK_RESPONDENT_TO_CASE);
   });
 });

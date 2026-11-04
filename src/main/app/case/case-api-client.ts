@@ -26,15 +26,11 @@ export class CaseApiClient {
     } catch (err) {
       const errorMessage = 'Case user roles could not be added.';
       this.logError(err as AxiosError);
-      AppInsights.trackException(
-        err instanceof Error ? err : new Error(errorMessage),
-        {
-          operation: 'addCaseUserRoles',
-          endpoint: UrlEndPoints.CaseUsers,
-          statusCode:
-            (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
-        }
-      );
+      AppInsights.trackException(err instanceof Error ? err : new Error(errorMessage), {
+        operation: 'addCaseUserRoles',
+        endpoint: UrlEndPoints.CaseUsers,
+        statusCode: (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
+      });
       throw new Error(errorMessage);
     }
   }
@@ -47,25 +43,21 @@ export class CaseApiClient {
       const errorMessage = 'Case could not be retrieved.';
       this.logError(err as AxiosError);
 
-      AppInsights.trackException(
-        err instanceof Error ? err : new Error(errorMessage),
-        {
-          operation: 'getCaseById',
-          caseId,
-          endpoint: UrlEndPoints.CaseId(caseId),
-          statusCode:
-            (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
-        }
-      );
+      AppInsights.trackException(err instanceof Error ? err : new Error(errorMessage), {
+        operation: 'getCaseById',
+        caseId,
+        endpoint: UrlEndPoints.CaseId(caseId),
+        statusCode: (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
+      });
 
       throw new Error(errorMessage);
     }
   }
 
   public async findUserCases<TCaseData = FinremCaseData>(
-  caseType: string,
-  query: string
-): Promise<CcdV1Response<TCaseData>[] | false> {
+    caseType: string,
+    query: string
+  ): Promise<CcdV1Response<TCaseData>[] | false> {
     try {
       const response = await this.server.post<ES<CcdV1Response<TCaseData>>>(UrlEndPoints.SearchCases(caseType), query);
       return response.data.cases;
@@ -75,16 +67,12 @@ export class CaseApiClient {
         return false;
       }
       this.logError(err);
-      AppInsights.trackException(
-        err instanceof Error ? err : new Error(errorMessage),
-        {
-          operation: 'findExistingUserCases',
-          caseType,
-          endpoint: UrlEndPoints.SearchCases(caseType),
-          statusCode:
-            (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
-        }
-      );
+      AppInsights.trackException(err instanceof Error ? err : new Error(errorMessage), {
+        operation: 'findExistingUserCases',
+        caseType,
+        endpoint: UrlEndPoints.SearchCases(caseType),
+        statusCode: (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
+      });
       throw new Error(errorMessage);
     }
   }
@@ -96,15 +84,11 @@ export class CaseApiClient {
     } catch (err) {
       this.logError(err);
       const errorMessage = 'Case roles could not be fetched.';
-      AppInsights.trackException(
-        err instanceof Error ? err : new Error(errorMessage),
-        {
-          operation: 'getCaseUserRoles',
-          endpoint: UrlEndPoints.CaseRoles,
-          statusCode:
-            (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
-        }
-      );
+      AppInsights.trackException(err instanceof Error ? err : new Error(errorMessage), {
+        operation: 'getCaseUserRoles',
+        endpoint: UrlEndPoints.CaseRoles,
+        statusCode: (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
+      });
       throw new Error('Case roles could not be fetched.');
     }
   }
@@ -140,17 +124,13 @@ export class CaseApiClient {
       }
       this.logError(err);
       const errorMessage = 'Case could not be updated.';
-      AppInsights.trackException(
-        err instanceof Error ? err : new Error(errorMessage),
-        {
-          operation: 'sendEvent',
-          caseId,
-          eventName,
-          endpoint: UrlEndPoints.CaseEventTrigger(caseId, eventName),
-          statusCode:
-            (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
-        }
-      );
+      AppInsights.trackException(err instanceof Error ? err : new Error(errorMessage), {
+        operation: 'sendEvent',
+        caseId,
+        eventName,
+        endpoint: UrlEndPoints.CaseEventTrigger(caseId, eventName),
+        statusCode: (err as AxiosError)?.response?.status?.toString() ?? 'unknown',
+      });
       throw new Error('Case could not be updated.');
     }
   }
