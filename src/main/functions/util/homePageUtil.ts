@@ -71,6 +71,10 @@ export function resetCaseContext(session: SessionData): void {
   delete session.caseData;
   delete session.caseUserName;
 
+  delete session.uploadDraftRestoredFor;
+  delete session.DocumentSelection;
+  delete session.documents;
+
   const user = session.user as UserDetails | undefined;
   if (user) {
     delete user.caseRole;

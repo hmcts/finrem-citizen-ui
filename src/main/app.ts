@@ -17,6 +17,7 @@ import { OIDCModule } from './modules/oidc';
 import { PropertiesVolume } from './modules/properties-volume';
 import { createDefaultRateLimiter } from './modules/rate-limiter';
 import { Session } from './modules/session';
+import { uploadDraftMiddleware } from './middleware/upload-draft';
 
 const { setupDev } = require('./development');
 
@@ -77,6 +78,8 @@ new OIDCModule().enableFor(app);
 
 app.use(caseContextMiddleware);
 app.use(routeAccessMiddleware);
+app.use([RouteNames.uploadJourney, RouteNames.documents], uploadDraftMiddleware);
+
 app.use(Object.values(PrivateRoutes), createDefaultRateLimiter(app.locals.redisClient));
 
 // Add contact email to all templates via res.locals
