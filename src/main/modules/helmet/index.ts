@@ -49,6 +49,7 @@ export class Helmet {
             objectSrc: [self],
             scriptSrc,
             styleSrc: [self],
+            upgradeInsecureRequests: this.developmentMode ? null : [],
           },
         },
         referrerPolicy: { policy: 'origin' },
