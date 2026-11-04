@@ -21,7 +21,7 @@ export class CaseApi {
   }
 
   public async getExistingNfdCase(): Promise<string | undefined> {
-    const userCases = await this.apiClient.findUserCaseRefs(
+    const userCases = await this.apiClient.findUserCases<unknown>(
       CaseType.NFD,
       JSON.stringify({
         query: { match_all: {} },
