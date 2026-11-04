@@ -29,8 +29,6 @@ export class CaseApi {
       })
     );
 
-    console.log('userCases:', userCases);
-
     if (!userCases || userCases.length === 0) {
       return undefined;
     }

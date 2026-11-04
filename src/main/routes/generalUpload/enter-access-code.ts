@@ -11,8 +11,8 @@ import {
   getLinkingEventType,
   validateAccessCodeFormat,
 } from '../../functions/util/accessCodeUtil';
-import { oidcMiddleware } from '../../middleware';
 import { refreshUserNfdCaseFlag } from '../../functions/util/homePageUtil';
+import { oidcMiddleware } from '../../middleware';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
