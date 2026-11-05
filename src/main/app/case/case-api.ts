@@ -51,7 +51,7 @@ export class CaseApi {
   }
 
   private getSingleCaseIdOrThrow(
-    userCases: Array<{ id: string }> | false,
+    userCases: { id: string }[] | false,
     multipleFoundMessagePrefix: string
   ): string | undefined {
     if (!userCases || userCases.length === 0) {
