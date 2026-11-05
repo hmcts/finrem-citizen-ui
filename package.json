@@ -141,11 +141,15 @@
     "postcss-selector-parser": "^7.1.5",
     "qs": "^6.17.0",
     "uuid": "14.0.1",
-    "@opentelemetry/sdk-node": "0.221.0",
     "@opentelemetry/core": "^2.8.0",
     "colord": "^2.9.4",
     "js-yaml": "^4.3.2",
     "ip-address": "10.7.4",
-    "follow-redirects": "^1.16.1"
+    "follow-redirects": "^1.16.1",
+    "@azure/msal-node": "^7.1.2",
+    "@opentelemetry/sdk-trace": "3.0.0",
+    "@opentelemetry/sdk-trace-base": "npm:@opentelemetry/sdk-trace@^3.0.0",
+    "@opentelemetry/sdk-trace-node": "npm:@opentelemetry/sdk-trace@^3.0.0",
+    "@opentelemetry/sdk-trace-web": "npm:@opentelemetry/sdk-trace@^3.0.0"
   }
 }
