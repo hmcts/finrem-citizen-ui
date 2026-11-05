@@ -153,6 +153,69 @@ describe('CaseApi.addCaseUserRoles', () => {
   });
 });
 
+describe('CaseApiClient.findUserCases', () => {
+  let mockAxios: jest.Mocked<Pick<typeof axios, 'post' | 'get'>>;
+  let mockLogger: LoggerInstance;
+  let api: CaseApiClient;
+
+  beforeEach(() => {
+    mockAxios = {
+      post: jest.fn(),
+      get: jest.fn(),
+    } as unknown as jest.Mocked<Pick<typeof axios, 'post' | 'get'>>;
+
+    mockLogger = {
+      error: jest.fn().mockImplementation((msg: string) => msg),
+      info: jest.fn().mockImplementation((msg: string) => msg),
+    } as unknown as LoggerInstance;
+
+    api = new CaseApiClient(mockAxios as unknown as AxiosInstance, mockLogger);
+  });
+
+  const CASE_TYPE = 'FinancialRemedyContested';
+  const GENERAL_QUERY = JSON.stringify({
+    query: { match_all: {} },
+    size: 2,
+  });
+
+  test('should return cases when search is successful', async () => {
+    const cases = [{ id: '1', state: 'Draft', case_data: {} }];
+
+    mockAxios.post.mockResolvedValue({
+      data: { cases, total: 1 },
+    });
+
+    const result = await api.findUserCases(CASE_TYPE, GENERAL_QUERY);
+
+    expect(mockAxios.post).toHaveBeenCalledWith(UrlEndPoints.SearchCases(CASE_TYPE), expect.any(String));
+    expect(result).toEqual(cases);
+  });
+
+  test('should return false when 404 is returned', async () => {
+    mockAxios.post.mockRejectedValue({
+      response: { status: 404 },
+    });
+
+    const result = await api.findUserCases(CASE_TYPE, GENERAL_QUERY);
+
+    expect(result).toBe(false);
+    expect(mockLogger.error).not.toHaveBeenCalled();
+  });
+
+  test('should log error and throw when error occurs', async () => {
+    mockAxios.post.mockRejectedValue({
+      config: { method: 'post', url: UrlEndPoints.SearchCases(CASE_TYPE) },
+      response: { status: 500, data: { error: 'bad' } },
+    });
+
+    await expect(api.findUserCases(CASE_TYPE, GENERAL_QUERY)).rejects.toThrow('Case could not be retrieved.');
+
+    expect(mockLogger.error).toHaveBeenCalledWith(`API Error post ${UrlEndPoints.SearchCases(CASE_TYPE)} 500`);
+
+    expect(mockLogger.info).toHaveBeenCalledWith('Response: ', { error: 'bad' });
+  });
+});
+
 describe('CaseApiClient.sendEvent', () => {
   let mockAxios: jest.Mocked<Pick<typeof axios, 'get' | 'post'>>;
   let mockLogger: LoggerInstance;
