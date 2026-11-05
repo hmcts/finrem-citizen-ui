@@ -839,8 +839,7 @@ describe('OIDCModule', () => {
 
     await handler(req, res, next);
 
-    expect(mockLogger.error).toHaveBeenCalledWith('OIDC callback error:', expect.any(OIDCCallbackError));
-
+    expect(mockLogger.error).toHaveBeenCalledWith('[oidc] OIDC callback error', expect.any(OIDCCallbackError));
     const firstArg: unknown = next.mock.calls[0]?.[0];
     expect(firstArg).toBeInstanceOf(OIDCCallbackError);
 
@@ -874,8 +873,7 @@ describe('OIDCModule', () => {
 
     await handler(req, res, next);
 
-    expect(mockLogger.error).toHaveBeenCalledWith('OIDC callback error:', unexpectedError);
-
+    expect(mockLogger.error).toHaveBeenCalledWith('[oidc] OIDC callback error', unexpectedError);
     const firstArg: unknown = next.mock.calls[0]?.[0];
     expect(firstArg).toBeInstanceOf(OIDCCallbackError);
 

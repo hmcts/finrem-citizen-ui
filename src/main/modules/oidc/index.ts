@@ -18,6 +18,8 @@ const getOidcClient = async (): Promise<typeof OidcClientType> => {
   return new Function("return import('openid-client')")();
 };
 
+const OIDC_CALLBACK_FAILED_LOG_MESSAGE = '[oidc] OIDC callback error';
+
 export class OIDCModule {
   private clientConfig: OidcClientType.Configuration | undefined;
   private readonly oidcConfig: OIDCConfig = config.get<OIDCConfig>('oidc');
@@ -223,7 +225,7 @@ export class OIDCModule {
 
         if (!id_token || !claims) {
           const err = new OIDCCallbackError('No ID token received from IDAM');
-          this.logger.error('OIDC callback error:', err);
+          this.logger.error(OIDC_CALLBACK_FAILED_LOG_MESSAGE, err);
           return next(err);
         }
 
@@ -261,8 +263,8 @@ export class OIDCModule {
           res.redirect(RouteNames.basePath);
         });
       } catch (err: unknown) {
-        this.logger.error('OIDC callback error:', err);
-        next(new OIDCCallbackError('Authentication callback failed'));
+        this.logger.error(OIDC_CALLBACK_FAILED_LOG_MESSAGE, err);
+        return next(new OIDCCallbackError('Authentication callback failed'));
       }
     });
   }

@@ -4,6 +4,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { RouteNames, ViewNames } from '../../../main/constants';
 import { globalErrorHandler } from '../../../main/middleware/global-error-handler';
 import { AppInsights } from '../../../main/modules/appinsights';
+import { OIDCCallbackError } from '../../../main/modules/oidc/errors';
 
 jest.mock('@hmcts/nodejs-logging', () => {
   const logger = {
@@ -235,6 +236,27 @@ describe('globalErrorHandler', () => {
       url: '/submit',
     });
     expect(res.redirect).toHaveBeenCalledWith(RouteNames.csrfError);
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.render).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('redirects to the login page for OIDC callback errors', () => {
+    const req = makeReq({ method: 'GET', originalUrl: '/oauth2/callback', url: '/oauth2/callback' });
+    const res = makeRes();
+
+    globalErrorHandler(new OIDCCallbackError('callback_exception'), req, res, next);
+
+    expect(trackExceptionSpy).toHaveBeenCalledWith(expect.any(OIDCCallbackError), {
+      errorId: expect.any(String),
+      idamUserId: 'user-id',
+      caseReference: '12345',
+      sessionId: 'session-id',
+      method: 'GET',
+      statusCode: '500',
+      url: '/oauth2/callback',
+    });
+    expect(res.redirect).toHaveBeenCalledWith(RouteNames.login);
     expect(res.status).not.toHaveBeenCalled();
     expect(res.render).not.toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
