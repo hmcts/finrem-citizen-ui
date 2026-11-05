@@ -3,11 +3,11 @@ import { Request } from 'express';
 import { DOCUMENT_RENAME_FORMATS } from '../../../../main/constants';
 import {
   generateRenamedFilename,
-getCombinedPDFFormat,
+  getCombinedPDFFormat,
   getDocumentLabel,
   getDocumentRenameFormat,
-  getSelectedDocumentTypesForDisplay,
-  shouldAutoRename,shouldCombineIntoPDF,
+  getSelectedDocumentTypesForDisplay, makeFilenameUnique,
+  shouldAutoRename, shouldCombineIntoPDF,
 } from '../../../../main/functions/util/documentUtil';
 describe('documentUtil', () => {
   describe('getDocumentLabel', () => {
@@ -640,6 +640,54 @@ it('should not rename document not in mapping', () => {
       expect(getCombinedPDFFormat('position-statement')).toBe('');
       expect(getCombinedPDFFormat('unknown-type')).toBe('');
       expect(getCombinedPDFFormat('')).toBe('');
+    });
+  });
+
+  describe('makeFilenameUnique', () => {
+    const base = 'SmeagolGollum-FormFM1-15-10-2026.pdf';
+    const now = new Date(2026, 9, 15, 15, 35);
+
+    it('should preserve original filename for first upload', () => {
+      const result = makeFilenameUnique(base, new Set(), now);
+
+      expect(result).toBe(base);
+    });
+
+    it('should append (1) for second upload', () => {
+      const existing = new Set([base]);
+
+      const result = makeFilenameUnique(base, existing, now);
+
+      expect(result).toBe(
+        'SmeagolGollum-FormFM1-15-10-2026 15-35 (1).pdf'
+      );
+    });
+
+    it('should increment to (2) for third upload', () => {
+      const existing = new Set([
+        base,
+        'SmeagolGollum-FormFM1-15-10-2026 15-35 (1).pdf',
+      ]);
+
+      const result = makeFilenameUnique(base, existing, now);
+
+      expect(result).toBe(
+        'SmeagolGollum-FormFM1-15-10-2026 15-35 (2).pdf'
+      );
+    });
+
+    it('should use the highest existing suffix when numbers have gaps', () => {
+      const existing = new Set([
+        base,
+        'SmeagolGollum-FormFM1-15-10-2026 15-30 (1).pdf',
+        'SmeagolGollum-FormFM1-15-10-2026 15-35 (3).pdf',
+      ]);
+      const newTime = new Date(2026, 9, 15, 15, 40);
+      const result = makeFilenameUnique(base, existing, newTime);
+
+      expect(result).toBe(
+        'SmeagolGollum-FormFM1-15-10-2026 15-40 (4).pdf'
+      );
     });
   });
 });
