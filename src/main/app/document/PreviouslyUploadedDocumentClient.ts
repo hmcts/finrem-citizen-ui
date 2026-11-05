@@ -40,16 +40,22 @@ export interface PreviouslyUploadedDocumentsCaseDetails {
   state: string;
   version: number;
   case_type_id: string;
-  created_date: string;
-  last_modified: string;
-  last_state_modified_date: string;
+  created_date: Date;
+  last_modified: Date;
+  last_state_modified_date: Date;
   security_classification: string;
   case_data: PreviouslyUploadedDocumentsCaseData;
 }
 
 export interface PreviouslyUploadedDocumentsCaseData {
-  citizenApplicantDocument?: PreviouslyUploadedDocument[];
-  citizenRespondentDocument?: PreviouslyUploadedDocument[];
+  applicantDocCollection?: PreviouslyUploadedDocument[];
+  respondentDocCollection?: PreviouslyUploadedDocument[];
+  fdrApplicantDocCollection?: PreviouslyUploadedDocument[];
+  fdrRespondentDocCollection?: PreviouslyUploadedDocument[];
+  divorceApplicantDocCollection?: PreviouslyUploadedDocument[];
+  divorceRespondentDocCollection?: PreviouslyUploadedDocument[];
+  hearingApplicantDocCollection?: PreviouslyUploadedDocument[];
+  hearingRespondentDocCollection?: PreviouslyUploadedDocument[];
 }
 
 export interface PreviouslyUploadedDocument {
@@ -61,6 +67,7 @@ export interface PreviouslyUploadedDocumentValue {
   DocumentLink: PreviouslyUploadedDocumentLink;
   DocumentType: string;
   DocumentFileName: string;
+  DocumentDateAdded: Date;
 }
 
 export interface PreviouslyUploadedDocumentLink {
