@@ -12,6 +12,11 @@ export class CaseApi {
     private readonly logger: LoggerInstance
   ) {}
 
+  private readonly GENERAL_QUERY = JSON.stringify({
+    query: { match_all: {} },
+    size: 2, // only need 0/1/many
+  });
+
   public async addUsersToCase(assignments: { case_id: string; user_id: string; case_role: CaseRole }[]): Promise<void> {
     await this.apiClient.addCaseUserRoles(assignments);
   }
@@ -21,46 +26,15 @@ export class CaseApi {
   }
 
   public async getExistingNfdCase(): Promise<string | undefined> {
-    const userCases = await this.apiClient.findUserCases<unknown>(
-      CaseType.NFD,
-      JSON.stringify({
-        query: { match_all: {} },
-        size: 2, // only need 0/1/many
-      })
-    );
+    const userCases = await this.apiClient.findUserCases<unknown>(CaseType.NFD, this.GENERAL_QUERY);
 
-    if (!userCases || userCases.length === 0) {
-      return undefined;
-    }
-
-    if (userCases.length > 1) {
-      const message = `More than one NFD case found. Expected exactly one. Found: ${userCases.length}.`;
-      this.logger.error(message);
-      throw new Error(message);
-    }
-
-    return String(userCases[0].id);
+    return this.getSingleCaseIdOrThrow(userCases, 'More than one NFD case found');
   }
 
   public async getExistingFRUserCase(): Promise<string | undefined> {
-    const userCases = await this.apiClient.findUserCases(
-      CaseType.CONTESTED,
-      JSON.stringify({
-        query: { match_all: {} },
-        size: 2, // only need 0/1/many,
-      })
-    );
+    const userCases = await this.apiClient.findUserCases(CaseType.CONTESTED, this.GENERAL_QUERY);
 
-    if (!userCases || userCases.length === 0) {
-      return undefined;
-    }
-
-    if (userCases.length > 1) {
-      const message = `More than one case found for caseType FR. Expected exactly one. Found: ${userCases.length}.`;
-      this.logger.error(message);
-      throw new Error(message);
-    }
-    return String(userCases[0].id);
+    return this.getSingleCaseIdOrThrow(userCases, 'More than one case found for caseType FR');
   }
 
   public async getUsersRoleOnCase(caseId: string, userId: string): Promise<CaseRole | undefined> {
@@ -74,6 +48,23 @@ export class CaseApi {
     eventName: string
   ): Promise<FinremCaseData> {
     return this.apiClient.sendEvent(caseId, partialCaseData, eventName);
+  }
+
+  private getSingleCaseIdOrThrow(
+    userCases: Array<{ id: string }> | false,
+    multipleFoundMessagePrefix: string
+  ): string | undefined {
+    if (!userCases || userCases.length === 0) {
+      return undefined;
+    }
+
+    if (userCases.length > 1) {
+      const message = `${multipleFoundMessagePrefix}. Expected exactly one. Found: ${userCases.length}.`;
+      this.logger.error(message);
+      throw new Error(message);
+    }
+
+    return String(userCases[0].id);
   }
 }
 
