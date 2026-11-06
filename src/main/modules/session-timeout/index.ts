@@ -21,14 +21,11 @@ export class SessionTimeout {
       // Tell browsers and proxies not to store this response.
       res.set('Cache-Control', 'no-store');
 
-      // Wait for session deletion to complete before showing the page.
       req.session.destroy(error => {
         if (error) {
-          // Forward session-store failures to the global error handler.
           return next(error);
         }
 
-        // Remove the browser's session cookie using its original path.
         res.clearCookie(config.get<string>('session.cookieName'), {
           path: '/',
         });
