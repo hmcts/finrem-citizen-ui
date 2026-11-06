@@ -623,7 +623,7 @@ describe('General Upload Routes', () => {
           caseUserName: 'JohnSmith',
           DocumentSelection: {
             documentDetails: [
-              { id: 'doc-1', value: { DocumentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)' } },
+              { id: 'doc-1', value: { DocumentType: 'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5' } },
             ],
           },
           documents: {
@@ -631,8 +631,8 @@ describe('General Upload Routes', () => {
               {
                 id: 'file-1',
                 value: {
-                  DocumentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
-                  DocumentFileName: 'JohnSmith-FormFM1-23-06-2026.pdf',
+                  DocumentType: 'Statement of position on non-court dispute resolution (NCDR): Form FM5',
+                  DocumentFileName: 'JohnSmith-FormFM5-23-06-2026.pdf',
                   DocumentLink: {
                     document_url: 'http://example.com/documents/file1',
                   },
@@ -651,9 +651,9 @@ describe('General Upload Routes', () => {
       expect(mockRes.render).toHaveBeenCalledWith('generalUpload/check-upload', expect.objectContaining({
         data: expect.objectContaining({
           uploadedFiles: expect.objectContaining({
-            'family-mediation-information-and-assessment-meeting-miam-form-form-fm1': expect.arrayContaining([
+            'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5': expect.arrayContaining([
               expect.objectContaining({
-                displayFilename: expect.stringContaining('JohnSmith-FormFM1'),
+                displayFilename: expect.stringContaining('JohnSmith-FormFM5'),
               }),
             ]),
           }),
@@ -669,7 +669,7 @@ describe('General Upload Routes', () => {
           caseUserName: 'JohnSmith',
           DocumentSelection: {
             documentDetails: [
-              { id: 'doc-1', value: { DocumentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)' } },
+              { id: 'doc-1', value: { DocumentType: 'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5' } },
             ],
           },
           documents: {
@@ -677,8 +677,8 @@ describe('General Upload Routes', () => {
               {
                 id: 'file-1',
                 value: {
-                  DocumentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
-                  DocumentFileName: 'JohnSmith-FormFM1-23-06-2026.pdf',
+                  DocumentType: 'Statement of position on non-court dispute resolution (NCDR): Form FM5',
+                  DocumentFileName: 'JohnSmith-FormFM5-23-06-2026.pdf',
                   DocumentLink: {
                     document_url: 'http://example.com/documents/file1',
                   },
@@ -700,7 +700,7 @@ describe('General Upload Routes', () => {
             expect.objectContaining({
               files: expect.arrayContaining([
                 expect.objectContaining({
-                  displayFilename: expect.stringContaining('JohnSmith-FormFM1'),
+                  displayFilename: expect.stringContaining('JohnSmith-FormFM5'),
                 }),
               ]),
             }),
