@@ -18,7 +18,6 @@ export class SessionTimeout {
    */
   public enableFor(app: Express): void {
     app.get(RouteNames.timedOut, (req, res, next) => {
-      // Tell browsers and proxies not to store this response.
       res.set('Cache-Control', 'no-store');
 
       req.session.destroy(error => {
