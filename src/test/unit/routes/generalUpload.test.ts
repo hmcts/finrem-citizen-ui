@@ -623,7 +623,7 @@ describe('General Upload Routes', () => {
           caseUserName: 'JohnSmith',
           DocumentSelection: {
             documentDetails: [
-              { id: 'doc-1', value: { DocumentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)' } },
+              { id: 'doc-1', value: { DocumentType: 'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5' } },
             ],
           },
           documents: {
@@ -631,8 +631,8 @@ describe('General Upload Routes', () => {
               {
                 id: 'file-1',
                 value: {
-                  DocumentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
-                  DocumentFileName: 'JohnSmith-FormFM1-23-06-2026.pdf',
+                  DocumentType: 'Statement of position on non-court dispute resolution (NCDR): Form FM5',
+                  DocumentFileName: 'JohnSmith-FormFM5-23-06-2026.pdf',
                   DocumentLink: {
                     document_url: 'http://example.com/documents/file1',
                   },
@@ -651,9 +651,9 @@ describe('General Upload Routes', () => {
       expect(mockRes.render).toHaveBeenCalledWith('generalUpload/check-upload', expect.objectContaining({
         data: expect.objectContaining({
           uploadedFiles: expect.objectContaining({
-            'family-mediation-information-and-assessment-meeting-miam-form-form-fm1': expect.arrayContaining([
+            'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5': expect.arrayContaining([
               expect.objectContaining({
-                displayFilename: expect.stringContaining('JohnSmith-FormFM1'),
+                displayFilename: expect.stringContaining('JohnSmith-FormFM5'),
               }),
             ]),
           }),
@@ -669,7 +669,7 @@ describe('General Upload Routes', () => {
           caseUserName: 'JohnSmith',
           DocumentSelection: {
             documentDetails: [
-              { id: 'doc-1', value: { DocumentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)' } },
+              { id: 'doc-1', value: { DocumentType: 'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5' } },
             ],
           },
           documents: {
@@ -677,8 +677,8 @@ describe('General Upload Routes', () => {
               {
                 id: 'file-1',
                 value: {
-                  DocumentType: 'Family mediation information and assessment meeting (MIAM) form (Form FM1)',
-                  DocumentFileName: 'JohnSmith-FormFM1-23-06-2026.pdf',
+                  DocumentType: 'Statement of position on non-court dispute resolution (NCDR): Form FM5',
+                  DocumentFileName: 'JohnSmith-FormFM5-23-06-2026.pdf',
                   DocumentLink: {
                     document_url: 'http://example.com/documents/file1',
                   },
@@ -700,7 +700,7 @@ describe('General Upload Routes', () => {
             expect.objectContaining({
               files: expect.arrayContaining([
                 expect.objectContaining({
-                  displayFilename: expect.stringContaining('JohnSmith-FormFM1'),
+                  displayFilename: expect.stringContaining('JohnSmith-FormFM5'),
                 }),
               ]),
             }),
@@ -1744,24 +1744,77 @@ describe('General Upload Routes', () => {
   });
 
   describe('GET /upload/previously-uploaded-documents', () => {
-    it('should render previously uploaded documents', async () => {
+    it('should render all previously uploaded documents from all CUI party collections in descending order of upload timestamp', async () => {
       const mockResponse = {
         case_details: {
           case_data: {
-            citizenApplicantDocument: [],
-            citizenRespondentDocument: [
+            applicantDocCollection: [],
+            respondentDocCollection: [
               {
                 value: {
                   DocumentLink: {
                     document_url:
-                      'http://dm-store/documents/f6b20958-b1d9-4cda-8354-8b8236ef299d',
-                    upload_timestamp: '2026-06-15T08:11:58.314565476',
+                      'http://dm-store/documents/123',
+                    upload_timestamp: '2026-06-15T11:00:00.000000000',
                     document_filename: 'Test-Demo.docx',
                   },
                   DocumentType: 'Statement of issues',
                   DocumentFileName: 'Test-Demo.docx',
                 },
               },
+            ],
+            fdrRespondentDocCollection: [
+              {
+                value: {
+                  DocumentLink: {
+                    document_url:
+                      'http://dm-store/documents/234',
+                    upload_timestamp: '2026-06-15T10:00:00.000000000',
+                    document_filename: 'Test-FDR.docx',
+                  },
+                  DocumentType: 'Some FDR doc',
+                  DocumentFileName: 'Test-FDR.docx',
+                },
+              },
+            ],
+            divorceRespondentDocCollection: [
+              {
+                value: {
+                  DocumentLink: {
+                    document_url:
+                      'http://dm-store/documents/456',
+                    upload_timestamp: '2026-06-16T09:00:00.000000000',
+                    document_filename: 'Test-Divorce.docx',
+                  },
+                  DocumentType: 'Some divorce doc',
+                  DocumentFileName: 'Test-Divorce.docx',
+                },
+              },
+            ],
+            hearingRespondentDocCollection: [
+              {
+                value: {
+                  DocumentLink: {
+                    document_url:
+                      'http://dm-store/documents/678',
+                    upload_timestamp: '2026-06-17T08:00:00.000000000',
+                    document_filename: 'Test-hearing.docx',
+                  },
+                  DocumentType: 'Some hearing doc',
+                  DocumentFileName: 'Test-hearing.docx',
+                },
+              },
+              {
+                value: {
+                  DocumentLink: {
+                    document_url:
+                      'http://dm-store/documents/678',
+                    document_filename: 'Test-hearing-null-timestamp.docx',
+                  },
+                  DocumentType: 'Some hearing doc with null timestamp',
+                  DocumentFileName: 'Test-hearing-null-timestamp.docx',
+                },
+              }
             ],
           },
         },
@@ -1814,15 +1867,29 @@ describe('General Upload Routes', () => {
         {
           documentRows: [
             [
-              {
-                text: '15 June 2026 at 9:11am',
-              },
-              {
-                text: 'Statement of issues',
-              },
-              {
-                html: '<a class="govuk-link" href="/documents/f6b20958-b1d9-4cda-8354-8b8236ef299d/download">Test-Demo.docx</a>',
-              },
+              { text: '17 June 2026 at 9:00am' },
+              { text: 'Some hearing doc' },
+              { text: 'Test-hearing.docx' },
+            ],
+            [
+              { text: '16 June 2026 at 10:00am' },
+              { text: 'Some divorce doc' },
+              { text: 'Test-Divorce.docx' },
+            ],
+            [
+              { text: '15 June 2026 at 12:00pm' },
+              { text: 'Statement of issues' },
+              { text: 'Test-Demo.docx' },
+            ],
+            [
+              { text: '15 June 2026 at 11:00am' },
+              { text: 'Some FDR doc' },
+              { text: 'Test-FDR.docx' },
+            ],
+              [
+              { text: '' },
+              { text: 'Some hearing doc with null timestamp' },
+              { text: 'Test-hearing-null-timestamp.docx' },
             ],
           ],
         }
@@ -1830,11 +1897,12 @@ describe('General Upload Routes', () => {
 
       expect(next).not.toHaveBeenCalled();
     });
+
     it('should escape document names before rendering link html', async () => {
       const mockResponse = {
         case_details: {
           case_data: {
-            citizenRespondentDocument: [
+            respondentDocCollection: [
               {
                 value: {
                   DocumentLink: {
@@ -1899,8 +1967,8 @@ describe('General Upload Routes', () => {
       expect(next).not.toHaveBeenCalled();
     });
     it.each([
-      [CaseRole.RESPONDENT, 'citizenRespondentDocument'],
-      [CaseRole.APPLICANT, 'citizenApplicantDocument'],
+      [CaseRole.RESPONDENT, 'respondentDocCollection'],
+      [CaseRole.APPLICANT, 'applicantDocCollection'],
     ])(
       'should render plain text when document URL does not contain a valid document id for %s',
       async (caseRole, documentCollectionKey) => {
@@ -2086,8 +2154,8 @@ describe('General Upload Routes', () => {
       const mockResponse = {
         case_details: {
           case_data: {
-            citizenApplicantDocument: [],
-            citizenRespondentDocument: [],
+            applicantDocCollection: [],
+            respondentDocCollection: [],
           },
         },
       };
@@ -2142,7 +2210,7 @@ describe('General Upload Routes', () => {
         const mockResponse = {
           case_details: {
             case_data: {
-              citizenRespondentDocument: [
+              respondentDocCollection: [
                 {
                   value: {
                     DocumentLink: {
