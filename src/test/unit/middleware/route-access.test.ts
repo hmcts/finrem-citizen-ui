@@ -8,7 +8,7 @@ import { routeAccessMiddleware } from '../../../main/middleware/route-access';
 function makeReq(
   path: string,
   session: {
-    user?: { caseRole?: CaseRole };
+    user?: { caseRole?: CaseRole; isRepresented?: boolean };
     caseRole?: CaseRole;
     caseNumber?: string;
   }
@@ -85,6 +85,45 @@ describe('routeAccessMiddleware', () => {
 
       expect(next).toHaveBeenCalledTimes(1);
       expect(res.redirect).not.toHaveBeenCalled();
+    });
+
+    it('allows non-represented users to access upload journey routes', () => {
+      const req = makeReq(`${RouteNames.uploadJourney}/before-you-start`, {
+        user: { caseRole: CaseRole.APPLICANT, isRepresented: false },
+        caseNumber: '1234567890123456',
+      });
+      const res = makeRes();
+
+      routeAccessMiddleware(req, res, next);
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(res.redirect).not.toHaveBeenCalled();
+    });
+
+    it('redirects represented users away from upload journey root', () => {
+      const req = makeReq(RouteNames.uploadJourney, {
+        user: { caseRole: CaseRole.APPLICANT, isRepresented: true },
+        caseNumber: '1234567890123456',
+      });
+      const res = makeRes();
+
+      routeAccessMiddleware(req, res, next);
+
+      expect(res.redirect).toHaveBeenCalledWith(RouteNames.dashboard);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('redirects represented users away from upload journey step routes', () => {
+      const req = makeReq(`${RouteNames.uploadJourney}/before-you-start`, {
+        user: { caseRole: CaseRole.APPLICANT, isRepresented: true },
+        caseNumber: '1234567890123456',
+      });
+      const res = makeRes();
+
+      routeAccessMiddleware(req, res, next);
+
+      expect(res.redirect).toHaveBeenCalledWith(RouteNames.dashboard);
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
