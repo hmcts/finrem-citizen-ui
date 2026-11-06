@@ -41,38 +41,22 @@ function normalizeQuery(query: string): string {
 function createSourceFunction(
   apiUrl: string,
   resultsMap: Map<string, AutocompleteResult>,
-  queryCache: Map<string, AutocompleteResult[]>,
-  inProgressRequests: Map<string, Promise<AutocompleteResult[]>>
+  queryCache: Map<string, AutocompleteResult[]>
 ): (query: string, populateResults: (results: string[]) => void) => Promise<void> {
   return async (query: string, populateResults: (results: string[]) => void) => {
     const normalizedQuery = normalizeQuery(query);
     const shouldUseQueryCache = normalizedQuery === '';
 
     try {
-      let request = inProgressRequests.get(normalizedQuery);
+      const cachedResults = shouldUseQueryCache
+        ? queryCache.get(normalizedQuery)
+        : undefined;
 
-      if (!request) {
-        const cachedResults = shouldUseQueryCache
-          ? queryCache.get(normalizedQuery)
-          : undefined;
+      const results = cachedResults || await fetchAutocompleteResults(apiUrl, query);
 
-        if (cachedResults) {
-          request = Promise.resolve(cachedResults);
-        } else {
-          request = fetchAutocompleteResults(apiUrl, query).then(results => {
-              if (shouldUseQueryCache) {
-                queryCache.set(normalizedQuery, results);
-              }
-              return results;
-            }).finally(() => {
-              inProgressRequests.delete(normalizedQuery);
-            });
-
-          inProgressRequests.set(normalizedQuery, request);
-        }
+      if (shouldUseQueryCache && !cachedResults) {
+        queryCache.set(normalizedQuery, results);
       }
-
-      const results = await request;
 
       resultsMap.clear();
       results.forEach(result => {
@@ -115,18 +99,16 @@ function initAutocomplete(): void {
     const config = getAutocompleteConfig(element);
     const resultsMap = new Map<string, AutocompleteResult>();
     const queryCache = new Map<string, AutocompleteResult[]>();
-    const inProgressRequests = new Map<string, Promise<AutocompleteResult[]>>();
 
     document.addEventListener('document-types:changed', () => {
       queryCache.clear();
-      inProgressRequests.clear();
     });
 
     accessibleAutocomplete({
       element: container,
       id: config.inputId,
       name: config.inputName,
-      source: createSourceFunction(config.apiUrl, resultsMap, queryCache, inProgressRequests),
+      source: createSourceFunction(config.apiUrl, resultsMap, queryCache),
       onConfirm: createConfirmHandler(element, config.eventName, resultsMap),
       showNoOptionsFound: true,
       showAllValues: true,
