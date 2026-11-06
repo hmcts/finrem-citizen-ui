@@ -238,6 +238,25 @@ describe('document-type-selection', () => {
 
       expect(changedHandler).toHaveBeenCalledTimes(1);
     });
+
+    it('should dispatch document-types:changed after successful remove', async () => {
+      setSelectedDocuments([TEST_DOCUMENT]);
+
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ documents: [] }),
+      } as Response);
+
+      const changedHandler = listenForDocumentTypesChanged();
+
+      initDocumentTypeSelection();
+
+      clickRemoveLink();
+
+      await flushPromises();
+
+      expect(changedHandler).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('remove document type', () => {
@@ -277,25 +296,6 @@ describe('document-type-selection', () => {
       await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(global.fetch).toHaveBeenCalled();
-    });
-
-    it('should dispatch document-types:changed after successful remove', async () => {
-      setSelectedDocuments([TEST_DOCUMENT]);
-
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ documents: [] }),
-      } as Response);
-
-      const changedHandler = listenForDocumentTypesChanged();
-
-      initDocumentTypeSelection();
-
-      clickRemoveLink();
-
-      await flushPromises();
-
-      expect(changedHandler).toHaveBeenCalledTimes(1);
     });
   });
 
