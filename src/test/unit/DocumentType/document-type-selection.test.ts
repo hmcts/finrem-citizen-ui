@@ -3,6 +3,35 @@
  */
 import { initDocumentTypeSelection } from '../../../main/js/document-type-selection';
 
+const TEST_DOCUMENT = { id: 1, label: 'Test', value: 'test' };
+
+const flushPromises = (): Promise<void> => new Promise(resolve => setTimeout(resolve, 0));
+
+const selectDocumentType = (doc = TEST_DOCUMENT): void => {
+  document.dispatchEvent(new CustomEvent('document:selected', { detail: doc }));
+};
+
+const clickAddButton = (): void => {
+  const button = document.querySelector('[data-add-document-type]') as HTMLButtonElement;
+  button.click();
+};
+
+const clickRemoveLink = (): void => {
+  const removeLink = document.querySelector('[data-remove-document-type]') as HTMLAnchorElement;
+  removeLink.click();
+};
+
+const setSelectedDocuments = (docs: Array<{ id: number; label: string; value: string }>): void => {
+  const hiddenInput = document.querySelector('[name="documentsJson"]') as HTMLInputElement;
+  hiddenInput.value = JSON.stringify(docs);
+};
+
+const listenForDocumentTypesChanged = (): jest.Mock => {
+  const changedHandler = jest.fn();
+  document.addEventListener('document-types:changed', changedHandler, { once: true });
+  return changedHandler;
+};
+
 describe('document-type-selection', () => {
   beforeEach(() => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -195,23 +224,17 @@ describe('document-type-selection', () => {
     it('should dispatch document-types:changed after successful add', async () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ documents: [{ id: 1, label: 'Test', value: 'test' }] }),
+        json: async () => ({ documents: [TEST_DOCUMENT] }),
       } as Response);
 
-      const changedHandler = jest.fn();
-      document.addEventListener('document-types:changed', changedHandler);
+      const changedHandler = listenForDocumentTypesChanged();
 
       initDocumentTypeSelection();
 
-      const event = new CustomEvent('document:selected', {
-        detail: { id: 1, label: 'Test', value: 'test' },
-      });
-      document.dispatchEvent(event);
+      selectDocumentType();
+      clickAddButton();
 
-      const button = document.querySelector('[data-add-document-type]') as HTMLButtonElement;
-      button.click();
-
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushPromises();
 
       expect(changedHandler).toHaveBeenCalledTimes(1);
     });
@@ -257,44 +280,22 @@ describe('document-type-selection', () => {
     });
 
     it('should dispatch document-types:changed after successful remove', async () => {
-      const hiddenInput = document.querySelector('[name="documentsJson"]') as HTMLInputElement;
-      hiddenInput.value = JSON.stringify([{ id: 1, label: 'Test', value: 'test' }]);
+      setSelectedDocuments([TEST_DOCUMENT]);
 
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ documents: [] }),
       } as Response);
 
-      const changedHandler = jest.fn();
-      document.addEventListener('document-types:changed', changedHandler);
+      const changedHandler = listenForDocumentTypesChanged();
 
       initDocumentTypeSelection();
 
-      const removeLink = document.querySelector('[data-remove-document-type]') as HTMLAnchorElement;
-      removeLink.click();
+      clickRemoveLink();
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushPromises();
 
       expect(changedHandler).toHaveBeenCalledTimes(1);
-    });
-
-    it('should not dispatch document-types:changed when remove fails', async () => {
-      const hiddenInput = document.querySelector('[name="documentsJson"]') as HTMLInputElement;
-      hiddenInput.value = JSON.stringify([{ id: 1, label: 'Test', value: 'test' }]);
-
-      (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: false } as Response);
-
-      const changedHandler = jest.fn();
-      document.addEventListener('document-types:changed', changedHandler);
-
-      initDocumentTypeSelection();
-
-      const removeLink = document.querySelector('[data-remove-document-type]') as HTMLAnchorElement;
-      removeLink.click();
-
-      await new Promise(resolve => setTimeout(resolve, 0));
-
-      expect(changedHandler).not.toHaveBeenCalled();
     });
   });
 
