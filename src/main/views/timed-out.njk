@@ -1,0 +1,37 @@
+{% extends "template.njk" %}
+
+{% set pageTitle = "You were signed out to protect your privacy" %}
+
+{% block header %}
+  {% include "macros/cookie-banner.njk" %}
+
+  {{ govukHeader({
+    homepageUrl: "/",
+    containerClasses: "govuk-width-container"
+  }) }}
+
+  {{ govukServiceNavigation({
+    serviceName: serviceName,
+    serviceUrl: "/"
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+      <p class="govuk-body">
+        You were signed out because you were inactive.
+      </p>
+
+      <p class="govuk-body">
+        You will need to start any unfinished document upload again.
+      </p>
+
+      <p class="govuk-body">
+        <a class="govuk-link" href="{{ loginUrl }}">Sign back in</a>
+      </p>
+    </div>
+  </div>
+{% endblock %}

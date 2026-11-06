@@ -2,7 +2,7 @@ import { describe, expect, test } from '@jest/globals';
 import request from 'supertest';
 
 import { app } from '../../../main/app';
-import { PrivateRoutes, PublicRoutes } from '../../../main/constants';
+import { PrivateRoutes, PublicRoutes, RouteNames } from '../../../main/constants';
 
 describe('Authentication & OIDC Login Flow', () => {
   describe('OIDC Login Flow Initialization', () => {
@@ -28,7 +28,7 @@ describe('Authentication & OIDC Login Flow', () => {
 
       // Missing code redirects back to login (302/303) or errors (400/401/500)
       expect([302, 303, 400, 401, 500]).toContain(res.status);
-      expect(res.status).not.toBe(200);  // Should never succeed
+      expect(res.status).not.toBe(200); // Should never succeed
 
       if ([302, 303].includes(res.status)) {
         expect(res.header.location).toEqual(expect.any(String));
@@ -66,56 +66,56 @@ describe('Authentication & OIDC Login Flow', () => {
     test('GET /dashboard requires authentication and redirects to /login', async () => {
       const res = await request(app).get(PrivateRoutes.dashboard);
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      expect(res.status).toBe(303);
+      expect(res.header.location).toBe(RouteNames.timedOut);
     });
 
     test('GET /enter-case-number requires authentication', async () => {
       const res = await request(app).get(PrivateRoutes.enterCaseNumber);
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      expect(res.status).toBe(303);
+      expect(res.header.location).toBe(RouteNames.timedOut);
     });
 
     test('GET /enter-access-code requires authentication', async () => {
       const res = await request(app).get(PrivateRoutes.enterAccessCode);
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      expect(res.status).toBe(303);
+      expect(res.header.location).toBe(RouteNames.timedOut);
     });
 
     test('GET /task-list-upload-dashboard requires authentication', async () => {
       const res = await request(app).get(PrivateRoutes.taskListUpload);
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      expect(res.status).toBe(303);
+      expect(res.header.location).toBe(RouteNames.timedOut);
     });
 
     test('GET /upload/* requires authentication', async () => {
       const res = await request(app).get(PrivateRoutes.uploadJourney);
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      expect(res.status).toBe(303);
+      expect(res.header.location).toBe(RouteNames.timedOut);
     });
   });
 
   describe('Form Submissions Without Session', () => {
-    test('POST /enter-case-number without session redirects to login', async () => {
+    test('POST /enter-case-number without session redirects to timed-out page', async () => {
       const res = await request(app)
         .post(PrivateRoutes.enterCaseNumber)
         .send({ caseNumber: '1234567890123456' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toMatch(/login|oauth/i);
+      expect(res.status).toBe(303);
+      expect(res.header.location).toBe(RouteNames.timedOut);
     });
 
-    test('POST /enter-access-code without session redirects to login', async () => {
+    test('POST /enter-access-code without session redirects to timed-out page', async () => {
       const res = await request(app)
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: 'TEST0001' });
 
-      expect(res.status).toBe(302);
-      expect(res.header.location).toBe(PublicRoutes.login);
+      expect(res.status).toBe(303);
+      expect(res.header.location).toBe(RouteNames.timedOut);
     });
   });
 
@@ -145,11 +145,11 @@ describe('Authentication & OIDC Login Flow', () => {
       expect([404, 405]).toContain(res.status);
     });
 
-    test('PUT /dashboard returns 404 or 405 (method not allowed)', async () => {
+    test('GET /dashboard without session redirects to timed-out page', async () => {
       const res = await request(app).put(PrivateRoutes.dashboard);
 
-      // PUT on protected route is not supported, expect 404 or 405
-      expect([404, 405]).toContain(res.status);
+      expect(res.status).toBe(303);
+      expect(res.header.location).toBe(RouteNames.timedOut);
     });
   });
 
