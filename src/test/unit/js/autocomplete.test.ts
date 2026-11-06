@@ -9,7 +9,7 @@ let capturedSource: SourceFn | null = null;
 const DUMMY_QUERY_DATA = [
   { id: 1, label: 'Bank statements', value: 'bank-statements' },
   { id: 2, label: 'Payslips', value: 'payslips' }
-]
+];
 
 jest.mock('accessible-autocomplete', () => {
   return jest.fn((options: { source: SourceFn }) => {

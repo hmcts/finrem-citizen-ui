@@ -21,7 +21,7 @@ const clickRemoveLink = (): void => {
   removeLink.click();
 };
 
-const setSelectedDocuments = (docs: Array<{ id: number; label: string; value: string }>): void => {
+const setSelectedDocuments = (docs: { id: number; label: string; value: string }[]): void => {
   const hiddenInput = document.querySelector('[name="documentsJson"]') as HTMLInputElement;
   hiddenInput.value = JSON.stringify(docs);
 };
