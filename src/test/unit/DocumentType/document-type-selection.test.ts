@@ -191,6 +191,30 @@ describe('document-type-selection', () => {
 
       expect(global.fetch).toHaveBeenCalled();
     });
+
+    it('should dispatch document-types:changed after successful add', async () => {
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ documents: [{ id: 1, label: 'Test', value: 'test' }] }),
+      } as Response);
+
+      const changedHandler = jest.fn();
+      document.addEventListener('document-types:changed', changedHandler);
+
+      initDocumentTypeSelection();
+
+      const event = new CustomEvent('document:selected', {
+        detail: { id: 1, label: 'Test', value: 'test' },
+      });
+      document.dispatchEvent(event);
+
+      const button = document.querySelector('[data-add-document-type]') as HTMLButtonElement;
+      button.click();
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(changedHandler).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('remove document type', () => {
@@ -230,6 +254,47 @@ describe('document-type-selection', () => {
       await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(global.fetch).toHaveBeenCalled();
+    });
+
+    it('should dispatch document-types:changed after successful remove', async () => {
+      const hiddenInput = document.querySelector('[name="documentsJson"]') as HTMLInputElement;
+      hiddenInput.value = JSON.stringify([{ id: 1, label: 'Test', value: 'test' }]);
+
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ documents: [] }),
+      } as Response);
+
+      const changedHandler = jest.fn();
+      document.addEventListener('document-types:changed', changedHandler);
+
+      initDocumentTypeSelection();
+
+      const removeLink = document.querySelector('[data-remove-document-type]') as HTMLAnchorElement;
+      removeLink.click();
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(changedHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not dispatch document-types:changed when remove fails', async () => {
+      const hiddenInput = document.querySelector('[name="documentsJson"]') as HTMLInputElement;
+      hiddenInput.value = JSON.stringify([{ id: 1, label: 'Test', value: 'test' }]);
+
+      (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: false } as Response);
+
+      const changedHandler = jest.fn();
+      document.addEventListener('document-types:changed', changedHandler);
+
+      initDocumentTypeSelection();
+
+      const removeLink = document.querySelector('[data-remove-document-type]') as HTMLAnchorElement;
+      removeLink.click();
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(changedHandler).not.toHaveBeenCalled();
     });
   });
 

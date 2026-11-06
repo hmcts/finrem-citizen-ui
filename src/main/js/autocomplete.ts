@@ -34,14 +34,46 @@ async function fetchAutocompleteResults(apiUrl: string, query: string): Promise<
   return response.json();
 }
 
+function normalizeQuery(query: string): string {
+  return query.trim().toLowerCase();
+}
+
 function createSourceFunction(
   apiUrl: string,
-  resultsMap: Map<string, AutocompleteResult>
+  resultsMap: Map<string, AutocompleteResult>,
+  queryCache: Map<string, AutocompleteResult[]>,
+  inProgressRequests: Map<string, Promise<AutocompleteResult[]>>
 ): (query: string, populateResults: (results: string[]) => void) => Promise<void> {
   return async (query: string, populateResults: (results: string[]) => void) => {
+    const normalizedQuery = normalizeQuery(query);
+    const shouldUseQueryCache = normalizedQuery === '';
+
     try {
-      const results = await fetchAutocompleteResults(apiUrl, query);
-      
+      let request = inProgressRequests.get(normalizedQuery);
+
+      if (!request) {
+        const cachedResults = shouldUseQueryCache
+          ? queryCache.get(normalizedQuery)
+          : undefined;
+
+        if (cachedResults) {
+          request = Promise.resolve(cachedResults);
+        } else {
+          request = fetchAutocompleteResults(apiUrl, query).then(results => {
+              if (shouldUseQueryCache) {
+                queryCache.set(normalizedQuery, results);
+              }
+              return results;
+            }).finally(() => {
+              inProgressRequests.delete(normalizedQuery);
+            });
+
+          inProgressRequests.set(normalizedQuery, request);
+        }
+      }
+
+      const results = await request;
+
       resultsMap.clear();
       results.forEach(result => {
         resultsMap.set(result.label, result);
@@ -82,12 +114,19 @@ function initAutocomplete(): void {
 
     const config = getAutocompleteConfig(element);
     const resultsMap = new Map<string, AutocompleteResult>();
+    const queryCache = new Map<string, AutocompleteResult[]>();
+    const inProgressRequests = new Map<string, Promise<AutocompleteResult[]>>();
+
+    document.addEventListener('document-types:changed', () => {
+      queryCache.clear();
+      inProgressRequests.clear();
+    });
 
     accessibleAutocomplete({
       element: container,
       id: config.inputId,
       name: config.inputName,
-      source: createSourceFunction(config.apiUrl, resultsMap),
+      source: createSourceFunction(config.apiUrl, resultsMap, queryCache, inProgressRequests),
       onConfirm: createConfirmHandler(element, config.eventName, resultsMap),
       showNoOptionsFound: true,
       showAllValues: true,
@@ -101,10 +140,6 @@ function initAutocomplete(): void {
       input.addEventListener('focus', () => {
         if (menu && menu.style.display === 'none') {
           menu.style.display = '';
-        }
-        if (input.value === '') {
-          const event = new Event('input', { bubbles: true });
-          input.dispatchEvent(event);
         }
       });
 
