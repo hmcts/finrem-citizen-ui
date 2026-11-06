@@ -86,7 +86,6 @@ export const UrlEndPoints = {
  * If not, it keeps its original filename.
  */
 export const DOCUMENT_RENAME_FORMATS: Record<string, string> = {
-  'family-mediation-information-and-assessment-meeting-miam-form-form-fm1': 'FormFM1',
   'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5': 'FormFM5',
   'estimate-of-costs-incurred-form-h': 'FormH',
   'statement-of-costs-form-h1': 'FormH1',

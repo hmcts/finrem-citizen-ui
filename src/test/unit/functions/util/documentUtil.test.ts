@@ -3,11 +3,11 @@ import { Request } from 'express';
 import { DOCUMENT_RENAME_FORMATS } from '../../../../main/constants';
 import {
   generateRenamedFilename,
-getCombinedPDFFormat,
+  getCombinedPDFFormat,
   getDocumentLabel,
   getDocumentRenameFormat,
-  getSelectedDocumentTypesForDisplay,
-  shouldAutoRename,shouldCombineIntoPDF,
+  getSelectedDocumentTypesForDisplay, makeFilenameUnique,
+  shouldAutoRename, shouldCombineIntoPDF,
 } from '../../../../main/functions/util/documentUtil';
 describe('documentUtil', () => {
   describe('getDocumentLabel', () => {
@@ -279,7 +279,7 @@ describe('documentUtil', () => {
 
   describe('shouldAutoRename', () => {
     it('should return true for all form documents that should be auto-renamed', () => {
-      expect(shouldAutoRename('family-mediation-information-and-assessment-meeting-miam-form-form-fm1')).toBe(true);
+      expect(shouldAutoRename('statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5')).toBe(true);
       expect(shouldAutoRename('statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5')).toBe(true);
       expect(shouldAutoRename('estimate-of-costs-incurred-form-h')).toBe(true);
       expect(shouldAutoRename('statement-of-costs-form-h1')).toBe(true);
@@ -327,7 +327,7 @@ describe('documentUtil', () => {
 
   describe('getDocumentRenameFormat', () => {
     it('should return the correct rename format for form documents', () => {
-      expect(getDocumentRenameFormat('family-mediation-information-and-assessment-meeting-miam-form-form-fm1')).toBe('FormFM1');
+      expect(getDocumentRenameFormat('statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5')).toBe('FormFM5');
       expect(getDocumentRenameFormat('statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5')).toBe('FormFM5');
       expect(getDocumentRenameFormat('estimate-of-costs-incurred-form-h')).toBe('FormH');
       expect(getDocumentRenameFormat('statement-of-costs-form-h1')).toBe('FormH1');
@@ -388,23 +388,23 @@ describe('documentUtil', () => {
 
     it('should generate preview filename', () => {
       const result = generateRenamedFilename(
-        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5',
         '',
         'Sam Thompson',
         true
       );
 
-      expect(result).toBe('SamThompson-FormFM1-DD-MM-YYYY');
+      expect(result).toBe('SamThompson-FormFM5-DD-MM-YYYY');
     });
     it('should generate preview filename with default username', () => {
       const result = generateRenamedFilename(
-        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5',
         '',
         undefined,
         true
       );
 
-      expect(result).toBe('UserName-FormFM1-DD-MM-YYYY');
+      expect(result).toBe('UserName-FormFM5-DD-MM-YYYY');
     });
     it('should return empty string in preview mode for non-renamed documents', () => {
       const result = generateRenamedFilename(
@@ -417,14 +417,14 @@ describe('documentUtil', () => {
       expect(result).toBe('');
     });
 
-    it('should rename FM1', () => {
+    it('should rename FM5', () => {
       const result = generateRenamedFilename(
-        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
-        'fm1.pdf',
+        'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5',
+        'fm5.pdf',
         'SamThompson'
       );
 
-      expect(result).toBe('SamThompson-FormFM1-23-06-2026.pdf');
+      expect(result).toBe('SamThompson-FormFM5-23-06-2026.pdf');
     });
 
     it('should rename N260', () => {
@@ -467,19 +467,19 @@ it('should not rename document not in mapping', () => {
 });
     it('should generate renamed filename with user name for auto-rename document types', () => {
       const result = generateRenamedFilename(
-        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5',
         'my-document.pdf',
         'JohnSmith'
       );
-      expect(result).toBe('JohnSmith-FormFM1-23-06-2026.pdf');
+      expect(result).toBe('JohnSmith-FormFM5-23-06-2026.pdf');
     });
 
     it('should use default UserName when caseUserName is not provided', () => {
       const result = generateRenamedFilename(
-        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5',
         'my-document.pdf'
       );
-      expect(result).toBe('UserName-FormFM1-23-06-2026.pdf');
+      expect(result).toBe('UserName-FormFM5-23-06-2026.pdf');
     });
 
     it('should preserve file extension from original filename', () => {
@@ -521,69 +521,69 @@ it('should not rename document not in mapping', () => {
       jest.setSystemTime(new Date('2026-01-05T14:00:00.000Z'));
 
       const result = generateRenamedFilename(
-        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
+        'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5',
         'document.pdf',
         'User'
       );
-      expect(result).toBe('User-FormFM1-05-01-2026.pdf');
+      expect(result).toBe('User-FormFM5-05-01-2026.pdf');
     });
 
     it('should append counter when filename already exists', () => {
-      const existingFilenames = ['SamThompson-FormFM1-23-06-2026.pdf'];
+      const existingFilenames = ['SamThompson-FormFM5-23-06-2026.pdf'];
 
       const result = generateRenamedFilename(
-        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
-        'fm1.pdf',
+        'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5',
+        'fm5.pdf',
         'SamThompson',
         false,
         existingFilenames
       );
 
-      expect(result).toBe('SamThompson-FormFM1-23-06-2026-1.pdf');
+      expect(result).toBe('SamThompson-FormFM5-23-06-2026-1.pdf');
     });
 
     it('should increment counter for multiple duplicates', () => {
       const existingFilenames = [
-        'SamThompson-FormFM1-23-06-2026.pdf',
-        'SamThompson-FormFM1-23-06-2026-1.pdf',
-        'SamThompson-FormFM1-23-06-2026-2.pdf'
+        'SamThompson-FormFM5-23-06-2026.pdf',
+        'SamThompson-FormFM5-23-06-2026-1.pdf',
+        'SamThompson-FormFM5-23-06-2026-2.pdf'
       ];
 
       const result = generateRenamedFilename(
-        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
-        'fm1.pdf',
+        'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5',
+        'fm5.pdf',
         'SamThompson',
         false,
         existingFilenames
       );
 
-      expect(result).toBe('SamThompson-FormFM1-23-06-2026-3.pdf');
+      expect(result).toBe('SamThompson-FormFM5-23-06-2026-3.pdf');
     });
 
     it('should not append counter when filename does not exist', () => {
-      const existingFilenames = ['OtherUser-FormFM1-23-06-2026.pdf'];
+      const existingFilenames = ['OtherUser-FormFM5-23-06-2026.pdf'];
 
       const result = generateRenamedFilename(
-        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
-        'fm1.pdf',
+        'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5',
+        'fm5.pdf',
         'SamThompson',
         false,
         existingFilenames
       );
 
-      expect(result).toBe('SamThompson-FormFM1-23-06-2026.pdf');
+      expect(result).toBe('SamThompson-FormFM5-23-06-2026.pdf');
     });
 
     it('should handle empty existingFilenames array', () => {
       const result = generateRenamedFilename(
-        'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
-        'fm1.pdf',
+        'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5',
+        'fm5.pdf',
         'SamThompson',
         false,
         []
       );
 
-      expect(result).toBe('SamThompson-FormFM1-23-06-2026.pdf');
+      expect(result).toBe('SamThompson-FormFM5-23-06-2026.pdf');
     });
 
     it('should append counter with different file extensions', () => {
@@ -640,6 +640,54 @@ it('should not rename document not in mapping', () => {
       expect(getCombinedPDFFormat('position-statement')).toBe('');
       expect(getCombinedPDFFormat('unknown-type')).toBe('');
       expect(getCombinedPDFFormat('')).toBe('');
+    });
+  });
+
+  describe('makeFilenameUnique', () => {
+    const base = 'SmeagolGollum-FormFM1-15-10-2026.pdf';
+    const now = new Date(2026, 9, 15, 15, 35);
+
+    it('should preserve original filename for first upload', () => {
+      const result = makeFilenameUnique(base, new Set(), now);
+
+      expect(result).toBe(base);
+    });
+
+    it('should append (1) for second upload', () => {
+      const existing = new Set([base]);
+
+      const result = makeFilenameUnique(base, existing, now);
+
+      expect(result).toBe(
+        'SmeagolGollum-FormFM1-15-10-2026 15-35 (1).pdf'
+      );
+    });
+
+    it('should increment to (2) for third upload', () => {
+      const existing = new Set([
+        base,
+        'SmeagolGollum-FormFM1-15-10-2026 15-35 (1).pdf',
+      ]);
+
+      const result = makeFilenameUnique(base, existing, now);
+
+      expect(result).toBe(
+        'SmeagolGollum-FormFM1-15-10-2026 15-35 (2).pdf'
+      );
+    });
+
+    it('should use the highest existing suffix when numbers have gaps', () => {
+      const existing = new Set([
+        base,
+        'SmeagolGollum-FormFM1-15-10-2026 15-30 (1).pdf',
+        'SmeagolGollum-FormFM1-15-10-2026 15-35 (3).pdf',
+      ]);
+      const newTime = new Date(2026, 9, 15, 15, 40);
+      const result = makeFilenameUnique(base, existing, newTime);
+
+      expect(result).toBe(
+        'SmeagolGollum-FormFM1-15-10-2026 15-40 (4).pdf'
+      );
     });
   });
 });

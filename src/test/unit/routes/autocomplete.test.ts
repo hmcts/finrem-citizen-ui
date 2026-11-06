@@ -67,7 +67,7 @@ describe('Autocomplete Route', () => {
       expect(response.body).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            id: 39,
+            id: 38,
             label: 'Bank statements',
             value: 'bank-statements',
           }),
