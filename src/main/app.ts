@@ -53,6 +53,7 @@ app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));
 });
 
+app.use(Object.values(PrivateRoutes), createDefaultRateLimiter(app.locals.redisClient));
 app.use(Object.values(PrivateRoutes), sessionExpiryMiddleware);
 
 if (config.get<boolean>('useCSRFProtection')) {
@@ -62,7 +63,6 @@ new OIDCModule().enableFor(app);
 
 app.use(caseContextMiddleware);
 app.use(routeAccessMiddleware);
-app.use(Object.values(PrivateRoutes), createDefaultRateLimiter(app.locals.redisClient));
 
 // Add contact email to all templates via res.locals
 app.use(contactEmailMiddleware);
