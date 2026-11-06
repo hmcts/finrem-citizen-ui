@@ -4,8 +4,7 @@ import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../../app/auth/user';
 import { getCaseApi } from '../../app/case/case-api';
-import { CASE_TYPE } from '../../app/case/case-type';
-import { CaseRole, CaseType, FinremCaseData } from '../../app/case/definition';
+import { CaseRole, FinremCaseData } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
 import { CaseUserNames, RouteNames } from '../../constants';
 
@@ -24,16 +23,11 @@ export async function fetchUserCaseContext(
 ): Promise<UserCaseContext> {
   const caseApi = getCaseApi(user, logger);
 
-  if (user.hasNFDCase === undefined) {
-    const nfdCaseId = await caseApi.getExistingUserCase(CaseType.NFD);
-    user.hasNFDCase = nfdCaseId !== undefined;
-  }
-  logger.info('User has NFD case registered: ', user.hasNFDCase);
-
-  const finremCaseId = await caseApi.getExistingUserCase(CASE_TYPE);
+  const finremCaseId = await caseApi.getExistingFRUserCase();
   logger.info('Financial Remedy caseId is: ', finremCaseId);
 
   if (finremCaseId?.trim()) {
+    await refreshUserNfdCaseFlag(user, logger);
     const systemUser = await getSystemUser();
     const caseworkerUserApi = getCaseApi(systemUser, logger);
     const caseData = await caseworkerUserApi.getCaseById(finremCaseId);
@@ -102,9 +96,7 @@ export async function loadCaseAndReloadSession(
     const caseData = await caseApi.getCaseById(caseId);
 
     logger.info(`Case ${caseId} successfully loaded from CCD`);
-
     req.session.caseData = caseData;
-
     return caseData;
   } catch (error) {
     logger.error(`Failed to load case ${caseId} from CCD:`, error);
@@ -156,6 +148,10 @@ export function resolveCaseUserName(session: SessionData): string | undefined {
       return session.caseData.respondentFlags?.partyName || CaseUserNames.RESPONDENT;
     }
   }
-
   return undefined;
+}
+
+export async function refreshUserNfdCaseFlag(user: UserDetails, logger: LoggerInstance): Promise<void> {
+    const nfdCaseId = await getCaseApi(user, logger).getExistingNfdCase();
+    user.hasNFDCase = nfdCaseId !== undefined;
 }

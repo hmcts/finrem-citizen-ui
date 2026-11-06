@@ -5,7 +5,7 @@ import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../../../../main/app/auth/user';
 import { getCaseApi } from '../../../../main/app/case/case-api';
-import { CaseRole, CaseType } from '../../../../main/app/case/definition';
+import { CaseRole } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { CaseUserNames, RouteNames } from '../../../../main/constants';
 import * as homePageUtil from '../../../../main/functions/util/homePageUtil';
@@ -14,6 +14,7 @@ import {
   fetchUserCaseRole,
   hydrateUserSessionWithCaseContext,
   loadCaseAndReloadSession,
+  refreshUserNfdCaseFlag,
   resetCaseContext,
   resolveCaseUserName,
   resolveHomeUrl,
@@ -49,20 +50,10 @@ type MinimalCaseData = {
   };
 };
 
-type GetExistingUserCaseMock = (
-  caseType: CaseType | string
-) => Promise<string | undefined>;
-
+type GetExistingFRUserCaseMock = () => Promise<string | undefined>;
+type GetExistingNfdCaseMock = () => Promise<string | undefined>;
 type GetCaseByIdMock = (caseId: string) => Promise<MinimalCaseData>;
-
-type HomePageCaseApiMock = {
-  getExistingUserCase: jest.MockedFunction<GetExistingUserCaseMock>;
-  getCaseById: jest.MockedFunction<GetCaseByIdMock>;
-};
-
-type ReloadSessionCaseApiMock = {
-  getCaseById: jest.MockedFunction<GetCaseByIdMock>;
-};
+type GetUsersRoleOnCaseMock = (caseId: string, userId: string) => Promise<CaseRole | undefined>;
 
 const createCaseData = (id: string): MinimalCaseData => ({ id });
 
@@ -91,7 +82,8 @@ const createUserDetails = (): UserDetails => ({
 });
 
 describe('fetchUserCaseContext and resolveHomeUrl', () => {
-  let mockGetExistingUserCase: jest.MockedFunction<GetExistingUserCaseMock>;
+  let mockGetExistingFRUserCase: jest.MockedFunction<GetExistingFRUserCaseMock>;
+  let mockGetExistingNfdCase: jest.MockedFunction<GetExistingNfdCaseMock>;
   let mockGetCaseById: jest.MockedFunction<GetCaseByIdMock>;
   let userDetails: UserDetails;
   let mockLogger: LoggerInstance;
@@ -99,17 +91,9 @@ describe('fetchUserCaseContext and resolveHomeUrl', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockGetExistingUserCase = jest.fn<GetExistingUserCaseMock>();
+    mockGetExistingFRUserCase = jest.fn<GetExistingFRUserCaseMock>();
+    mockGetExistingNfdCase = jest.fn<GetExistingNfdCaseMock>();
     mockGetCaseById = jest.fn<GetCaseByIdMock>();
-
-    const caseApiMock: HomePageCaseApiMock = {
-      getExistingUserCase: mockGetExistingUserCase,
-      getCaseById: mockGetCaseById,
-    };
-
-    jest
-      .mocked(getCaseApi)
-      .mockReturnValue(caseApiMock as unknown as ReturnType<typeof getCaseApi>);
 
     jest.mocked(getSystemUser).mockResolvedValue(createSystemUser());
 
@@ -121,9 +105,22 @@ describe('fetchUserCaseContext and resolveHomeUrl', () => {
     userDetails = createUserDetails();
   });
 
-  test('loads context with case data when case exists', async () => {
-    mockGetExistingUserCase.mockResolvedValue('CASE123');
+  test('loads context with case data when FR case exists and refreshes NFD flag', async () => {
+    mockGetExistingFRUserCase.mockResolvedValue('CASE123');
+    mockGetExistingNfdCase.mockResolvedValue('NFD123');
     mockGetCaseById.mockResolvedValue({ id: 'CASE123' });
+
+    jest
+      .mocked(getCaseApi)
+      .mockReturnValueOnce({
+        getExistingFRUserCase: mockGetExistingFRUserCase,
+      } as unknown as ReturnType<typeof getCaseApi>)
+      .mockReturnValueOnce({
+        getExistingNfdCase: mockGetExistingNfdCase,
+      } as unknown as ReturnType<typeof getCaseApi>)
+      .mockReturnValueOnce({
+        getCaseById: mockGetCaseById,
+      } as unknown as ReturnType<typeof getCaseApi>);
 
     const result = await fetchUserCaseContext(userDetails, mockLogger);
 
@@ -132,19 +129,28 @@ describe('fetchUserCaseContext and resolveHomeUrl', () => {
       caseNumber: 'CASE123',
     });
     expect(resolveHomeUrl(result)).toBe(RouteNames.dashboard);
+    expect(userDetails.hasNFDCase).toBe(true);
+    expect(getSystemUser).toHaveBeenCalledTimes(1);
   });
 
-  test('loads empty context when no case exists', async () => {
-    mockGetExistingUserCase.mockResolvedValue(undefined);
+  test('loads empty context when no FR case exists and skips NFD/system-user lookups', async () => {
+    mockGetExistingFRUserCase.mockResolvedValue(undefined);
+
+    jest.mocked(getCaseApi).mockReturnValue({
+      getExistingFRUserCase: mockGetExistingFRUserCase,
+    } as unknown as ReturnType<typeof getCaseApi>);
 
     const result = await fetchUserCaseContext(userDetails, mockLogger);
 
     expect(result).toEqual({});
     expect(resolveHomeUrl(result)).toBe(RouteNames.enterCaseNumber);
+    expect(getCaseApi).toHaveBeenCalledTimes(1);
+    expect(getSystemUser).not.toHaveBeenCalled();
   });
 
   test('hydrates session with case context, role, and derived user name', async () => {
-    mockGetExistingUserCase.mockResolvedValue('CASE123');
+    mockGetExistingFRUserCase.mockResolvedValue('CASE123');
+    mockGetExistingNfdCase.mockResolvedValue(undefined);
     mockGetCaseById.mockResolvedValue({
       id: 'CASE123',
       applicantFlags: {
@@ -152,15 +158,22 @@ describe('fetchUserCaseContext and resolveHomeUrl', () => {
       },
     });
 
-    const getUsersRoleOnCase = jest.fn().mockImplementation(
-      async () => CaseRole.APPLICANT
-    );
+    const getUsersRoleOnCase = jest.fn<GetUsersRoleOnCaseMock>().mockResolvedValue(CaseRole.APPLICANT);
 
-    jest.mocked(getCaseApi).mockReturnValue({
-      getExistingUserCase: mockGetExistingUserCase,
-      getCaseById: mockGetCaseById,
-      getUsersRoleOnCase,
-    } as unknown as ReturnType<typeof getCaseApi>);
+    jest
+      .mocked(getCaseApi)
+      .mockReturnValueOnce({
+        getExistingFRUserCase: mockGetExistingFRUserCase,
+      } as unknown as ReturnType<typeof getCaseApi>)
+      .mockReturnValueOnce({
+        getExistingNfdCase: mockGetExistingNfdCase,
+      } as unknown as ReturnType<typeof getCaseApi>)
+      .mockReturnValueOnce({
+        getCaseById: mockGetCaseById,
+      } as unknown as ReturnType<typeof getCaseApi>)
+      .mockReturnValueOnce({
+        getUsersRoleOnCase,
+      } as unknown as ReturnType<typeof getCaseApi>);
 
     const session = {
       user: userDetails,
@@ -170,7 +183,7 @@ describe('fetchUserCaseContext and resolveHomeUrl', () => {
     const typedSession = session as unknown as {
       caseNumber?: string;
       caseUserName?: string;
-      user: { caseRole?: CaseRole };
+      user: { caseRole?: CaseRole; hasNFDCase?: boolean };
     };
 
     expect(result).toEqual({
@@ -185,10 +198,12 @@ describe('fetchUserCaseContext and resolveHomeUrl', () => {
     expect(typedSession.caseNumber).toBe('CASE123');
     expect(typedSession.user.caseRole).toBe(CaseRole.APPLICANT);
     expect(typedSession.caseUserName).toBe('John Smith');
+    expect(typedSession.user.hasNFDCase).toBe(false);
   });
 
   test('hydrates session and derives case user name when role already exists', async () => {
-    mockGetExistingUserCase.mockResolvedValue('CASE123');
+    mockGetExistingFRUserCase.mockResolvedValue('CASE123');
+    mockGetExistingNfdCase.mockResolvedValue('NFD123');
     mockGetCaseById.mockResolvedValue({
       id: 'CASE123',
       applicantFlags: {
@@ -196,15 +211,17 @@ describe('fetchUserCaseContext and resolveHomeUrl', () => {
       },
     });
 
-    const getUsersRoleOnCase = jest.fn().mockImplementation(
-      async () => CaseRole.APPLICANT
-    );
-
-    jest.mocked(getCaseApi).mockReturnValue({
-      getExistingUserCase: mockGetExistingUserCase,
-      getCaseById: mockGetCaseById,
-      getUsersRoleOnCase,
-    } as unknown as ReturnType<typeof getCaseApi>);
+    jest
+      .mocked(getCaseApi)
+      .mockReturnValueOnce({
+        getExistingFRUserCase: mockGetExistingFRUserCase,
+      } as unknown as ReturnType<typeof getCaseApi>)
+      .mockReturnValueOnce({
+        getExistingNfdCase: mockGetExistingNfdCase,
+      } as unknown as ReturnType<typeof getCaseApi>)
+      .mockReturnValueOnce({
+        getCaseById: mockGetCaseById,
+      } as unknown as ReturnType<typeof getCaseApi>);
 
     const session = {
       user: {
@@ -216,15 +233,20 @@ describe('fetchUserCaseContext and resolveHomeUrl', () => {
     await hydrateUserSessionWithCaseContext(session, mockLogger);
     const typedSession = session as unknown as {
       caseUserName?: string;
-      user: { caseRole?: CaseRole };
+      user: { caseRole?: CaseRole; hasNFDCase?: boolean };
     };
 
     expect(typedSession.user.caseRole).toBe(CaseRole.APPLICANT);
     expect(typedSession.caseUserName).toBe('John Smith');
+    expect(typedSession.user.hasNFDCase).toBe(true);
   });
 
-  test('clears stale session case context, role, and user name when no case is found', async () => {
-    mockGetExistingUserCase.mockResolvedValue(undefined);
+  test('clears stale session case context, role, and user name when no FR case is found', async () => {
+    mockGetExistingFRUserCase.mockResolvedValue(undefined);
+
+    jest.mocked(getCaseApi).mockReturnValue({
+      getExistingFRUserCase: mockGetExistingFRUserCase,
+    } as unknown as ReturnType<typeof getCaseApi>);
 
     const session = {
       caseNumber: 'OLD-CASE',
@@ -252,6 +274,47 @@ describe('fetchUserCaseContext and resolveHomeUrl', () => {
   });
 });
 
+describe('refreshUserNfdCaseFlag', () => {
+  let mockLogger: LoggerInstance;
+  let userDetails: UserDetails;
+  let mockGetExistingNfdCase: jest.MockedFunction<GetExistingNfdCaseMock>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    userDetails = createUserDetails();
+    mockLogger = {
+      info: jest.fn(),
+      error: jest.fn(),
+    } as unknown as LoggerInstance;
+    mockGetExistingNfdCase = jest.fn<GetExistingNfdCaseMock>();
+  });
+
+  test('sets hasNFDCase true when NFD case exists', async () => {
+    mockGetExistingNfdCase.mockResolvedValue('NFD123');
+
+    jest.mocked(getCaseApi).mockReturnValue({
+      getExistingNfdCase: mockGetExistingNfdCase,
+    } as unknown as ReturnType<typeof getCaseApi>);
+
+    await refreshUserNfdCaseFlag(userDetails, mockLogger);
+
+    expect(userDetails.hasNFDCase).toBe(true);
+    expect(mockGetExistingNfdCase).toHaveBeenCalledTimes(1);
+  });
+
+  test('sets hasNFDCase false when no NFD case exists', async () => {
+    mockGetExistingNfdCase.mockResolvedValue(undefined);
+
+    jest.mocked(getCaseApi).mockReturnValue({
+      getExistingNfdCase: mockGetExistingNfdCase,
+    } as unknown as ReturnType<typeof getCaseApi>);
+
+    await refreshUserNfdCaseFlag(userDetails, mockLogger);
+
+    expect(userDetails.hasNFDCase).toBe(false);
+  });
+});
+
 describe('loadCaseAndReloadSession', () => {
   let mockGetCaseById: jest.MockedFunction<GetCaseByIdMock>;
   let mockLogger: LoggerInstance;
@@ -262,13 +325,11 @@ describe('loadCaseAndReloadSession', () => {
 
     mockGetCaseById = jest.fn<GetCaseByIdMock>();
 
-    const caseApiMock: ReloadSessionCaseApiMock = {
-      getCaseById: mockGetCaseById,
-    };
-
     jest
       .mocked(getCaseApi)
-      .mockReturnValue(caseApiMock as unknown as ReturnType<typeof getCaseApi>);
+      .mockReturnValue({
+        getCaseById: mockGetCaseById,
+      } as unknown as ReturnType<typeof getCaseApi>);
 
     jest.mocked(getSystemUser).mockResolvedValue(createSystemUser());
 
@@ -378,9 +439,7 @@ describe('fetchUserCaseRole', () => {
       },
     } as unknown as SessionData;
 
-    const getUsersRoleOnCase = jest.fn().mockImplementation(
-      async () => 'RESPONDENT'
-    );
+    const getUsersRoleOnCase = jest.fn<GetUsersRoleOnCaseMock>().mockResolvedValue(CaseRole.RESPONDENT);
 
     jest.mocked(getCaseApi).mockReturnValue({
       getUsersRoleOnCase,
@@ -389,7 +448,7 @@ describe('fetchUserCaseRole', () => {
     const result = await fetchUserCaseRole(session);
 
     expect(getUsersRoleOnCase).toHaveBeenCalledWith('CASE123', 'user-5');
-    expect(result).toBe('RESPONDENT');
+    expect(result).toBe(CaseRole.RESPONDENT);
   });
 
   test('returns undefined when caseNumber is missing', async () => {
