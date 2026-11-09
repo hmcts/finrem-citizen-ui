@@ -5,7 +5,7 @@ import express from 'express';
 import { glob } from 'glob';
 import * as path from 'path';
 
-import { PrivateRoutes, ViewNames } from './constants';
+import { PrivateRoutes, RouteNames, ViewNames } from './constants';
 import { caseContextMiddleware, contactEmailMiddleware, globalErrorHandler, routeAccessMiddleware } from './middleware';
 import { sessionExpiryMiddleware } from './middleware/session-expiry';
 import { AppInsights } from './modules/appinsights';
@@ -19,6 +19,7 @@ import { PropertiesVolume } from './modules/properties-volume';
 import { createDefaultRateLimiter } from './modules/rate-limiter';
 import { Session } from './modules/session';
 import { SessionTimeout } from './modules/session-timeout';
+import { setRecentSessionCookie } from './modules/session-timeout/recent-session-cookie';
 
 const { setupDev } = require('./development');
 
@@ -48,6 +49,13 @@ app.use(
   })
 );
 app.use(setNoStoreForHtmlRequests);
+app.use((req, res, next) => {
+  if (req.session?.user && req.path !== RouteNames.logout && req.path !== RouteNames.callbackUrl) {
+    setRecentSessionCookie(res);
+  }
+
+  next();
+});
 
 app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));

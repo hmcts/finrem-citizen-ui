@@ -2,6 +2,7 @@ import config from 'config';
 import type { Express } from 'express';
 
 import { RouteNames, ViewNames } from '../../constants';
+import { clearRecentSessionCookie } from './recent-session-cookie';
 
 /**
  * Handles the timed-out page, clearing the FCUI session before
@@ -28,6 +29,8 @@ export class SessionTimeout {
         res.clearCookie(config.get<string>('session.cookieName'), {
           path: '/',
         });
+
+        clearRecentSessionCookie(res);
 
         res.render(ViewNames.TimedOut, {
           loginUrl: RouteNames.login,

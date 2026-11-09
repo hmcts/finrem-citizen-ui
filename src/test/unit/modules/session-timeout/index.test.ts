@@ -3,6 +3,7 @@ import type { Express, Request, RequestHandler, Response } from 'express';
 
 import { RouteNames, ViewNames } from '../../../../main/constants';
 import { SessionTimeout } from '../../../../main/modules/session-timeout';
+import { RECENT_SESSION_COOKIE } from '../../../../main/modules/session-timeout/recent-session-cookie';
 
 // Use a predictable session cookie name instead of loading real configuration.
 jest.mock('config', () => ({
@@ -17,9 +18,7 @@ function invokeTimedOutHandler(error?: Error) {
 
   new SessionTimeout().enableFor({ get } as unknown as Express);
 
-  const handler = get.mock.calls.find(
-    ([path]) => path === RouteNames.timedOut
-  )?.[1];
+  const handler = get.mock.calls.find(([path]) => path === RouteNames.timedOut)?.[1];
 
   if (!handler) {
     throw new Error('Timed-out route was not registered');
@@ -52,7 +51,7 @@ function invokeTimedOutHandler(error?: Error) {
 }
 
 describe('Session timeout page', () => {
-  it('destroys the session, clears its cookie and renders the page', () => {
+  it('destroys the session, clears both cookies and renders the page', () => {
     const { destroy, res, next } = invokeTimedOutHandler();
 
     // Prevent caching and remove the session and its browser cookie.
@@ -61,6 +60,7 @@ describe('Session timeout page', () => {
     expect(res.clearCookie).toHaveBeenCalledWith('test-session', {
       path: '/',
     });
+    expect(res.clearCookie).toHaveBeenCalledWith(RECENT_SESSION_COOKIE, expect.objectContaining({ path: '/' }));
 
     // Display the timed-out page with a link to sign back in.
     expect(res.render).toHaveBeenCalledWith(ViewNames.TimedOut, {
