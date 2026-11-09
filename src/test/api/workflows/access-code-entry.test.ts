@@ -7,8 +7,8 @@ import { PrivateRoutes, RouteNames } from '../../../main/constants';
 jest.setTimeout(15000);
 
 const assertRedirectContract = (res: Response): void => {
-  expect(res.status).toBe(303);
-  expect(res.header.location).toBe(RouteNames.timedOut);
+  expect(res.status).toBe(302);
+  expect(res.header.location).toBe(RouteNames.login);
   expect(res.headers['content-type']).toMatch(/text\/html|text\/plain/i);
   expect(res.text).toMatch(/Redirecting to/i);
 };

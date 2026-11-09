@@ -66,36 +66,36 @@ describe('Authentication & OIDC Login Flow', () => {
     test('GET /dashboard requires authentication and redirects to /login', async () => {
       const res = await request(app).get(PrivateRoutes.dashboard);
 
-      expect(res.status).toBe(303);
-      expect(res.header.location).toBe(RouteNames.timedOut);
+      expect(res.status).toBe(302);
+      expect(res.header.location).toBe(RouteNames.login);
     });
 
     test('GET /enter-case-number requires authentication', async () => {
       const res = await request(app).get(PrivateRoutes.enterCaseNumber);
 
-      expect(res.status).toBe(303);
-      expect(res.header.location).toBe(RouteNames.timedOut);
+      expect(res.status).toBe(302);
+      expect(res.header.location).toBe(RouteNames.login);
     });
 
     test('GET /enter-access-code requires authentication', async () => {
       const res = await request(app).get(PrivateRoutes.enterAccessCode);
 
-      expect(res.status).toBe(303);
-      expect(res.header.location).toBe(RouteNames.timedOut);
+      expect(res.status).toBe(302);
+      expect(res.header.location).toBe(RouteNames.login);
     });
 
     test('GET /task-list-upload-dashboard requires authentication', async () => {
       const res = await request(app).get(PrivateRoutes.taskListUpload);
 
-      expect(res.status).toBe(303);
-      expect(res.header.location).toBe(RouteNames.timedOut);
+      expect(res.status).toBe(302);
+      expect(res.header.location).toBe(RouteNames.login);
     });
 
     test('GET /upload/* requires authentication', async () => {
       const res = await request(app).get(PrivateRoutes.uploadJourney);
 
-      expect(res.status).toBe(303);
-      expect(res.header.location).toBe(RouteNames.timedOut);
+      expect(res.status).toBe(302);
+      expect(res.header.location).toBe(RouteNames.login);
     });
   });
 
@@ -105,8 +105,8 @@ describe('Authentication & OIDC Login Flow', () => {
         .post(PrivateRoutes.enterCaseNumber)
         .send({ caseNumber: '1234567890123456' });
 
-      expect(res.status).toBe(303);
-      expect(res.header.location).toBe(RouteNames.timedOut);
+      expect(res.status).toBe(302);
+      expect(res.header.location).toBe(RouteNames.login);
     });
 
     test('POST /enter-access-code without session redirects to timed-out page', async () => {
@@ -114,8 +114,8 @@ describe('Authentication & OIDC Login Flow', () => {
         .post(PrivateRoutes.enterAccessCode)
         .send({ accessCode: 'TEST0001' });
 
-      expect(res.status).toBe(303);
-      expect(res.header.location).toBe(RouteNames.timedOut);
+      expect(res.status).toBe(302);
+      expect(res.header.location).toBe(RouteNames.login);
     });
   });
 
@@ -148,8 +148,8 @@ describe('Authentication & OIDC Login Flow', () => {
     test('GET /dashboard without session redirects to timed-out page', async () => {
       const res = await request(app).put(PrivateRoutes.dashboard);
 
-      expect(res.status).toBe(303);
-      expect(res.header.location).toBe(RouteNames.timedOut);
+      expect(res.status).toBe(302);
+      expect(res.header.location).toBe(RouteNames.login);
     });
   });
 
