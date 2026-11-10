@@ -35,6 +35,10 @@ class DocumentTypeSelectionManager {
   private documentTypesList: HTMLElement | null = null;
   private noDocumentTypesMessage: HTMLElement | null = null;
 
+  private dispatchDocumentTypesChanged(): void {
+    document.dispatchEvent(new CustomEvent('document-types:changed', { bubbles: true }));
+  }
+
   constructor() {
     this.container = document.querySelector(DocumentTypeSelectionManager.SELECTORS.CONTAINER);
     if (!this.container) {
@@ -97,6 +101,7 @@ class DocumentTypeSelectionManager {
       const data = await response.json();
       this.documentTypes = data.documents;
       this.selectedDocumentType = null;
+      this.dispatchDocumentTypesChanged();
       
       this.clearAutocompleteInput();
       this.updateHiddenInput();
@@ -129,6 +134,7 @@ class DocumentTypeSelectionManager {
 
       const data = await response.json();
       this.documentTypes = data.documents;
+      this.dispatchDocumentTypesChanged();
       this.updateHiddenInput();
       this.render();
     } catch (error) {
