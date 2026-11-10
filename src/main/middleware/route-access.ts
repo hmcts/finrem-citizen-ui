@@ -28,6 +28,15 @@ export const routeAccessMiddleware: RequestHandler = (req: Request, res: Respons
     return res.redirect(RouteNames.enterCaseNumber);
   }
 
+  const isRepresented = req.session?.user?.isRepresented === true;
+  const isUploadRoute =
+    requestPath === RouteNames.uploadJourney ||
+    requestPath.startsWith(`${RouteNames.uploadJourney}/`);
+
+  if (isRepresented && isUploadRoute) {
+    return res.redirect(RouteNames.dashboard);
+  }
+
   return next();
 };
 
