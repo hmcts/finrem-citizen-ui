@@ -12,9 +12,14 @@ export class CaseApi {
     private readonly logger: LoggerInstance
   ) {}
 
-  private readonly GENERAL_QUERY = JSON.stringify({
+  private readonly QUERY_FOR_MULTIPLE = JSON.stringify({
     query: { match_all: {} },
-    size: 2, // only need 0/1/many
+    size: 2, // 0/1/many
+  });
+
+   private readonly QUERY_FOR_PRESENCE = JSON.stringify({
+    query: { match_all: {} },
+    size: 1, // 0/1
   });
 
   public async addUsersToCase(assignments: { case_id: string; user_id: string; case_role: CaseRole }[]): Promise<void> {
@@ -26,13 +31,13 @@ export class CaseApi {
   }
 
   public async getExistingNfdCase(): Promise<string | undefined> {
-    const userCases = await this.apiClient.findUserCases<unknown>(CaseType.NFD, this.GENERAL_QUERY);
+    const userCases = await this.apiClient.findUserCases<unknown>(CaseType.NFD, this.QUERY_FOR_PRESENCE);
 
     return this.getFirstCaseIdOrEmpty(userCases);
   }
 
   public async getExistingFRUserCase(): Promise<string | undefined> {
-    const userCases = await this.apiClient.findUserCases(CaseType.CONTESTED, this.GENERAL_QUERY);
+    const userCases = await this.apiClient.findUserCases(CaseType.CONTESTED, this.QUERY_FOR_MULTIPLE);
 
     return this.getSingleCaseIdOrThrow(userCases, 'More than one case found for caseType FR');
   }
@@ -73,7 +78,7 @@ export class CaseApi {
     return undefined;
   }
 
-  this.logger.info(`Found ${userCases.length} NFD case(s) for user`);
+  this.logger.info(`Found NFD case(s) for user`);
 
   return String(userCases[0].id);
 }

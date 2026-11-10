@@ -189,7 +189,7 @@ describe('CaseApi.getExistingNfdCase', () => {
     const query = mockApiClient.findUserCases.mock.calls[0][1] as string;
     expect(JSON.parse(query)).toEqual({
       query: { match_all: {} },
-      size: 2,
+      size: 1,
     });
 
     expect(result).toBeUndefined();
@@ -202,19 +202,7 @@ describe('CaseApi.getExistingNfdCase', () => {
     const result = await api.getExistingNfdCase();
 
     expect(result).toBe('987654321');
-    expect(mockLogger.info).toHaveBeenCalledWith('Found 1 NFD case(s) for user');
-  });
-
-  test('returns case id as string when multiple NFD cases exist', async () => {
-    mockApiClient.findUserCases.mockResolvedValue([
-      { id: 987654321, state: 'Submitted' },
-      { id: 123456789, state: 'Submitted' },
-    ]);
-
-    const result = await api.getExistingNfdCase();
-
-    expect(result).toBe('987654321');
-    expect(mockLogger.info).toHaveBeenCalledWith('Found 2 NFD case(s) for user');
+    expect(mockLogger.info).toHaveBeenCalledWith('Found NFD case(s) for user');
   });
 
   test('propagates errors from apiClient.findUserCases', async () => {
