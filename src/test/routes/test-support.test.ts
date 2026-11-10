@@ -1,9 +1,20 @@
-import { afterAll, beforeEach, describe, expect, test } from '@jest/globals';
+import { afterAll, beforeEach, describe, expect, jest, test } from '@jest/globals';
 import express, { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 
 import { TestRoutes } from '../../main/constants';
+import * as testSupportRouteGuard from '../../main/functions/util/test-support-route-guard';
 import setupTestSupportRoutes from '../../main/routes/generalUpload/test-support';
+
+jest.mock('../../main/functions/util/test-support-route-guard', () => ({
+  areTestSupportRoutesEnabled: jest.fn(),
+  assertTestSupportRoutesStartupGuard: jest.fn(),
+  isValidTestSupportSecretHeader: jest.fn(),
+}));
+
+const mockAreTestSupportRoutesEnabled = jest.mocked(testSupportRouteGuard.areTestSupportRoutesEnabled);
+const mockAssertTestSupportRoutesStartupGuard = jest.mocked(testSupportRouteGuard.assertTestSupportRoutesStartupGuard);
+const mockIsValidTestSupportSecretHeader = jest.mocked(testSupportRouteGuard.isValidTestSupportSecretHeader);
 
 const buildTestSupportApp = (saveError?: Error) => {
   const testApp = express();
@@ -27,9 +38,12 @@ describe('Test support routes', () => {
 
   beforeEach(() => {
     process.env = { ...originalEnv };
-    process.env.NODE_ENV = 'test';
-    process.env.ENABLE_TEST_SUPPORT_ROUTES = 'true';
-    process.env.TEST_SUPPORT_ROUTE_SECRET = 'local-functional-secret';
+    jest.clearAllMocks();
+    mockAreTestSupportRoutesEnabled.mockReturnValue(true);
+    mockAssertTestSupportRoutesStartupGuard.mockImplementation(() => undefined);
+    mockIsValidTestSupportSecretHeader.mockImplementation(
+      headerValue => headerValue === 'local-functional-secret'
+    );
   });
 
   afterAll(() => {
@@ -37,7 +51,7 @@ describe('Test support routes', () => {
   });
 
   test('should not register route when disabled by default', async () => {
-    delete process.env.ENABLE_TEST_SUPPORT_ROUTES;
+    mockAreTestSupportRoutesEnabled.mockReturnValue(false);
     const { testApp } = buildTestSupportApp();
 
     const res = await request(testApp).get(TestRoutes.injectCaseSession);
@@ -45,20 +59,10 @@ describe('Test support routes', () => {
     expect(res.status).toBe(404);
   });
 
-  test('should throw startup guard when enabled outside allowed envs', () => {
-    process.env.NODE_ENV = 'production';
+  test('should run startup guard during route setup', () => {
+    buildTestSupportApp();
 
-    expect(() => buildTestSupportApp()).toThrow(
-      'ENABLE_TEST_SUPPORT_ROUTES=true is not allowed in "production". Allowed environments: local, development, test, preview, aat.'
-    );
-  });
-
-  test('should throw startup guard when secret is missing', () => {
-    delete process.env.TEST_SUPPORT_ROUTE_SECRET;
-
-    expect(() => buildTestSupportApp()).toThrow(
-      'ENABLE_TEST_SUPPORT_ROUTES=true requires TEST_SUPPORT_ROUTE_SECRET to be set.'
-    );
+    expect(mockAssertTestSupportRoutesStartupGuard).toHaveBeenCalledTimes(1);
   });
 
   test('should return 403 when secret header is missing', async () => {

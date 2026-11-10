@@ -4,19 +4,19 @@ function getRuntimeEnv(): string {
   return process.env.NODE_ENV || 'development';
 }
 
-export function isTestSupportRoutesEnabled(): boolean {
+export function areTestSupportRoutesEnabled(): boolean {
   return process.env.ENABLE_TEST_SUPPORT_ROUTES === 'true';
 }
 
 export function assertTestSupportRoutesStartupGuard(): void {
-  if (!isTestSupportRoutesEnabled()) {
+  if (!areTestSupportRoutesEnabled()) {
     return;
   }
 
   const env = getRuntimeEnv();
   if (!ALLOWED_TEST_SUPPORT_ENVS.has(env)) {
     throw new Error(
-      `ENABLE_TEST_SUPPORT_ROUTES=true is not allowed in "${env}". Allowed environments: local, development, test, preview, aat.`
+      `ENABLE_TEST_SUPPORT_ROUTES=true is not allowed in "${env}". Allowed environments: local, test.`
     );
   }
 

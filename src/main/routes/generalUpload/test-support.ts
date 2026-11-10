@@ -3,10 +3,10 @@ import { Application, Request, Response } from 'express';
 import { AccessCodeCollection, FinremCaseData, YesOrNo } from '../../app/case/definition';
 import { RouteNames, TestRoutes } from '../../constants';
 import {
+  areTestSupportRoutesEnabled,
   assertTestSupportRoutesStartupGuard,
-  isTestSupportRoutesEnabled,
   isValidTestSupportSecretHeader,
-} from './test-support-guard';
+} from '../../functions/util/test-support-route-guard';
 
 /**
  * Test-support routes — only registered when explicitly enabled.
@@ -16,7 +16,7 @@ import {
 export default function setupTestSupportRoutes(app: Application): void {
   assertTestSupportRoutesStartupGuard();
 
-  if (!isTestSupportRoutesEnabled()) {
+  if (!areTestSupportRoutesEnabled()) {
     return;
   }
 
