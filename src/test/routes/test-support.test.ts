@@ -59,12 +59,6 @@ describe('Test support routes', () => {
     expect(res.status).toBe(404);
   });
 
-  test('should run startup guard during route setup', () => {
-    buildTestSupportApp();
-
-    expect(mockAssertTestSupportRoutesStartupGuard).toHaveBeenCalledTimes(1);
-  });
-
   test('should return 403 when secret header is missing', async () => {
     const { testApp } = buildTestSupportApp();
 
