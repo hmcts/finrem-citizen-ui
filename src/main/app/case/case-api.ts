@@ -78,7 +78,7 @@ export class CaseApi {
     return undefined;
   }
 
-  this.logger.info(`Found NFD case(s) for user`);
+  this.logger.info('Found NFD case(s) for user');
 
   return String(userCases[0].id);
 }
