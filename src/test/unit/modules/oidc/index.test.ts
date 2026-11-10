@@ -6,6 +6,7 @@ import * as oidcClient from 'openid-client';
 import { RouteNames } from '../../../../main/constants';
 import { OIDCAuthenticationError, OIDCCallbackError } from '../../../../main/modules/oidc/errors';
 import { OIDCModule } from '../../../../main/modules/oidc/index';
+import { RECENT_SESSION_COOKIE } from '../../../../main/modules/session-timeout/recent-session-cookie';
 
 var mockLogger = {
   info: jest.fn(),
@@ -64,6 +65,8 @@ type RequestLike = {
 
 type ResponseLike = {
   redirect: jest.Mock;
+  cookie: jest.Mock;
+  clearCookie: jest.Mock;
 };
 
 type RouteHandler = (req: Request, res: Response, next: NextFunction) => void | Promise<void>;
@@ -116,6 +119,9 @@ describe('OIDCModule', () => {
       if (key === 'secrets.finrem.session-secret') {
         return 'mocked-session-secret' as T;
       }
+      if (key === 'session.ttlInSeconds') {
+        return 5400 as T;
+      }
       throw new Error(`Unexpected config.get key: ${key}`);
     });
 
@@ -149,6 +155,8 @@ describe('OIDCModule', () => {
   const makeRes = (): Response => {
     const response: ResponseLike = {
       redirect: jest.fn(),
+      cookie: jest.fn(),
+      clearCookie: jest.fn(),
     };
 
     return response as unknown as Response;
@@ -284,6 +292,9 @@ describe('OIDCModule', () => {
       }
       if (key === 'services.manageCase.url') {
         return 'https://manage-case.example.com' as T;
+      }
+      if (key === 'session.ttlInSeconds') {
+        return 5400 as T;
       }
       throw new Error(`Unexpected config.get key: ${key}`);
     });
@@ -434,6 +445,7 @@ describe('OIDCModule', () => {
 
     await handler(req, res, next);
 
+    expect(res.clearCookie).toHaveBeenCalledWith(RECENT_SESSION_COOKIE, expect.objectContaining({ path: '/' }));
     const redirectMock = (res as unknown as ResponseLike).redirect;
     expect(redirectMock).toHaveBeenCalledWith(RouteNames.basePath);
   });
@@ -469,6 +481,7 @@ describe('OIDCModule', () => {
 
     await handler(req, res, next);
 
+    expect(res.clearCookie).toHaveBeenCalledWith(RECENT_SESSION_COOKIE, expect.objectContaining({ path: '/' }));
     expect(mockedOidc.buildEndSessionUrl).toHaveBeenCalledWith(clientConfig, {
       post_logout_redirect_uri: 'https://app.example.com',
       id_token_hint: 'id-token-123',
@@ -681,6 +694,16 @@ describe('OIDCModule', () => {
 
     await handler(req, res, next);
 
+    expect(res.cookie).toHaveBeenCalledWith(
+      RECENT_SESSION_COOKIE,
+      '1',
+      expect.objectContaining({
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 7_200_000,
+      })
+    );
     expect(mockedOidc.authorizationCodeGrant).toHaveBeenCalledWith(
       clientConfig,
       new URL('https://app.example.com/oauth2/callback?code=abc'),
@@ -691,14 +714,13 @@ describe('OIDCModule', () => {
       }
     );
 
-
     const requestAfter = req as unknown as RequestLike;
 
     expect(requestAfter.session.user).toEqual({
       sub: 'user-123',
       email: 'user-123',
       familyName: '',
-      givenName: 'Lexi',   
+      givenName: 'Lexi',
       id: undefined,
       roles: [],
       accessToken: 'access-123',
@@ -766,6 +788,8 @@ describe('OIDCModule', () => {
     const redirectMock = (res as unknown as ResponseLike).redirect;
     expect(redirectMock).toHaveBeenCalledWith('https://manage-case.example.com');
     expect(next).not.toHaveBeenCalled();
+    expect(res.cookie).not.toHaveBeenCalled();
+    expect(res.clearCookie).toHaveBeenCalledWith(RECENT_SESSION_COOKIE, expect.objectContaining({ path: '/' }));
   });
 
   it('callback redirects to root when returnTo is missing', async () => {
