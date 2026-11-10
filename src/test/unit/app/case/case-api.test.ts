@@ -162,6 +162,69 @@ describe('CaseApi.getExistingFRUserCase', () => {
   });
 });
 
+describe('CaseApi.getExistingNfdCase', () => {
+  const mockApiClient = {
+    findUserCases: jest.fn(),
+  };
+
+  const mockLogger = {
+    info: jest.fn().mockImplementation((msg: string) => msg),
+  } as unknown as LoggerInstance;
+
+  let api: CaseApi;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient, mockLogger as unknown as LoggerInstance);
+  });
+
+  test('returns undefined when user has no NFD cases', async () => {
+    mockApiClient.findUserCases.mockResolvedValue([]);
+
+    const result = await api.getExistingNfdCase();
+
+    expect(mockApiClient.findUserCases).toHaveBeenCalledTimes(1);
+    expect(mockApiClient.findUserCases).toHaveBeenCalledWith(CaseType.NFD, expect.any(String));
+
+    const query = mockApiClient.findUserCases.mock.calls[0][1] as string;
+    expect(JSON.parse(query)).toEqual({
+      query: { match_all: {} },
+      size: 2,
+    });
+
+    expect(result).toBeUndefined();
+    expect(mockLogger.info).toHaveBeenCalledWith('No NFD cases found for user');
+  });
+
+  test('returns case id as string when single NFD case exists', async () => {
+    mockApiClient.findUserCases.mockResolvedValue([{ id: 987654321, state: 'Submitted' }]);
+
+    const result = await api.getExistingNfdCase();
+
+    expect(result).toBe('987654321');
+    expect(mockLogger.info).toHaveBeenCalledWith('Found 1 NFD case(s) for user');
+  });
+
+  test('returns case id as string when multiple NFD cases exist', async () => {
+    mockApiClient.findUserCases.mockResolvedValue([
+      { id: 987654321, state: 'Submitted' },
+      { id: 123456789, state: 'Submitted' },
+    ]);
+
+    const result = await api.getExistingNfdCase();
+
+    expect(result).toBe('987654321');
+    expect(mockLogger.info).toHaveBeenCalledWith('Found 2 NFD case(s) for user');
+  });
+
+  test('propagates errors from apiClient.findUserCases', async () => {
+    mockApiClient.findUserCases.mockRejectedValue(new Error('upstream error'));
+
+    await expect(api.getExistingNfdCase()).rejects.toThrow('upstream error');
+    expect(mockLogger.info).not.toHaveBeenCalled();
+  });
+});
+
 describe('CaseApi.triggerEvent', () => {
   const mockApiClient = {
     sendEvent: jest.fn(),

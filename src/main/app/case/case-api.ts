@@ -28,7 +28,7 @@ export class CaseApi {
   public async getExistingNfdCase(): Promise<string | undefined> {
     const userCases = await this.apiClient.findUserCases<unknown>(CaseType.NFD, this.GENERAL_QUERY);
 
-    return this.getSingleCaseIdOrThrow(userCases, 'More than one NFD case found');
+    return this.getFirstCaseIdOrEmpty(userCases);
   }
 
   public async getExistingFRUserCase(): Promise<string | undefined> {
@@ -66,6 +66,17 @@ export class CaseApi {
 
     return String(userCases[0].id);
   }
+
+  private getFirstCaseIdOrEmpty(userCases: { id: string }[] | false): string | undefined {
+  if (!userCases || userCases.length === 0) {
+    this.logger.info('No NFD cases found for user');
+    return undefined;
+  }
+
+  this.logger.info(`Found ${userCases.length} NFD case(s) for user`);
+
+  return String(userCases[0].id);
+}
 }
 
 export const getCaseApi = (userDetails: UserDetails, logger: LoggerInstance): CaseApi => {
