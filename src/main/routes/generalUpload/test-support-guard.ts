@@ -1,4 +1,4 @@
-const ALLOWED_TEST_SUPPORT_ENVS = new Set(['local', 'development', 'test', 'preview', 'aat']);
+const ALLOWED_TEST_SUPPORT_ENVS = new Set(['local', 'test']);
 
 function getRuntimeEnv(): string {
   return process.env.NODE_ENV || 'development';
