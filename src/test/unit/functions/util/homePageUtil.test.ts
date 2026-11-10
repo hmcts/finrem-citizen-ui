@@ -5,7 +5,7 @@ import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../../../../main/app/auth/user';
 import { getCaseApi } from '../../../../main/app/case/case-api';
-import { CaseRole } from '../../../../main/app/case/definition';
+import { CaseRole, YesOrNo } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { CaseUserNames, RouteNames } from '../../../../main/constants';
 import * as homePageUtil from '../../../../main/functions/util/homePageUtil';
@@ -18,6 +18,7 @@ import {
   resetCaseContext,
   resolveCaseUserName,
   resolveHomeUrl,
+  resolveIsUserRepresented,
 } from '../../../../main/functions/util/homePageUtil';
 
 jest.mock('config', () => ({
@@ -52,6 +53,7 @@ type MinimalCaseData = {
 
 type GetExistingFRUserCaseMock = () => Promise<string | undefined>;
 type GetExistingNfdCaseMock = () => Promise<string | undefined>;
+
 type GetCaseByIdMock = (caseId: string) => Promise<MinimalCaseData>;
 type GetUsersRoleOnCaseMock = (caseId: string, userId: string) => Promise<CaseRole | undefined>;
 
@@ -347,26 +349,17 @@ describe('loadCaseAndReloadSession', () => {
     const caseData = createCaseData('1234567890123456');
     mockGetCaseById.mockResolvedValue(caseData);
 
-    const result = await loadCaseAndReloadSession(
-      mockReq,
-      '1234-5678-9012-3456',
-      mockLogger
-    );
+    const result = await loadCaseAndReloadSession(mockReq, '1234-5678-9012-3456', mockLogger);
 
     expect(getSystemUser).toHaveBeenCalled();
-    expect(getCaseApi).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'system-user' }),
-      mockLogger
-    );
+    expect(getCaseApi).toHaveBeenCalledWith(expect.objectContaining({ id: 'system-user' }), mockLogger);
     expect(mockGetCaseById).toHaveBeenCalledWith('1234567890123456');
     expect(result).toEqual(caseData);
     expect((mockReq.session as { caseData?: unknown }).caseData).toEqual(caseData);
     expect(mockLogger.info).toHaveBeenCalledWith(
       'Loading case 1234567890123456 from CCD backend: http://ccd.test.local'
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Case 1234567890123456 successfully loaded from CCD'
-    );
+    expect(mockLogger.info).toHaveBeenCalledWith('Case 1234567890123456 successfully loaded from CCD');
   });
 
   test('loads case when case reference contains no hyphens', async () => {
@@ -383,31 +376,25 @@ describe('loadCaseAndReloadSession', () => {
     const ccdError = new Error('CCD unavailable');
     mockGetCaseById.mockRejectedValue(ccdError);
 
-    await expect(
-      loadCaseAndReloadSession(mockReq, '1234-5678-9012-3456', mockLogger)
-    ).rejects.toThrow('CCD unavailable');
+    await expect(loadCaseAndReloadSession(mockReq, '1234-5678-9012-3456', mockLogger)).rejects.toThrow(
+      'CCD unavailable'
+    );
 
     expect((mockReq.session as { caseData?: unknown }).caseData).toBeUndefined();
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'Failed to load case 1234567890123456 from CCD:',
-      ccdError
-    );
+    expect(mockLogger.error).toHaveBeenCalledWith('Failed to load case 1234567890123456 from CCD:', ccdError);
   });
 
   test('logs and rethrows when getting system user fails', async () => {
     const systemUserError = new Error('IDAM unavailable');
     jest.mocked(getSystemUser).mockRejectedValue(systemUserError);
 
-    await expect(
-      loadCaseAndReloadSession(mockReq, '1234-5678-9012-3456', mockLogger)
-    ).rejects.toThrow('IDAM unavailable');
+    await expect(loadCaseAndReloadSession(mockReq, '1234-5678-9012-3456', mockLogger)).rejects.toThrow(
+      'IDAM unavailable'
+    );
 
     expect(getCaseApi).not.toHaveBeenCalled();
     expect((mockReq.session as { caseData?: unknown }).caseData).toBeUndefined();
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'Failed to load case 1234567890123456 from CCD:',
-      systemUserError
-    );
+    expect(mockLogger.error).toHaveBeenCalledWith('Failed to load case 1234567890123456 from CCD:', systemUserError);
   });
 });
 
@@ -720,5 +707,96 @@ describe('resetCaseContext', () => {
     expect(typedSession.caseUserName).toBeUndefined();
     expect(typedSession.user?.caseRole).toBeUndefined();
     expect(typedSession.user?.hasNFDCase).toBeUndefined();
+  });
+});
+
+describe('resolveIsUserRepresented', () => {
+  test('returns true when applicant user is represented', () => {
+    const session = {
+      user: {
+        caseRole: CaseRole.APPLICANT,
+      },
+      caseData: {
+        applicantRepresented: YesOrNo.YES,
+      }
+    } as unknown as SessionData;
+
+    expect(resolveIsUserRepresented(session)).toBe(true);
+  });
+
+  test('returns true when respondent user is represented', () => {
+    const session = {
+      user: {
+        caseRole: CaseRole.RESPONDENT,
+      },
+     caseData: {
+        respondentRepresented: YesOrNo.YES,
+      }
+    } as unknown as SessionData;
+
+    expect(resolveIsUserRepresented(session)).toBe(true);
+  });
+
+  test('returns false when applicant user is not represented', () => {
+    const session = {
+      user: {
+        caseRole: CaseRole.APPLICANT,
+      },
+      caseData: {
+        applicantRepresented: YesOrNo.NO,
+      }
+    } as unknown as SessionData;
+
+    expect(resolveIsUserRepresented(session)).toBe(false);
+  });
+
+  test('returns false when respondent user is not represented', () => {
+    const session = {
+      user: {
+        caseRole: CaseRole.RESPONDENT,
+      },
+      caseData: {
+        respondentRepresented: YesOrNo.NO,
+      }
+    } as unknown as SessionData;
+
+    expect(resolveIsUserRepresented(session)).toBe(false);
+  });
+
+  test('returns false when representation info is missing', () => {
+    const session = {
+      user: {
+        caseRole: CaseRole.APPLICANT,
+      },
+      caseData: {
+        applicantFlags: {},
+      },
+    } as unknown as SessionData;
+
+    expect(resolveIsUserRepresented(session)).toBe(false);
+  });
+
+  test('returns undefined when case role is missing', () => {
+    const session = {
+      user: {
+        caseRole: undefined,
+      },
+      caseData: {
+        applicantFlags: {},
+      },
+    } as unknown as SessionData;
+
+    expect(resolveIsUserRepresented(session)).toBeUndefined();
+  });
+
+  test('returns undefined when case data is missing', () => {
+    const session = {
+      user: {
+        caseRole: CaseRole.APPLICANT,
+      },
+      caseData: undefined,
+    } as unknown as SessionData;
+
+    expect(resolveIsUserRepresented(session)).toBeUndefined();
   });
 });

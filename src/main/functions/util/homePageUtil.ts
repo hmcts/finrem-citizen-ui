@@ -4,7 +4,7 @@ import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../../app/auth/user';
 import { getCaseApi } from '../../app/case/case-api';
-import { CaseRole, FinremCaseData } from '../../app/case/definition';
+import { CaseRole, FinremCaseData, YesOrNo } from '../../app/case/definition';
 import { UserDetails } from '../../app/controller/AppRequest';
 import { CaseUserNames, RouteNames } from '../../constants';
 
@@ -17,10 +17,7 @@ export function resolveHomeUrl(caseContext: UserCaseContext): string {
   return caseContext.caseNumber?.trim() ? RouteNames.dashboard : RouteNames.enterCaseNumber;
 }
 
-export async function fetchUserCaseContext(
-  user: UserDetails,
-  logger: LoggerInstance,
-): Promise<UserCaseContext> {
+export async function fetchUserCaseContext(user: UserDetails, logger: LoggerInstance): Promise<UserCaseContext> {
   const caseApi = getCaseApi(user, logger);
 
   const finremCaseId = await caseApi.getExistingFRUserCase();
@@ -49,11 +46,13 @@ export async function hydrateUserSessionWithCaseContext(
     session.caseData = caseContext.caseData;
     user.caseRole = await fetchUserCaseRole(session, logger);
     session.caseUserName = resolveCaseUserName(session);
+    user.isRepresented = resolveIsUserRepresented(session);
   } else {
     delete session.caseNumber;
     delete session.caseData;
     delete user.caseRole;
     delete session.caseUserName;
+    delete user.isRepresented;
   }
 
   return caseContext;
@@ -69,6 +68,7 @@ export function resetCaseContext(session: SessionData): void {
   if (user) {
     delete user.caseRole;
     delete user.hasNFDCase;
+    delete user.isRepresented;
   }
 }
 
@@ -152,6 +152,23 @@ export function resolveCaseUserName(session: SessionData): string | undefined {
 }
 
 export async function refreshUserNfdCaseFlag(user: UserDetails, logger: LoggerInstance): Promise<void> {
-    const nfdCaseId = await getCaseApi(user, logger).getExistingNfdCase();
-    user.hasNFDCase = nfdCaseId !== undefined;
+  const nfdCaseId = await getCaseApi(user, logger).getExistingNfdCase();
+  user.hasNFDCase = nfdCaseId !== undefined;
+}
+
+export function resolveIsUserRepresented(session: SessionData): boolean | undefined {
+  const user = session.user as UserDetails;
+  const caseData = session.caseData;
+
+  if (user.caseRole && caseData) {
+    if (user.caseRole === CaseRole.APPLICANT) {
+      return caseData.applicantRepresented === YesOrNo.YES || false;
+    }
+
+    if (user.caseRole === CaseRole.RESPONDENT) {
+      return caseData.respondentRepresented === YesOrNo.YES || false;
+    }
+  }
+
+  return undefined;
 }
