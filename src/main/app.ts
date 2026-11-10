@@ -78,7 +78,11 @@ app.use(contactEmailMiddleware);
 glob
   .sync(__dirname + '/routes/**/*.+(ts|js)')
   .map(filename => require(filename))
-  .forEach(route => route.default(app));
+  .forEach(route => {
+    if (typeof route.default === 'function') {
+      route.default(app);
+    }
+  });
 
 app.use((req, res) => {
   res.status(404);

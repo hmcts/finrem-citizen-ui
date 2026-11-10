@@ -238,6 +238,10 @@ export const test = base.extend<MyFixtures & MockOptions>({
       response.status() === 404,
       '[mock] tests require /__test/inject-case-session (ENABLE_TEST_SUPPORT_ROUTES=true)'
     );
+    base.skip(
+      response.status() === 403,
+      '[mock] tests require TEST_SUPPORT_ROUTE_SECRET to match x-test-support-secret'
+    );
 
     await use();
   }, { auto: true }],

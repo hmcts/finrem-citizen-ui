@@ -1,6 +1,4 @@
-process.env.ENABLE_TEST_SUPPORT_ROUTES = 'true';
-
-import { describe, expect, test } from '@jest/globals';
+import { afterAll, beforeEach, describe, expect, test } from '@jest/globals';
 import express, { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 
@@ -25,10 +23,65 @@ const buildTestSupportApp = (saveError?: Error) => {
 };
 
 describe('Test support routes', () => {
-  test('should return 400 when inject-case-session params are missing', async () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+    process.env.NODE_ENV = 'test';
+    process.env.ENABLE_TEST_SUPPORT_ROUTES = 'true';
+    process.env.TEST_SUPPORT_ROUTE_SECRET = 'local-functional-secret';
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
+  test('should not register route when disabled by default', async () => {
+    delete process.env.ENABLE_TEST_SUPPORT_ROUTES;
     const { testApp } = buildTestSupportApp();
 
     const res = await request(testApp).get(TestRoutes.injectCaseSession);
+
+    expect(res.status).toBe(404);
+  });
+
+  test('should throw startup guard when enabled outside allowed envs', () => {
+    process.env.NODE_ENV = 'production';
+
+    expect(() => buildTestSupportApp()).toThrow(
+      'ENABLE_TEST_SUPPORT_ROUTES=true is not allowed in "production". Allowed environments: local, development, test, preview, aat.'
+    );
+  });
+
+  test('should throw startup guard when secret is missing', () => {
+    delete process.env.TEST_SUPPORT_ROUTE_SECRET;
+
+    expect(() => buildTestSupportApp()).toThrow(
+      'ENABLE_TEST_SUPPORT_ROUTES=true requires TEST_SUPPORT_ROUTE_SECRET to be set.'
+    );
+  });
+
+  test('should return 403 when secret header is missing', async () => {
+    const { testApp } = buildTestSupportApp();
+
+    const res = await request(testApp)
+      .get(TestRoutes.injectCaseSession)
+      .query({
+        caseNumber: '1234567890123456',
+        applicantCode: 'APPCODE1',
+        respondentCode: 'RSPCODE1',
+      });
+
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual({ error: 'Forbidden' });
+  });
+
+  test('should return 400 when inject-case-session params are missing', async () => {
+    const { testApp } = buildTestSupportApp();
+
+    const res = await request(testApp)
+      .get(TestRoutes.injectCaseSession)
+      .set('x-test-support-secret', 'local-functional-secret');
 
     expect(res.status).toBe(400);
     expect(res.body).toEqual({
@@ -41,6 +94,7 @@ describe('Test support routes', () => {
 
     const res = await request(testApp)
       .get(TestRoutes.injectCaseSession)
+      .set('x-test-support-secret', 'local-functional-secret')
       .query({
         caseNumber: '1234567890123456',
         applicantCode: 'APPCODE1',
@@ -56,6 +110,7 @@ describe('Test support routes', () => {
 
     const res = await request(testApp)
       .get(TestRoutes.injectCaseSession)
+      .set('x-test-support-secret', 'local-functional-secret')
       .query({
         caseNumber: '1234567890123456',
         applicantCode: 'appcode1',
@@ -92,6 +147,7 @@ describe('Test support routes', () => {
 
     const res = await request(testApp)
       .get(TestRoutes.injectCaseSession)
+      .set('x-test-support-secret', 'local-functional-secret')
       .query({
         caseNumber: '1234567890123456',
         applicantCode: 'APPCODE1',
