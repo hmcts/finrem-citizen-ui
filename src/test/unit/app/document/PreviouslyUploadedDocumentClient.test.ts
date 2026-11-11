@@ -55,7 +55,7 @@ describe('PreviouslyUploadedDocumentClient', () => {
 
   it('gets previously uploaded documents and returns response data', async () => {
     const caseId = '12345';
-    const documentCollection = 'citizenApplicantDocument';
+    const documentCollection = 'uploadedCuiApplicantDocuments';
     const endpoint = `/cases/${caseId}/documents/${documentCollection}`;
 
     const responseData = {
@@ -71,7 +71,7 @@ describe('PreviouslyUploadedDocumentClient', () => {
         last_state_modified_date: '2024-01-03',
         security_classification: 'PUBLIC',
         case_data: {
-          citizenApplicantDocument: [
+          uploadedCuiApplicantDocuments: [
             {
               id: 'doc-1',
               value: {
@@ -111,7 +111,7 @@ describe('PreviouslyUploadedDocumentClient', () => {
 
   it('throws when axios get rejects', async () => {
     const caseId = '12345';
-    const documentCollection = 'citizenRespondentDocument';
+    const documentCollection = 'uploadedCuiRespondentDocuments';
     const endpoint = '/test-endpoint';
     const error = new Error('Request failed');
 

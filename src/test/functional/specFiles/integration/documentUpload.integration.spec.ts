@@ -61,10 +61,10 @@ const renameScenarios: RenameScenario[] = [
     renameToken: 'Chronology',
   },
   {
-    label: 'Family Mediation Information and Assessment Meeting (MIAM) Form: Form FM1',
-    searchTerm: 'miam',
-    typeValue: 'family-mediation-information-and-assessment-meeting-miam-form-form-fm1',
-    renameToken: 'FormFM1',
+    label: 'Statement of position on non-court dispute resolution (NCDR): Form FM5',
+    searchTerm: 'fm5',
+    typeValue: 'statement-of-position-on-non-court-dispute-resolution-ncdr-form-fm5',
+    renameToken: 'FormFM5',
   },
   {
     label: 'Statement of costs (summary assessment): Form N260',

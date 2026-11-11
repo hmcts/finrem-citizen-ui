@@ -3,6 +3,7 @@ import type { Application, NextFunction, Request, Response } from 'express';
 
 import { CaseRole } from '../../../main/app/case/definition';
 import { RouteNames, ViewNames } from '../../../main/constants';
+import { DashboardLatestUpdateTemplates } from '../../../main/functions/util/dashboard-template-selector';
 import setupDashboardRoute from '../../../main/routes/generalUpload/dashboard';
 
 jest.mock('../../../main/middleware', () => ({
@@ -194,6 +195,81 @@ describe('Dashboard Route', () => {
       expect.objectContaining({
         hasDivorceCase: false,
         showPreviouslyUploaded: true,
+      })
+    );
+  });
+
+  it('should set latestCaseUpdateTemplate to represented when user is represented', async () => {
+    const { res } = await callHandler({
+      caseNumber: '1234-5678-9012-3456',
+      user: {    caseRole: CaseRole.APPLICANT, hasNFDCase: true, isRepresented: true },
+      caseUserName: 'John Smith',
+      caseData: {
+        applicantFlags: { partyName: 'John Smith' },
+      },
+    });
+
+    expect(res.render).toHaveBeenCalledWith(
+      ViewNames.Dashboard,
+      expect.objectContaining({
+        latestCaseUpdateTemplate: DashboardLatestUpdateTemplates.REPRESENTED,
+        showPreviouslyUploaded: true,
+      })
+    );
+  });
+
+  it('should set latestCaseUpdateTemplate to active when user is not represented', async () => {
+    const { res } = await callHandler({
+      caseNumber: '1234-5678-9012-3456',
+      user: { caseRole: CaseRole.RESPONDENT, hasNFDCase: false, isRepresented: false },
+      caseUserName: 'Jane Doe',
+      caseData: {
+        respondentFlags: { partyName: 'Jane Doe' },
+      },
+    });
+
+    expect(res.render).toHaveBeenCalledWith(
+      ViewNames.Dashboard,
+      expect.objectContaining({
+        latestCaseUpdateTemplate: DashboardLatestUpdateTemplates.ACTIVE,
+        hasDivorceCase: false,
+        showPreviouslyUploaded: true,
+      })
+    );
+  });
+
+  it('should set latestCaseUpdateTemplate to active when represented flag is missing', async () => {
+    const { res } = await callHandler({
+      caseNumber: '1234-5678-9012-3456',
+      caseUserName: 'Test User',
+      user: {
+        caseRole: CaseRole.APPLICANT,
+      },
+    });
+
+    expect(res.render).toHaveBeenCalledWith(
+      ViewNames.Dashboard,
+      expect.objectContaining({
+        latestCaseUpdateTemplate: DashboardLatestUpdateTemplates.ACTIVE,
+        showPreviouslyUploaded: true,
+      })
+    );
+  });
+
+  it('should set latestCaseUpdateTemplate to closed when case state is close', async () => {
+    const { res } = await callHandler({
+      caseNumber: '1234-5678-9012-3456',
+      user: { caseRole: CaseRole.APPLICANT, isRepresented: false },
+      caseUserName: 'Test User',
+      caseData: {
+        state: 'close',
+      },
+    });
+
+    expect(res.render).toHaveBeenCalledWith(
+      ViewNames.Dashboard,
+      expect.objectContaining({
+        latestCaseUpdateTemplate: DashboardLatestUpdateTemplates.CLOSED,
       })
     );
   });
