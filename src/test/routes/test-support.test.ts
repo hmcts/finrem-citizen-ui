@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, jest, test } from '@jest/global
 import express, { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 
-import { TestRoutes } from '../../main/constants';
+import { TestSupportHeaders, TestRoutes } from '../../main/constants';
 import * as testSupportRouteGuard from '../../main/functions/util/test-support-route-guard';
 import setupTestSupportRoutes from '../../main/routes/generalUpload/test-support';
 
@@ -15,6 +15,7 @@ jest.mock('../../main/functions/util/test-support-route-guard', () => ({
 const mockAreTestSupportRoutesEnabled = jest.mocked(testSupportRouteGuard.areTestSupportRoutesEnabled);
 const mockAssertTestSupportRoutesStartupGuard = jest.mocked(testSupportRouteGuard.assertTestSupportRoutesStartupGuard);
 const mockIsValidTestSupportSecretHeader = jest.mocked(testSupportRouteGuard.isValidTestSupportSecretHeader);
+const DUMMY_TEST_SUPPORT_SECRET = 'local-functional-secret';
 
 const buildTestSupportApp = (saveError?: Error) => {
   const testApp = express();
@@ -42,7 +43,7 @@ describe('Test support routes', () => {
     mockAreTestSupportRoutesEnabled.mockReturnValue(true);
     mockAssertTestSupportRoutesStartupGuard.mockImplementation(() => undefined);
     mockIsValidTestSupportSecretHeader.mockImplementation(
-      headerValue => headerValue === 'local-functional-secret'
+      headerValue => headerValue === DUMMY_TEST_SUPPORT_SECRET
     );
   });
 
@@ -67,7 +68,7 @@ describe('Test support routes', () => {
       .query({
         caseNumber: '1234567890123456',
         applicantCode: 'APPCODE1',
-        respondentCode: 'RSPCODE1',
+      respondentCode: 'RSPCODE1',
       });
 
     expect(res.status).toBe(403);
@@ -79,7 +80,7 @@ describe('Test support routes', () => {
 
     const res = await request(testApp)
       .get(TestRoutes.injectCaseSession)
-      .set('x-test-support-secret', 'local-functional-secret');
+      .set(TestSupportHeaders.secret, 'local-functional-secret');
 
     expect(res.status).toBe(400);
     expect(res.body).toEqual({
@@ -92,7 +93,7 @@ describe('Test support routes', () => {
 
     const res = await request(testApp)
       .get(TestRoutes.injectCaseSession)
-      .set('x-test-support-secret', 'local-functional-secret')
+      .set(TestSupportHeaders.secret, DUMMY_TEST_SUPPORT_SECRET)
       .query({
         caseNumber: '1234567890123456',
         applicantCode: 'APPCODE1',
@@ -108,7 +109,7 @@ describe('Test support routes', () => {
 
     const res = await request(testApp)
       .get(TestRoutes.injectCaseSession)
-      .set('x-test-support-secret', 'local-functional-secret')
+      .set(TestSupportHeaders.secret, DUMMY_TEST_SUPPORT_SECRET)
       .query({
         caseNumber: '1234567890123456',
         applicantCode: 'appcode1',
@@ -145,7 +146,7 @@ describe('Test support routes', () => {
 
     const res = await request(testApp)
       .get(TestRoutes.injectCaseSession)
-      .set('x-test-support-secret', 'local-functional-secret')
+      .set(TestSupportHeaders.secret, DUMMY_TEST_SUPPORT_SECRET)
       .query({
         caseNumber: '1234567890123456',
         applicantCode: 'APPCODE1',

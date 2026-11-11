@@ -1,5 +1,6 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+import { TestSupportHeaders } from '../../../main/constants';
 import { AttributeAssertion, expectAttributes, expectVisible } from '../utils/helpers/pomAssertions';
 
 const ROUTES = {
@@ -104,7 +105,7 @@ export class BasePage {
       respondentCode,
     });
     await this.page.setExtraHTTPHeaders({
-      'x-test-support-secret': this.testSupportRouteSecret,
+      [TestSupportHeaders.secret]: this.testSupportRouteSecret,
     });
     await this.page.goto(`/__test/inject-case-session?${params.toString()}`);
 

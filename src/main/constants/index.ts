@@ -17,6 +17,10 @@ export const TestRoutes = {
   injectCaseSession: '/__test/inject-case-session',
 } as const;
 
+export const TestSupportHeaders = {
+  secret: 'x-test-support-secret',
+} as const;
+
 export const PrivateRoutes = {
   autocomplete: '/autocomplete',
   enterCaseNumber: '/enter-case-number',

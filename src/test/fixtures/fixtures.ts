@@ -240,7 +240,7 @@ export const test = base.extend<MyFixtures & MockOptions>({
     );
     base.skip(
       response.status() === 403,
-      '[mock] tests require TEST_SUPPORT_ROUTE_SECRET to match x-test-support-secret'
+      '[mock] tests require TEST_SUPPORT_ROUTE_SECRET to match test-support secret header'
     );
 
     await use();

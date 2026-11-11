@@ -1,7 +1,7 @@
 import { Application, Request, Response } from 'express';
 
 import { AccessCodeCollection, FinremCaseData, YesOrNo } from '../../app/case/definition';
-import { RouteNames, TestRoutes } from '../../constants';
+import { RouteNames, TestSupportHeaders, TestRoutes } from '../../constants';
 import {
   areTestSupportRoutesEnabled,
   assertTestSupportRoutesStartupGuard,
@@ -32,7 +32,7 @@ export default function setupTestSupportRoutes(app: Application): void {
    * /enter-access-code so the test can proceed directly to code submission.
    */
   app.get(TestRoutes.injectCaseSession, (req: Request, res: Response) => {
-    const providedSecret = req.header('x-test-support-secret');
+    const providedSecret = req.header(TestSupportHeaders.secret);
     if (!isValidTestSupportSecretHeader(providedSecret)) {
       return res.status(403).json({ error: 'Forbidden' });
     }

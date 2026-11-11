@@ -6,6 +6,8 @@ import {
   isValidTestSupportSecretHeader,
 } from '../../../../main/functions/util/test-support-route-guard';
 
+const DUMMY_TEST_SUPPORT_SECRET = 'local-functional-secret';
+
 describe('test-support-route-guard', () => {
   const originalEnv = process.env;
 
@@ -13,7 +15,7 @@ describe('test-support-route-guard', () => {
     process.env = { ...originalEnv };
     process.env.NODE_ENV = 'test';
     process.env.ENABLE_TEST_SUPPORT_ROUTES = 'true';
-    process.env.TEST_SUPPORT_ROUTE_SECRET = 'local-functional-secret';
+    process.env.TEST_SUPPORT_ROUTE_SECRET = DUMMY_TEST_SUPPORT_SECRET;
   });
 
   test('returns true when test-support routes are enabled', () => {
@@ -37,7 +39,7 @@ describe('test-support-route-guard', () => {
   });
 
   test('accepts matching secret header', () => {
-    expect(isValidTestSupportSecretHeader('local-functional-secret')).toBe(true);
+    expect(isValidTestSupportSecretHeader(DUMMY_TEST_SUPPORT_SECRET)).toBe(true);
   });
 
   test('rejects secret header that does not match', () => {
