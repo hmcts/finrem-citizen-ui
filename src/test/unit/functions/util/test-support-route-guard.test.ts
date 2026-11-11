@@ -40,7 +40,7 @@ describe('test-support-route-guard', () => {
     expect(isValidTestSupportSecretHeader('local-functional-secret')).toBe(true);
   });
 
-  test('rejects non-matching secret header', () => {
+  test('rejects secret header that does not match', () => {
     expect(isValidTestSupportSecretHeader('wrong-secret')).toBe(false);
   });
 });

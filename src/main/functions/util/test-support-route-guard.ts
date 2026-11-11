@@ -1,13 +1,5 @@
 const ALLOWED_TEST_SUPPORT_ENVS = new Set(['local', 'test']);
 
-function getRuntimeEnv(): string {
-  return process.env.NODE_ENV || 'development';
-}
-
-export function areTestSupportRoutesEnabled(): boolean {
-  return process.env.ENABLE_TEST_SUPPORT_ROUTES === 'true';
-}
-
 export function assertTestSupportRoutesStartupGuard(): void {
   if (!areTestSupportRoutesEnabled()) {
     return;
@@ -26,6 +18,10 @@ export function assertTestSupportRoutesStartupGuard(): void {
   }
 }
 
+export function areTestSupportRoutesEnabled(): boolean {
+  return process.env.ENABLE_TEST_SUPPORT_ROUTES === 'true';
+}
+
 export function isValidTestSupportSecretHeader(headerValue: string | undefined): boolean {
   const expected = process.env.TEST_SUPPORT_ROUTE_SECRET;
   if (!expected) {
@@ -33,4 +29,8 @@ export function isValidTestSupportSecretHeader(headerValue: string | undefined):
   }
 
   return headerValue === expected;
+}
+
+function getRuntimeEnv(): string {
+  return process.env.NODE_ENV || 'development';
 }

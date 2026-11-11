@@ -29,7 +29,7 @@ const configuredWorkers = Number.parseInt(process.env.PLAYWRIGHT_WORKERS || '', 
 const workerCount = Number.isFinite(configuredWorkers) && configuredWorkers > 0 ? configuredWorkers : 4;
 const configuredRetries = Number.parseInt(process.env.PLAYWRIGHT_RETRIES || '', 10);
 const retryCount = Number.isFinite(configuredRetries) && configuredRetries >= 0 ? configuredRetries : 3;
-const testSupportRouteSecret = process.env.TEST_SUPPORT_ROUTE_SECRET;
+const testSupportRouteSecret = process.env.TEST_SUPPORT_ROUTE_SECRET  || 'local-functional-secret';
 const commonUse = (CommonConfig.recommended.use ?? {}) as Record<string, unknown>;
 const commonLaunchOptions = (commonUse.launchOptions ?? {}) as Record<string, unknown>;
 

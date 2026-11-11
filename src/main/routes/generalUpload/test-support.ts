@@ -14,11 +14,11 @@ import {
  * going through the real CCD access-code generation flow (Form C).
  */
 export default function setupTestSupportRoutes(app: Application): void {
-  assertTestSupportRoutesStartupGuard();
-
   if (!areTestSupportRoutesEnabled()) {
     return;
   }
+
+  assertTestSupportRoutesStartupGuard();
 
   /**
    * GET /__test/inject-case-session
