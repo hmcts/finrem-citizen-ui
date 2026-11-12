@@ -306,11 +306,15 @@ export class ContestedEventApi {
     caseId: string,
     issueDate?: string
   ): Promise<void> {
+    await this.caseWorkerManualPayment(caseId);
     await this.caseWorkerIssueApplication(caseId, false, issueDate);
+  }
+
+  static async caseWorkerManualPayment(caseId: string) {
     await this.updateCaseworkerEvent(
       caseId,
-      ContestedEvents.progressToListing.ccdCallback,
-      ''
+      ContestedEvents.manualPayment.ccdCallback,
+      PayloadPath.Contested.manualPayment,
     );
   }
 

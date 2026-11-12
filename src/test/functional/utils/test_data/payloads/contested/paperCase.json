@@ -1,32 +1,75 @@
 {
-  "applicantFMName": "Paper",
-  "applicantLName": "Applicant",
-  "appRespondentFMName": "Paper",
-  "appRespondentLName": "Respondent",
-  "divorceCaseNumber": "LV17D54321",
-  "divorceStageReached": "Decree Nisi",
-  "paperApplication": "Yes",
-  "applicantRepresented": "No",
-  "typeOfApplication": "In connection to matrimonial and civil partnership proceedings",
-  "natureOfApplication": ["lumpSumOrder"],
-  "regionList": "london",
-  "londonFRCList": "cfc",
-  "cfcCourtList": "FR_s_CFCList_1",
-  "fastTrackDecision": {
-    "fastTrackDecisionReason": ["reason1"]
-  },
-  "applicantAddress": {
-    "AddressLine1": "111 Paper Lane",
-    "PostTown": "London",
-    "PostCode": "SW1D 4DD",
-    "Country": "United Kingdom"
-  },
-  "isApplicantAddressConfidential": "No",
-  "respondentAddress": {
-    "AddressLine1": "222 Paper Way",
-    "PostTown": "London",
-    "PostCode": "SW1E 5EE",
-    "Country": "United Kingdom"
-  },
-  "isRespondentAddressConfidential": "No"
+    "applicantRepresented": "No",
+    "typeOfApplication": "In connection to matrimonial and civil partnership proceedings",
+    "divorceCaseNumber": "LV18D81234",
+    "civilPartnership": "No",
+    "dateOfMarriage": "1997-01-01",
+    "dateOfSepration": null,
+    "divorcePetitionIssuedDate": null,
+    "nameOfCourtDivorceCentre": "Paper Case Court",
+    "divorceStageReached": "Decree Nisi",
+    "divorceUploadEvidence1": {
+        "document_url": "http://dm-store-aat.service.core-compute-aat.internal/documents/fb21c3c0-4a60-42c7-9aaf-d07f42141c29",
+        "document_binary_url": "http://dm-store-aat.service.core-compute-aat.internal/documents/fb21c3c0-4a60-42c7-9aaf-d07f42141c29/binary",
+        "document_filename": "Decree Nisi.docx"
+    },
+    "divorceDecreeNisiDate": "2025-01-01",
+    "applicantFMName": "Frodo",
+    "applicantLName": "Baggins",
+    "applicantResideOutsideUK": "No",
+    "applicantPhone": "123456789",
+    "applicantEmail": null,
+    "applicantAddressConfidential": "No",
+    "applicantInRefugeQuestion": "Yes",
+    "respondentFMName": "Smeagol",
+    "respondentLName": "Gollum",
+    "applicantAddress": {
+        "AddressLine1": "111",
+        "AddressLine2": "Leadenhall Street",
+        "AddressLine3": null,
+        "PostTown": "London",
+        "County": null,
+        "PostCode": "EC3A 2AD",
+        "Country": "United Kingdom"
+    },
+    "respondentRepresented": "No",
+     "respondentAddress": {
+        "AddressLine1": "888",
+        "AddressLine2": "Leadenhall Street",
+        "AddressLine3": "",
+        "PostTown": "London",
+        "County": "",
+        "PostCode": "EC3A 2AD",
+        "Country": "United Kingdom"
+    },
+    "respondentInRefugeQuestion": "No",
+    "natureOfApplicationChecklist": [
+        "Maintenance Pending Suit"
+    ],
+    "fastTrackDecision": "No",
+    "addToComplexityListOfCourts": "trueDontKnow",
+    "estimatedAssetsChecklistV3": "underTwoHundredAndFiftyThousandPounds",
+    "netValueOfHome": "249999",
+    "potentialAllegationChecklist": [
+        "notApplicable"
+    ],
+    "regionList": "midlands",
+    "midlandsFRCList": "birmingham",
+    "birminghamCourtList": "FR_birmingham_hc_list_2",
+    "allocatedToBeHeardAtHighCourtJudgeLevel": "No",
+    "specialAssistanceRequired": null,
+    "specificArrangementsRequired": null,
+    "isApplicantsHomeCourt": "No",
+    "applicantAttendedMIAM": "No",
+    "claimingExemptionMIAM": "Yes",
+    "evidenceUnavailableDomesticAbuseMIAM": null,
+    "MIAMExemptionsChecklist": [
+        "domesticViolence"
+    ],
+    "MIAMDomesticViolenceChecklist": [
+        "FR_ms_MIAMDomesticViolenceChecklist_Value_1"
+    ],
+    "promptForAnyDocument": "No",
+    "promptForUrgentCaseQuestion": "No",
+    "applicantSolicitorConsentForEmails": "Yes"
 }

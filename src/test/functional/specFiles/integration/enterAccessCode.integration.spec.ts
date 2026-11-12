@@ -22,7 +22,7 @@ async function assertResolvableUrl(urlValue: string, label: string): Promise<voi
     const message = err instanceof Error ? err.message : String(err);
     throw new Error(
       `[integration-preflight] ${label} host is not resolvable: ${host}. ` +
-      `Check environment URL and network/DNS access. Original error: ${message}`
+        `Check environment URL and network/DNS access. Original error: ${message}`
     );
   }
 }
@@ -35,12 +35,12 @@ export async function assertIntegrationPreflight(): Promise<void> {
 
 /**
  * INTEGRATION TESTS: Enter Access Code
- * 
+ *
  * These tests exercise the CCD-backed journey path:
  * case number submission -> access code submission -> dashboard.
  * They call invalidateAccessCode() which triggers real CCD events.
  * In local mock runs, fixture data is mock-seeded; in shared envs, cases are created/progressed via APIs.
- * 
+ *
  * Runs on: preview/AAT/perftest/ITHC by default, plus local when mock CCD is configured.
  * Default: skipped on demo; local runs require CCD_URL -> http://localhost:4100.
  * ACCESS_CODE_REAL_INTEGRATION=false is treated as legacy local default and
@@ -50,38 +50,32 @@ export async function assertIntegrationPreflight(): Promise<void> {
 // INTEGRATION: Happy-path submission calls invalidateAccessCode(), which triggers
 // a CCD event. These tests require a real case + real access-code integration.
 if (shouldRunRealCcdIntegrationSuite()) {
-  const isLocalMockCcd = /https?:\/\/(localhost|127\.0\.0\.1):4100\b/i.test(
-    (process.env.CCD_URL || '').trim()
-  );
+  const isLocalMockCcd = /https?:\/\/(localhost|127\.0\.0\.1):4100\b/i.test((process.env.CCD_URL || '').trim());
 
   test.describe('[integration-happy-path] Enter Access Code - Happy Path', () => {
     if (isLocalMockCcd) {
       test.use({ useMockTestSupport: true });
     }
 
-    test.beforeEach(async ({
-      loggedInPage,
-      basePage,
-      enterCaseNumberPage,
-      enterAccessCodePage,
-      contestedCaseWithHearing,
-    }) => {
-      expectAuthenticated(loggedInPage);
+    test.beforeEach(
+      async ({ loggedInPage, basePage, enterCaseNumberPage, enterAccessCodePage, contestedCaseForCaseNumber }) => {
+        expectAuthenticated(loggedInPage);
 
-      // Reset local mock state so access code is fresh per test.
-      if (isLocalMockCcd) {
-        await basePage.injectCaseSession(
-          contestedCaseWithHearing.caseId,
-          contestedCaseWithHearing.applicantAccessCode,
-          contestedCaseWithHearing.respondentAccessCode
-        );
-      } else {
-        await navigateToAccessCodeStep(enterCaseNumberPage, contestedCaseWithHearing.caseId);
+        // Reset local mock state so access code is fresh per test.
+        if (isLocalMockCcd) {
+          await basePage.injectCaseSession(
+            contestedCaseForCaseNumber.caseId,
+            contestedCaseForCaseNumber.applicantAccessCode,
+            contestedCaseForCaseNumber.respondentAccessCode
+          );
+        } else {
+          await navigateToAccessCodeStep(enterCaseNumberPage, contestedCaseForCaseNumber.caseId);
+        }
+
+        await basePage.verifyGlobalHeaderAndFooter();
+        await enterAccessCodePage.verifyAccessCodePageContent();
       }
-
-      await basePage.verifyGlobalHeaderAndFooter();
-      await enterAccessCodePage.verifyAccessCodePageContent();
-    });
+    );
     /**
      * Citizen successfully enters valid applicant access code and views case.
      * [integration-happy-path] Requires real CCD-backed invalidation flow.
@@ -90,11 +84,11 @@ if (shouldRunRealCcdIntegrationSuite()) {
       loggedInPage,
       dashboardPage,
       enterAccessCodePage,
-      contestedCaseWithHearing,
+      contestedCaseForCaseNumber,
       axeUtils,
     }) => {
       expectAuthenticated(loggedInPage);
-      const accessCode = contestedCaseWithHearing.applicantAccessCode;
+      const accessCode = contestedCaseForCaseNumber.applicantAccessCode;
 
       await enterAccessCodePage.submitAccessCode(accessCode);
       await dashboardPage.verifyDashboardPageContent();
@@ -109,11 +103,11 @@ if (shouldRunRealCcdIntegrationSuite()) {
       loggedInPage,
       dashboardPage,
       enterAccessCodePage,
-      contestedCaseWithHearing,
+      contestedCaseForCaseNumber,
       axeUtils,
     }) => {
       expectAuthenticated(loggedInPage);
-      const accessCode = contestedCaseWithHearing.applicantAccessCode;
+      const accessCode = contestedCaseForCaseNumber.applicantAccessCode;
 
       await enterAccessCodePage.submitAccessCode(`  ${accessCode}  `);
       await dashboardPage.verifyDashboardPageContent();
@@ -128,11 +122,11 @@ if (shouldRunRealCcdIntegrationSuite()) {
       loggedInPage,
       dashboardPage,
       enterAccessCodePage,
-      contestedCaseWithHearing,
+      contestedCaseForCaseNumber,
       axeUtils,
     }) => {
       expectAuthenticated(loggedInPage);
-      const accessCode = contestedCaseWithHearing.respondentAccessCode;
+      const accessCode = contestedCaseForCaseNumber.respondentAccessCode;
 
       await enterAccessCodePage.submitAccessCode(accessCode);
       await dashboardPage.verifyDashboardPageContent();
@@ -147,11 +141,11 @@ if (shouldRunRealCcdIntegrationSuite()) {
       loggedInPage,
       dashboardPage,
       enterAccessCodePage,
-      contestedCaseWithHearing,
+      contestedCaseForCaseNumber,
       axeUtils,
     }) => {
       expectAuthenticated(loggedInPage);
-      const accessCode = contestedCaseWithHearing.applicantAccessCode;
+      const accessCode = contestedCaseForCaseNumber.applicantAccessCode;
 
       // Enter access code in lowercase
       const lowercaseCode = accessCode.toLowerCase();
@@ -165,44 +159,42 @@ if (shouldRunRealCcdIntegrationSuite()) {
 }
 
 if (shouldRunRealCcdIntegrationSuite()) {
-  const isLocalMockCcd = /https?:\/\/(localhost|127\.0\.0\.1):4100\b/i.test(
-    (process.env.CCD_URL || '').trim()
-  );
+  const isLocalMockCcd = /https?:\/\/(localhost|127\.0\.0\.1):4100\b/i.test((process.env.CCD_URL || '').trim());
 
   test.describe('[integration-happy-path] Enter Access Code - Full Journey', () => {
     if (isLocalMockCcd) {
       test.use({ useMockTestSupport: true });
     }
 
-  test.beforeAll(async () => {
-    await assertIntegrationPreflight();
-  });
+    test.beforeAll(async () => {
+      await assertIntegrationPreflight();
+    });
 
-  test('[integration-happy-path] Citizen can submit applicant access code without pre-injection @integration @a11y', async ({
-    loggedInPage,
-    basePage,
-    enterCaseNumberPage,
-    contestedCaseWithHearing,
-    enterAccessCodePage,
-    dashboardPage,
-    axeUtils,
-  }) => {
-    expectAuthenticated(loggedInPage);
+    test('[integration-happy-path] Citizen can submit applicant access code without pre-injection @integration @a11y', async ({
+      loggedInPage,
+      basePage,
+      enterCaseNumberPage,
+      contestedCaseForCaseNumber,
+      enterAccessCodePage,
+      dashboardPage,
+      axeUtils,
+    }) => {
+      expectAuthenticated(loggedInPage);
 
-    // Local mock mode needs session reseed so reused access code state does not leak between tests.
-    if (isLocalMockCcd) {
-      await basePage.injectCaseSession(
-        contestedCaseWithHearing.caseId,
-        contestedCaseWithHearing.applicantAccessCode,
-        contestedCaseWithHearing.respondentAccessCode
-      );
-    } else {
-      await navigateToAccessCodeStep(enterCaseNumberPage, contestedCaseWithHearing.caseId);
-    }
+      // Local mock mode needs session reseed so reused access code state does not leak between tests.
+      if (isLocalMockCcd) {
+        await basePage.injectCaseSession(
+          contestedCaseForCaseNumber.caseId,
+          contestedCaseForCaseNumber.applicantAccessCode,
+          contestedCaseForCaseNumber.respondentAccessCode
+        );
+      } else {
+        await navigateToAccessCodeStep(enterCaseNumberPage, contestedCaseForCaseNumber.caseId);
+      }
 
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
-    await dashboardPage.verifyDashboardPageContent();
-    await runA11yAudit(axeUtils);
-  });
+      await enterAccessCodePage.submitAccessCode(contestedCaseForCaseNumber.applicantAccessCode);
+      await dashboardPage.verifyDashboardPageContent();
+      await runA11yAudit(axeUtils);
+    });
   });
 }

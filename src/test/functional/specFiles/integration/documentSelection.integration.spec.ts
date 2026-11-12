@@ -1,8 +1,5 @@
 import { expect, test } from '../../../fixtures/fixtures';
-import {
-  isLocalMockCcdConfigured,
-  shouldRunRealCcdIntegrationSuite,
-} from '../journeyHelpers/integrationTarget.helper';
+import { isLocalMockCcdConfigured, shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationTarget.helper';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
@@ -27,137 +24,139 @@ if (shouldRunRealCcdIntegrationSuite()) {
   test.describe('[integration] Document selection page', () => {
     test.describe.configure({ timeout: 90_000 });
 
-  if (isLocalMockCcd) {
-    test.use({ useMockTestSupport: true });
-  }
-
-  test.beforeEach(async ({
-    loggedInPage: _loggedInPage,
-    enterCaseNumberPage,
-    enterAccessCodePage,
-    contestedCaseWithHearing,
-    dashboardPage,
-    beforeYouStartPage,
-    confidentialityPage,
-    basePage,
-    fdrPage,
-    documentSelectionPage,
-  }) => {
-    // Local mock mode needs deterministic reseed so one-time code invalidation does not leak between tests.
     if (isLocalMockCcd) {
-      await basePage.injectCaseSession(
-        contestedCaseWithHearing.caseId,
-        contestedCaseWithHearing.applicantAccessCode,
-        contestedCaseWithHearing.respondentAccessCode
-      );
-    } else {
-      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+      test.use({ useMockTestSupport: true });
     }
 
-    await navigateToFdrStep(dashboardPage, beforeYouStartPage, confidentialityPage, basePage);
-    await fdrPage.selectYesAndContinue();
-    await expect(documentSelectionPage.page).toHaveURL(/\/upload\/document-type-selection/);
-    await expect(documentSelectionPage.pageHeader).toBeVisible();
-  });
+    test.beforeEach(
+      async ({
+        loggedInPage: _loggedInPage,
+        enterCaseNumberPage,
+        enterAccessCodePage,
+        contestedCaseForCaseNumber,
+        dashboardPage,
+        beforeYouStartPage,
+        confidentialityPage,
+        basePage,
+        fdrPage,
+        documentSelectionPage,
+      }) => {
+        // Local mock mode needs deterministic reseed so one-time code invalidation does not leak between tests.
+        if (isLocalMockCcd) {
+          await basePage.injectCaseSession(
+            contestedCaseForCaseNumber.caseId,
+            contestedCaseForCaseNumber.applicantAccessCode,
+            contestedCaseForCaseNumber.respondentAccessCode
+          );
+        } else {
+          await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
+          await enterAccessCodePage.submitAccessCode(contestedCaseForCaseNumber.applicantAccessCode);
+        }
 
-  test('[integration] Document selection supports adding a document @a11y', async ({
-    documentSelectionPage,
-    axeUtils,
-  }) => {
-    await documentSelectionPage.addDocumentBySearchTerm('payslip', 'Payslips');
-    await documentSelectionPage.expectDocumentsListContains(['Payslips']);
-    await runA11yAudit(axeUtils);
-  });
+        await navigateToFdrStep(dashboardPage, beforeYouStartPage, confidentialityPage, basePage);
+        await fdrPage.selectYesAndContinue();
+        await expect(documentSelectionPage.page).toHaveURL(/\/upload\/document-type-selection/);
+        await expect(documentSelectionPage.pageHeader).toBeVisible();
+      }
+    );
 
-  test('[integration] Document selection supports adding multiple documents @a11y', async ({
-    documentSelectionPage,
-    axeUtils,
-  }) => {
-    await documentSelectionPage.addDocumentBySearchTerm('payslip', 'Payslips');
-    await documentSelectionPage.addDocumentBySearchTerm('bank', 'Bank statements');
-    await documentSelectionPage.expectDocumentsListContains(['Payslips', 'Bank statements']);
-    await runA11yAudit(axeUtils);
-  });
-
-  test('[integration] Document selection excludes already selected type from autocomplete results @a11y', async ({
-    documentSelectionPage,
-    axeUtils,
-  }) => {
-    const selectedLabel = 'Payslips';
-    const searchTerm = 'payslip';
-
-    await documentSelectionPage.addDocumentBySearchTerm(searchTerm, selectedLabel);
-    await documentSelectionPage.expectDocumentsListContains([selectedLabel]);
-
-    const autocompleteResponsePromise = documentSelectionPage.page.waitForResponse(response => {
-      return response.url().includes('/autocomplete')
-        && response.url().includes(`q=${encodeURIComponent(searchTerm)}`)
-        && response.ok();
+    test('[integration] Document selection supports adding a document @a11y', async ({
+      documentSelectionPage,
+      axeUtils,
+    }) => {
+      await documentSelectionPage.addDocumentBySearchTerm('payslip', 'Payslips');
+      await documentSelectionPage.expectDocumentsListContains(['Payslips']);
+      await runA11yAudit(axeUtils);
     });
 
-    await documentSelectionPage.documentTypeInput.fill('');
-    await documentSelectionPage.documentTypeInput.pressSequentially(searchTerm);
-    await autocompleteResponsePromise;
+    test('[integration] Document selection supports adding multiple documents @a11y', async ({
+      documentSelectionPage,
+      axeUtils,
+    }) => {
+      await documentSelectionPage.addDocumentBySearchTerm('payslip', 'Payslips');
+      await documentSelectionPage.addDocumentBySearchTerm('bank', 'Bank statements');
+      await documentSelectionPage.expectDocumentsListContains(['Payslips', 'Bank statements']);
+      await runA11yAudit(axeUtils);
+    });
 
-    await expect(
-      documentSelectionPage.page.getByRole('option', { name: selectedLabel })
-    ).toHaveCount(0);
+    test('[integration] Document selection excludes already selected type from autocomplete results @a11y', async ({
+      documentSelectionPage,
+      axeUtils,
+    }) => {
+      const selectedLabel = 'Payslips';
+      const searchTerm = 'payslip';
 
-    await runA11yAudit(axeUtils);
-  });
+      await documentSelectionPage.addDocumentBySearchTerm(searchTerm, selectedLabel);
+      await documentSelectionPage.expectDocumentsListContains([selectedLabel]);
 
-  test('[integration] Document selection supports removing a document @a11y', async ({
-    documentSelectionPage,
-    axeUtils,
-  }) => {
-    await documentSelectionPage.addDocumentBySearchTerm('payslip', 'Payslips');
-    await documentSelectionPage.addDocumentBySearchTerm('bank', 'Bank statements');
+      const autocompleteResponsePromise = documentSelectionPage.page.waitForResponse(response => {
+        return (
+          response.url().includes('/autocomplete') &&
+          response.url().includes(`q=${encodeURIComponent(searchTerm)}`) &&
+          response.ok()
+        );
+      });
 
-    await documentSelectionPage.removeDocumentByLabel('Payslips');
-    await documentSelectionPage.page.waitForLoadState('networkidle');
-    await documentSelectionPage.expectDocumentsListContains(['Bank statements']);
-    await runA11yAudit(axeUtils);
-  });
+      await documentSelectionPage.documentTypeInput.fill('');
+      await documentSelectionPage.documentTypeInput.pressSequentially(searchTerm);
+      await autocompleteResponsePromise;
 
-  test('[integration] Document selection requires at least one document before continuing @a11y', async ({
-    documentSelectionPage,
-    axeUtils,
-  }) => {
-    await documentSelectionPage.submitWithoutDocumentsAndExpectValidationError();
-    await runA11yAudit(axeUtils);
-  });
+      await expect(documentSelectionPage.page.getByRole('option', { name: selectedLabel })).toHaveCount(0);
 
-  test('[integration] Document selection continue navigates to upload documents after adding documents @a11y', async ({
-    documentSelectionPage,
-    axeUtils,
-  }) => {
-    await documentSelectionPage.addDocumentBySearchTerm('payslip', 'Payslips');
-    await documentSelectionPage.clickContinueAndExpectUploadDocumentsStep();
-    await runA11yAudit(axeUtils);
-  });
+      await runA11yAudit(axeUtils);
+    });
 
-  test('[integration] Document selection getting help panel shows expected contact details @a11y', async ({
-    documentSelectionPage,
-    axeUtils,
-  }) => {
-    await expect(documentSelectionPage.gettingHelp.summary).toContainText(/contact us for help/i);
-    await documentSelectionPage.verifyGettingHelpSection();
-    await expect(documentSelectionPage.gettingHelp.callChargesLink).toHaveText(
-      'Find out about call charges (opens in new tab)'
-    );
-    await runA11yAudit(axeUtils);
-  });
+    test('[integration] Document selection supports removing a document @a11y', async ({
+      documentSelectionPage,
+      axeUtils,
+    }) => {
+      await documentSelectionPage.addDocumentBySearchTerm('payslip', 'Payslips');
+      await documentSelectionPage.addDocumentBySearchTerm('bank', 'Bank statements');
 
-  test('[integration] Document selection back navigation returns to FDR and retains selected documents @a11y', async ({
-    documentSelectionPage,
-    axeUtils,
-  }) => {
-    await documentSelectionPage.addDocumentBySearchTerm('payslip', 'Payslips');
+      await documentSelectionPage.removeDocumentByLabel('Payslips');
+      await documentSelectionPage.page.waitForLoadState('networkidle');
+      await documentSelectionPage.expectDocumentsListContains(['Bank statements']);
+      await runA11yAudit(axeUtils);
+    });
 
-    await documentSelectionPage.clickBackToFdrAndReturnWithYesSelection();
-    await documentSelectionPage.expectDocumentsListContains(['Payslips']);
-    await runA11yAudit(axeUtils);
-  });
+    test('[integration] Document selection requires at least one document before continuing @a11y', async ({
+      documentSelectionPage,
+      axeUtils,
+    }) => {
+      await documentSelectionPage.submitWithoutDocumentsAndExpectValidationError();
+      await runA11yAudit(axeUtils);
+    });
+
+    test('[integration] Document selection continue navigates to upload documents after adding documents @a11y', async ({
+      documentSelectionPage,
+      axeUtils,
+    }) => {
+      await documentSelectionPage.addDocumentBySearchTerm('payslip', 'Payslips');
+      await documentSelectionPage.clickContinueAndExpectUploadDocumentsStep();
+      await runA11yAudit(axeUtils);
+    });
+
+    test('[integration] Document selection getting help panel shows expected contact details @a11y', async ({
+      documentSelectionPage,
+      axeUtils,
+    }) => {
+      await expect(documentSelectionPage.gettingHelp.summary).toContainText(/contact us for help/i);
+      await documentSelectionPage.verifyGettingHelpSection();
+      await expect(documentSelectionPage.gettingHelp.callChargesLink).toHaveText(
+        'Find out about call charges (opens in new tab)'
+      );
+      await runA11yAudit(axeUtils);
+    });
+
+    test('[integration] Document selection back navigation returns to FDR and retains selected documents @a11y', async ({
+      documentSelectionPage,
+      axeUtils,
+    }) => {
+      await documentSelectionPage.addDocumentBySearchTerm('payslip', 'Payslips');
+
+      await documentSelectionPage.clickBackToFdrAndReturnWithYesSelection();
+      await documentSelectionPage.expectDocumentsListContains(['Payslips']);
+      await runA11yAudit(axeUtils);
+    });
   });
 }

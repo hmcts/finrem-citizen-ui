@@ -183,7 +183,7 @@ type MyFixtures = {
   enterCaseNumberPage: EnterCaseNumberPage;
   enterAccessCodePage: EnterAccessCodePage;
   /** A real contested case used solely for case-number linking tests (no access codes). */
-  contestedCaseForCaseNumber: CreatedCase;
+  contestedCaseForCaseNumber: CreatedCaseWithAccessCodes;
   /** A real contested case pre-loaded with deterministic mock access codes. */
   contestedCaseWithHearing: CreatedCaseWithAccessCodes;
   axeUtils: AxeUtils;
@@ -416,18 +416,17 @@ export const test = base.extend<MyFixtures & MockOptions>({
    */
   contestedCaseForCaseNumber: [
     async ({}, use) => {
-      if (isLocalMockCcdUrl(getConfiguredCcdUrl())) {
-        const { caseId, formattedCaseId } = getMockSeedCase();
-        await use({ caseId, formattedCaseId });
-        return;
-      }
 
-      const caseId = String(
-        await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)
-      );
+      const caseData = await ContestedCaseFactory.createAndIssuePaperCase(false);
+      const caseId = String(caseData.caseId);
       const formattedCaseId = caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
       try {
-        await use({ caseId, formattedCaseId });
+        await use({
+          caseId,
+          formattedCaseId,
+          applicantAccessCode: caseData.applicantCode,
+          respondentAccessCode: caseData.respondentCode
+        });
       } finally {
         await cleanupCreatedContestedCase(caseId);
       }

@@ -1,17 +1,14 @@
 import { test } from '../../../fixtures/fixtures';
-import {
-  isLocalMockCcdConfigured,
-  shouldRunRealCcdIntegrationSuite,
-} from '../journeyHelpers/integrationTarget.helper';
+import { isLocalMockCcdConfigured, shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationTarget.helper';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToDashboardStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
 /**
  * INTEGRATION TESTS: Dashboard Upload Journey
- * 
+ *
  * These tests verify dashboard page layout, navigation, and upload journey flow.
  * They rely on authenticated sessions via the standard loggedInPage fixture.
- * 
+ *
  * Runs on: Environments with working authentication/session support
  */
 
@@ -19,94 +16,96 @@ if (shouldRunRealCcdIntegrationSuite()) {
   const isLocalMockCcd = isLocalMockCcdConfigured();
 
   test.describe('[integration] Dashboard upload journey', () => {
-  if (isLocalMockCcd) {
-    test.use({ useMockTestSupport: true });
-  }
-
-  test.beforeEach(async ({
-    loggedInPage: _loggedInPage,
-    enterCaseNumberPage,
-    enterAccessCodePage,
-    contestedCaseWithHearing,
-    dashboardPage,
-    basePage,
-  }) => {
-    // Local mock mode needs deterministic reseed so one-time code invalidation does not leak between tests.
     if (isLocalMockCcd) {
-      await basePage.injectCaseSession(
-        contestedCaseWithHearing.caseId,
-        contestedCaseWithHearing.applicantAccessCode,
-        contestedCaseWithHearing.respondentAccessCode
-      );
-    } else {
-      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+      test.use({ useMockTestSupport: true });
     }
 
-    // Ensure logged-in session and navigate to dashboard for each test
-    await navigateToDashboardStep(dashboardPage, basePage);
-  });
+    test.beforeEach(
+      async ({
+        loggedInPage: _loggedInPage,
+        enterCaseNumberPage,
+        enterAccessCodePage,
+        contestedCaseForCaseNumber,
+        dashboardPage,
+        basePage,
+      }) => {
+        // Local mock mode needs deterministic reseed so one-time code invalidation does not leak between tests.
+        if (isLocalMockCcd) {
+          await basePage.injectCaseSession(
+            contestedCaseForCaseNumber.caseId,
+            contestedCaseForCaseNumber.applicantAccessCode,
+            contestedCaseForCaseNumber.respondentAccessCode
+          );
+        } else {
+          await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
+          await enterAccessCodePage.submitAccessCode(contestedCaseForCaseNumber.applicantAccessCode);
+        }
 
-  test('[integration] Dashboard sections and upload document button visible and accessible @a11y', async ({
-    dashboardPage,
-    axeUtils,
-  }) => {
-    await dashboardPage.verifyDashboardPageContent();
-    await dashboardPage.verifyDivorceAccountHeadingHidden();
-    await runA11yAudit(axeUtils);
-  });
+        // Ensure logged-in session and navigate to dashboard for each test
+        await navigateToDashboardStep(dashboardPage, basePage);
+      }
+    );
 
-  test('[integration] Dashboard getting help panel shows expected support details when expanded @a11y', async ({
-    dashboardPage,
-    axeUtils,
-  }) => {
-    await dashboardPage.verifyDashboardPageContent();
-    await dashboardPage.verifyGettingHelpSection();
-    await runA11yAudit(axeUtils);
-  });
+    test('[integration] Dashboard sections and upload document button visible and accessible @a11y', async ({
+      dashboardPage,
+      axeUtils,
+    }) => {
+      await dashboardPage.verifyDashboardPageContent();
+      await dashboardPage.verifyDivorceAccountHeadingHidden();
+      await runA11yAudit(axeUtils);
+    });
 
-  test('[integration] Dashboard divorce-account inset is conditionally rendered and valid when present @a11y', async ({
-    dashboardPage,
-    axeUtils,
-  }) => {
-    await dashboardPage.verifyDashboardPageContent();
-    await dashboardPage.verifyDivorceAccountInsetIfVisible();
-    await runA11yAudit(axeUtils);
-  });
+    test('[integration] Dashboard getting help panel shows expected support details when expanded @a11y', async ({
+      dashboardPage,
+      axeUtils,
+    }) => {
+      await dashboardPage.verifyDashboardPageContent();
+      await dashboardPage.verifyGettingHelpSection();
+      await runA11yAudit(axeUtils);
+    });
 
-  test('[integration] Before-you-start sections and help details are visible and accessible @a11y', async ({
-    dashboardPage,
-    beforeYouStartPage,
-    axeUtils,
-  }) => {
-    await dashboardPage.clickGoToDocumentUpload();
+    test('[integration] Dashboard divorce-account inset is conditionally rendered and valid when present @a11y', async ({
+      dashboardPage,
+      axeUtils,
+    }) => {
+      await dashboardPage.verifyDashboardPageContent();
+      await dashboardPage.verifyDivorceAccountInsetIfVisible();
+      await runA11yAudit(axeUtils);
+    });
 
-    await beforeYouStartPage.verifyBeforeYouStartPageContent();
-    await beforeYouStartPage.verifyHelpAndGuidanceClosedByDefault();
-    await beforeYouStartPage.verifyUnableToSendGuidance();
-    await beforeYouStartPage.verifyGettingHelpSection();
-    await runA11yAudit(axeUtils);
-  });
+    test('[integration] Before-you-start sections and help details are visible and accessible @a11y', async ({
+      dashboardPage,
+      beforeYouStartPage,
+      axeUtils,
+    }) => {
+      await dashboardPage.clickGoToDocumentUpload();
 
-  test('[integration] Before-you-start supports back navigation and start-now progression @a11y', async ({
-    dashboardPage,
-    beforeYouStartPage,
-    confidentialityPage,
-    axeUtils,
-  }) => {
-    await dashboardPage.verifyDashboardPageContent();
-    await dashboardPage.clickGoToDocumentUpload();
+      await beforeYouStartPage.verifyBeforeYouStartPageContent();
+      await beforeYouStartPage.verifyHelpAndGuidanceClosedByDefault();
+      await beforeYouStartPage.verifyUnableToSendGuidance();
+      await beforeYouStartPage.verifyGettingHelpSection();
+      await runA11yAudit(axeUtils);
+    });
 
-    await beforeYouStartPage.verifyBeforeYouStartPageContent();
+    test('[integration] Before-you-start supports back navigation and start-now progression @a11y', async ({
+      dashboardPage,
+      beforeYouStartPage,
+      confidentialityPage,
+      axeUtils,
+    }) => {
+      await dashboardPage.verifyDashboardPageContent();
+      await dashboardPage.clickGoToDocumentUpload();
 
-    await beforeYouStartPage.goBackToDashboard();
-    await dashboardPage.verifyDashboardPageContent();
-    await dashboardPage.verifyDivorceAccountHeadingHidden();
+      await beforeYouStartPage.verifyBeforeYouStartPageContent();
 
-    await dashboardPage.clickGoToDocumentUpload();
-    await beforeYouStartPage.startUploadJourney();
-    await confidentialityPage.verifyConfidentialityPageContent();
-    await runA11yAudit(axeUtils);
-  });
+      await beforeYouStartPage.goBackToDashboard();
+      await dashboardPage.verifyDashboardPageContent();
+      await dashboardPage.verifyDivorceAccountHeadingHidden();
+
+      await dashboardPage.clickGoToDocumentUpload();
+      await beforeYouStartPage.startUploadJourney();
+      await confidentialityPage.verifyConfidentialityPageContent();
+      await runA11yAudit(axeUtils);
+    });
   });
 }

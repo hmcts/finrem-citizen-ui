@@ -42,6 +42,10 @@ export const ContestedEvents = {
     ccdCallback: 'FR_manageHearings',
     description: 'Manage hearings including add hearing',
   },
+  manualPayment: {
+    listItem: "Manual Payment",
+    ccdCallback: "FR_manualPayment"
+  },
   addHearing: {
     ccdCallback: 'FR_addSchedulingListingInfo',
     description: 'Add hearing schedule (legacy)',
@@ -106,6 +110,7 @@ export const PayloadPath = {
     schedule1: 'src/test/functional/utils/test_data/payloads/contested/schedule1.json',
     hearing: 'src/test/functional/utils/test_data/payloads/contested/addHearing.json',
     draftOrder: 'src/test/functional/utils/test_data/payloads/contested/draftOrder.json',
+    manualPayment: 'src/test/functional/utils/test_data/payloads/contested/manualPayment.json',
   },
   Consented: {
     base: 'src/test/functional/utils/test_data/payloads/consented/base.json',

@@ -29,7 +29,8 @@ export class DashboardPage extends BasePage {
 
   constructor(readonly page: Page) {
     super(page);
-    this.userNameHeader = this.page.getByRole('heading', { level: 2, name: /(?:Applicant|Respondent)$/ });
+    // TODO ENV VAR: User name header for integration tests with specific user names
+    this.userNameHeader = this.page.getByRole('heading', { level: 2, name: /(?:Frodo Baggins|Smeagol Gollum)$/ });
     this.caseHeading = this.page.getByRole('heading', { name: 'Your financial remedy case' });
     this.caseNumberText = this.page.getByText(/Case number\s+/i);
     this.divorceAccountHeading = this.page.getByRole('heading', { name: 'This is your financial remedy account' });

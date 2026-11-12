@@ -279,12 +279,16 @@ export class ContestedCaseFactory {
   }
 
   /**
-   * Create paper case and progress to listing
+   * Create paper case and issue application
    */
-  static async createAndProcessPaperCaseUpToProgressToListing(
+  static async createAndIssuePaperCase(
     isExpressPilot = false,
     issueDate?: string
-  ): Promise<string> {
+  ): Promise<{
+    caseId: string;
+    applicantCode: string;
+    respondentCode: string;
+  }> {
     const caseId = await this.pollUntilReady(
       () => this.createCase(isExpressPilot, true),
       'Paper case creation'
@@ -292,10 +296,17 @@ export class ContestedCaseFactory {
 
     // Replace fixed waits with targeted retry for eventual consistency on caseworker start-events.
     await this.withCaseworkerStartEventRetry(async () => {
-      await ContestedEventApi.caseWorkerProgressPaperCaseToListing(caseId, issueDate);
+      await ContestedEventApi.caseWorkerManualPayment(caseId);
+      await ContestedEventApi.caseWorkerIssueApplication(caseId, false, issueDate);
     });
 
-    return caseId;
+    const accessCodes = await this.waitForAccessCodes(caseId, Date.now() + 60_000);
+
+    return {
+      caseId,
+      applicantCode: accessCodes?.applicantCode ?? '',
+      respondentCode: accessCodes?.respondentCode ?? ''
+    };
   }
 
   /**
