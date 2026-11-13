@@ -13,9 +13,11 @@ def backendPullRequestLabelPrefix = "use-ccd-defs-pr-"
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
 def FORTIFY_VAULT_NAME = "finrem-aat"
+def ENABLE_FORTIFY_PR_LABEL = "enable_fortify_scan"
 
-def checkForFortifyLabel(branch_name) {
-  return new GithubAPI(this).getLabelsbyPattern(branch_name, "fortify").contains("fortify")
+def checkForFortifyLabel = { branchName ->
+  new GithubAPI(this).getLabelsbyPattern(branchName, ENABLE_FORTIFY_PR_LABEL)
+    .contains(ENABLE_FORTIFY_PR_LABEL)
 }
 
 def secrets = [
