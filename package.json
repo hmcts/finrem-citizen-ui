@@ -36,6 +36,7 @@
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:api && yarn test:coverage",
     "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:api && yarn test:coverage && yarn test:functional",
     "qacichecks:allBrowsers": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:api && yarn test:coverage && yarn test:functional:allBrowsers",
+    "fortifyScan": "./src/test/java/gradlew -p ./src/test/java fortifyScan",
     "prepare": "husky install"
   },
   "dependencies": {

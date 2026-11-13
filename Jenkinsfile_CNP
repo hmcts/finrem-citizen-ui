@@ -12,6 +12,14 @@ def backendPullRequestLabelPrefix = "use-ccd-defs-pr-"
 
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
+def FORTIFY_VAULT_NAME = "finrem-aat"
+def ENABLE_FORTIFY_PR_LABEL = "enable_fortify_scan"
+
+def checkForFortifyLabel = { branchName ->
+  new GithubAPI(this).getLabelsbyPattern(branchName, ENABLE_FORTIFY_PR_LABEL)
+    .contains(ENABLE_FORTIFY_PR_LABEL)
+}
+
 def secrets = [
   'finrem-${env}': [
     secret("finrem-citizen-s2s-client-secret", "SERVICE_AUTH_SECRET"),
@@ -68,6 +76,11 @@ withPipeline(type, product, component) {
   afterSuccess('build') {
     yarnBuilder.yarn('build')
   }
+
+  if (checkForFortifyLabel(env.BRANCH_NAME)) {
+    enableFortifyScan(FORTIFY_VAULT_NAME)
+  }
+
   // 2. Setup for Smoke and Functional Tests
   before('tests') {
     sh 'rm -rf smoke-output functional-output a11y-output'
