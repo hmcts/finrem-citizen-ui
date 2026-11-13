@@ -1,15 +1,15 @@
 {
-    "copyOfPaperFormA": [
-        {
-            "value": {
-                "typeOfDocument": "Copy of paper form A",
-                "uploadedDocument": {
-                    "document_url": "http://dm-store-aat.service.core-compute-aat.internal/documents/fb21c3c0-4a60-42c7-9aaf-d07f42141c29",
-                    "document_binary_url": "http://dm-store-aat.service.core-compute-aat.internal/documents/fb21c3c0-4a60-42c7-9aaf-d07f42141c29/binary",
-                    "document_filename": "Copy_of_Paper_FormA.docx"
-                }
-            },
-            "id": null
+  "copyOfPaperFormA": [
+    {
+      "value": {
+        "typeOfDocument": "Copy of paper form A",
+        "uploadedDocument": {
+          "document_url": "${DOCUMENT_URL}",
+          "document_binary_url": "${DOCUMENT_BINARY_URL}",
+          "document_filename": "Copy_of_Paper_FormA.docx"
         }
-    ]
+      },
+      "id": null
+    }
+  ]
 }

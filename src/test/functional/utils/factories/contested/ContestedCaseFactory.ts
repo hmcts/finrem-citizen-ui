@@ -9,8 +9,10 @@ import {
   ESTIMATED_ASSETS_UNDER_1M,
   EXPRESS_PILOT_PARTICIPATING_COURT_REPLACEMENT,
   OUTCOME_LIST_DATA,
-  REFER_LIST_DATA } from '../../PayloadMutator';
+  REFER_LIST_DATA,
+} from '../../PayloadMutator';
 import { envTestData } from '../../test_data/EnvTestDataConfig';
+import { updateJsonFileWithEnvValues } from '../../test_data/JsonEnvValReplacer';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const parseNumberEnv = (value: string | undefined, fallback: number): number => {
@@ -63,12 +65,10 @@ export class ContestedCaseFactory {
   private static isCaseNotFoundError(error: unknown): boolean {
     const message = error instanceof Error ? error.message : String(error);
     return (
-      message.includes('status 404')
-      && (
-        message.includes('No case found')
-        || message.includes('CaseNotFoundException')
-        || message.includes('Cannot find case for given criteria')
-      )
+      message.includes('status 404') &&
+      (message.includes('No case found') ||
+        message.includes('CaseNotFoundException') ||
+        message.includes('Cannot find case for given criteria'))
     );
   }
 
@@ -108,10 +108,7 @@ export class ContestedCaseFactory {
     );
   }
 
-  private static async pollUntilReady<T>(
-    operation: () => Promise<T>,
-    retryLabel: string
-  ): Promise<T> {
+  private static async pollUntilReady<T>(operation: () => Promise<T>, retryLabel: string): Promise<T> {
     let lastError: unknown;
 
     for (let attempt = 0; attempt <= START_EVENT_RETRY_CONFIG.maxRetries; attempt++) {
@@ -131,7 +128,9 @@ export class ContestedCaseFactory {
 
         const errorType = error instanceof Error ? error.message.split('\n')[0] : String(error);
         // eslint-disable-next-line no-console
-        console.log(`[Factory Poll] ${retryLabel} transient error "${errorType}" (attempt ${attempt + 1}/${START_EVENT_RETRY_CONFIG.maxRetries + 1}), waiting ${delayMs}ms...`);
+        console.log(
+          `[Factory Poll] ${retryLabel} transient error "${errorType}" (attempt ${attempt + 1}/${START_EVENT_RETRY_CONFIG.maxRetries + 1}), waiting ${delayMs}ms...`
+        );
         await sleep(delayMs);
       }
     }
@@ -151,7 +150,7 @@ export class ContestedCaseFactory {
     isPaper,
     replacements = [],
     event,
-    payloadPath
+    payloadPath,
   }: {
     isPaper: boolean;
     replacements?: ReplacementAction[];
@@ -159,14 +158,9 @@ export class ContestedCaseFactory {
     payloadPath?: string;
   }): Promise<string> {
     const derivedEvent =
-      event ||
-      (isPaper
-        ? ContestedEvents.createPaperCase.ccdCallback
-        : ContestedEvents.createCase.ccdCallback);
+      event || (isPaper ? ContestedEvents.createPaperCase.ccdCallback : ContestedEvents.createCase.ccdCallback);
 
-    const derivedPayloadPath =
-      payloadPath ||
-      (isPaper ? PayloadPath.Contested.paper : PayloadPath.Contested.formA);
+    const derivedPayloadPath = payloadPath || (isPaper ? PayloadPath.Contested.paper : PayloadPath.Contested.formA);
 
     const builder = new CaseDataBuilder(CaseType.Contested, derivedEvent)
       [isPaper ? 'withCaseWorkerUser' : 'withSolicitorUser']()
@@ -184,7 +178,7 @@ export class ContestedCaseFactory {
     // Don't add issueDate at creation - it's set by caseworker when issuing
     return this.buildContestedCase({
       isPaper: false,
-      replacements: []
+      replacements: [],
     });
   }
 
@@ -195,7 +189,7 @@ export class ContestedCaseFactory {
   static createSchedule1Case(): Promise<string> {
     return this.buildContestedCase({
       isPaper: false,
-      payloadPath: PayloadPath.Contested.schedule1
+      payloadPath: PayloadPath.Contested.schedule1,
     });
   }
 
@@ -205,45 +199,37 @@ export class ContestedCaseFactory {
       isPaper: false,
       replacements: [
         ...EXPRESS_PILOT_PARTICIPATING_COURT_REPLACEMENT,
-        ...APPLICATION_ISSUE_DATE(DateHelper.getCurrentDate())
-      ]
+        ...APPLICATION_ISSUE_DATE(DateHelper.getCurrentDate()),
+      ],
     });
   }
 
   static createContestedPaperCaseWithExpressPilotEnrolled(): Promise<string> {
     return this.buildContestedCase({
       isPaper: true,
-      replacements: EXPRESS_PILOT_PARTICIPATING_COURT_REPLACEMENT
+      replacements: EXPRESS_PILOT_PARTICIPATING_COURT_REPLACEMENT,
     });
   }
 
   static createContestedPaperCaseWithEstimatedAssetUnder1M(): Promise<string> {
     return this.buildContestedCase({
       isPaper: true,
-      replacements: [
-        ...EXPRESS_PILOT_PARTICIPATING_COURT_REPLACEMENT,
-        ...ESTIMATED_ASSETS_UNDER_1M
-      ]
+      replacements: [...EXPRESS_PILOT_PARTICIPATING_COURT_REPLACEMENT, ...ESTIMATED_ASSETS_UNDER_1M],
     });
   }
 
   // Reusable helper for creating cases
-  private static async createCase(
-    isExpressPilot: boolean,
-    isPaper: boolean
-  ): Promise<string> {
+  private static async createCase(isExpressPilot: boolean, isPaper: boolean): Promise<string> {
     if (isExpressPilot) {
       return isPaper
         ? this.createContestedPaperCaseWithExpressPilotEnrolled()
         : this.createContestedFormACaseWithExpressPilotEnrolled();
     }
-    return isPaper
-      ? this.createBaseContestedPaperCase()
-      : this.createBaseContestedFormA();
+    return isPaper ? this.createBaseContestedPaperCase() : this.createBaseContestedFormA();
   }
 
   // Workflow helpers - these create and progress cases
-  
+
   /**
    * Create and submit a Form A case
    */
@@ -260,10 +246,7 @@ export class ContestedCaseFactory {
     isExpressPilot = false,
     issueDate?: string
   ): Promise<string> {
-    const caseId = await this.pollUntilReady(
-      () => this.createCase(isExpressPilot, false),
-      'Form A case creation'
-    );
+    const caseId = await this.pollUntilReady(() => this.createCase(isExpressPilot, false), 'Form A case creation');
 
     // Poll until the solicitor start-event token is available instead of fixed sleeps.
     await this.withSolicitorStartEventRetry(async () => {
@@ -289,10 +272,7 @@ export class ContestedCaseFactory {
     applicantCode: string;
     respondentCode: string;
   }> {
-    const caseId = await this.pollUntilReady(
-      () => this.createCase(isExpressPilot, true),
-      'Paper case creation'
-    );
+    const caseId = await this.pollUntilReady(() => this.createCase(isExpressPilot, true), 'Paper case creation');
 
     // Replace fixed waits with targeted retry for eventual consistency on caseworker start-events.
     await this.withCaseworkerStartEventRetry(async () => {
@@ -305,14 +285,14 @@ export class ContestedCaseFactory {
     return {
       caseId,
       applicantCode: accessCodes?.applicantCode ?? '',
-      respondentCode: accessCodes?.respondentCode ?? ''
+      respondentCode: accessCodes?.respondentCode ?? '',
     };
   }
 
   /**
    * Create contested case with hearing date scheduled
-    * This progresses a case to listing with a hearing added.
-    * Access codes are generated at FR_issueApplication.
+   * This progresses a case to listing with a hearing added.
+   * Access codes are generated at FR_issueApplication.
    */
   static async createContestedCaseWithHearing(): Promise<string> {
     // Must provide issue date for issueApplication event
@@ -329,9 +309,9 @@ export class ContestedCaseFactory {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const isManageHearingsCallbackFailure =
-        message.includes('FR_manageHearings')
-        && message.includes('Callback to service has been unsuccessful')
-        && message.includes('status 502');
+        message.includes('FR_manageHearings') &&
+        message.includes('Callback to service has been unsuccessful') &&
+        message.includes('status 502');
 
       if (!isManageHearingsCallbackFailure) {
         throw error;
@@ -343,9 +323,7 @@ export class ContestedCaseFactory {
       );
 
       // Fail fast on known infra callback failure; outer flow decides whether to retry with a fresh case.
-      throw new ManageHearingsInfraUnavailableError(
-        `FR_manageHearings callback failed (502) for case ${caseId}`
-      );
+      throw new ManageHearingsInfraUnavailableError(`FR_manageHearings callback failed (502) for case ${caseId}`);
     }
 
     return caseId;
@@ -357,14 +335,11 @@ export class ContestedCaseFactory {
   ): Promise<{ applicantCode: string; respondentCode: string } | undefined> {
     for (
       let attempt = 0;
-      Date.now() < deadlineEpochMs
-      && (
-        ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase === 0
-        || attempt < ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase
-      );
+      Date.now() < deadlineEpochMs &&
+      (ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase === 0 ||
+        attempt < ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase);
       attempt++
     ) {
-
       const { applicantCode, respondentCode } = await this.tryFetchAccessCodesOnce(caseId, attempt);
 
       if (applicantCode && respondentCode) {
@@ -372,8 +347,8 @@ export class ContestedCaseFactory {
       }
 
       const isLastCappedAttempt =
-        ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase > 0
-        && attempt === ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase - 1;
+        ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase > 0 &&
+        attempt === ACCESS_CODE_RETRY_CONFIG.codeFetchAttemptsPerCase - 1;
       if (isLastCappedAttempt) {
         return undefined;
       }
@@ -541,7 +516,9 @@ export class ContestedCaseFactory {
    *   const { applicantCode, respondentCode } = await ContestedCaseFactory.getAccessCodesForCase(caseId);
    *   // Use codes to login via citizen UI: https://finrem-citizen-ui.aat.platform.hmcts.net/case/{caseId}
    */
-  static async getAccessCodesForCase(caseId: string): Promise<{ applicantCode: string | undefined; respondentCode: string | undefined }> {
+  static async getAccessCodesForCase(
+    caseId: string
+  ): Promise<{ applicantCode: string | undefined; respondentCode: string | undefined }> {
     const applicantCode = await ContestedEventApi.getApplicantAccessCode(caseId);
     const respondentCode = await ContestedEventApi.getRespondentAccessCode(caseId);
 
@@ -565,9 +542,7 @@ export class ContestedCaseFactory {
     applicantCode: string;
     respondentCode: string;
   }> {
-    const caseId = String(
-      await this.createAndProcessFormACaseUpToProgressToListing(false)
-    );
+    const caseId = String(await this.createAndProcessFormACaseUpToProgressToListing(false));
     return {
       caseId,
       applicantCode: 'APPCODE1',
@@ -580,9 +555,7 @@ export class ContestedCaseFactory {
    * Default is mock-first (fast, deterministic, no manage-hearings dependency).
    * Set useRealIntegration=true only for dedicated happy-path integration tests.
    */
-  static async createCaseForAccessCodeJourney(
-    useRealIntegration = false
-  ): Promise<{
+  static async createCaseForAccessCodeJourney(useRealIntegration = false): Promise<{
     caseId: string;
     applicantCode: string;
     respondentCode: string;
@@ -629,9 +602,9 @@ export class ContestedCaseFactory {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const isAlreadyIssuedError =
-        message.includes('Pre-state condition is not valid')
-        && message.includes('applicationIssued')
-        && message.includes('FR_issueApplication');
+        message.includes('Pre-state condition is not valid') &&
+        message.includes('applicationIssued') &&
+        message.includes('FR_issueApplication');
 
       if (!isAlreadyIssuedError) {
         throw error;
@@ -648,9 +621,7 @@ export class ContestedCaseFactory {
   /**
    * Create and process Form A case up to flag creation
    */
-  static async createAndProcessFormACaseUpToCreateFlag(
-    isExpressPilot = false
-  ): Promise<string> {
+  static async createAndProcessFormACaseUpToCreateFlag(isExpressPilot = false): Promise<string> {
     const caseId = await this.createAndProcessFormACaseUpToIssueApplication(isExpressPilot);
     await ContestedEventApi.caseworkerCreateFlag(caseId);
     return caseId;
@@ -668,9 +639,7 @@ export class ContestedCaseFactory {
   /**
    * Create and process Schedule 1 case up to issue application
    */
-  static async createAndProcessSchedule1CaseUpToIssueApplication(
-    _isExpressPilot = false
-  ): Promise<string> {
+  static async createAndProcessSchedule1CaseUpToIssueApplication(_isExpressPilot = false): Promise<string> {
     const caseId = await this.createSchedule1Case();
     await ContestedEventApi.solicitorSubmitFormACase(caseId);
     await ContestedEventApi.caseWorkerIssueApplication(caseId);
@@ -680,9 +649,7 @@ export class ContestedCaseFactory {
   /**
    * Create and allocate case to judge
    */
-  static async createAndProcessFormACaseUpToAllocateJudge(
-    isExpressPilot = false
-  ): Promise<string> {
+  static async createAndProcessFormACaseUpToAllocateJudge(isExpressPilot = false): Promise<string> {
     const caseId = await this.createCase(isExpressPilot, false);
     await ContestedEventApi.solicitorSubmitFormACase(caseId);
     await ContestedEventApi.caseworkerAllocateToJudge(caseId);
@@ -692,9 +659,7 @@ export class ContestedCaseFactory {
   /**
    * Progress to general application outcome
    */
-  static async caseWorkerProgressToGeneralApplicationOutcome(
-    caseId: string
-  ): Promise<string> {
+  static async caseWorkerProgressToGeneralApplicationOutcome(caseId: string): Promise<string> {
     const generalApplicationId = await this.caseworkerProgressToGeneralApplicationReferToJudge(caseId);
     const modifications = OUTCOME_LIST_DATA(generalApplicationId);
     await ContestedEventApi.generalApplicationOutcome(caseId, modifications);
@@ -704,9 +669,7 @@ export class ContestedCaseFactory {
   /**
    * Create old general application directions hearing
    */
-  static async caseWorkerCreateOldGeneralApplicationDirectionsHearing(
-    caseId: string
-  ): Promise<string> {
+  static async caseWorkerCreateOldGeneralApplicationDirectionsHearing(caseId: string): Promise<string> {
     const codeForDirections = await this.caseWorkerProgressToGeneralApplicationOutcome(caseId);
     const modifications = DIRECTIONS_LIST_DATA(codeForDirections);
     await ContestedEventApi.generalApplicationDirections(caseId, modifications);
@@ -716,14 +679,8 @@ export class ContestedCaseFactory {
   /**
    * Progress to upload draft order
    */
-  static async progressToUploadDraftOrder({
-    isFormA
-  }: {
-    isFormA: boolean;
-  }): Promise<string> {
-    const caseId = isFormA
-      ? await this.createBaseContestedFormA()
-      : await this.createBaseContestedPaperCase();
+  static async progressToUploadDraftOrder({ isFormA }: { isFormA: boolean }): Promise<string> {
+    const caseId = isFormA ? await this.createBaseContestedFormA() : await this.createBaseContestedPaperCase();
 
     if (isFormA) {
       await ContestedEventApi.solicitorSubmitFormACase(caseId);
@@ -749,23 +706,21 @@ export class ContestedCaseFactory {
       courtOrderDate: hearingDate,
       documentUrl: envTestData.DOCUMENT_URL,
       documentBinaryUrl: envTestData.DOCUMENT_BINARY_URL,
-      uploadTimestamp: await DateHelper.getCurrentTimestamp()
+      uploadTimestamp: await DateHelper.getCurrentTimestamp(),
     };
 
     await ContestedEventApi.judgeApproveOrders(caseId, documentDetailsForFutureTestSteps);
     await ContestedEventApi.caseWorkerProcessOrderLegacy(caseId, {
       documentUrl: envTestData.DOCUMENT_URL,
       documentBinaryUrl: envTestData.DOCUMENT_BINARY_URL,
-      uploadTimestamp: await DateHelper.getCurrentTimestamp()
+      uploadTimestamp: await DateHelper.getCurrentTimestamp(),
     });
     return caseId;
   }
 
   // Private helper methods
 
-  private static async caseworkerProgressToGeneralApplicationReferToJudge(
-    caseId: string
-  ): Promise<string> {
+  private static async caseworkerProgressToGeneralApplicationReferToJudge(caseId: string): Promise<string> {
     const generalApplicationId = await ContestedEventApi.caseWorkerProgressToCreateGeneralApplication(caseId);
     const modifications = REFER_LIST_DATA(generalApplicationId);
     await ContestedEventApi.generalApplicationReferToJudge(caseId, modifications);

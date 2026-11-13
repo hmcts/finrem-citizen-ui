@@ -3,9 +3,9 @@
  */
 export const envTestData = {
   // Document URLs for testing (AAT)
-  DOCUMENT_URL: process.env.DOCUMENT_URL || 'http://dm-store-aat.service.core-compute-aat.internal/documents/14159821-7a8a-41d6-b46d-91dbb0339867',
-  DOCUMENT_BINARY_URL: process.env.DOCUMENT_BINARY_URL || 'http://dm-store-aat.service.core-compute-aat.internal/documents/14159821-7a8a-41d6-b46d-91dbb0339867/binary',
-  
+  DOCUMENT_URL: 'http://dm-store-aat.service.core-compute-aat.internal/documents/fb21c3c0-4a60-42c7-9aaf-d07f42141c29',
+  DOCUMENT_BINARY_URL: 'http://dm-store-aat.service.core-compute-aat.internal/documents/fb21c3c0-4a60-42c7-9aaf-d07f42141c29/binary',
+
   // Organization IDs (AAT PRD)
   ORG_ID_1: 'Y707HZM',  // FinRem-1-Org
   ORG_ID_2: '95V5X7X',  // FinRem-2-Org
@@ -21,4 +21,8 @@ export const envTestData = {
   // PBA
   PBA_NUMBER: 'PBA0089162',
   PBA_ACCOUNT_NAME: 'Bag End',
+
+  // PA (Parties)
+  APPLICANT_NAME: 'Frodo Baggins',
+  RESPONDENT_NAME: 'Smeagol Gollum',
 };
