@@ -14,10 +14,6 @@ export const envTestData = {
   EXPRESS_PILOT_COURT_ID: 'FR_s_CFCList_11',
   EXPRESS_PILOT_COURT_NAME: 'Birmingham Civil and Family Justice Centre',
   
-  // Default solicitor org
-  SOLICITOR_ORG_ID: process.env.SOLICITOR_ORG_ID || 'Y707HZM',
-  SOLICITOR_ORG_NAME: process.env.SOLICITOR_ORG_NAME || 'FinRem-1-Org',
-  
   // PBA
   PBA_NUMBER: 'PBA0089162',
   PBA_ACCOUNT_NAME: 'Bag End',

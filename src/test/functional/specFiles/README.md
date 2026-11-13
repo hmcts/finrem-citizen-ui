@@ -912,7 +912,6 @@ Deletion credential fallback order:
 
 - `caseworker`
 - `systemUser`
-- `solicitor`
 
 If deletion fails for all available credentials, tests continue and a warning is logged with attempted users and error details.
 

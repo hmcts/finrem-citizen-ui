@@ -163,7 +163,7 @@ export async function getUserToken(username: string, password: string): Promise<
       throw new Error(
         `[IDAM auth] Resource owner authentication failed for user ${maskIdentifier(username)}. `
         + 'Check credential env vars for the user role in use (for example USERNAME_CASEWORKER/PASSWORD_CASEWORKER, '
-        + 'PLAYWRIGHT_SOLICITOR_USERNAME/PLAYWRIGHT_SOLICITOR_PSWD, or IDAM_SYSTEM_USERNAME/IDAM_SYSTEM_PASSWORD) '
+        + 'or IDAM_SYSTEM_USERNAME/IDAM_SYSTEM_PASSWORD) '
         + `and verify they are valid for ${getTargetEnvLabel()}.`
       );
     }
