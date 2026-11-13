@@ -184,8 +184,6 @@ type MyFixtures = {
   enterAccessCodePage: EnterAccessCodePage;
   /** A real contested case used solely for case-number linking tests (no access codes). */
   contestedCaseForCaseNumber: CreatedCaseWithAccessCodes;
-  /** A real contested case pre-loaded with deterministic mock access codes. */
-  contestedCaseWithHearing: CreatedCaseWithAccessCodes;
   axeUtils: AxeUtils;
   beforeYouStartPage: BeforeYouStartPage;
   confidentialityPage: ConfidentialityPage;
@@ -426,45 +424,6 @@ export const test = base.extend<MyFixtures & MockOptions>({
           formattedCaseId,
           applicantAccessCode: caseData.applicantCode,
           respondentAccessCode: caseData.respondentCode
-        });
-      } finally {
-        await cleanupCreatedContestedCase(caseId);
-      }
-    },
-    { timeout: 240 * 1000 }
-  ],
-
-  /**
-   * Creates a contested case for the access-code journey using a mock-first strategy.
-   *
-   * Default: mock codes (APPCODE1/RSPCODE1) via /__test/inject-case-session,
-    * which avoids external dependency instability and keeps tests deterministic.
-   *
-   * Optional real integration mode (happy path only): set
-   *   ACCESS_CODE_REAL_INTEGRATION=true
-    * to generate real access codes via FR_issueApplication and fetch them from case details.
-   *
-   * Both applicant and respondent access codes are returned so tests can verify
-   * each role's happy path without sharing state.
-   */
-  contestedCaseWithHearing: [
-    async ({}, use) => {
-      if (isLocalMockCcdUrl(getConfiguredCcdUrl())) {
-        await use(getMockSeedCase());
-        return;
-      }
-
-      const useRealIntegration = shouldUseRealAccessCodeIntegration();
-      const caseData = await ContestedCaseFactory.createCaseForAccessCodeJourney(useRealIntegration);
-      const caseId = String(caseData.caseId);
-      const formattedCaseId = caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
-
-      try {
-        await use({
-          caseId,
-          formattedCaseId,
-          applicantAccessCode: caseData.applicantCode,
-          respondentAccessCode: caseData.respondentCode,
         });
       } finally {
         await cleanupCreatedContestedCase(caseId);

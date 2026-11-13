@@ -1,7 +1,6 @@
 import { CaseType, ContestedEvents, PayloadPath } from '../../../config/case-data';
 import config from '../../../config/config';
 import { ReplacementAction } from '../../../types/replacement-action';
-import { DateHelper } from '../../DateHelper';
 import { ccdApi } from '../../helpers/CcdApi';
 
 /**
@@ -84,24 +83,6 @@ export class ContestedEventApi {
     return undefined;
   }
 
-  private static readAccessCodeCollectionCount(
-    payload: Record<string, unknown>,
-    candidateFields: readonly string[]
-  ): number {
-    for (const field of candidateFields) {
-      const value = payload[field];
-      if (Array.isArray(value)) {
-        return value.length;
-      }
-    }
-
-    return 0;
-  }
-
-  private static getAccessCodeRelatedKeys(payload: Record<string, unknown>): string[] {
-    return Object.keys(payload).filter(key => /access.?code/i.test(key));
-  }
-
   private static shouldLogVerboseFallbacks(): boolean {
     return process.env.CCD_VERBOSE_RETRY === 'true' || !!process.env.CI;
   }
@@ -140,16 +121,6 @@ export class ContestedEventApi {
     return {
       username: config.caseworker.username,
       password: config.caseworker.password,
-    };
-  }
-
-  /**
-   * Get solicitor credentials from config
-   */
-  private static get solicitor() {
-    return {
-      username: config.solicitor.username,
-      password: config.solicitor.password,
     };
   }
 
@@ -222,28 +193,11 @@ export class ContestedEventApi {
     }
   }
 
-  /**
-   * Solicitor submits Form A application
-   */
-  static async solicitorSubmitFormACase(caseId: string): Promise<void> {
-    await ccdApi.updateCaseInCcd(
-      this.solicitor.username,
-      this.solicitor.password,
-      caseId,
-      this.caseType,
-      ContestedEvents.solicitorSubmit.ccdCallback,
-      PayloadPath.Contested.formASubmit // Use case submission payload
-    );
-  }
-
-  /**
-   * Caseworker makes HWF decision
-   */
-  static async caseWorkerHWFDecisionMade(caseId: string): Promise<void> {
+  static async caseWorkerManualPayment(caseId: string) {
     await this.updateCaseworkerEvent(
       caseId,
-      ContestedEvents.hwfDecision.ccdCallback,
-      ''
+      ContestedEvents.manualPayment.ccdCallback,
+      PayloadPath.Contested.manualPayment,
     );
   }
 
@@ -262,241 +216,6 @@ export class ContestedEventApi {
     await this.updateCaseworkerEvent(
       caseId,
       ContestedEvents.issueApplication.ccdCallback,
-      '',
-      modifications
-    );
-  }
-
-  /**
-   * Caseworker allocates to judge
-   */
-  static async caseworkerAllocateToJudge(caseId: string): Promise<void> {
-    await this.updateCaseworkerEvent(
-      caseId,
-      ContestedEvents.allocateToJudge.ccdCallback,
-      ''
-    );
-  }
-
-  /**
-   * Progress Form A case to listing
-   * Flow: HWF Decision -> Issue Application -> Progress to Listing
-   */
-  static async caseWorkerProgressFormACaseToListing(
-    caseId: string,
-    issueDate?: string
-  ): Promise<void> {
-    // 1. Make HWF decision first
-    await this.caseWorkerHWFDecisionMade(caseId);
-    // 2. Issue application
-    await this.caseWorkerIssueApplication(caseId, true, issueDate);
-    // 3. Progress to listing
-    await this.updateCaseworkerEvent(
-      caseId,
-      ContestedEvents.progressToListing.ccdCallback,
-      ''
-    );
-  }
-
-  /**
-   * Progress paper case to listing
-   * Flow: Manual Payment -> Issue Application -> Progress to Listing
-   */
-  static async caseWorkerProgressPaperCaseToListing(
-    caseId: string,
-    issueDate?: string
-  ): Promise<void> {
-    await this.caseWorkerManualPayment(caseId);
-    await this.caseWorkerIssueApplication(caseId, false, issueDate);
-  }
-
-  static async caseWorkerManualPayment(caseId: string) {
-    await this.updateCaseworkerEvent(
-      caseId,
-      ContestedEvents.manualPayment.ccdCallback,
-      PayloadPath.Contested.manualPayment,
-    );
-  }
-
-  /**
-   * Add hearing to case using manageHearings event
-   */
-  static async caseWorkerPerformsAddAHearing(caseId: string): Promise<void> {
-    const hearingDate = await DateHelper.getHearingDateTwelveWeeksLaterInISOFormat();
-    const modifications: ReplacementAction[] = [
-      { action: 'replace', key: '__HEARING_DATE__', value: hearingDate }
-    ];
-
-    await this.updateCaseworkerEvent(
-      caseId,
-      ContestedEvents.manageHearings.ccdCallback,
-      PayloadPath.Contested.hearing,
-      modifications
-    );
-  }
-
-  /**
-   * Create general application
-   */
-  static async caseWorkerProgressToCreateGeneralApplication(
-    caseId: string
-  ): Promise<string> {
-    const hasSystemUser =
-      !!this.systemUser.username
-      && !!this.systemUser.password
-      && this.systemUser.username !== this.caseworker.username;
-
-    const preferSystemUser = !!config.useSystemUserForCaseworkerEvents && hasSystemUser;
-    const primaryCredentials = preferSystemUser ? this.systemUser : this.caseworker;
-    const fallbackCredentials = preferSystemUser ? this.caseworker : this.systemUser;
-
-    let response;
-    try {
-      response = await ccdApi.updateCaseInCcd(
-        primaryCredentials.username,
-        primaryCredentials.password,
-        caseId,
-        this.caseType,
-        ContestedEvents.createGeneralApplication.ccdCallback,
-        ''
-      );
-    } catch (error) {
-      const canFallback = !!fallbackCredentials.username && !!fallbackCredentials.password;
-
-      if (!canFallback || !this.isCaseNotFound404(error)) {
-        throw error;
-      }
-
-      if (this.shouldLogVerboseFallbacks()) {
-        // eslint-disable-next-line no-console
-        console.warn(
-          `[CCD Fallback] Primary user cannot access case ${caseId} for event ${ContestedEvents.createGeneralApplication.ccdCallback}. Retrying with fallback user.`
-        );
-      }
-
-      response = await ccdApi.updateCaseInCcd(
-        fallbackCredentials.username,
-        fallbackCredentials.password,
-        caseId,
-        this.caseType,
-        ContestedEvents.createGeneralApplication.ccdCallback,
-        ''
-      );
-    }
-    // Return the general application ID from the response
-    const generalApplications = response?.generalApplications as { id: string }[] | undefined;
-    return generalApplications?.[0]?.id || '';
-  }
-
-  /**
-   * Refer general application to judge
-   */
-  static async generalApplicationReferToJudge(
-    caseId: string,
-    modifications: ReplacementAction[]
-  ): Promise<void> {
-    await this.updateCaseworkerEvent(
-      caseId,
-      ContestedEvents.referToJudge.ccdCallback,
-      '',
-      modifications
-    );
-  }
-
-  /**
-   * General application outcome
-   */
-  static async generalApplicationOutcome(
-    caseId: string,
-    modifications: ReplacementAction[]
-  ): Promise<void> {
-    await this.updateCaseworkerEvent(
-      caseId,
-      ContestedEvents.gaOutcome.ccdCallback,
-      '',
-      modifications
-    );
-  }
-
-  /**
-   * General application directions
-   */
-  static async generalApplicationDirections(
-    caseId: string,
-    modifications: ReplacementAction[]
-  ): Promise<void> {
-    await this.updateCaseworkerEvent(
-      caseId,
-      ContestedEvents.gaDirections.ccdCallback,
-      '',
-      modifications
-    );
-  }
-
-  /**
-   * Create case flag
-   */
-  static async caseworkerCreateFlag(caseId: string): Promise<void> {
-    await this.updateCaseworkerEvent(
-      caseId,
-      ContestedEvents.createFlag.ccdCallback,
-      ''
-    );
-  }
-
-  /**
-   * Upload agreed draft order (applicant)
-   */
-  static async agreedDraftOrderApplicant(caseId: string): Promise<void> {
-    await ccdApi.updateCaseInCcd(
-      this.solicitor.username,
-      this.solicitor.password,
-      caseId,
-      this.caseType,
-      ContestedEvents.agreedDraftOrder.ccdCallback,
-      ''
-    );
-  }
-
-  /**
-   * Judge approves orders
-   */
-  static async judgeApproveOrders(
-    caseId: string,
-    documentDetails: Record<string, string>
-  ): Promise<void> {
-    const modifications: ReplacementAction[] = Object.entries(documentDetails).map(
-      ([key, value]) => ({ action: 'insert' as const, key, value })
-    );
-
-    await ccdApi.updateCaseInCcd(
-      this.caseworker.username,
-      this.caseworker.password,
-      caseId,
-      this.caseType,
-      ContestedEvents.approveOrders.ccdCallback,
-      '',
-      modifications
-    );
-  }
-
-  /**
-   * Process order (legacy)
-   */
-  static async caseWorkerProcessOrderLegacy(
-    caseId: string,
-    documentDetails: Record<string, string>
-  ): Promise<void> {
-    const modifications: ReplacementAction[] = Object.entries(documentDetails).map(
-      ([key, value]) => ({ action: 'insert' as const, key, value })
-    );
-
-    await ccdApi.updateCaseInCcd(
-      this.caseworker.username,
-      this.caseworker.password,
-      caseId,
-      this.caseType,
-      ContestedEvents.processOrder.ccdCallback,
       '',
       modifications
     );
@@ -575,35 +294,6 @@ export class ContestedEventApi {
         casePayload,
         this.respondentAccessCodeFieldCandidates
       ),
-    };
-  }
-
-  /**
-   * Returns non-sensitive diagnostics to confirm whether access-code generation
-   * fields exist and are populated on the case record.
-   */
-  static async getAccessCodeDebugSnapshot(caseId: string): Promise<{
-    applicantCodesCount: number;
-    respondentCodesCount: number;
-    hasApplicantAccessCodeValue: boolean;
-    hasRespondentAccessCodeValue: boolean;
-    caseDataTopLevelKeys: string[];
-    casePayloadKeys: string[];
-    accessCodeRelatedPayloadKeys: string[];
-  }> {
-    const caseData = await this.getCaseData(caseId);
-    const casePayload = (caseData.case_data as Record<string, unknown> | undefined) || caseData;
-    const applicantCode = this.readAccessCodeFromCandidates(casePayload, this.applicantAccessCodeFieldCandidates);
-    const respondentCode = this.readAccessCodeFromCandidates(casePayload, this.respondentAccessCodeFieldCandidates);
-
-    return {
-      applicantCodesCount: this.readAccessCodeCollectionCount(casePayload, this.applicantAccessCodeFieldCandidates),
-      respondentCodesCount: this.readAccessCodeCollectionCount(casePayload, this.respondentAccessCodeFieldCandidates),
-      hasApplicantAccessCodeValue: !!applicantCode,
-      hasRespondentAccessCodeValue: !!respondentCode,
-      caseDataTopLevelKeys: Object.keys(caseData),
-      casePayloadKeys: Object.keys(casePayload),
-      accessCodeRelatedPayloadKeys: this.getAccessCodeRelatedKeys(casePayload),
     };
   }
 
