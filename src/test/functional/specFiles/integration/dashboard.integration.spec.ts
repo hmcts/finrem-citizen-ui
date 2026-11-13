@@ -25,20 +25,20 @@ if (shouldRunRealCcdIntegrationSuite()) {
         loggedInPage: _loggedInPage,
         enterCaseNumberPage,
         enterAccessCodePage,
-        contestedCaseForCaseNumber,
+        contestLipOnlyPaperCase,
         dashboardPage,
         basePage,
       }) => {
         // Local mock mode needs deterministic reseed so one-time code invalidation does not leak between tests.
         if (isLocalMockCcd) {
           await basePage.injectCaseSession(
-            contestedCaseForCaseNumber.caseId,
-            contestedCaseForCaseNumber.applicantAccessCode,
-            contestedCaseForCaseNumber.respondentAccessCode
+            contestLipOnlyPaperCase.caseId,
+            contestLipOnlyPaperCase.applicantAccessCode,
+            contestLipOnlyPaperCase.respondentAccessCode
           );
         } else {
-          await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
-          await enterAccessCodePage.submitAccessCode(contestedCaseForCaseNumber.applicantAccessCode);
+          await enterCaseNumberPage.submitCaseNumber(contestLipOnlyPaperCase.caseId);
+          await enterAccessCodePage.submitAccessCode(contestLipOnlyPaperCase.applicantAccessCode);
         }
 
         // Ensure logged-in session and navigate to dashboard for each test

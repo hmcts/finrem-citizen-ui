@@ -26,14 +26,14 @@ if (shouldRunRealCcdIntegrationSuite()) {
       loggedInPage,
       basePage,
       enterCaseNumberPage,
-      contestedCaseForCaseNumber,
+      contestLipOnlyPaperCase,
       page,
       axeUtils,
     }) => {
       expectAuthenticated(loggedInPage);
       await enterCaseNumberPage.verifyCaseNumberPageContent();
       await basePage.verifyGlobalHeaderAndFooter();
-      await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
+      await enterCaseNumberPage.submitCaseNumber(contestLipOnlyPaperCase.caseId);
       await expect(page).toHaveURL(/\/enter-access-code$/);
       await runA11yAudit(axeUtils);
     });
@@ -42,7 +42,7 @@ if (shouldRunRealCcdIntegrationSuite()) {
       loggedInPage,
       basePage,
       enterCaseNumberPage,
-      contestedCaseForCaseNumber,
+      contestLipOnlyPaperCase,
       page,
       axeUtils,
     }) => {
@@ -50,7 +50,7 @@ if (shouldRunRealCcdIntegrationSuite()) {
       await enterCaseNumberPage.verifyCaseNumberPageContent();
       await basePage.verifyGlobalHeaderAndFooter();
       // Use the formatted case ID (XXXX-XXXX-XXXX-XXXX)
-      await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.formattedCaseId);
+      await enterCaseNumberPage.submitCaseNumber(contestLipOnlyPaperCase.formattedCaseId);
       // Verify redirection to Access Code page
       await expect(page).toHaveURL(/\/enter-access-code$/);
       await expect(page.getByRole('heading', { level: 1, name: 'Enter access code' })).toBeVisible();

@@ -24,19 +24,19 @@ async function navigateToLinkedDashboard(
   basePage: BasePage,
   enterAccessCodePage: EnterAccessCodePage,
   dashboardPage: DashboardPage,
-  contestedCaseForCaseNumber: CaseWithHearing
+  contestLipOnlyPaperCase: CaseWithHearing
 ): Promise<void> {
   await basePage.injectCaseSession(
-    contestedCaseForCaseNumber.caseId,
-    contestedCaseForCaseNumber.applicantAccessCode,
-    contestedCaseForCaseNumber.respondentAccessCode
+    contestLipOnlyPaperCase.caseId,
+    contestLipOnlyPaperCase.applicantAccessCode,
+    contestLipOnlyPaperCase.respondentAccessCode
   );
   await basePage.verifyGlobalHeaderAndFooter();
-  await enterAccessCodePage.submitAccessCode(contestedCaseForCaseNumber.applicantAccessCode);
+  await enterAccessCodePage.submitAccessCode(contestLipOnlyPaperCase.applicantAccessCode);
   await dashboardPage.verifyDashboardPageContent();
 }
 
-// MOCK: All tests in this describe use the contestedCaseForCaseNumber fixture with hardcoded
+// MOCK: All tests in this describe use the contestLipOnlyPaperCase fixture with hardcoded
 // access codes (APPCODE1 / RSPCODE1) injected via /__test/inject-case-session.
 // No Form C or FR_manageHearings hearing flow is required.
 // To run against real CCD-generated codes: ACCESS_CODE_REAL_INTEGRATION=true
@@ -62,7 +62,7 @@ test.describe('[local-integration] Persistent Session After Re-login', () => {
     basePage,
     dashboardPage,
     enterAccessCodePage,
-    contestedCaseForCaseNumber,
+    contestLipOnlyPaperCase,
     idamPage,
     page,
     axeUtils,
@@ -71,7 +71,7 @@ test.describe('[local-integration] Persistent Session After Re-login', () => {
     // Longer timeout required for login flow
     test.setTimeout(90_000);
     expectAuthenticated(loggedInPage);
-    await navigateToLinkedDashboard(basePage, enterAccessCodePage, dashboardPage, contestedCaseForCaseNumber);
+    await navigateToLinkedDashboard(basePage, enterAccessCodePage, dashboardPage, contestLipOnlyPaperCase);
 
     // Sign out — IDAM redirects to its sign-in page
     await basePage.signOut();
@@ -101,11 +101,11 @@ test.describe('[local-integration] Persistent Session After Re-login', () => {
     basePage,
     dashboardPage,
     enterAccessCodePage,
-    contestedCaseForCaseNumber,
+    contestLipOnlyPaperCase,
     context,
     axeUtils,
   }) => {
-    await navigateToLinkedDashboard(basePage, enterAccessCodePage, dashboardPage, contestedCaseForCaseNumber);
+    await navigateToLinkedDashboard(basePage, enterAccessCodePage, dashboardPage, contestLipOnlyPaperCase);
 
     // Open a new tab in the same browser context (shares cookies/session)
     const newPage = await context.newPage();
@@ -134,11 +134,11 @@ test.describe('[local-integration] Persistent Session After Re-login', () => {
     basePage,
     dashboardPage,
     enterAccessCodePage,
-    contestedCaseForCaseNumber,
+    contestLipOnlyPaperCase,
     page,
     axeUtils,
   }) => {
-    await navigateToLinkedDashboard(basePage, enterAccessCodePage, dashboardPage, contestedCaseForCaseNumber);
+    await navigateToLinkedDashboard(basePage, enterAccessCodePage, dashboardPage, contestLipOnlyPaperCase);
 
     // Navigate away then back to dashboard within the same authenticated session
     await page.goto('/');

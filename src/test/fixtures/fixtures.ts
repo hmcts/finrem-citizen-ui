@@ -183,7 +183,7 @@ type MyFixtures = {
   enterCaseNumberPage: EnterCaseNumberPage;
   enterAccessCodePage: EnterAccessCodePage;
   /** A real contested case used solely for case-number linking tests (no access codes). */
-  contestedCaseForCaseNumber: CreatedCaseWithAccessCodes;
+  contestLipOnlyPaperCase: CreatedCaseWithAccessCodes;
   axeUtils: AxeUtils;
   beforeYouStartPage: BeforeYouStartPage;
   confidentialityPage: ConfidentialityPage;
@@ -412,7 +412,7 @@ export const test = base.extend<MyFixtures & MockOptions>({
    *
    * The 240s timeout reflects the time needed to drive the full case-creation API chain, which can be slow in the AAT environment.
    */
-  contestedCaseForCaseNumber: [
+  contestLipOnlyPaperCase: [
     async ({}, use) => {
 
       const caseData = await ContestedCaseFactory.createAndIssuePaperCase(false);

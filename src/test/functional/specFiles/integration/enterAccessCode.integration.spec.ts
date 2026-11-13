@@ -58,18 +58,18 @@ if (shouldRunRealCcdIntegrationSuite()) {
     }
 
     test.beforeEach(
-      async ({ loggedInPage, basePage, enterCaseNumberPage, enterAccessCodePage, contestedCaseForCaseNumber }) => {
+      async ({ loggedInPage, basePage, enterCaseNumberPage, enterAccessCodePage, contestLipOnlyPaperCase }) => {
         expectAuthenticated(loggedInPage);
 
         // Reset local mock state so access code is fresh per test.
         if (isLocalMockCcd) {
           await basePage.injectCaseSession(
-            contestedCaseForCaseNumber.caseId,
-            contestedCaseForCaseNumber.applicantAccessCode,
-            contestedCaseForCaseNumber.respondentAccessCode
+            contestLipOnlyPaperCase.caseId,
+            contestLipOnlyPaperCase.applicantAccessCode,
+            contestLipOnlyPaperCase.respondentAccessCode
           );
         } else {
-          await navigateToAccessCodeStep(enterCaseNumberPage, contestedCaseForCaseNumber.caseId);
+          await navigateToAccessCodeStep(enterCaseNumberPage, contestLipOnlyPaperCase.caseId);
         }
 
         await basePage.verifyGlobalHeaderAndFooter();
@@ -84,11 +84,11 @@ if (shouldRunRealCcdIntegrationSuite()) {
       loggedInPage,
       dashboardPage,
       enterAccessCodePage,
-      contestedCaseForCaseNumber,
+      contestLipOnlyPaperCase,
       axeUtils,
     }) => {
       expectAuthenticated(loggedInPage);
-      const accessCode = contestedCaseForCaseNumber.applicantAccessCode;
+      const accessCode = contestLipOnlyPaperCase.applicantAccessCode;
 
       await enterAccessCodePage.submitAccessCode(accessCode);
       await dashboardPage.verifyDashboardPageContent();
@@ -103,11 +103,11 @@ if (shouldRunRealCcdIntegrationSuite()) {
       loggedInPage,
       dashboardPage,
       enterAccessCodePage,
-      contestedCaseForCaseNumber,
+      contestLipOnlyPaperCase,
       axeUtils,
     }) => {
       expectAuthenticated(loggedInPage);
-      const accessCode = contestedCaseForCaseNumber.applicantAccessCode;
+      const accessCode = contestLipOnlyPaperCase.applicantAccessCode;
 
       await enterAccessCodePage.submitAccessCode(`  ${accessCode}  `);
       await dashboardPage.verifyDashboardPageContent();
@@ -122,11 +122,11 @@ if (shouldRunRealCcdIntegrationSuite()) {
       loggedInPage,
       dashboardPage,
       enterAccessCodePage,
-      contestedCaseForCaseNumber,
+      contestLipOnlyPaperCase,
       axeUtils,
     }) => {
       expectAuthenticated(loggedInPage);
-      const accessCode = contestedCaseForCaseNumber.respondentAccessCode;
+      const accessCode = contestLipOnlyPaperCase.respondentAccessCode;
 
       await enterAccessCodePage.submitAccessCode(accessCode);
       await dashboardPage.verifyDashboardPageContent();
@@ -141,11 +141,11 @@ if (shouldRunRealCcdIntegrationSuite()) {
       loggedInPage,
       dashboardPage,
       enterAccessCodePage,
-      contestedCaseForCaseNumber,
+      contestLipOnlyPaperCase,
       axeUtils,
     }) => {
       expectAuthenticated(loggedInPage);
-      const accessCode = contestedCaseForCaseNumber.applicantAccessCode;
+      const accessCode = contestLipOnlyPaperCase.applicantAccessCode;
 
       // Enter access code in lowercase
       const lowercaseCode = accessCode.toLowerCase();
@@ -174,7 +174,7 @@ if (shouldRunRealCcdIntegrationSuite()) {
       loggedInPage,
       basePage,
       enterCaseNumberPage,
-      contestedCaseForCaseNumber,
+      contestLipOnlyPaperCase,
       enterAccessCodePage,
       dashboardPage,
       axeUtils,
@@ -184,15 +184,15 @@ if (shouldRunRealCcdIntegrationSuite()) {
       // Local mock mode needs session reseed so reused access code state does not leak between tests.
       if (isLocalMockCcd) {
         await basePage.injectCaseSession(
-          contestedCaseForCaseNumber.caseId,
-          contestedCaseForCaseNumber.applicantAccessCode,
-          contestedCaseForCaseNumber.respondentAccessCode
+          contestLipOnlyPaperCase.caseId,
+          contestLipOnlyPaperCase.applicantAccessCode,
+          contestLipOnlyPaperCase.respondentAccessCode
         );
       } else {
-        await navigateToAccessCodeStep(enterCaseNumberPage, contestedCaseForCaseNumber.caseId);
+        await navigateToAccessCodeStep(enterCaseNumberPage, contestLipOnlyPaperCase.caseId);
       }
 
-      await enterAccessCodePage.submitAccessCode(contestedCaseForCaseNumber.applicantAccessCode);
+      await enterAccessCodePage.submitAccessCode(contestLipOnlyPaperCase.applicantAccessCode);
       await dashboardPage.verifyDashboardPageContent();
       await runA11yAudit(axeUtils);
     });

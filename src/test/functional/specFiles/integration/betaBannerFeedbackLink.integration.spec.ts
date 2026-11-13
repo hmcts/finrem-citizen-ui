@@ -11,21 +11,21 @@ if (shouldRunRealCcdIntegrationSuite()) {
     }
 
     test.beforeEach(
-      async ({ loggedInPage, basePage, enterCaseNumberPage, enterAccessCodePage, contestedCaseForCaseNumber }) => {
+      async ({ loggedInPage, basePage, enterCaseNumberPage, enterAccessCodePage, contestLipOnlyPaperCase }) => {
         expectAuthenticated(loggedInPage);
 
         await enterCaseNumberPage.verifyCaseNumberPageContent();
         await enterCaseNumberPage.verifyBetaBannerFeedbackLinkForCurrentPage();
-        await enterCaseNumberPage.submitCaseNumber(contestedCaseForCaseNumber.caseId);
+        await enterCaseNumberPage.submitCaseNumber(contestLipOnlyPaperCase.caseId);
         await enterAccessCodePage.verifyAccessCodePageContent();
         await enterAccessCodePage.verifyBetaBannerFeedbackLinkForCurrentPage();
 
         // Local mock mode reseeds at the enter-access-code stage to keep single-use codes deterministic.
         if (isLocalMockCcd) {
           await basePage.injectCaseSession(
-            contestedCaseForCaseNumber.caseId,
-            contestedCaseForCaseNumber.applicantAccessCode,
-            contestedCaseForCaseNumber.respondentAccessCode
+            contestLipOnlyPaperCase.caseId,
+            contestLipOnlyPaperCase.applicantAccessCode,
+            contestLipOnlyPaperCase.respondentAccessCode
           );
           await enterAccessCodePage.verifyAccessCodePageContent();
           await enterAccessCodePage.verifyBetaBannerFeedbackLinkForCurrentPage();
@@ -43,12 +43,12 @@ if (shouldRunRealCcdIntegrationSuite()) {
       documentSelectionPage,
       documentUploadPage,
       checkUploadPage,
-      contestedCaseForCaseNumber,
+      contestLipOnlyPaperCase,
       axeUtils,
     }) => {
       expectAuthenticated(loggedInPage);
 
-      await enterAccessCodePage.submitAccessCode(contestedCaseForCaseNumber.applicantAccessCode);
+      await enterAccessCodePage.submitAccessCode(contestLipOnlyPaperCase.applicantAccessCode);
       await dashboardPage.verifyDashboardPageContent();
       await dashboardPage.verifyBetaBannerFeedbackLinkForCurrentPage();
 
