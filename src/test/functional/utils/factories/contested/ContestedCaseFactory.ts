@@ -570,7 +570,8 @@ export class ContestedCaseFactory {
    * Set useRealIntegration=true only for dedicated happy-path integration tests.
    */
   static async createCaseForAccessCodeJourney(
-    useRealIntegration = false
+    useRealIntegration = false,
+    isPaper = false
   ): Promise<{
     caseId: string;
     applicantCode: string;
@@ -578,13 +579,16 @@ export class ContestedCaseFactory {
   }> {
     if (useRealIntegration) {
       // Real integration path: access codes are generated at FR_issueApplication.
-      return this.createContestedCaseWithIssueApplicationAndAccessCode();
+      return isPaper
+        ? this.createContestedPaperCaseWithIssueApplicationAndAccessCode()
+        : this.createContestedCaseWithIssueApplicationAndAccessCode();
     }
 
     // Default path: mock access codes and inject into test session.
-    return this.createContestedCaseWithMockedAccessCode();
+    return isPaper
+      ? this.createContestedPaperCaseWithMockedAccessCode()
+      : this.createContestedCaseWithMockedAccessCode();
   }
-
   /**
    * Create contested case up to HWF decision
    */
@@ -593,6 +597,55 @@ export class ContestedCaseFactory {
     await ContestedEventApi.solicitorSubmitFormACase(caseId);
     await ContestedEventApi.caseWorkerHWFDecisionMade(caseId);
     return caseId;
+  }
+
+    /**
+   * Creates a real paper contested case but returns deterministic mock access codes.
+   * Use this factory when access-code journey tests should be based on a paper case payload.
+   */
+  static async createContestedPaperCaseWithMockedAccessCode(): Promise<{
+    caseId: string;
+    applicantCode: string;
+    respondentCode: string;
+  }> {
+    const caseId = String(
+      await this.createAndProcessPaperCaseUpToProgressToListing(false)
+    );
+    return {
+      caseId,
+      applicantCode: 'APPCODE1',
+      respondentCode: 'RSPCODE1',
+    };
+  }
+
+  static async createContestedPaperCaseWithIssueApplicationAndAccessCode(): Promise<{
+    caseId: string;
+    applicantCode: string;
+    respondentCode: string;
+  }> {
+    const issueDate = DateHelper.getCurrentDate();
+    const caseId = await this.createCase(false, true);
+
+    await this.withCaseworkerStartEventRetry(async () => {
+      await ContestedEventApi.caseWorkerIssueApplication(caseId, false, issueDate);
+    });
+
+    const startedAtEpochMs = Date.now();
+    const deadlineEpochMs = startedAtEpochMs + ACCESS_CODE_RETRY_CONFIG.maxTotalRuntimeMs;
+
+    const codes = await this.waitForAccessCodes(caseId, deadlineEpochMs);
+    if (!codes) {
+      const elapsedMs = Date.now() - startedAtEpochMs;
+      throw new AccessCodeGenerationUnavailableError(
+        `Access codes not found after FR_issueApplication for paper case. elapsedMs=${elapsedMs}; configuredMaxRuntimeMs=${ACCESS_CODE_RETRY_CONFIG.maxTotalRuntimeMs}; caseId=${caseId}`
+      );
+    }
+
+    return {
+      caseId,
+      applicantCode: codes.applicantCode,
+      respondentCode: codes.respondentCode,
+    };
   }
 
   /**

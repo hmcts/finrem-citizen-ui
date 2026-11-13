@@ -423,7 +423,7 @@ export const test = base.extend<MyFixtures & MockOptions>({
       }
 
       const caseId = String(
-        await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)
+        await ContestedCaseFactory.createAndProcessPaperCaseUpToProgressToListing(false)
       );
       const formattedCaseId = caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
       try {
@@ -456,7 +456,7 @@ export const test = base.extend<MyFixtures & MockOptions>({
       }
 
       const useRealIntegration = shouldUseRealAccessCodeIntegration();
-      const caseData = await ContestedCaseFactory.createCaseForAccessCodeJourney(useRealIntegration);
+      const caseData = await ContestedCaseFactory.createCaseForAccessCodeJourney(useRealIntegration, true);
       const caseId = String(caseData.caseId);
       const formattedCaseId = caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
 
