@@ -1,11 +1,21 @@
-process.env.ENABLE_TEST_SUPPORT_ROUTES = 'true';
-
-import { describe, expect, test } from '@jest/globals';
+import { afterAll, beforeEach, describe, expect, jest, test } from '@jest/globals';
 import express, { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 
-import { TestRoutes } from '../../main/constants';
+import { TestRoutes,TestSupportHeaders } from '../../main/constants';
+import * as testSupportRouteGuard from '../../main/functions/util/test-support-route-guard';
 import setupTestSupportRoutes from '../../main/routes/generalUpload/test-support';
+
+jest.mock('../../main/functions/util/test-support-route-guard', () => ({
+  areTestSupportRoutesEnabled: jest.fn(),
+  assertTestSupportRoutesStartupGuard: jest.fn(),
+  isValidTestSupportSecretHeader: jest.fn(),
+}));
+
+const mockAreTestSupportRoutesEnabled = jest.mocked(testSupportRouteGuard.areTestSupportRoutesEnabled);
+const mockAssertTestSupportRoutesStartupGuard = jest.mocked(testSupportRouteGuard.assertTestSupportRoutesStartupGuard);
+const mockIsValidTestSupportSecretHeader = jest.mocked(testSupportRouteGuard.isValidTestSupportSecretHeader);
+const DUMMY_TEST_SUPPORT_SECRET = 'local-functional-secret';
 
 const buildTestSupportApp = (saveError?: Error) => {
   const testApp = express();
@@ -25,10 +35,52 @@ const buildTestSupportApp = (saveError?: Error) => {
 };
 
 describe('Test support routes', () => {
-  test('should return 400 when inject-case-session params are missing', async () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+    jest.clearAllMocks();
+    mockAreTestSupportRoutesEnabled.mockReturnValue(true);
+    mockAssertTestSupportRoutesStartupGuard.mockImplementation(() => undefined);
+    mockIsValidTestSupportSecretHeader.mockImplementation(
+      headerValue => headerValue === DUMMY_TEST_SUPPORT_SECRET
+    );
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
+  test('should not register route when disabled by default', async () => {
+    mockAreTestSupportRoutesEnabled.mockReturnValue(false);
     const { testApp } = buildTestSupportApp();
 
     const res = await request(testApp).get(TestRoutes.injectCaseSession);
+
+    expect(res.status).toBe(404);
+  });
+
+  test('should return 403 when secret header is missing', async () => {
+    const { testApp } = buildTestSupportApp();
+
+    const res = await request(testApp)
+      .get(TestRoutes.injectCaseSession)
+      .query({
+        caseNumber: '1234567890123456',
+        applicantCode: 'APPCODE1',
+      respondentCode: 'RSPCODE1',
+      });
+
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual({ error: 'Forbidden' });
+  });
+
+  test('should return 400 when inject-case-session params are missing', async () => {
+    const { testApp } = buildTestSupportApp();
+
+    const res = await request(testApp)
+      .get(TestRoutes.injectCaseSession)
+      .set(TestSupportHeaders.secret, 'local-functional-secret');
 
     expect(res.status).toBe(400);
     expect(res.body).toEqual({
@@ -41,6 +93,7 @@ describe('Test support routes', () => {
 
     const res = await request(testApp)
       .get(TestRoutes.injectCaseSession)
+      .set(TestSupportHeaders.secret, DUMMY_TEST_SUPPORT_SECRET)
       .query({
         caseNumber: '1234567890123456',
         applicantCode: 'APPCODE1',
@@ -56,6 +109,7 @@ describe('Test support routes', () => {
 
     const res = await request(testApp)
       .get(TestRoutes.injectCaseSession)
+      .set(TestSupportHeaders.secret, DUMMY_TEST_SUPPORT_SECRET)
       .query({
         caseNumber: '1234567890123456',
         applicantCode: 'appcode1',
@@ -92,6 +146,7 @@ describe('Test support routes', () => {
 
     const res = await request(testApp)
       .get(TestRoutes.injectCaseSession)
+      .set(TestSupportHeaders.secret, DUMMY_TEST_SUPPORT_SECRET)
       .query({
         caseNumber: '1234567890123456',
         applicantCode: 'APPCODE1',
