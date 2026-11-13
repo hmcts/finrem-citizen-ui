@@ -2,6 +2,8 @@
 @import 'autocomplete';
 @import 'cookie-banner';
 
+$fcui-table-scroll-breakpoint: 31.875em;
+
 .finrem-section-break {
   height: 4px;
   background: #1e6fb8;
@@ -67,4 +69,20 @@
   background-color: #e8f5fe;
   padding: 15px 15px 15px 20px;
   border-left: 4px solid #1e6fb8;
+}
+
+.table-wrapper {
+  max-width: 100%;
+}
+
+.table-wrapper:focus {
+  outline: 3px solid govuk-functional-colour("focus");
+  outline-offset: 0;
+}
+
+@media (max-width: $fcui-table-scroll-breakpoint) {
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }

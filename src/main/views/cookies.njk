@@ -41,57 +41,61 @@
       <p class="govuk-body">You can <a class="govuk-link" href="https://tools.google.com/dlpage/gaoptout">opt out of Google Analytics</a> if you do not want Google to have access to your information.</p>
       <p class="govuk-body">List of google analytics cookies used.</p>
 
-      <table class="govuk-table" aria-describedby="Google Analytics sets the following cookies">
-        <thead class="govuk-table__head">
-          <tr class="govuk-table__row">
-            <th scope="col" class="govuk-table__header">Name</th>
-            <th scope="col" class="govuk-table__header">Purpose</th>
-            <th scope="col" class="govuk-table__header">Expires</th>
-          </tr>
-        </thead>
-        <tbody class="govuk-table__body">
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell">_ga</td>
-            <td class="govuk-table__cell">This helps us count how many people visit the service by tracking if you&rsquo;ve visited before</td>
-            <td class="govuk-table__cell">2 years</td>
-          </tr>
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell">_gat</td>
-            <td class="govuk-table__cell">Manages the rate at which page view requests are made</td>
-            <td class="govuk-table__cell">10 minutes</td>
-          </tr>
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell">_gid</td>
-            <td class="govuk-table__cell">Identifies you to the service</td>
-            <td class="govuk-table__cell">24 hours</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-wrapper" tabindex="0" role="region" aria-label="Google Analytics cookies table">
+        <table class="govuk-table" aria-describedby="Google Analytics sets the following cookies">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">Name</th>
+              <th scope="col" class="govuk-table__header">Purpose</th>
+              <th scope="col" class="govuk-table__header">Expires</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">_ga</td>
+              <td class="govuk-table__cell">This helps us count how many people visit the service by tracking if you&rsquo;ve visited before</td>
+              <td class="govuk-table__cell">2 years</td>
+            </tr>
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">_gat</td>
+              <td class="govuk-table__cell">Manages the rate at which page view requests are made</td>
+              <td class="govuk-table__cell">10 minutes</td>
+            </tr>
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">_gid</td>
+              <td class="govuk-table__cell">Identifies you to the service</td>
+              <td class="govuk-table__cell">24 hours</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <h3 class="govuk-heading-s">To store the answers you&rsquo;ve given during your visit (known as a &lsquo;session&rsquo;)</h3>
       <p class="govuk-body">Session cookies are stored on your computer as you travel through a website, and let the website know what you&rsquo;ve seen and done so far. These are temporary cookies and are automatically deleted a short while after you leave the website.</p>
 
-      <table class="govuk-table" aria-describedby="List of session cookies used.">
-        <thead class="govuk-table__head">
-          <tr class="govuk-table__row">
-            <th scope="col" class="govuk-table__header">Name</th>
-            <th scope="col" class="govuk-table__header">Purpose</th>
-            <th scope="col" class="govuk-table__header">Expires</th>
-          </tr>
-        </thead>
-        <tbody class="govuk-table__body">
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell">{{ sessionCookieName }}</td>
-            <td class="govuk-table__cell">Carries details of your current session</td>
-            <td class="govuk-table__cell">When you close your browser</td>
-          </tr>
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell">fcui-recent-session</td>
-            <td class="govuk-table__cell">Helps us show you a message if your session has timed out</td>
-            <td class="govuk-table__cell">Up to 30 minutes after your session times out</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-wrapper" tabindex="0" role="region" aria-label="Session cookies table">
+        <table class="govuk-table" aria-describedby="List of session cookies used.">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">Name</th>
+              <th scope="col" class="govuk-table__header">Purpose</th>
+              <th scope="col" class="govuk-table__header">Expires</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">{{ sessionCookieName }}</td>
+              <td class="govuk-table__cell">Carries details of your current session</td>
+              <td class="govuk-table__cell">When you close your browser</td>
+            </tr>
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">fcui-recent-session</td>
+              <td class="govuk-table__cell">Helps us show you a message if your session has timed out</td>
+              <td class="govuk-table__cell">Up to 30 minutes after your session times out</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <h3 class="govuk-heading-s">To measure application performance</h3>
       <p class="govuk-body">We use Dynatrace Software Intelligence Platform to provide an Application Performance Monitoring Service to collect information about how you use HMCTS services. We do this to monitor HMCTS services in order to resolve issues within our services as well as collect data on how our services can be improved. HMCTS store information about:</p>
@@ -102,47 +106,49 @@
       </ul>
       <p class="govuk-body">Information is presented within the Application Performance Monitoring service for the purposes detailed above. We do not use or share the information for any other purpose. We do not allow Dynatrace to use or share the information for any other purposes.</p>
 
-      <table class="govuk-table" aria-describedby="List of dynatrace cookies used.">
-        <thead class="govuk-table__head">
-          <tr class="govuk-table__row">
-            <th scope="col" class="govuk-table__header">Name</th>
-            <th scope="col" class="govuk-table__header">Purpose</th>
-            <th scope="col" class="govuk-table__header">Expires</th>
-          </tr>
-        </thead>
-        <tbody class="govuk-table__body">
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell">dtCookie</td>
-            <td class="govuk-table__cell">Tracks a visit across multiple request</td>
-            <td class="govuk-table__cell">Session end</td>
-          </tr>
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell">dtLatC</td>
-            <td class="govuk-table__cell">Measures server latency for performance monitoring</td>
-            <td class="govuk-table__cell">Session end</td>
-          </tr>
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell">dtPC</td>
-            <td class="govuk-table__cell">Required to identify proper endpoints for beacon transmission; includes session ID for correlation</td>
-            <td class="govuk-table__cell">Session end</td>
-          </tr>
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell">dtSa</td>
-            <td class="govuk-table__cell">Intermediate store for page-spanning actions</td>
-            <td class="govuk-table__cell">Session end</td>
-          </tr>
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell">rxVisitor</td>
-            <td class="govuk-table__cell">Visitor ID to correlate sessions</td>
-            <td class="govuk-table__cell">1 year</td>
-          </tr>
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell">rxvt</td>
-            <td class="govuk-table__cell">Session timeout</td>
-            <td class="govuk-table__cell">Session end</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-wrapper" tabindex="0" role="region" aria-label="Dynatrace cookies table">
+        <table class="govuk-table" aria-describedby="List of dynatrace cookies used.">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">Name</th>
+              <th scope="col" class="govuk-table__header">Purpose</th>
+              <th scope="col" class="govuk-table__header">Expires</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">dtCookie</td>
+              <td class="govuk-table__cell">Tracks a visit across multiple request</td>
+              <td class="govuk-table__cell">Session end</td>
+            </tr>
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">dtLatC</td>
+              <td class="govuk-table__cell">Measures server latency for performance monitoring</td>
+              <td class="govuk-table__cell">Session end</td>
+            </tr>
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">dtPC</td>
+              <td class="govuk-table__cell">Required to identify proper endpoints for beacon transmission; includes session ID for correlation</td>
+              <td class="govuk-table__cell">Session end</td>
+            </tr>
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">dtSa</td>
+              <td class="govuk-table__cell">Intermediate store for page-spanning actions</td>
+              <td class="govuk-table__cell">Session end</td>
+            </tr>
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">rxVisitor</td>
+              <td class="govuk-table__cell">Visitor ID to correlate sessions</td>
+              <td class="govuk-table__cell">1 year</td>
+            </tr>
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">rxvt</td>
+              <td class="govuk-table__cell">Session timeout</td>
+              <td class="govuk-table__cell">Session end</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <h2 class="govuk-heading-m">Change your cookie settings</h2>
       <form class="cookie-preferences-form" novalidate>
