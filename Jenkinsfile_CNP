@@ -12,6 +12,8 @@ def backendPullRequestLabelPrefix = "use-ccd-defs-pr-"
 
 def yarnBuilder = new uk.gov.hmcts.contino.YarnBuilder(this)
 
+def FORTIFY_VAULT_NAME = "finrem-aat"
+
 def checkForFortifyLabel(branch_name) {
   return new GithubAPI(this).getLabelsbyPattern(branch_name, "fortify").contains("fortify")
 }
@@ -74,7 +76,7 @@ withPipeline(type, product, component) {
   }
 
   if (checkForFortifyLabel(env.BRANCH_NAME)) {
-    enableFortifyScan()
+    enableFortifyScan(FORTIFY_VAULT_NAME)
   }
 
   // 2. Setup for Smoke and Functional Tests
