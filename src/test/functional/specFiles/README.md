@@ -918,7 +918,7 @@ If deletion fails for all available credentials, tests continue and a warning is
 
 Practical expectations for contributors:
 
-- If your spec uses `contestedCaseWithHearing` or `contestLipOnlyPaperCase`, assume one real case per test in preview/AAT/perftest/ITHC.
+- If your spec uses `contestLipOnlyPaperCase`, assume one real case per test in preview/AAT/perftest/ITHC.
 - If running locally against mock CCD, assume seeded reusable case data unless your test flow explicitly creates and isolates additional state.
 - If you need post-run cleanup of real CCD data, set `DELETE_CREATED_CCD_CASES=true` for that run.
 
