@@ -136,7 +136,6 @@ export class ContestedCaseFactory {
   }
 
   private static async buildContestedCase({
-    isPaper,
     replacements = [],
     event,
     payloadPath,
@@ -147,12 +146,12 @@ export class ContestedCaseFactory {
     payloadPath?: string;
   }): Promise<string> {
     const derivedEvent =
-      event || (isPaper ? ContestedEvents.createPaperCase.ccdCallback : ContestedEvents.createCase.ccdCallback);
+      event || ContestedEvents.createPaperCase.ccdCallback;
 
-    const derivedPayloadPath = payloadPath || (isPaper ? PayloadPath.Contested.paper : PayloadPath.Contested.formA);
+    const derivedPayloadPath = payloadPath || PayloadPath.Contested.paper;
 
     const builder = new CaseDataBuilder(CaseType.Contested, derivedEvent)
-      [isPaper ? 'withCaseWorkerUser' : 'withSolicitorUser']()
+     ['withCaseWorkerUser']()
       .withPayload(derivedPayloadPath);
 
     if (replacements.length) {
@@ -173,13 +172,6 @@ export class ContestedCaseFactory {
 
   static createBaseContestedPaperCase(): Promise<string> {
     return this.buildContestedCase({ isPaper: true });
-  }
-
-  static createSchedule1Case(): Promise<string> {
-    return this.buildContestedCase({
-      isPaper: false,
-      payloadPath: PayloadPath.Contested.schedule1,
-    });
   }
 
   static createContestedPaperCaseWithExpressPilotEnrolled(): Promise<string> {
