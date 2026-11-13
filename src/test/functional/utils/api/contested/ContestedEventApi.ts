@@ -193,7 +193,7 @@ export class ContestedEventApi {
     }
   }
 
-  static async caseWorkerManualPayment(caseId: string) {
+  static async caseWorkerManualPayment(caseId: string): Promise<void>  {
     await this.updateCaseworkerEvent(
       caseId,
       ContestedEvents.manualPayment.ccdCallback,

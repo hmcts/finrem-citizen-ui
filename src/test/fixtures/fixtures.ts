@@ -33,46 +33,8 @@ function getConfiguredCcdUrl(): string {
   return (process.env.CCD_URL || '').trim();
 }
 
-function isPreviewOrAatTarget(): boolean {
-  const runningEnv = (process.env.RUNNING_ENV || '').toLowerCase();
-  const testUrl = (process.env.TEST_URL || '').toLowerCase();
-
-  return (
-    runningEnv === 'aat'
-    || runningEnv.startsWith('pr-')
-    || testUrl.includes('.preview.platform.hmcts.net')
-    || testUrl.includes('.aat.platform.hmcts.net')
-  );
-}
-
-function shouldUseRealAccessCodeIntegration(): boolean {
-  const explicitToggle = process.env.ACCESS_CODE_REAL_INTEGRATION;
-
-  if (explicitToggle === 'true') {
-    return true;
-  }
-
-  if (explicitToggle === 'false') {
-    // Legacy .env files often set false; do not block preview/AAT by default.
-    return isPreviewOrAatTarget();
-  }
-
-  return isPreviewOrAatTarget();
-}
-
 function isLocalMockCcdUrl(url: string): boolean {
   return /https?:\/\/(localhost|127\.0\.0\.1):4100\b/i.test(url);
-}
-
-function getMockSeedCase(): CreatedCaseWithAccessCodes {
-  const caseId = process.env.MOCK_CASE_ID || '1616591401473378';
-
-  return {
-    caseId,
-    formattedCaseId: caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-'),
-    applicantAccessCode: process.env.MOCK_APPLICANT_ACCESS_CODE || 'APPCODE1',
-    respondentAccessCode: process.env.MOCK_RESPONDENT_ACCESS_CODE || 'RSPCODE1',
-  };
 }
 
 function shouldDeleteCreatedCcdCases(): boolean {

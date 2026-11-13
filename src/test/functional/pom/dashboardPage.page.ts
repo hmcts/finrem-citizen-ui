@@ -1,8 +1,8 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+import { envTestData } from '../utils/test_data/EnvTestDataConfig';
 import { BasePage } from './basePage.page';
 import { GettingHelpPanel } from './components/gettingHelpPanel.component';
-import { envTestData } from '../utils/test_data/EnvTestDataConfig';
 
 // URL path constants for clarity and maintainability
 const URL_PATTERNS = {

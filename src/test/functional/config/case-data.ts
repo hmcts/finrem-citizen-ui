@@ -19,8 +19,8 @@ export const ContestedEvents = {
     description: 'Issue application',
   },
   manualPayment: {
-    listItem: "Manual Payment",
-    ccdCallback: "FR_manualPayment"
+    listItem: 'Manual Payment',
+    ccdCallback: 'FR_manualPayment'
   }
 } as const;
 
