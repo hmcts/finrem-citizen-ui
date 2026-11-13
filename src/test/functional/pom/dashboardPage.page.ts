@@ -1,5 +1,6 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+import { envTestData } from '../utils/test_data/EnvTestDataConfig';
 import { BasePage } from './basePage.page';
 import { GettingHelpPanel } from './components/gettingHelpPanel.component';
 
@@ -9,6 +10,10 @@ const URL_PATTERNS = {
   BEFORE_YOU_START: /\/upload\/before-you-start/, // Base path; allows query params
 };
 
+const PARTY_NAMES = {
+  APPLICANT: envTestData.APPLICANT_NAME,
+  RESPONDENT: envTestData.RESPONDENT_NAME
+};
 export class DashboardPage extends BasePage {
   readonly userNameHeader: Locator;
   readonly caseHeading: Locator;
@@ -29,7 +34,7 @@ export class DashboardPage extends BasePage {
 
   constructor(readonly page: Page) {
     super(page);
-    this.userNameHeader = this.page.getByRole('heading', { level: 2, name: /(?:Applicant|Respondent)$/ });
+    this.userNameHeader = this.page.getByRole('heading', { level: 2, name: new RegExp(`(?:${PARTY_NAMES.APPLICANT}|${PARTY_NAMES.RESPONDENT})$`) });
     this.caseHeading = this.page.getByRole('heading', { name: 'Your financial remedy case' });
     this.caseNumberText = this.page.getByText(/Case number\s+/i);
     this.divorceAccountHeading = this.page.getByRole('heading', { name: 'This is your financial remedy account' });

@@ -443,7 +443,7 @@ How real-CCD suites are selected:
 
 How integration fixtures prepare data:
 
-- integration specs consume `contestedCaseForCaseNumber` and `contestedCaseWithHearing` fixtures
+- integration specs consume `contestLipOnlyPaperCase` and `contestedCaseWithHearing` fixtures
 - on local mock CCD, fixtures return mock-seeded case and access-code data to keep happy-path tests deterministic
 - on preview/AAT/perftest/ITHC, fixture setup creates real cases/events via contested case factory helpers before UI assertions begin
 - when prerequisites are missing (IDAM user auth, CCD role grants, S2S/CCD reachability), failures occur in setup rather than in page assertions
@@ -848,7 +848,7 @@ The main fixture groups are:
 - `idamPage`: wraps the Playwright page for IDAM login flow steps.
 - `loggedInPage`: performs the full OIDC login flow, waits for authentication, and lands the test on `/enter-case-number`.
 - `enterCaseNumberPage`, `enterAccessCodePage`, `beforeYouStartPage`, `confidentialityPage`, `fdrPage`, `documentSelectionPage`, `documentUploadPage`, `checkUploadPage`, `dashboardPage`, `basePage`: page objects that keep selectors and interactions out of the specs.
-- `contestedCaseForCaseNumber`: creates a real contested case for case-number linking tests.
+- `contestLipOnlyPaperCase`: creates a real contested case for case-number linking tests.
 - `contestedCaseWithHearing`: creates a contested case with access codes, using mock codes locally and real access-code generation only when the environment supports it.
 - `axeUtils`: provides the Axe wrapper used by accessibility checks.
 - `assertionHelpers`: shared assertion utilities for functional tests.
@@ -881,7 +881,7 @@ This section explains exactly how case data is handled during functional runs.
 
 Creation model (real CCD targets):
 
-- `contestedCaseForCaseNumber` creates a new contested case per test that requests the fixture.
+- `contestLipOnlyPaperCase` creates a new contested case per test that requests the fixture.
 - `contestedCaseWithHearing` creates a new contested case per test that requests the fixture.
 - These are test-scoped fixtures, so a case is not shared across separate tests unless a suite introduces its own shared state.
 
@@ -912,13 +912,12 @@ Deletion credential fallback order:
 
 - `caseworker`
 - `systemUser`
-- `solicitor`
 
 If deletion fails for all available credentials, tests continue and a warning is logged with attempted users and error details.
 
 Practical expectations for contributors:
 
-- If your spec uses `contestedCaseWithHearing` or `contestedCaseForCaseNumber`, assume one real case per test in preview/AAT/perftest/ITHC.
+- If your spec uses `contestLipOnlyPaperCase`, assume one real case per test in preview/AAT/perftest/ITHC.
 - If running locally against mock CCD, assume seeded reusable case data unless your test flow explicitly creates and isolates additional state.
 - If you need post-run cleanup of real CCD data, set `DELETE_CREATED_CCD_CASES=true` for that run.
 

@@ -1,8 +1,5 @@
 import { test } from '../../../fixtures/fixtures';
-import {
-  isLocalMockCcdConfigured,
-  shouldRunRealCcdIntegrationSuite,
-} from '../journeyHelpers/integrationTarget.helper';
+import { isLocalMockCcdConfigured, shouldRunRealCcdIntegrationSuite } from '../journeyHelpers/integrationTarget.helper';
 import { runA11yAudit } from '../journeyHelpers/specAssertions.helper';
 import { navigateToFdrStep } from '../journeyHelpers/uploadJourneyNavigation.helper';
 
@@ -27,67 +24,60 @@ if (shouldRunRealCcdIntegrationSuite()) {
     // Run serially to avoid concurrent logins overwhelming the AAT pod.
     test.describe.configure({ mode: 'serial' });
 
-  if (isLocalMockCcd) {
-    test.use({ useMockTestSupport: true });
-  }
-
-  test.beforeEach(async ({
-    loggedInPage: _loggedInPage,
-    enterCaseNumberPage,
-    enterAccessCodePage,
-    contestedCaseWithHearing,
-    dashboardPage,
-    beforeYouStartPage,
-    confidentialityPage,
-    basePage,
-  }) => {
-    // Local mock mode needs deterministic reseed so one-time code invalidation does not leak between tests.
     if (isLocalMockCcd) {
-      await basePage.injectCaseSession(
-        contestedCaseWithHearing.caseId,
-        contestedCaseWithHearing.applicantAccessCode,
-        contestedCaseWithHearing.respondentAccessCode
-      );
-    } else {
-      await enterCaseNumberPage.submitCaseNumber(contestedCaseWithHearing.caseId);
-      await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+      test.use({ useMockTestSupport: true });
     }
 
-    await navigateToFdrStep(dashboardPage, beforeYouStartPage, confidentialityPage, basePage);
-  });
+    test.beforeEach(
+      async ({
+        loggedInPage: _loggedInPage,
+        enterCaseNumberPage,
+        enterAccessCodePage,
+        contestLipOnlyPaperCase,
+        dashboardPage,
+        beforeYouStartPage,
+        confidentialityPage,
+        basePage,
+      }) => {
+        // Local mock mode needs deterministic reseed so one-time code invalidation does not leak between tests.
+        if (isLocalMockCcd) {
+          await basePage.injectCaseSession(
+            contestLipOnlyPaperCase.caseId,
+            contestLipOnlyPaperCase.applicantAccessCode,
+            contestLipOnlyPaperCase.respondentAccessCode
+          );
+        } else {
+          await enterCaseNumberPage.submitCaseNumber(contestLipOnlyPaperCase.caseId);
+          await enterAccessCodePage.submitAccessCode(contestLipOnlyPaperCase.applicantAccessCode);
+        }
 
-  test('[integration] FDR page content is visible and accessible @a11y', async ({
-    fdrPage,
-    axeUtils,
-  }) => {
-    await fdrPage.verifyFdrPageContent();
-    await runA11yAudit(axeUtils);
-  });
+        await navigateToFdrStep(dashboardPage, beforeYouStartPage, confidentialityPage, basePage);
+      }
+    );
 
-  test('[integration] FDR requires hearing selection before continuing @a11y', async ({
-    fdrPage,
-    axeUtils,
-  }) => {
-    await fdrPage.submitWithoutSelectionAndExpectValidationError();
-    await runA11yAudit(axeUtils);
-  });
+    test('[integration] FDR page content is visible and accessible @a11y', async ({ fdrPage, axeUtils }) => {
+      await fdrPage.verifyFdrPageContent();
+      await runA11yAudit(axeUtils);
+    });
 
-  test('[integration] FDR yes selection navigates to document selection @a11y', async ({
-    fdrPage,
-    documentSelectionPage,
-    axeUtils,
-  }) => {
-    await fdrPage.selectYesAndContinue();
-    await documentSelectionPage.verifyDocumentSelectionPageContent('/upload/fdr');
-    await runA11yAudit(axeUtils);
-  });
+    test('[integration] FDR requires hearing selection before continuing @a11y', async ({ fdrPage, axeUtils }) => {
+      await fdrPage.submitWithoutSelectionAndExpectValidationError();
+      await runA11yAudit(axeUtils);
+    });
 
-  test('[integration] FDR getting help panel shows expected contact details @a11y', async ({
-    fdrPage,
-    axeUtils,
-  }) => {
-    await fdrPage.verifyGettingHelpSection();
-    await runA11yAudit(axeUtils);
-  });
+    test('[integration] FDR yes selection navigates to document selection @a11y', async ({
+      fdrPage,
+      documentSelectionPage,
+      axeUtils,
+    }) => {
+      await fdrPage.selectYesAndContinue();
+      await documentSelectionPage.verifyDocumentSelectionPageContent('/upload/fdr');
+      await runA11yAudit(axeUtils);
+    });
+
+    test('[integration] FDR getting help panel shows expected contact details @a11y', async ({ fdrPage, axeUtils }) => {
+      await fdrPage.verifyGettingHelpSection();
+      await runA11yAudit(axeUtils);
+    });
   });
 }
