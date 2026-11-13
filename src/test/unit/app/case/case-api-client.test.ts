@@ -154,7 +154,7 @@ describe('CaseApi.addCaseUserRoles', () => {
   });
 });
 
-describe('CaseApiClient.findExistingUserCases', () => {
+describe('CaseApiClient.findUserCases', () => {
   let mockAxios: jest.Mocked<Pick<typeof axios, 'post' | 'get'>>;
   let mockLogger: LoggerInstance;
   let api: CaseApiClient;
@@ -174,6 +174,10 @@ describe('CaseApiClient.findExistingUserCases', () => {
   });
 
   const CASE_TYPE = 'FinancialRemedyContested';
+  const GENERAL_QUERY = JSON.stringify({
+    query: { match_all: {} },
+    size: 2,
+  });
 
   test('should return cases when search is successful', async () => {
     const cases = [{ id: '1', state: 'Draft', case_data: {} }];
@@ -182,12 +186,9 @@ describe('CaseApiClient.findExistingUserCases', () => {
       data: { cases, total: 1 },
     });
 
-    const result = await api.findExistingUserCases(CASE_TYPE);
+    const result = await api.findUserCases(CASE_TYPE, GENERAL_QUERY);
 
-    expect(mockAxios.post).toHaveBeenCalledWith(
-      UrlEndPoints.SearchCases(CASE_TYPE),
-      expect.any(String)
-    );
+    expect(mockAxios.post).toHaveBeenCalledWith(UrlEndPoints.SearchCases(CASE_TYPE), expect.any(String));
     expect(result).toEqual(cases);
   });
 
@@ -196,7 +197,7 @@ describe('CaseApiClient.findExistingUserCases', () => {
       response: { status: 404 },
     });
 
-    const result = await api.findExistingUserCases(CASE_TYPE);
+    const result = await api.findUserCases(CASE_TYPE, GENERAL_QUERY);
 
     expect(result).toBe(false);
     expect(mockLogger.error).not.toHaveBeenCalled();
@@ -208,17 +209,11 @@ describe('CaseApiClient.findExistingUserCases', () => {
       response: { status: 500, data: { error: 'bad' } },
     });
 
-    await expect(api.findExistingUserCases(CASE_TYPE))
-      .rejects.toThrow('Case could not be retrieved.');
+    await expect(api.findUserCases(CASE_TYPE, GENERAL_QUERY)).rejects.toThrow('Case could not be retrieved.');
 
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      `API Error post ${UrlEndPoints.SearchCases(CASE_TYPE)} 500`
-    );
+    expect(mockLogger.error).toHaveBeenCalledWith(`API Error post ${UrlEndPoints.SearchCases(CASE_TYPE)} 500`);
 
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Response: ',
-      { error: 'bad' }
-    );
+    expect(mockLogger.info).toHaveBeenCalledWith('Response: ', { error: 'bad' });
   });
 });
 
@@ -230,16 +225,15 @@ describe('CaseApiClient.sendEvent', () => {
   const CASE_ID = '123456';
   const EVENT_NAME = EVENT_TYPE.LINK_APPLICANT_TO_CASE;
 
-  
-const applicantAccessCodes = [
-  {
-    id: '9319d817-ade5-4e9e-a204-261331158a0e',
-    value: {
-      isValid: YesOrNo.NO,
-      accessCode: 'FBLV2NTR',
+  const applicantAccessCodes = [
+    {
+      id: '9319d817-ade5-4e9e-a204-261331158a0e',
+      value: {
+        isValid: YesOrNo.NO,
+        accessCode: 'FBLV2NTR',
+      },
     },
-  },
-];
+  ];
 
   beforeEach(() => {
     mockAxios = {
@@ -270,26 +264,17 @@ const applicantAccessCodes = [
       },
     });
 
-    const result = await api.sendEvent(
-      CASE_ID,
-      { applicantAccessCodes },
-      EVENT_NAME
-    );
+    const result = await api.sendEvent(CASE_ID, { applicantAccessCodes }, EVENT_NAME);
 
     expect(mockAxios.get).toHaveBeenCalledTimes(1);
-    expect(mockAxios.get).toHaveBeenCalledWith(
-      UrlEndPoints.CaseEventTrigger(CASE_ID, EVENT_NAME)
-    );
+    expect(mockAxios.get).toHaveBeenCalledWith(UrlEndPoints.CaseEventTrigger(CASE_ID, EVENT_NAME));
 
     expect(mockAxios.post).toHaveBeenCalledTimes(1);
-    expect(mockAxios.post).toHaveBeenCalledWith(
-      UrlEndPoints.CaseEvents(CASE_ID),
-      {
-        event: { id: EVENT_NAME },
-        data: { applicantAccessCodes },
-        event_token: 'event-token',
-      }
-    );
+    expect(mockAxios.post).toHaveBeenCalledWith(UrlEndPoints.CaseEvents(CASE_ID), {
+      event: { id: EVENT_NAME },
+      data: { applicantAccessCodes },
+      event_token: 'event-token',
+    });
 
     expect(result).toEqual({
       id: CASE_ID,
@@ -317,15 +302,9 @@ const applicantAccessCodes = [
         },
       });
 
-    const result = await api.sendEvent(
-      CASE_ID,
-      { applicantAccessCodes },
-      EVENT_NAME
-    );
+    const result = await api.sendEvent(CASE_ID, { applicantAccessCodes }, EVENT_NAME);
 
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'retrying send event due to 409. this is retry no (1)'
-    );
+    expect(mockLogger.info).toHaveBeenCalledWith('retrying send event due to 409. this is retry no (1)');
 
     expect(mockAxios.get).toHaveBeenCalledTimes(2);
     expect(mockAxios.post).toHaveBeenCalledTimes(2);
@@ -350,18 +329,13 @@ const applicantAccessCodes = [
       },
     });
 
-    await expect(
-      api.sendEvent(CASE_ID, { applicantAccessCodes }, EVENT_NAME)
-    ).rejects.toThrow('Case could not be updated.');
-
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      `API Error post ${UrlEndPoints.CaseEvents(CASE_ID)} 400`
+    await expect(api.sendEvent(CASE_ID, { applicantAccessCodes }, EVENT_NAME)).rejects.toThrow(
+      'Case could not be updated.'
     );
 
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Response: ',
-      { error: 'bad request' }
-    );
+    expect(mockLogger.error).toHaveBeenCalledWith(`API Error post ${UrlEndPoints.CaseEvents(CASE_ID)} 400`);
+
+    expect(mockLogger.info).toHaveBeenCalledWith('Response: ', { error: 'bad request' });
   });
 });
 
@@ -406,10 +380,7 @@ describe('CaseApiClient.getCaseUserRoles', () => {
     const result = await api.getCaseUserRoles(request);
 
     expect(mockAxios.post).toHaveBeenCalledTimes(1);
-    expect(mockAxios.post).toHaveBeenCalledWith(
-      '/case-users/search',
-      request
-    );
+    expect(mockAxios.post).toHaveBeenCalledWith('/case-users/search', request);
     expect(result).toEqual(responseData);
   });
 
@@ -429,17 +400,10 @@ describe('CaseApiClient.getCaseUserRoles', () => {
 
     mockAxios.post.mockRejectedValue(axiosError);
 
-    await expect(api.getCaseUserRoles(request))
-      .rejects
-      .toThrow('Case roles could not be fetched.');
+    await expect(api.getCaseUserRoles(request)).rejects.toThrow('Case roles could not be fetched.');
 
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'API Error post case-users/search 500'
-    );
+    expect(mockLogger.error).toHaveBeenCalledWith('API Error post case-users/search 500');
 
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Response: ',
-      { error: 'Internal error' }
-    );
+    expect(mockLogger.info).toHaveBeenCalledWith('Response: ', { error: 'Internal error' });
   });
 });

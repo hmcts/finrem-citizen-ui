@@ -1,12 +1,11 @@
-
 import { LoggerInstance } from 'winston';
 
 import { getSystemUser } from '../../../../main/app/auth/user';
 import * as caseApiModule from '../../../../main/app/case/case-api';
 import { CaseApi, getCaseApi, triggerSystemEvent } from '../../../../main/app/case/case-api';
 import * as caseApiClient from '../../../../main/app/case/case-api-client';
-import { CASE_TYPE, EVENT_TYPE } from '../../../../main/app/case/case-type';
-import { CaseRole } from '../../../../main/app/case/definition';
+import { EVENT_TYPE } from '../../../../main/app/case/case-type';
+import { CaseRole, CaseType } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
 
 jest.mock('axios');
@@ -42,8 +41,7 @@ describe('CaseApi', () => {
 
   let api: CaseApi;
   beforeEach(() => {
-    api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient,
-      mockLogger as unknown as LoggerInstance);
+    api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient, mockLogger as unknown as LoggerInstance);
   });
 
   afterEach(() => {
@@ -81,7 +79,10 @@ test('Should call addCaseUserRoles with assignments', async () => {
     info: jest.fn().mockImplementation((msg: string) => msg),
   } as unknown as LoggerInstance;
 
-  const api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient, mockLogger as unknown as LoggerInstance);
+  const api = new CaseApi(
+    mockApiClient as unknown as caseApiClient.CaseApiClient,
+    mockLogger as unknown as LoggerInstance
+  );
 
   const assignments = [{ case_id: '1234', user_id: 'user1', case_role: CaseRole.APPLICANT }];
 
@@ -93,9 +94,9 @@ test('Should call addCaseUserRoles with assignments', async () => {
   expect(mockApiClient.addCaseUserRoles).toHaveBeenCalledWith(assignments);
 });
 
-describe('CaseApi.getExistingUserCase', () => {
+describe('CaseApi.getExistingFRUserCase', () => {
   const mockApiClient = {
-    findExistingUserCases: jest.fn(),
+    findUserCases: jest.fn(),
   };
 
   const mockLogger = {
@@ -107,62 +108,108 @@ describe('CaseApi.getExistingUserCase', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    api = new CaseApi(
-      mockApiClient as unknown as caseApiClient.CaseApiClient,
-      mockLogger as unknown as LoggerInstance
-    );
+    api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient, mockLogger as unknown as LoggerInstance);
   });
 
-  test('should return undefined when user has no cases', async () => {
-    mockApiClient.findExistingUserCases.mockResolvedValue([]);
+  test('returns undefined when user has no FR cases', async () => {
+    mockApiClient.findUserCases.mockResolvedValue([]);
 
-    const result = await api.getExistingUserCase(CASE_TYPE);
+    const result = await api.getExistingFRUserCase();
 
-    expect(mockApiClient.findExistingUserCases).toHaveBeenCalledTimes(1);
-    expect(mockApiClient.findExistingUserCases).toHaveBeenCalledWith(CASE_TYPE);
+    expect(mockApiClient.findUserCases).toHaveBeenCalledTimes(1);
+    expect(mockApiClient.findUserCases).toHaveBeenCalledWith(CaseType.CONTESTED, expect.any(String));
+
+    const query = mockApiClient.findUserCases.mock.calls[0][1] as string;
+    expect(JSON.parse(query)).toEqual({
+      query: { match_all: {} },
+      size: 2,
+    });
+
     expect(result).toBeUndefined();
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
 
-  test('should return case id as string when exactly one case exists', async () => {
-    mockApiClient.findExistingUserCases.mockResolvedValue([
-      { id: 987654321, state: 'Submitted' },
-    ]);
+  test('returns case id as string when exactly one FR case exists', async () => {
+    mockApiClient.findUserCases.mockResolvedValue([{ id: 987654321, state: 'Submitted' }]);
 
-    const result = await api.getExistingUserCase(CASE_TYPE);
+    const result = await api.getExistingFRUserCase();
 
-    expect(mockApiClient.findExistingUserCases).toHaveBeenCalledTimes(1);
-    expect(mockApiClient.findExistingUserCases).toHaveBeenCalledWith(CASE_TYPE);
     expect(result).toBe('987654321');
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
 
-  test('should log error and throw when more than one case exists', async () => {
-    mockApiClient.findExistingUserCases.mockResolvedValue([
+  test('logs error and throws when more than one FR case exists', async () => {
+    mockApiClient.findUserCases.mockResolvedValue([
       { id: '1111', state: 'Draft' },
       { id: '2222', state: 'Submitted' },
     ]);
 
-    await expect(api.getExistingUserCase(CASE_TYPE)).rejects.toThrow(
-      `More than one case found for caseType "${CASE_TYPE}". Expected exactly one. Found: 2.`
+    await expect(api.getExistingFRUserCase()).rejects.toThrow(
+      'More than one case found for caseType FR. Expected exactly one. Found: 2.'
     );
 
-    expect(mockApiClient.findExistingUserCases).toHaveBeenCalledTimes(1);
-    expect(mockApiClient.findExistingUserCases).toHaveBeenCalledWith(CASE_TYPE);
     expect(mockLogger.error).toHaveBeenCalledTimes(1);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      `More than one case found for caseType "${CASE_TYPE}". Expected exactly one. Found: 2.`
+      'More than one case found for caseType FR. Expected exactly one. Found: 2.'
     );
   });
 
-  test('should propagate errors from apiClient.findExistingUserCases', async () => {
-    mockApiClient.findExistingUserCases.mockRejectedValue(new Error('upstream error'));
+  test('propagates errors from apiClient.findUserCases', async () => {
+    mockApiClient.findUserCases.mockRejectedValue(new Error('upstream error'));
 
-    await expect(api.getExistingUserCase(CASE_TYPE)).rejects.toThrow('upstream error');
-
-    expect(mockApiClient.findExistingUserCases).toHaveBeenCalledTimes(1);
-    expect(mockApiClient.findExistingUserCases).toHaveBeenCalledWith(CASE_TYPE);
+    await expect(api.getExistingFRUserCase()).rejects.toThrow('upstream error');
     expect(mockLogger.error).not.toHaveBeenCalled();
+  });
+});
+
+describe('CaseApi.getExistingNfdCase', () => {
+  const mockApiClient = {
+    findUserCases: jest.fn(),
+  };
+
+  const mockLogger = {
+    info: jest.fn().mockImplementation((msg: string) => msg),
+  } as unknown as LoggerInstance;
+
+  let api: CaseApi;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient, mockLogger as unknown as LoggerInstance);
+  });
+
+  test('returns undefined when user has no NFD cases', async () => {
+    mockApiClient.findUserCases.mockResolvedValue([]);
+
+    const result = await api.getExistingNfdCase();
+
+    expect(mockApiClient.findUserCases).toHaveBeenCalledTimes(1);
+    expect(mockApiClient.findUserCases).toHaveBeenCalledWith(CaseType.NFD, expect.any(String));
+
+    const query = mockApiClient.findUserCases.mock.calls[0][1] as string;
+    expect(JSON.parse(query)).toEqual({
+      query: { match_all: {} },
+      size: 1,
+    });
+
+    expect(result).toBeUndefined();
+    expect(mockLogger.info).toHaveBeenCalledWith('No NFD cases found for user');
+  });
+
+  test('returns case id as string when single NFD case exists', async () => {
+    mockApiClient.findUserCases.mockResolvedValue([{ id: 987654321, state: 'Submitted' }]);
+
+    const result = await api.getExistingNfdCase();
+
+    expect(result).toBe('987654321');
+    expect(mockLogger.info).toHaveBeenCalledWith('Found NFD case(s) for user');
+  });
+
+  test('propagates errors from apiClient.findUserCases', async () => {
+    mockApiClient.findUserCases.mockRejectedValue(new Error('upstream error'));
+
+    await expect(api.getExistingNfdCase()).rejects.toThrow('upstream error');
+    expect(mockLogger.info).not.toHaveBeenCalled();
   });
 });
 
@@ -180,10 +227,7 @@ describe('CaseApi.triggerEvent', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    api = new CaseApi(
-      mockApiClient as unknown as caseApiClient.CaseApiClient,
-      mockLogger
-    );
+    api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient, mockLogger);
   });
 
   test('should call apiClient.sendEvent and return the result', async () => {
@@ -205,11 +249,7 @@ describe('CaseApi.triggerEvent', () => {
     const result = await api.triggerEvent(caseId, userData, eventName);
 
     expect(mockApiClient.sendEvent).toHaveBeenCalledTimes(1);
-    expect(mockApiClient.sendEvent).toHaveBeenCalledWith(
-      caseId,
-      userData,
-      eventName
-    );
+    expect(mockApiClient.sendEvent).toHaveBeenCalledWith(caseId, userData, eventName);
     expect(result).toEqual(expectedResult);
   });
 
@@ -217,13 +257,9 @@ describe('CaseApi.triggerEvent', () => {
     const caseId = '123456';
     const eventName = EVENT_TYPE.LINK_APPLICANT_TO_CASE;
 
-    mockApiClient.sendEvent.mockRejectedValue(
-      new Error('Case could not be updated.')
-    );
+    mockApiClient.sendEvent.mockRejectedValue(new Error('Case could not be updated.'));
 
-    await expect(
-      api.triggerEvent(caseId, {}, eventName)
-    ).rejects.toThrow('Case could not be updated.');
+    await expect(api.triggerEvent(caseId, {}, eventName)).rejects.toThrow('Case could not be updated.');
 
     expect(mockApiClient.sendEvent).toHaveBeenCalledTimes(1);
   });
@@ -243,10 +279,7 @@ describe('CaseApi.getUsersRoleOnCase', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    api = new CaseApi(
-      mockApiClient as unknown as caseApiClient.CaseApiClient,
-      mockLogger
-    );
+    api = new CaseApi(mockApiClient as unknown as caseApiClient.CaseApiClient, mockLogger);
   });
 
   test('returns the user case role when one exists', async () => {
@@ -331,16 +364,12 @@ describe('triggerSystemEvent', () => {
     jest.mocked(getSystemUser).mockResolvedValue(systemUser);
     jest.spyOn(caseApiModule, 'getCaseApi').mockReturnValue(caseApi);
 
-    await expect(
-      triggerSystemEvent('123456', {}, EVENT_TYPE.LINK_RESPONDENT_TO_CASE, mockLogger)
-    ).rejects.toThrow('CCD error');
+    await expect(triggerSystemEvent('123456', {}, EVENT_TYPE.LINK_RESPONDENT_TO_CASE, mockLogger)).rejects.toThrow(
+      'CCD error'
+    );
 
     expect(getSystemUser).toHaveBeenCalledTimes(1);
     expect(caseApiModule.getCaseApi).toHaveBeenCalledWith(systemUser, mockLogger);
-    expect(triggerEvent).toHaveBeenCalledWith(
-      '123456',
-      {},
-      EVENT_TYPE.LINK_RESPONDENT_TO_CASE
-    );
+    expect(triggerEvent).toHaveBeenCalledWith('123456', {}, EVENT_TYPE.LINK_RESPONDENT_TO_CASE);
   });
 });
