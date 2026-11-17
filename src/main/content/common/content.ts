@@ -12,11 +12,11 @@ const cy: typeof en = {
   }
 };
 
-const languages: Record<SupportedLanguages, typeof en> = {
+const contentByLanguage: Record<SupportedLanguages, typeof en> = {
   en,
   cy,
 };
 
 export function generateCommonContent(language: SupportedLanguages): typeof en {
-  return getLocalizedContent(languages, language);
+  return getLocalizedContent(contentByLanguage, language);
 }

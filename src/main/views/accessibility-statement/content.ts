@@ -30,14 +30,14 @@ const en = {
   ],
   feedbackHeading: 'Feedback and contact information',
   feedbackLeadIn:
-    "If you find any problems not listed on this page, think we're not meeting accessibility requirements, or need information in a different format like accessible PDF, large print, easy read, audio recording or braille, contact:",
+    "If you find any problems not listed on this page or think we're not meeting accessibility requirements or, you need information on this website in a different format like accessible PDF, large print, easy read, audio recording or braille, contact:",
   feedbackItems: ['email HMCTSFinancialRemedy@justice.gov.uk', 'call 0300 123 5577'],
   responseTime: "We'll consider your request and aim to get back to you within 10 days.",
   enforcementHeading: 'Enforcement procedure',
   enforcementParagraph1:
     "The Equality and Human Rights Commission (EHRC) is responsible for enforcing the Public Sector Bodies (Websites and Mobile Applications) (No. 2) Accessibility Regulations 2018 (the 'accessibility regulations').",
-  enforcementParagraph2Prefix: "If you're not happy with how we respond to your complaint, contact the ",
-  enforcementLinkText: 'Equality Advisory and Support Service',
+  enforcementParagraph2Prefix: "If you're not happy with how we respond to your complaint, ",
+  enforcementLinkText: 'contact the Equality Advisory and Support Service',
   enforcementLinkUrl: 'https://www.equalityadvisoryservice.com/',
   enforcementParagraph2Suffix: '.',
   technicalHeading: "Technical information about this website's accessibility",
@@ -45,9 +45,9 @@ const en = {
     'HMCTS is committed to making its websites accessible, in accordance with the Public Sector Bodies (Websites and Mobile Applications) (No. 2) Accessibility Regulations 2018.',
   complianceHeading: 'Compliance status',
   complianceText:
-    'This website is partially compliant with the WCAG (Web Content Accessibility Guidelines) version 2.2 AA standard, due to the non-compliances listed below.',
+    'This website is partially compliant with the WCAG (Web Content Accessibility Guidelines) version 2.2 AA standard, due to the following non-compliances (and/or) the following exemptions.',
   nonAccessibleHeading: 'Non-accessible content',
-  nonAccessibleReason: 'The content listed below is non-accessible for the following reason(s):',
+  nonAccessibleReason: 'The content is non-accessible for the following reason(s):',
   nonComplianceHeading: 'Non-compliance with the accessibility regulations',
   nonComplianceItems: [
     'File upload button name does not update for VoiceOver users to reflect that a file has been added. This may cause confusion for screen reader users who may think the file upload has failed. This fails WCAG 2.2 success criterion 1.3.1 (Info and Relationships).',
@@ -64,13 +64,10 @@ const en = {
   ],
   improvementHeading: "What we're doing to improve accessibility",
   improvementText:
-    'This website is continually tested using accessibility automated tests and basic manual and assistive technology checks. Any new features introduced will also be tested internally or with support from the internal HMCTS accessibility testing team.',
+    'This website is continually tested using accessibility automated tests and basic manual and assistive technology checks. Any new features introduced will also be tested internally or with the support of the internal HMCTS accessibility testing team.',
   preparationHeading: 'Preparation of this accessibility statement',
-  preparedOn: 'This statement was prepared on 8 October 2026.',
-  reviewedOn: 'It was last reviewed on 13 January 2027.',
-  testedOn: 'This website was last tested on 22 September 2026.',
-  testedBy:
-    'The test was carried out by the Internal Accessibility Team within HMCTS.',
+  preparedAndReviewedOn: 'This statement was prepared on 8 October 2026. It was last reviewed on 13 January 2027.',
+  testedOn: 'This website was last tested on 22 September 2026. The test was carried out by the Internal Accessibility Team within HMCTS. The team tested against a range of assistive technologies and accessibility testing tools.',
 } satisfies LocalizedPageContent;
 
 const cy: typeof en = {
@@ -78,11 +75,11 @@ const cy: typeof en = {
   title: 'Datganiad hygyrchedd ar gyfer Financial Remedy',
 };
 
-const languages: Record<SupportedLanguages, typeof en> = {
+const contentByLanguage: Record<SupportedLanguages, typeof en> = {
   en,
   cy,
 };
 
 export function generateAccessibilityStatementContent(language: SupportedLanguages): typeof en {
-  return getLocalizedContent(languages, language);
+  return getLocalizedContent(contentByLanguage, language);
 }

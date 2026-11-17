@@ -25,10 +25,10 @@ export function resolveLanguage(req: Request): SupportedLanguages {
 }
 
 export function getLocalizedContent<T>(
-  languages: Record<SupportedLanguages, T>,
+  contentByLanguage: Record<SupportedLanguages, T>,
   language: SupportedLanguages
 ): T {
-  return languages[language] || languages[SupportedLanguages.En];
+  return contentByLanguage[language] || contentByLanguage[SupportedLanguages.En];
 }
 
 export enum SupportedLanguages {
