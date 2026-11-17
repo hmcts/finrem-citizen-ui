@@ -38,7 +38,6 @@ export enum SupportedLanguages {
 
 const supportedLanguages = new Set<SupportedLanguages>([SupportedLanguages.En, SupportedLanguages.Cy]);
 
-
 type LocalizedContent = Record<string, unknown>;
 
 export type LocalizedPageContent = {
