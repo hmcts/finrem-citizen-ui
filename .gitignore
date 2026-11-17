@@ -15,6 +15,7 @@ lib/
 
 # Build & Compiled Assets
 dist/
+.gradle/
 public/
 .nyc_output
 .sass-cache
@@ -45,6 +46,7 @@ functional-output/*
 mochawesome-report/*
 junit*.xml
 a11y-output/axe-report/*
+Fortify Scan/
 
 # Project Specific Paths
 src/main/public/img/lib/*
@@ -52,6 +54,7 @@ src/main/public/js/lib/**/*.js
 src/main/public/stylesheets/lib/*
 src/main/resources/localhost-ssl
 src/main/views/govuk
+src/test/java/build/
 
 # Misc
 npm-debug.log.*
