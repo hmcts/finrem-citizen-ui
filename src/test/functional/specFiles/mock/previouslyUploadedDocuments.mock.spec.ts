@@ -24,16 +24,16 @@ test.describe('[mock] Previously uploaded documents', () => {
     loggedInPage: _loggedInPage,
     basePage,
     enterAccessCodePage,
-    contestedCaseWithHearing,
+    contestLipOnlyPaperCase,
     dashboardPage,
   }) => {
     await basePage.injectCaseSession(
-      contestedCaseWithHearing.caseId,
-      contestedCaseWithHearing.applicantAccessCode,
-      contestedCaseWithHearing.respondentAccessCode
+      contestLipOnlyPaperCase.caseId,
+      contestLipOnlyPaperCase.applicantAccessCode,
+      contestLipOnlyPaperCase.respondentAccessCode
     );
 
-    await enterAccessCodePage.submitAccessCode(contestedCaseWithHearing.applicantAccessCode);
+    await enterAccessCodePage.submitAccessCode(contestLipOnlyPaperCase.applicantAccessCode);
 
     // Assert the intended post-submit state
     await expect(page).toHaveURL(/\/dashboard(?:\?.*)?$/, { timeout: 15_000 });

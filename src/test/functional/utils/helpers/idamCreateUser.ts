@@ -42,6 +42,7 @@ export class IdamApiService {
         password: DEFAULT_TEST_USER_PASSWORD,
       };
 
+      // eslint-disable-next-line no-console
       console.log(`[IdamApiService] Creating test user: ${user.username}`);
 
       await this.withRetry(async () => {
