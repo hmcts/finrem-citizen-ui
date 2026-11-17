@@ -33,46 +33,8 @@ function getConfiguredCcdUrl(): string {
   return (process.env.CCD_URL || '').trim();
 }
 
-function isPreviewOrAatTarget(): boolean {
-  const runningEnv = (process.env.RUNNING_ENV || '').toLowerCase();
-  const testUrl = (process.env.TEST_URL || '').toLowerCase();
-
-  return (
-    runningEnv === 'aat'
-    || runningEnv.startsWith('pr-')
-    || testUrl.includes('.preview.platform.hmcts.net')
-    || testUrl.includes('.aat.platform.hmcts.net')
-  );
-}
-
-function shouldUseRealAccessCodeIntegration(): boolean {
-  const explicitToggle = process.env.ACCESS_CODE_REAL_INTEGRATION;
-
-  if (explicitToggle === 'true') {
-    return true;
-  }
-
-  if (explicitToggle === 'false') {
-    // Legacy .env files often set false; do not block preview/AAT by default.
-    return isPreviewOrAatTarget();
-  }
-
-  return isPreviewOrAatTarget();
-}
-
 function isLocalMockCcdUrl(url: string): boolean {
   return /https?:\/\/(localhost|127\.0\.0\.1):4100\b/i.test(url);
-}
-
-function getMockSeedCase(): CreatedCaseWithAccessCodes {
-  const caseId = process.env.MOCK_CASE_ID || '1616591401473378';
-
-  return {
-    caseId,
-    formattedCaseId: caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-'),
-    applicantAccessCode: process.env.MOCK_APPLICANT_ACCESS_CODE || 'APPCODE1',
-    respondentAccessCode: process.env.MOCK_RESPONDENT_ACCESS_CODE || 'RSPCODE1',
-  };
 }
 
 function shouldDeleteCreatedCcdCases(): boolean {
@@ -183,9 +145,7 @@ type MyFixtures = {
   enterCaseNumberPage: EnterCaseNumberPage;
   enterAccessCodePage: EnterAccessCodePage;
   /** A real contested case used solely for case-number linking tests (no access codes). */
-  contestedCaseForCaseNumber: CreatedCase;
-  /** A real contested case pre-loaded with deterministic mock access codes. */
-  contestedCaseWithHearing: CreatedCaseWithAccessCodes;
+  contestLipOnlyPaperCase: CreatedCaseWithAccessCodes;
   axeUtils: AxeUtils;
   beforeYouStartPage: BeforeYouStartPage;
   confidentialityPage: ConfidentialityPage;
@@ -414,58 +374,18 @@ export const test = base.extend<MyFixtures & MockOptions>({
    *
    * The 240s timeout reflects the time needed to drive the full case-creation API chain, which can be slow in the AAT environment.
    */
-  contestedCaseForCaseNumber: [
+  contestLipOnlyPaperCase: [
     async ({}, use) => {
-      if (isLocalMockCcdUrl(getConfiguredCcdUrl())) {
-        const { caseId, formattedCaseId } = getMockSeedCase();
-        await use({ caseId, formattedCaseId });
-        return;
-      }
 
-      const caseId = String(
-        await ContestedCaseFactory.createAndProcessFormACaseUpToProgressToListing(false)
-      );
-      const formattedCaseId = caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
-      try {
-        await use({ caseId, formattedCaseId });
-      } finally {
-        await cleanupCreatedContestedCase(caseId);
-      }
-    },
-    { timeout: 240 * 1000 }
-  ],
-
-  /**
-   * Creates a contested case for the access-code journey using a mock-first strategy.
-   *
-   * Default: mock codes (APPCODE1/RSPCODE1) via /__test/inject-case-session,
-    * which avoids external dependency instability and keeps tests deterministic.
-   *
-   * Optional real integration mode (happy path only): set
-   *   ACCESS_CODE_REAL_INTEGRATION=true
-    * to generate real access codes via FR_issueApplication and fetch them from case details.
-   *
-   * Both applicant and respondent access codes are returned so tests can verify
-   * each role's happy path without sharing state.
-   */
-  contestedCaseWithHearing: [
-    async ({}, use) => {
-      if (isLocalMockCcdUrl(getConfiguredCcdUrl())) {
-        await use(getMockSeedCase());
-        return;
-      }
-
-      const useRealIntegration = shouldUseRealAccessCodeIntegration();
-      const caseData = await ContestedCaseFactory.createCaseForAccessCodeJourney(useRealIntegration);
+      const caseData = await ContestedCaseFactory.createAndIssuePaperCase(false);
       const caseId = String(caseData.caseId);
       const formattedCaseId = caseId.replaceAll(/(\d{4})(?=\d)/g, '$1-');
-
       try {
         await use({
           caseId,
           formattedCaseId,
           applicantAccessCode: caseData.applicantCode,
-          respondentAccessCode: caseData.respondentCode,
+          respondentAccessCode: caseData.respondentCode
         });
       } finally {
         await cleanupCreatedContestedCase(caseId);
