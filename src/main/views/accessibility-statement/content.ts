@@ -2,7 +2,6 @@ import { LocalizedPageContent, SupportedLanguages } from '../../modules/i18n';
 
 const en = {
   title: 'Accessibility statement for Financial Remedy',
-  errors: {},
   appliesTo: 'This accessibility statement applies to the Financial Remedy service.',
   intro:
     'This website is run by HM Courts & Tribunals Service. We want as many people as possible to be able to use this website. For example, that means you should be able to:',

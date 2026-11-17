@@ -18,7 +18,6 @@ type LocalizedContent = Record<string, unknown>;
 
 export type LocalizedPageContent = {
   title: string;
-  errors: Record<string, string>;
 } & LocalizedContent;
 
 export function renderLocalizedView(
