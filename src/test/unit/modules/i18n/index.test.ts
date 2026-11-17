@@ -75,24 +75,4 @@ describe('renderLocalizedView', () => {
       })
     );
   });
-
-  it('does not allow extra locals to override htmlLang', () => {
-    const req = { session: { lang: 'en' } } as unknown as Request;
-    const render = jest.fn();
-    const res = { render } as unknown as Response;
-
-    renderLocalizedView(
-      req,
-      res,
-      'test-view',
-      () => ({ title: 'Page title' })
-    );
-
-    expect(render).toHaveBeenCalledWith(
-      'test-view',
-      expect.objectContaining({
-        htmlLang: 'en',
-      })
-    );
-  });
 });

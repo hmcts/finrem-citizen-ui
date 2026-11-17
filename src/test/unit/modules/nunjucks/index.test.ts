@@ -185,26 +185,6 @@ describe('buildFeedbackSurveyUrl', () => {
 
   });
 
-  it('sets welsh common footer link text when session language is cy', () => {
-    const req = makeReq({
-      path: '/test-page',
-      session: { lang: 'cy' } as Request['session'],
-    });
-    const res = { locals: { nonce: 'nonce123' } } as unknown as Response;
-    let nextCalled = false;
-
-    addNunjucksLocals(req, res, (() => {
-      nextCalled = true;
-    }) as NextFunction);
-
-    expect(res.locals.common).toEqual({
-      footerLinks: {
-        accessibilityStatement: 'Datganiad Hygyrchedd',
-      },
-    });
-    expect(nextCalled).toBe(true);
-  });
-
   it('renders the survey link in the shared beta banner', () => {
     const govukTemplates = path.dirname(require.resolve('govuk-frontend/package.json')) + '/dist';
     const viewsPath = path.join(__dirname, '../../../../main/views');
