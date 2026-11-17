@@ -16,16 +16,15 @@
         {% endfor %}
       </ul>
 
-      <p class="govuk-body">{{ simpleText }}</p>
+      <p class="govuk-body">{{ simplicityStatement }}</p>
       <p class="govuk-body">
-        {{ abilityNetPrefix }}
         <a class="govuk-link" href="{{ abilityNetLinkUrl }}" target="_blank" rel="noopener noreferrer">
           {{ abilityNetLinkText }} {{ opensInNewTabText }}
         </a>{{ abilityNetSuffix }}
       </p>
 
       <h2 class="govuk-heading-l">{{ howAccessibleHeading }}</h2>
-      <p class="govuk-body">{{ knownIssuesLeadIn }}</p>
+      <p class="govuk-body">{{ knownIssuesIntro }}</p>
       <ul class="govuk-list govuk-list--bullet">
         {% for issue in knownIssues %}
           <li>{{ issue }}</li>
@@ -33,7 +32,7 @@
       </ul>
 
       <h2 class="govuk-heading-l">{{ feedbackHeading }}</h2>
-      <p class="govuk-body">{{ feedbackLeadIn }}</p>
+      <p class="govuk-body">{{ feedbackIntro }}</p>
       <ul class="govuk-list govuk-list--bullet">
         {% for item in feedbackItems %}
           <li>{{ item }}</li>
@@ -47,11 +46,11 @@
         {{ enforcementParagraph2Prefix }}
         <a class="govuk-link" href="{{ enforcementLinkUrl }}" target="_blank" rel="noopener noreferrer">
           {{ enforcementLinkText }} {{ opensInNewTabText }}
-        </a>{{ enforcementParagraph2Suffix }}
+        </a>.
       </p>
 
-      <h2 class="govuk-heading-l">{{ technicalHeading }}</h2>
-      <p class="govuk-body">{{ commitment }}</p>
+      <h2 class="govuk-heading-l">{{ technicalInformationHeading }}</h2>
+      <p class="govuk-body">{{ accessibilityCommitment }}</p>
 
       <h3 class="govuk-heading-m">{{ complianceHeading }}</h3>
       <p class="govuk-body">{{ complianceText }}</p>

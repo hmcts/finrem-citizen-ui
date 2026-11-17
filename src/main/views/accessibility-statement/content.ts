@@ -5,7 +5,6 @@ const en = {
   appliesTo: 'This accessibility statement applies to the Financial Remedy service.',
   intro:
     'This website is run by HM Courts & Tribunals Service. We want as many people as possible to be able to use this website. For example, that means you should be able to:',
-  capabilityLeadIn: 'You should be able to:',
   capabilityItems: [
     'change colours, contrast levels and fonts',
     'zoom in up to 400% without the text spilling off the screen',
@@ -13,14 +12,13 @@ const en = {
     'navigate most of the website using speech recognition software',
     'listen to most of the website using a screen reader (including the most recent versions of JAWS, NVDA and VoiceOver)',
   ],
-  simpleText: "We've also made the website text as simple as possible to understand.",
-  abilityNetPrefix: '',
+  simplicityStatement: "We've also made the website text as simple as possible to understand.",
   abilityNetLinkText: 'AbilityNet',
   opensInNewTabText: '(opens in new tab)',
   abilityNetLinkUrl: 'https://mcmw.abilitynet.org.uk/',
   abilityNetSuffix: ' has advice on making your device easier to use if you have a disability.',
   howAccessibleHeading: 'How accessible this website is',
-  knownIssuesLeadIn: 'We know some parts of this website are not fully accessible:',
+  knownIssuesIntro: 'We know some parts of this website are not fully accessible:',
   knownIssues: [
     'some links do not have descriptive accessible names',
     'some heading elements are not consistent',
@@ -29,7 +27,7 @@ const en = {
     'some error messages may not be descriptive',
   ],
   feedbackHeading: 'Feedback and contact information',
-  feedbackLeadIn:
+  feedbackIntro:
     "If you find any problems not listed on this page or think we're not meeting accessibility requirements or, you need information on this website in a different format like accessible PDF, large print, easy read, audio recording or braille, contact:",
   feedbackItems: ['email HMCTSFinancialRemedy@justice.gov.uk', 'call 0300 123 5577'],
   responseTime: "We'll consider your request and aim to get back to you within 10 days.",
@@ -39,9 +37,8 @@ const en = {
   enforcementParagraph2Prefix: "If you're not happy with how we respond to your complaint, ",
   enforcementLinkText: 'contact the Equality Advisory and Support Service',
   enforcementLinkUrl: 'https://www.equalityadvisoryservice.com/',
-  enforcementParagraph2Suffix: '.',
-  technicalHeading: "Technical information about this website's accessibility",
-  commitment:
+  technicalInformationHeading: "Technical information about this website's accessibility",
+  accessibilityCommitment:
     'HMCTS is committed to making its websites accessible, in accordance with the Public Sector Bodies (Websites and Mobile Applications) (No. 2) Accessibility Regulations 2018.',
   complianceHeading: 'Compliance status',
   complianceText:
