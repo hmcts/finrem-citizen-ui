@@ -2,24 +2,6 @@ import { Request, Response } from 'express';
 
 import { generateCommonContent } from '../../content/common/content';
 
-export enum SupportedLanguages {
-  En = 'en',
-  Cy = 'cy',
-}
-
-const supportedLanguages = new Set<SupportedLanguages>([SupportedLanguages.En, SupportedLanguages.Cy]);
-
-export function resolveLanguage(req: Request): SupportedLanguages {
-  const language = req.session?.lang;
-  return language && supportedLanguages.has(language) ? language : SupportedLanguages.En;
-}
-
-type LocalizedContent = Record<string, unknown>;
-
-export type LocalizedPageContent = {
-  title: string;
-} & LocalizedContent;
-
 export function renderLocalizedView(
   req: Request,
   res: Response,
@@ -36,3 +18,29 @@ export function renderLocalizedView(
     htmlLang: language,
   });
 }
+
+export function resolveLanguage(req: Request): SupportedLanguages {
+  const language = req.session?.lang;
+  return language && supportedLanguages.has(language) ? language : SupportedLanguages.En;
+}
+
+export function getLocalizedContent<T>(
+  languages: Record<SupportedLanguages, T>,
+  language: SupportedLanguages
+): T {
+  return languages[language] || languages[SupportedLanguages.En];
+}
+
+export enum SupportedLanguages {
+  En = 'en',
+  Cy = 'cy',
+}
+
+const supportedLanguages = new Set<SupportedLanguages>([SupportedLanguages.En, SupportedLanguages.Cy]);
+
+
+type LocalizedContent = Record<string, unknown>;
+
+export type LocalizedPageContent = {
+  title: string;
+} & LocalizedContent;

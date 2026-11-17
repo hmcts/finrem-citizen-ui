@@ -1,7 +1,26 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import type { Request, Response } from 'express';
 
-import { renderLocalizedView, resolveLanguage } from '../../../../main/modules/i18n';
+import { getLocalizedContent, renderLocalizedView, resolveLanguage, SupportedLanguages } from '../../../../main/modules/i18n';
+
+describe('getLocalizedContent', () => {
+  const languages = {
+    [SupportedLanguages.En]: { title: 'English title' },
+    [SupportedLanguages.Cy]: { title: 'Teitl Cymraeg' },
+  };
+
+  it('returns content for selected supported language', () => {
+    const content = getLocalizedContent(languages, SupportedLanguages.Cy);
+
+    expect(content.title).toBe('Teitl Cymraeg');
+  });
+
+  it('falls back to english for unsupported language', () => {
+    const content = getLocalizedContent(languages, 'es' as SupportedLanguages);
+
+    expect(content.title).toBe('English title');
+  });
+});
 
 describe('resolveLanguage', () => {
   it('returns english when language is set to en', () => {

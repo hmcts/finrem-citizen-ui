@@ -1,4 +1,4 @@
-import type { SupportedLanguages } from '../../modules/i18n';
+import { getLocalizedContent, type SupportedLanguages } from '../../modules/i18n';
 
 const en = {
   footerLinks: {
@@ -18,5 +18,5 @@ const languages: Record<SupportedLanguages, typeof en> = {
 };
 
 export function generateCommonContent(language: SupportedLanguages): typeof en {
-  return languages[language] || languages.en;
+  return getLocalizedContent(languages, language);
 }

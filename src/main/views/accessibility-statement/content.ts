@@ -1,4 +1,4 @@
-import { LocalizedPageContent, SupportedLanguages } from '../../modules/i18n';
+import { getLocalizedContent, LocalizedPageContent, SupportedLanguages } from '../../modules/i18n';
 
 const en = {
   title: 'Accessibility statement for Financial Remedy',
@@ -16,6 +16,7 @@ const en = {
   simpleText: "We've also made the website text as simple as possible to understand.",
   abilityNetPrefix: '',
   abilityNetLinkText: 'AbilityNet',
+  opensInNewTabText: '(opens in new tab)',
   abilityNetLinkUrl: 'https://mcmw.abilitynet.org.uk/',
   abilityNetSuffix: ' has advice on making your device easier to use if you have a disability.',
   howAccessibleHeading: 'How accessible this website is',
@@ -83,5 +84,5 @@ const languages: Record<SupportedLanguages, typeof en> = {
 };
 
 export function generateAccessibilityStatementContent(language: SupportedLanguages): typeof en {
-  return languages[language] || languages.en;
+  return getLocalizedContent(languages, language);
 }
