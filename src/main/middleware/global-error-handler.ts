@@ -4,6 +4,7 @@ import { NextFunction, Request, Response } from 'express';
 import { RouteNames, ViewNames } from '../constants';
 import { AppInsights } from '../modules/appinsights';
 import { CSRFToken } from '../modules/csrf';
+import { OIDCCallbackError } from '../modules/oidc/errors';
 
 const { Logger } = require('@hmcts/nodejs-logging');
 
@@ -25,6 +26,10 @@ function isErrorLike(error: unknown): error is ErrorLike {
 
 function isCsrfValidationError(error: unknown): boolean {
   return isErrorLike(error) && error.code === CSRFToken.VALIDATION_ERROR_CODE;
+}
+
+function isOidcCallbackError(error: unknown): error is OIDCCallbackError {
+  return error instanceof OIDCCallbackError;
 }
 
 function getErrorMessage(error: unknown): string {
@@ -95,6 +100,11 @@ export function globalErrorHandler(error: unknown, req: Request, res: Response, 
 
   if (isCsrfValidationError(error)) {
     res.redirect(RouteNames.csrfError);
+    return;
+  }
+
+  if (isOidcCallbackError(error)) {
+    res.redirect(RouteNames.login);
     return;
   }
 

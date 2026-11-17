@@ -5,8 +5,9 @@ import express from 'express';
 import { glob } from 'glob';
 import * as path from 'path';
 
-import { PrivateRoutes, ViewNames } from './constants';
+import { PrivateRoutes, RouteNames, ViewNames } from './constants';
 import { caseContextMiddleware, contactEmailMiddleware, globalErrorHandler, routeAccessMiddleware } from './middleware';
+import { sessionExpiryMiddleware } from './middleware/session-expiry';
 import { AppInsights } from './modules/appinsights';
 import { setNoStoreForHtmlRequests, setStaticCachingPolicy } from './modules/caching';
 import { setCspNonce } from './modules/csp-nonce';
@@ -17,6 +18,8 @@ import { OIDCModule } from './modules/oidc';
 import { PropertiesVolume } from './modules/properties-volume';
 import { createDefaultRateLimiter } from './modules/rate-limiter';
 import { Session } from './modules/session';
+import { SessionTimeout } from './modules/session-timeout';
+import { setRecentSessionCookie } from './modules/session-timeout/recent-session-cookie';
 
 const { setupDev } = require('./development');
 
@@ -33,20 +36,33 @@ new AppInsights().enable();
 new Nunjucks(developmentMode).enableFor(app);
 new Helmet(developmentMode).enableFor(app);
 new Session().enableFor(app);
+new SessionTimeout().enableFor(app);
 
 setupDev(app, developmentMode);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public'), {
-  setHeaders: setStaticCachingPolicy,
-}));
+app.use(
+  express.static(path.join(__dirname, 'public'), {
+    setHeaders: setStaticCachingPolicy,
+  })
+);
 app.use(setNoStoreForHtmlRequests);
+app.use((req, res, next) => {
+  if (req.session?.user && req.path !== RouteNames.logout && req.path !== RouteNames.callbackUrl) {
+    setRecentSessionCookie(res);
+  }
+
+  next();
+});
 
 app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, '/public/assets/images/favicon.ico'));
 });
+
+app.use(Object.values(PrivateRoutes), createDefaultRateLimiter(app.locals.redisClient));
+app.use(Object.values(PrivateRoutes), sessionExpiryMiddleware);
 
 if (config.get<boolean>('useCSRFProtection')) {
   new CSRFToken().enableFor(app);
@@ -55,7 +71,6 @@ new OIDCModule().enableFor(app);
 
 app.use(caseContextMiddleware);
 app.use(routeAccessMiddleware);
-app.use(Object.values(PrivateRoutes), createDefaultRateLimiter(app.locals.redisClient));
 
 // Add contact email to all templates via res.locals
 app.use(contactEmailMiddleware);

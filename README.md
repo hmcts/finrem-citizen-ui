@@ -121,6 +121,15 @@ For example, to run frontend CI against the backend preview deployment created b
 use-ccd-defs-pr-1234
 ```
 
+### Fortify scanning
+
+Fortify scans run in nightly CI by default. Fortify can also be run in PR CI by adding the `enable_fortify_scan` PR label in GitHub.
+
+Fortify credentials are read from Azure Key Vault `finrem-aat` for both PR and nightly runs. The expected secrets are:
+
+- `fortify-on-demand-username`
+- `fortify-on-demand-password`
+
 ### Local Functional Testing (with Mock CCD API)
 
 For local functional testing with mock infrastructure, run:

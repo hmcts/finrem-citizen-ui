@@ -1,16 +1,17 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import type { NextFunction, Request, Response } from 'express';
 
-import { CaseRole } from '../../../main/app/case/definition';
+import { CaseRole, State } from '../../../main/app/case/definition';
 import { RouteNames } from '../../../main/constants';
 import { routeAccessMiddleware } from '../../../main/middleware/route-access';
 
 function makeReq(
   path: string,
   session: {
-    user?: { caseRole?: CaseRole };
+    user?: { caseRole?: CaseRole; isRepresented?: boolean };
     caseRole?: CaseRole;
     caseNumber?: string;
+    caseData?: { state: State };
   }
 ): Request {
   return {
@@ -78,6 +79,101 @@ describe('routeAccessMiddleware', () => {
       const req = makeReq(`${RouteNames.documents}/abc123/download`, {
         user: { caseRole: CaseRole.APPLICANT },
         caseNumber: '1234567890123456',
+      });
+      const res = makeRes();
+
+      routeAccessMiddleware(req, res, next);
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(res.redirect).not.toHaveBeenCalled();
+    });
+
+    it('allows non-represented users to access upload journey routes', () => {
+      const req = makeReq(`${RouteNames.uploadJourney}/before-you-start`, {
+        user: { caseRole: CaseRole.APPLICANT, isRepresented: false },
+        caseNumber: '1234567890123456',
+      });
+      const res = makeRes();
+
+      routeAccessMiddleware(req, res, next);
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(res.redirect).not.toHaveBeenCalled();
+    });
+
+    it('redirects represented users away from upload journey root', () => {
+      const req = makeReq(RouteNames.uploadJourney, {
+        user: { caseRole: CaseRole.APPLICANT, isRepresented: true },
+        caseNumber: '1234567890123456',
+      });
+      const res = makeRes();
+
+      routeAccessMiddleware(req, res, next);
+
+      expect(res.redirect).toHaveBeenCalledWith(RouteNames.dashboard);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('redirects represented users away from upload journey step routes', () => {
+      const req = makeReq(`${RouteNames.uploadJourney}/before-you-start`, {
+        user: { caseRole: CaseRole.APPLICANT, isRepresented: true },
+        caseNumber: '1234567890123456',
+      });
+      const res = makeRes();
+
+      routeAccessMiddleware(req, res, next);
+
+      expect(res.redirect).toHaveBeenCalledWith(RouteNames.dashboard);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('redirects users on closed cases away from upload journey root', () => {
+      const req = makeReq(RouteNames.uploadJourney, {
+        user: { caseRole: CaseRole.APPLICANT, isRepresented: false },
+        caseNumber: '1234567890123456',
+        caseData: { state: State.CLOSE },
+      });
+      const res = makeRes();
+
+      routeAccessMiddleware(req, res, next);
+
+      expect(res.redirect).toHaveBeenCalledWith(RouteNames.dashboard);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('redirects users on closed cases away from upload journey step routes', () => {
+      const req = makeReq(`${RouteNames.uploadJourney}/before-you-start`, {
+        user: { caseRole: CaseRole.APPLICANT, isRepresented: false },
+        caseNumber: '1234567890123456',
+        caseData: { state: State.CLOSE },
+      });
+      const res = makeRes();
+
+      routeAccessMiddleware(req, res, next);
+
+      expect(res.redirect).toHaveBeenCalledWith(RouteNames.dashboard);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('does not redirect users on open cases away from upload journey root', () => {
+      const req = makeReq(RouteNames.uploadJourney, {
+        user: { caseRole: CaseRole.APPLICANT, isRepresented: false },
+        caseNumber: '1234567890123456',
+        caseData: { state: State.PREPARE_FOR_HEARING },
+      });
+      const res = makeRes();
+
+      routeAccessMiddleware(req, res, next);
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(res.redirect).not.toHaveBeenCalled();
+    });
+
+    it('redirects users on open cases away from upload journey step routes', () => {
+      const req = makeReq(`${RouteNames.uploadJourney}/before-you-start`, {
+        user: { caseRole: CaseRole.APPLICANT, isRepresented: false },
+        caseNumber: '1234567890123456',
+        caseData: { state: State.PREPARE_FOR_HEARING },
       });
       const res = makeRes();
 

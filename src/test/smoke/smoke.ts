@@ -2,7 +2,7 @@
 import { describe, expect, test } from '@jest/globals';
 import axios, { AxiosResponse } from 'axios';
 
-import { PrivateRoutes, PublicRoutes, UploadStepNames } from '../../main/constants';
+import { PrivateRoutes, PublicRoutes, RouteNames, UploadStepNames } from '../../main/constants';
 
 const testUrl = process.env.TEST_URL || 'http://localhost:3100';
 
@@ -25,56 +25,66 @@ const pages: SmokePage[] = [
   { name: 'Health', path: PublicRoutes.health, expectedStatuses: [200, 503], responseKind: 'json' },
   { name: 'Info', path: PublicRoutes.info, responseKind: 'json' },
   { name: 'Cookies', path: PublicRoutes.cookies },
-  { name: 'Autocomplete', path: PrivateRoutes.autocomplete, expectsLoginRedirect: true },
-  { name: 'Enter Case Number', path: PrivateRoutes.enterCaseNumber, expectsLoginRedirect: true },
-  { name: 'Enter Access Code', path: PrivateRoutes.enterAccessCode, expectsLoginRedirect: true },
-  { name: 'Dashboard', path: PrivateRoutes.dashboard, expectsLoginRedirect: true },
-  { name: 'Task List Upload Dashboard', path: PrivateRoutes.taskListUpload, expectsLoginRedirect: true },
+  { name: 'Autocomplete', path: PrivateRoutes.autocomplete, expectedStatuses: [302], expectedRedirectPath: RouteNames.login, },
+  { name: 'Enter Case Number', path: PrivateRoutes.enterCaseNumber, expectedStatuses: [302], expectedRedirectPath: RouteNames.login, },
+  { name: 'Enter Access Code', path: PrivateRoutes.enterAccessCode, expectedStatuses: [302], expectedRedirectPath: RouteNames.login, },
+  { name: 'Dashboard', path: PrivateRoutes.dashboard, expectedStatuses: [302], expectedRedirectPath: RouteNames.login, },
+  { name: 'Task List Upload Dashboard', path: PrivateRoutes.taskListUpload, expectedStatuses: [302], expectedRedirectPath: RouteNames.login, },
   {
     name: 'Previously Uploaded Documents',
     path: `${PrivateRoutes.uploadJourney}/previously-uploaded-documents`,
-    expectsLoginRedirect: true,
+    expectedStatuses: [302],
+    expectedRedirectPath: RouteNames.login,
   },
-  { name: 'Upload Journey Start', path: PrivateRoutes.uploadJourney, expectsLoginRedirect: true },
+  { name: 'Upload Journey Start', path: PrivateRoutes.uploadJourney, expectedStatuses: [302],
+    expectedRedirectPath: RouteNames.login },
   {
     name: 'Before You Start',
     path: `${PrivateRoutes.uploadJourney}/${UploadStepNames.BeforeYouStart}`,
-    expectsLoginRedirect: true,
+    expectedStatuses: [302],
+    expectedRedirectPath: RouteNames.login,
   },
   {
     name: 'Confidentiality Guidance',
     path: `${PrivateRoutes.uploadJourney}/${UploadStepNames.Confidentiality}`,
-    expectsLoginRedirect: true,
+    expectedStatuses: [302],
+    expectedRedirectPath: RouteNames.login,
   },
   {
     name: 'Hearing (FDR)',
     path: `${PrivateRoutes.uploadJourney}/${UploadStepNames.FDR}`,
-    expectsLoginRedirect: true,
+    expectedStatuses: [302],
+    expectedRedirectPath: RouteNames.login,
   },
   {
     name: 'Document Type Selection',
     path: `${PrivateRoutes.uploadJourney}/${UploadStepNames.DocumentTypeSelection}`,
-    expectsLoginRedirect: true,
+    expectedStatuses: [302],
+    expectedRedirectPath: RouteNames.login,
   },
   {
     name: 'Upload Documents',
     path: `${PrivateRoutes.uploadJourney}/${UploadStepNames.UploadDocuments}`,
-    expectsLoginRedirect: true,
+    expectedStatuses: [302],
+    expectedRedirectPath: RouteNames.login,
   },
   {
     name: 'Check Upload',
     path: `${PrivateRoutes.uploadJourney}/${UploadStepNames.CheckUpload}`,
-    expectsLoginRedirect: true,
+    expectedStatuses: [302],
+    expectedRedirectPath: RouteNames.login,
   },
   {
     name: 'Send To Other Party',
     path: `${PrivateRoutes.uploadJourney}/${UploadStepNames.SendToOtherParty}`,
-    expectsLoginRedirect: true,
+    expectedStatuses: [302],
+    expectedRedirectPath: RouteNames.login,
   },
   {
     name: 'Case Submission (Confirmation)',
     path: `${PrivateRoutes.uploadJourney}/${UploadStepNames.Confirmation}`,
-    expectsLoginRedirect: true,
+    expectedStatuses: [302],
+    expectedRedirectPath: RouteNames.login,
   },
   ...(process.env.NODE_ENV === 'production'
     ? []
@@ -102,7 +112,7 @@ function assertSuccessfulPageResponse(response: AxiosResponse, page: SmokePage):
   const expectedStatuses = page.expectedStatuses ?? [200, 302];
   expect(expectedStatuses).toContain(response.status);
 
-  if (response.status === 302) {
+  if (response.status === 302 || response.status === 303) {
     const location = response.headers.location;
     expect(location).toBeDefined();
 

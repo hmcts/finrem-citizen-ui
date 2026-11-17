@@ -34,14 +34,30 @@ async function fetchAutocompleteResults(apiUrl: string, query: string): Promise<
   return response.json();
 }
 
+function normalizeQuery(query: string): string {
+  return query.trim().toLowerCase();
+}
+
 function createSourceFunction(
   apiUrl: string,
-  resultsMap: Map<string, AutocompleteResult>
+  resultsMap: Map<string, AutocompleteResult>,
+  queryCache: Map<string, AutocompleteResult[]>
 ): (query: string, populateResults: (results: string[]) => void) => Promise<void> {
   return async (query: string, populateResults: (results: string[]) => void) => {
+    const normalizedQuery = normalizeQuery(query);
+    const shouldUseQueryCache = normalizedQuery === '';
+
     try {
-      const results = await fetchAutocompleteResults(apiUrl, query);
-      
+      const cachedResults = shouldUseQueryCache
+        ? queryCache.get(normalizedQuery)
+        : undefined;
+
+      const results = cachedResults || await fetchAutocompleteResults(apiUrl, query);
+
+      if (shouldUseQueryCache && !cachedResults) {
+        queryCache.set(normalizedQuery, results);
+      }
+
       resultsMap.clear();
       results.forEach(result => {
         resultsMap.set(result.label, result);
@@ -82,12 +98,17 @@ function initAutocomplete(): void {
 
     const config = getAutocompleteConfig(element);
     const resultsMap = new Map<string, AutocompleteResult>();
+    const queryCache = new Map<string, AutocompleteResult[]>();
+
+    document.addEventListener('document-types:changed', () => {
+      queryCache.clear();
+    });
 
     accessibleAutocomplete({
       element: container,
       id: config.inputId,
       name: config.inputName,
-      source: createSourceFunction(config.apiUrl, resultsMap),
+      source: createSourceFunction(config.apiUrl, resultsMap, queryCache),
       onConfirm: createConfirmHandler(element, config.eventName, resultsMap),
       showNoOptionsFound: true,
       showAllValues: true,
@@ -101,10 +122,6 @@ function initAutocomplete(): void {
       input.addEventListener('focus', () => {
         if (menu && menu.style.display === 'none') {
           menu.style.display = '';
-        }
-        if (input.value === '') {
-          const event = new Event('input', { bubbles: true });
-          input.dispatchEvent(event);
         }
       });
 

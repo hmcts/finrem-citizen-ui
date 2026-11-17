@@ -36,6 +36,7 @@
     "cichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:api && yarn test:coverage",
     "qacichecks": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:api && yarn test:coverage && yarn test:functional",
     "qacichecks:allBrowsers": "yarn build && yarn lint && yarn test && yarn test:routes && yarn test:api && yarn test:coverage && yarn test:functional:allBrowsers",
+    "fortifyScan": "./src/test/java/gradlew -p ./src/test/java fortifyScan",
     "prepare": "husky install"
   },
   "dependencies": {
@@ -146,10 +147,6 @@
     "js-yaml": "^4.3.2",
     "ip-address": "10.7.4",
     "follow-redirects": "^1.16.1",
-    "@azure/msal-node": "^7.1.2",
-    "@opentelemetry/sdk-trace": "3.0.0",
-    "@opentelemetry/sdk-trace-base": "npm:@opentelemetry/sdk-trace@^3.0.0",
-    "@opentelemetry/sdk-trace-node": "npm:@opentelemetry/sdk-trace@^3.0.0",
-    "@opentelemetry/sdk-trace-web": "npm:@opentelemetry/sdk-trace@^3.0.0"
+    "@opentelemetry/instrumentation-http": "0.223.2"
   }
 }

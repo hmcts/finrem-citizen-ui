@@ -4,7 +4,7 @@ import { LoggerInstance } from 'winston';
 import { CaseApiClient, getCaseApiClient } from '../../../../main/app/case/case-api-client';
 import { CaseAssignedUserRole } from '../../../../main/app/case/case-roles';
 import { EVENT_TYPE } from '../../../../main/app/case/case-type';
-import { CaseRole, YesOrNo } from '../../../../main/app/case/definition';
+import { CaseRole, State, YesOrNo } from '../../../../main/app/case/definition';
 import { UserDetails } from '../../../../main/app/controller/AppRequest';
 import { UrlEndPoints } from '../../../../main/constants';
 
@@ -43,9 +43,10 @@ describe('CaseApi', () => {
     api = new CaseApiClient(mockedAxios, mockLogger);
   });
 
-  test('Should return case for caseId passed', async () => {
+  test('Should return case and case state for caseId passed', async () => {
     mockedAxios.get.mockResolvedValue({
       data: {
+        state: State.CLOSE,
         data: {
           id: '1234',
           accessCode: 'NFSDCLV3',
@@ -54,7 +55,7 @@ describe('CaseApi', () => {
     });
 
     const userCase = await api.getCaseById('1234');
-    expect(userCase).toStrictEqual({ id: '1234', accessCode: 'NFSDCLV3' });
+    expect(userCase).toStrictEqual({ id: '1234', accessCode: 'NFSDCLV3', state: State.CLOSE });
   });
 
   test('Should throw error when case could not be fetched', async () => {

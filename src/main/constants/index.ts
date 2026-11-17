@@ -10,6 +10,7 @@ export const PublicRoutes = {
   info: '/info',
   login: '/login',
   logout: '/logout',
+  timedOut: '/timed-out',
 } as const;
 
 export const TestRoutes = {
@@ -45,6 +46,7 @@ export const ViewNames = {
   TaskListUploadDashboard: 'task-list-upload-dashboard',
   GeneralUploadBeforeYouStart: 'generalUpload/before-you-start',
   GeneralUploadConfidentiality: 'generalUpload/confidentiality',
+  TimedOut: 'timed-out',
 };
 
 export const UploadStepNames = {

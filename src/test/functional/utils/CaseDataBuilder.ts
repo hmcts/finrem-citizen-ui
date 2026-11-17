@@ -29,15 +29,6 @@ export class CaseDataBuilder {
   }
 
   /**
-   * Use solicitor credentials
-   */
-  withSolicitorUser(): this {
-    this.username = config.solicitor.username;
-    this.password = config.solicitor.password;
-    return this;
-  }
-
-  /**
    * Use citizen credentials
    */
   withCitizenUser(): this {
@@ -84,7 +75,7 @@ export class CaseDataBuilder {
    */
   async create(): Promise<string> {
     if (!this.username || !this.password) {
-      throw new Error('User credentials not set. Call withCaseWorkerUser(), withSolicitorUser(), or withUser() first.');
+      throw new Error('User credentials not set. Call withCaseWorkerUser(), or withUser() first.');
     }
 
     if (!this.payloadPath) {

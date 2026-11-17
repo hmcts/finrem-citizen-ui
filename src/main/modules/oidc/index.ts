@@ -7,9 +7,9 @@ import { UserDetails } from '../../app/controller/AppRequest';
 import { RouteNames } from '../../constants';
 import { resetCaseContext } from '../../functions/util/homePageUtil';
 import { isProfessionalUser } from '../../functions/util/roleGuardUtil';
+import { clearRecentSessionCookie, setRecentSessionCookie } from '../session-timeout/recent-session-cookie';
 import type { OIDCConfig } from './config.interface';
 import { OIDCAuthenticationError, OIDCCallbackError } from './errors';
-
 
 const getOidcClient = async (): Promise<typeof OidcClientType> => {
   if (process.env.JEST_WORKER_ID !== undefined || process.env.NODE_ENV === 'test') {
@@ -18,11 +18,12 @@ const getOidcClient = async (): Promise<typeof OidcClientType> => {
   return new Function("return import('openid-client')")();
 };
 
+const OIDC_CALLBACK_FAILED_LOG_MESSAGE = '[oidc] OIDC callback error';
+
 export class OIDCModule {
   private clientConfig: OidcClientType.Configuration | undefined;
   private readonly oidcConfig: OIDCConfig = config.get<OIDCConfig>('oidc');
-  private readonly professionalUserRedirectUrl: string =
-    config.get<string>('services.manageCase.url');
+  private readonly professionalUserRedirectUrl: string = config.get<string>('services.manageCase.url');
   private readonly logger = Logger.getLogger('oidc');
 
   constructor() {
@@ -92,12 +93,11 @@ export class OIDCModule {
       const requestPath = typeof req.path === 'string' ? req.path : undefined;
       const requestMethod = req.method ?? 'GET';
       const needsOidcClient =
-        requestMethod === 'GET' && (
-          requestPath === undefined ||
+        requestMethod === 'GET' &&
+        (requestPath === undefined ||
           requestPath === RouteNames.login ||
           requestPath === RouteNames.callbackUrl ||
-          requestPath === RouteNames.logout
-        );
+          requestPath === RouteNames.logout);
 
       if (!needsOidcClient || this.clientConfig) {
         return next();
@@ -116,6 +116,8 @@ export class OIDCModule {
     });
 
     app.get(RouteNames.logout, async (req: Request, res: Response): Promise<void> => {
+      clearRecentSessionCookie(res);
+
       const oidcClient = await getOidcClient();
 
       if (!this.clientConfig) {
@@ -223,7 +225,7 @@ export class OIDCModule {
 
         if (!id_token || !claims) {
           const err = new OIDCCallbackError('No ID token received from IDAM');
-          this.logger.error('OIDC callback error:', err);
+          this.logger.error(OIDC_CALLBACK_FAILED_LOG_MESSAGE, err);
           return next(err);
         }
 
@@ -242,6 +244,8 @@ export class OIDCModule {
         if (isProfessionalUser(req.session.user.roles)) {
           const redirectUrl = this.professionalUserRedirectUrl;
 
+          clearRecentSessionCookie(res);
+
           req.session.destroy((err: unknown) => {
             if (err) {
               this.logger.error('Session destroy error for professional user redirect:', err);
@@ -255,14 +259,19 @@ export class OIDCModule {
 
         resetCaseContext(req.session);
 
-        req.session.save(() => {
+        req.session.save(error => {
+          if (error) {
+            return next(new OIDCCallbackError('Failed to save authenticated session'));
+          }
+
           delete req.session.codeVerifier;
           delete req.session.nonce;
+          setRecentSessionCookie(res);
           res.redirect(RouteNames.basePath);
         });
       } catch (err: unknown) {
-        this.logger.error('OIDC callback error:', err);
-        next(new OIDCCallbackError('Authentication callback failed'));
+        this.logger.error(OIDC_CALLBACK_FAILED_LOG_MESSAGE, err);
+        return next(new OIDCCallbackError('Authentication callback failed'));
       }
     });
   }
