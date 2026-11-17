@@ -104,6 +104,12 @@ describe('buildFeedbackSurveyUrl', () => {
     expect(res.locals.pagePath).toBe('/test-page');
     expect(res.locals.appRoutes).toBeDefined();
     expect(res.locals.appRoutes.cookies).toBe('/cookies');
+    expect(res.locals.appRoutes.accessibilityStatement).toBe('/accessibility-statement');
+    expect(res.locals.common).toEqual({
+      footerLinks: {
+        accessibilityStatement: 'Accessibility statement',
+      },
+    });
     expect(res.locals.dynatrace).toEqual({
       enabled: false,
       url: '',
@@ -177,6 +183,26 @@ describe('buildFeedbackSurveyUrl', () => {
       nonce: 'nonce123',
     });
 
+  });
+
+  it('sets welsh common footer link text when session language is cy', () => {
+    const req = makeReq({
+      path: '/test-page',
+      session: { lang: 'cy' } as Request['session'],
+    });
+    const res = { locals: { nonce: 'nonce123' } } as unknown as Response;
+    let nextCalled = false;
+
+    addNunjucksLocals(req, res, (() => {
+      nextCalled = true;
+    }) as NextFunction);
+
+    expect(res.locals.common).toEqual({
+      footerLinks: {
+        accessibilityStatement: 'Datganiad Hygyrchedd',
+      },
+    });
+    expect(nextCalled).toBe(true);
   });
 
   it('renders the survey link in the shared beta banner', () => {
