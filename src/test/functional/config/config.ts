@@ -41,37 +41,6 @@ const serviceEnv = getServiceEnv();
 const runningEnv = (process.env.RUNNING_ENV || '').trim().toLowerCase();
 const isPerftestTarget = runningEnv === 'perftest' || serviceEnv === 'perftest';
 
-const pickSolicitorUsername = (): string => {
-  // Perftest frequently relies on legacy solicitor credentials rather than Playwright mailinator users.
-  if (isPerftestTarget) {
-    return process.env.PLAYWRIGHT_SOLICITOR_USERNAME
-      || process.env.USERNAME_SOLICITOR
-      || process.env.PRD_SERVICE_USER_USERNAME
-      || process.env.IDAM_SYSTEM_USERNAME
-      || '';
-  }
-
-  return process.env.PLAYWRIGHT_SOLICITOR_USERNAME
-    || process.env.USERNAME_SOLICITOR
-    || process.env.PRD_SERVICE_USER_USERNAME
-    || '';
-};
-
-const pickSolicitorPassword = (): string => {
-  if (isPerftestTarget) {
-    return process.env.PLAYWRIGHT_SOLICITOR_PSWD
-      || process.env.PASSWORD_SOLICITOR
-      || process.env.PRD_SERVICE_USER_PASSWORD
-      || process.env.IDAM_SYSTEM_PASSWORD
-      || '';
-  }
-
-  return process.env.PLAYWRIGHT_SOLICITOR_PSWD
-    || process.env.PASSWORD_SOLICITOR
-    || process.env.PRD_SERVICE_USER_PASSWORD
-    || '';
-};
-
 const pickCaseworkerUsername = (): string => {
   if (isPerftestTarget) {
     return process.env.IDAM_SYSTEM_USERNAME
@@ -146,12 +115,6 @@ const config = {
   caseworker: {
     username: pickCaseworkerUsername(),
     password: pickCaseworkerPassword(),
-  },
-
-  // Solicitor credentials
-  solicitor: {
-    username: pickSolicitorUsername(),
-    password: pickSolicitorPassword(),
   },
 
   // System user credentials (fallback for cross-role CCD visibility in CI)
