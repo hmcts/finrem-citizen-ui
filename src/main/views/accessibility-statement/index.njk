@@ -1,0 +1,76 @@
+{% extends "template.njk" %}
+
+{% set pageTitle = title %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">{{ title }}</h1>
+
+      <p class="govuk-body">{{ appliesTo }}</p>
+      <p class="govuk-body">{{ intro }}</p>
+
+      <ul class="govuk-list govuk-list--bullet">
+        {% for item in capabilityItems %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+
+      <p class="govuk-body">{{ simplicityStatement }}</p>
+      <p class="govuk-body">
+        <a class="govuk-link" href="{{ abilityNetLinkUrl }}" target="_blank" rel="noopener noreferrer">
+          {{ abilityNetLinkText }} {{ opensInNewTabText }}
+        </a>{{ abilityNetSuffix }}
+      </p>
+
+      <h2 class="govuk-heading-l">{{ howAccessibleHeading }}</h2>
+      <p class="govuk-body">{{ knownIssuesIntro }}</p>
+      <ul class="govuk-list govuk-list--bullet">
+        {% for issue in knownIssues %}
+          <li>{{ issue }}</li>
+        {% endfor %}
+      </ul>
+
+      <h2 class="govuk-heading-l">{{ feedbackHeading }}</h2>
+      <p class="govuk-body">{{ feedbackIntro }}</p>
+      <ul class="govuk-list govuk-list--bullet">
+        {% for item in feedbackItems %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+      <p class="govuk-body">{{ responseTime }}</p>
+
+      <h2 class="govuk-heading-l">{{ enforcementHeading }}</h2>
+      <p class="govuk-body">{{ enforcementParagraph1 }}</p>
+      <p class="govuk-body">
+        {{ enforcementParagraph2Prefix }}
+        <a class="govuk-link" href="{{ enforcementLinkUrl }}" target="_blank" rel="noopener noreferrer">
+          {{ enforcementLinkText }} {{ opensInNewTabText }}
+        </a>.
+      </p>
+
+      <h2 class="govuk-heading-l">{{ technicalInformationHeading }}</h2>
+      <p class="govuk-body">{{ accessibilityCommitment }}</p>
+
+      <h3 class="govuk-heading-m">{{ complianceHeading }}</h3>
+      <p class="govuk-body">{{ complianceText }}</p>
+
+      <h3 class="govuk-heading-m">{{ nonAccessibleHeading }}</h3>
+      <p class="govuk-body">{{ nonAccessibleReason }}</p>
+
+      <h4 class="govuk-heading-s">{{ nonComplianceHeading }}</h4>
+      <ul class="govuk-list govuk-list--bullet">
+        {% for item in nonComplianceItems %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+
+      <h3 class="govuk-heading-m">{{ improvementHeading }}</h3>
+      <p class="govuk-body">{{ improvementText }}</p>
+
+      <h3 class="govuk-heading-m">{{ preparationHeading }}</h3>
+      <p class="govuk-body">{{ preparedAndReviewedOn }}</p>
+      <p class="govuk-body">{{ testedOn }}</p>
+    </div>
+  </div>
+{% endblock %}

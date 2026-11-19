@@ -105,4 +105,12 @@ describe('Public Endpoints (No Authentication Required)', () => {
     expect(res.headers['content-type']).toMatch(/text\/html/i);
     expect(res.text).toContain('Cookies on Dividing your money and property');
   });
+
+  test('GET /accessibility-statement returns accessibility statement page', async () => {
+    const res = await request(app).get(PublicRoutes.accessibilityStatement);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/text\/html/i);
+    expect(res.text).toContain('Accessibility statement');
+  });
 });
