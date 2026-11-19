@@ -5,6 +5,7 @@ import request from 'supertest';
 import { triggerSystemEvent } from '../../../main/app/case/case-api';
 import { EVENT_TYPE } from '../../../main/app/case/case-type';
 import {
+  CaseRole,
   FinremCaseData,
   YesOrNo,
 } from '../../../main/app/case/definition';
@@ -169,9 +170,19 @@ describe('POST /enter-access-code route handler', () => {
     expect(usedAt).toBeUndefined();
   });
 
-  it('redirects to dashboard on successful applicant access code submission', async () => {
+  it('redirects to dashboard on successful applicant access code submission and updates session user representation', async () => {
     const caseData = buildMockCaseData();
-    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+    const user: { id: string; email: string; caseRole?: CaseRole; isRepresented?: boolean } = {
+      id: 'user-1',
+      email: 'user-1@example.com',
+    };
+
+    jest.mocked(triggerSystemEvent).mockResolvedValueOnce({
+      ...buildMockCaseData(),
+      applicantRepresented: YesOrNo.YES,
+    } as unknown as FinremCaseData);
+
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData, user }))
       .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
 
     expect(res.status).toBe(302);
@@ -195,15 +206,28 @@ describe('POST /enter-access-code route handler', () => {
     );
     expect(triggerSystemEvent).toHaveBeenCalledTimes(1);
 
+    expect(user.caseRole).toBe(CaseRole.APPLICANT);
+    expect(user.isRepresented).toBe(true);
+
     const payload = jest.mocked(triggerSystemEvent).mock.calls[0][1] as {
       respondentAccessCodes?: unknown;
     };
     expect(payload.respondentAccessCodes).toBeUndefined();
   });
 
-  it('redirects to dashboard on successful respondent access code submission', async () => {
+  it('redirects to dashboard on successful respondent access code submission and updates session user representation', async () => {
     const caseData = buildMockCaseData();
-    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
+    const user: { id: string; email: string; caseRole?: CaseRole; isRepresented?: boolean } = {
+      id: 'user-1',
+      email: 'user-1@example.com',
+    };
+
+    jest.mocked(triggerSystemEvent).mockResolvedValueOnce({
+      ...buildMockCaseData(),
+      respondentRepresented: YesOrNo.NO,
+    } as unknown as FinremCaseData);
+
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData, user }))
       .post('/enter-access-code').send({ accessCode: 'RSPCODE1' });
 
     expect(res.status).toBe(302);
@@ -227,10 +251,24 @@ describe('POST /enter-access-code route handler', () => {
     );
     expect(triggerSystemEvent).toHaveBeenCalledTimes(1);
 
+    expect(user.caseRole).toBe(CaseRole.RESPONDENT);
+    expect(user.isRepresented).toBe(false);
+
     const payload = jest.mocked(triggerSystemEvent).mock.calls[0][1] as {
       applicantAccessCodes?: unknown;
     };
     expect(payload.applicantAccessCodes).toBeUndefined();
+  });
+
+  it('redirects to dashboard when session user is missing and does not throw (handled by hydration middleware)', async () => {
+    const caseData = buildMockCaseData();
+
+    const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData, user: undefined }))
+      .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
+
+    expect(res.status).toBe(302);
+    expect(res.header.location).toBe('/dashboard');
+    expect(triggerSystemEvent).toHaveBeenCalledTimes(1);
   });
 
   it('renders error view when triggerSystemEvent throws', async () => {
