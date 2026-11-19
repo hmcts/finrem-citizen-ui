@@ -1,7 +1,12 @@
 import { Application, Request, Response } from 'express';
 
 import { AccessCodeCollection, FinremCaseData, YesOrNo } from '../../app/case/definition';
-import { RouteNames, TestRoutes } from '../../constants';
+import { RouteNames, TestRoutes,TestSupportHeaders } from '../../constants';
+import {
+  areTestSupportRoutesEnabled,
+  assertTestSupportRoutesStartupGuard,
+  isValidTestSupportSecretHeader,
+} from '../../functions/util/test-support-route-guard';
 
 /**
  * Test-support routes — only registered when explicitly enabled.
@@ -9,11 +14,11 @@ import { RouteNames, TestRoutes } from '../../constants';
  * going through the real CCD access-code generation flow (Form C).
  */
 export default function setupTestSupportRoutes(app: Application): void {
-  const enableTestSupportRoutes = process.env.ENABLE_TEST_SUPPORT_ROUTES === 'true';
-
-  if (!enableTestSupportRoutes) {
+  if (!areTestSupportRoutesEnabled()) {
     return;
   }
+
+  assertTestSupportRoutesStartupGuard();
 
   /**
    * GET /__test/inject-case-session
@@ -27,6 +32,11 @@ export default function setupTestSupportRoutes(app: Application): void {
    * /enter-access-code so the test can proceed directly to code submission.
    */
   app.get(TestRoutes.injectCaseSession, (req: Request, res: Response) => {
+    const providedSecret = req.header(TestSupportHeaders.secret);
+    if (!isValidTestSupportSecretHeader(providedSecret)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     const { caseNumber, applicantCode, respondentCode } = req.query;
 
     if (
