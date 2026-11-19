@@ -21,11 +21,7 @@ const dataFactory = {
 };
 
 test.describe('[integration] Enter Case Number Page Verification - Validation Errors', () => {
-  test.beforeEach(async ({
-    loggedInPage: _loggedInPage,
-    enterCaseNumberPage,
-    basePage,
-  }) => {
+  test.beforeEach(async ({ loggedInPage: _loggedInPage, enterCaseNumberPage, basePage }) => {
     await enterCaseNumberPage.verifyCaseNumberPageContent();
     await basePage.verifyGlobalHeaderAndFooter();
   });
@@ -36,13 +32,19 @@ test.describe('[integration] Enter Case Number Page Verification - Validation Er
     await runA11yAudit(axeUtils);
   });
 
-  test('[integration] Error: Boundary check - 15 characters (Lower Boundary - 1) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
+  test('[integration] Error: Boundary check - 15 characters (Lower Boundary - 1) @a11y', async ({
+    enterCaseNumberPage,
+    axeUtils,
+  }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(15));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
     await runA11yAudit(axeUtils);
   });
 
-  test('[integration] Error: Boundary check - 21 characters (Upper Boundary + 1) @a11y', async ({ enterCaseNumberPage, axeUtils }) => {
+  test('[integration] Error: Boundary check - 21 characters (Upper Boundary + 1) @a11y', async ({
+    enterCaseNumberPage,
+    axeUtils,
+  }) => {
     await enterCaseNumberPage.submitCaseNumber(dataFactory.generateDigits(21));
     await enterCaseNumberPage.expectValidationError('Case number must be between 16 and 20 characters');
     await runA11yAudit(axeUtils);

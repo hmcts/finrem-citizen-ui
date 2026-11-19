@@ -65,11 +65,17 @@ withNightlyPipeline(type, product, component) {
     yarnBuilder.yarn('playwright install --with-deps chromium')
   }
 
+  enableFortifyScan()
+
   enableFullFunctionalTest(200)
 
   afterAlways('fullFunctionalTest') {
     junit testResults: 'functional-output/functional-test-result.xml', allowEmptyResults: true
     archiveArtifacts artifacts: 'functional-output/**', allowEmptyArchive: true
+  }
+
+  afterAlways('fortify-scan') {
+    archiveArtifacts artifacts: '**/Fortify Scan/**/*', allowEmptyArchive: true
   }
 
   enableSlackNotifications('#finrem-dev')
