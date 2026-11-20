@@ -18,10 +18,12 @@ import type { UserDetails } from '../controller/AppRequest';
 export class CaseDocumentManagementClient {
   client: AxiosInstance;
   BASE_URL: string = config.get(CASE_DOCUMENT_MANAGEMENT_SERVICE_URL);
+  UPLOAD_TIMEOUT_MS: number = config.get<number>('documentUpload.timeoutMs');
 
   constructor(private readonly user: UserDetails) {
     this.client = axios.create({
       baseURL: this.BASE_URL,
+      timeout: this.UPLOAD_TIMEOUT_MS,
       headers: {
         Authorization: `Bearer ${this.user.accessToken}`,
         ServiceAuthorization: getServiceAuthToken(),

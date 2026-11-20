@@ -381,6 +381,35 @@ describe('Home Routes', () => {
       expect(mockRes.redirect).toHaveBeenCalledWith('/upload/upload-documents');
     });
 
+    it('should handle CDAM timeout errors', async () => {
+      const error = Object.assign(new Error('timeout of 120000ms exceeded'), { code: 'ECONNABORTED' });
+      mockUploadDocumentToEvidenceStore.mockRejectedValueOnce(error as never);
+
+      require('../../../main/routes/generalUpload/home').default(app);
+
+      const req = {
+        file: createValidPdfFile(),
+        body: { documentType: 'form-fm1' },
+        session: {
+          save: jest.fn((cb: (err?: Error) => void) => cb()),
+        },
+      } as PartialRequestWithSession;
+      const res = {
+        redirect: jest.fn(),
+      } as Partial<Response>;
+
+      await getRegisteredHandler(mockPost, RouteNames.documentUpload)(
+        req as unknown as Request,
+        res as Response,
+        jest.fn()
+      );
+
+      expect(req.session?.uploadErrors).toEqual({
+        'form-fm1': 'The selected file could not be uploaded - try again',
+      });
+      expect(res.redirect).toHaveBeenCalledWith('/upload/upload-documents');
+    });
+
     it('should clear errors on successful upload when multiple errors exist', async () => {
       mockUploadDocumentToEvidenceStore.mockResolvedValueOnce(undefined as never);
 
