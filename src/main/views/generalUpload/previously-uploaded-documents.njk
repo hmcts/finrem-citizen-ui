@@ -27,20 +27,22 @@
         You can upload an updated version of a previously uploaded document, or any additional documentation, if you need to.
       </p>
 
-      {{ govukTable({
-        head: [
-          {
-            text: "Date added"
-          },
-          {
-            text: "Document type"
-          },
-          {
-            text: "Document name"
-          }
-        ],
-        rows: documentRows or []
-      }) }}
+      <div class="table-wrapper" tabindex="0" role="region" aria-label="Previously uploaded documents table">
+        {{ govukTable({
+          head: [
+            {
+              text: "Date added"
+            },
+            {
+              text: "Document type"
+            },
+            {
+              text: "Document name"
+            }
+          ],
+          rows: documentRows or []
+        }) }}
+      </div>
 
       <div class="govuk-button-group">
         {{ govukButton({

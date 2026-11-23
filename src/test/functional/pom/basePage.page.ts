@@ -1,5 +1,6 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+import { TestSupportHeaders } from '../../../main/constants';
 import { AttributeAssertion, expectAttributes, expectVisible } from '../utils/helpers/pomAssertions';
 
 const ROUTES = {
@@ -9,6 +10,7 @@ const ROUTES = {
 };
 
 export class BasePage {
+  readonly testSupportRouteSecret: string;
   readonly headerLogo: Locator;
   readonly footer: Locator;
   readonly betaBannerTag: Locator;
@@ -22,6 +24,7 @@ export class BasePage {
   readonly signOutBtn: Locator;
 
   constructor(readonly page: Page) {
+    this.testSupportRouteSecret = process.env.TEST_SUPPORT_ROUTE_SECRET || 'local-functional-secret';
     this.headerLogo = this.page.getByRole('img', { name: 'GOV.UK' });
     this.footer = this.page.getByRole('contentinfo');
     this.betaBannerTag = this.page.getByText('Beta', { exact: true });
@@ -100,6 +103,9 @@ export class BasePage {
       caseNumber: caseId,
       applicantCode,
       respondentCode,
+    });
+    await this.page.setExtraHTTPHeaders({
+      [TestSupportHeaders.secret]: this.testSupportRouteSecret,
     });
     await this.page.goto(`/__test/inject-case-session?${params.toString()}`);
 
