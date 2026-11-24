@@ -11,7 +11,7 @@ import {
   getLinkingEventType,
   validateAccessCodeFormat,
 } from '../../functions/util/accessCodeUtil';
-import { resolveIsUserRepresented } from '../../functions/util/homePageUtil';
+import { resolveIsUserRepresented, refreshUserNfdCaseFlag } from '../../functions/util/homePageUtil';
 import { oidcMiddleware } from '../../middleware';
 
 const { Logger } = require('@hmcts/nodejs-logging');
@@ -79,6 +79,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       if (user) {
         user.caseRole = role;
         user.isRepresented = resolveIsUserRepresented(req.session);
+        await refreshUserNfdCaseFlag(user, logger);
       }
 
       // Set case user name based on role
@@ -87,6 +88,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       } else if (role === CaseRole.RESPONDENT) {
         req.session.caseUserName = req.session.caseData.respondentFlags?.partyName || CaseUserNames.RESPONDENT;
       }
+
     } catch (error) {
       logger.error('Failed to link user to case via system event', { caseNumber, error });
       return res.render(ViewNames.Error);
