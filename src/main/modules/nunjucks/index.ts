@@ -5,10 +5,12 @@ import * as path from 'path';
 
 import { RouteNames } from '../../constants';
 import { COOKIE_PREFERENCES_COOKIE_NAME } from '../../constants/cookies';
+import { generateCommonContent } from '../../content/common/content';
 import { offsetDate } from '../../functions/task-list/calculate-offset-date';
 import { taskListFormItems } from '../../functions/task-list/task-list-form-items';
 import { taskListWarningMessage } from '../../functions/task-list/task-list-warning-message';
 import { taskStatus } from '../../functions/task-list/task-status';
+import { resolveLanguage } from '../i18n';
 
 const FEEDBACK_SURVEY_BASE_URL = 'https://www.smartsurvey.co.uk/s/CFR_feedback/?pageurl=';
 
@@ -50,6 +52,8 @@ export const buildFeedbackSurveyUrl = (req: express.Request): string =>
 export const addNunjucksLocals: express.RequestHandler = (req, res, next) => {
   const dynatraceEnabled = isDynatraceEnabled();
   const googleAnalyticsEnabled = isGoogleAnalyticsEnabled();
+  const language = resolveLanguage(req);
+  const commonContent = generateCommonContent(language);
 
   res.locals.pagePath = req.path;
   res.locals.feedbackSurveyUrl = buildFeedbackSurveyUrl(req);
@@ -63,11 +67,13 @@ export const addNunjucksLocals: express.RequestHandler = (req, res, next) => {
   };
   res.locals.appRoutes = {
     cookies: RouteNames.cookies,
+    accessibilityStatement: RouteNames.accessibilityStatement,
   };
   res.locals.dynatrace = {
     enabled: dynatraceEnabled,
     url: dynatraceEnabled ? config.get<string>('dynatrace.url') : '',
   };
+  res.locals.common = commonContent;
   next();
 };
 

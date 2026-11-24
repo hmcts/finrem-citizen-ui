@@ -1,5 +1,6 @@
 import type { CaseRole, FinremCaseData, UserDocumentSelection } from '../app/case/definition';
 import { UserDetails } from '../app/controller/AppRequest';
+import { SupportedLanguages } from '../modules/i18n';
 
 export {};
 
@@ -21,5 +22,6 @@ declare module 'express-session' {
     documents?: UserDocumentSelection;
     uploadErrors?: Record<string, string>;
     preservedContactEmail?: string;
+    lang?: SupportedLanguages;
   }
 }

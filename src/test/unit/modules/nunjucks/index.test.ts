@@ -104,6 +104,12 @@ describe('buildFeedbackSurveyUrl', () => {
     expect(res.locals.pagePath).toBe('/test-page');
     expect(res.locals.appRoutes).toBeDefined();
     expect(res.locals.appRoutes.cookies).toBe('/cookies');
+    expect(res.locals.appRoutes.accessibilityStatement).toBe('/accessibility-statement');
+    expect(res.locals.common).toEqual({
+      footerLinks: {
+        accessibilityStatement: 'Accessibility statement',
+      },
+    });
     expect(res.locals.dynatrace).toEqual({
       enabled: false,
       url: '',
