@@ -62,7 +62,7 @@ function createSourceFunction(
       results.forEach(result => {
         resultsMap.set(result.label, result);
       });
-      
+
       populateResults(results.map(r => r.label));
     } catch {
       populateResults([]);
@@ -85,6 +85,23 @@ function createConfirmHandler(
       element.dispatchEvent(customEvent);
     }
   };
+}
+
+function preserveInputDescriptions(input: HTMLInputElement, descriptionIds: string): void {
+  const updateDescription = () => {
+    const current = input.getAttribute('aria-describedby');
+    const ids = new Set(`${descriptionIds} ${current ?? ''}`.trim().split(/\s+/));
+    const description = [...ids].join(' ');
+
+    if (description !== current) {
+      input.setAttribute('aria-describedby', description);
+    }
+  };
+
+  updateDescription();
+
+  const observer = new MutationObserver(updateDescription);
+  observer.observe(input, { attributes: true, attributeFilter: ['aria-describedby'] });
 }
 
 function initAutocomplete(): void {
@@ -117,8 +134,13 @@ function initAutocomplete(): void {
 
     const input = container.querySelector(`#${config.inputId}`) as HTMLInputElement;
     const menu = container.querySelector(`#${config.inputId}__listbox`) as HTMLElement;
-    
+
     if (input) {
+      const descriptionIds = element.getAttribute('data-describedby');
+      if (descriptionIds) {
+        preserveInputDescriptions(input, descriptionIds);
+      }
+
       input.addEventListener('focus', () => {
         if (menu && menu.style.display === 'none') {
           menu.style.display = '';

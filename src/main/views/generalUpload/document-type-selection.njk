@@ -20,7 +20,7 @@
           titleText: "There is a problem",
           errorList: [
             {
-              text: "You must select what you want to upload",
+              text: errors.documents,
               href: "#document-type"
             }
           ]
@@ -45,14 +45,9 @@
           label="What do you want to upload?",
           apiUrl="/autocomplete",
           eventName="document:selected",
-          labelClass="govuk-label--m"
+          labelClass="govuk-label--m",
+          errorMessage=errors.documents
         ) }}
-
-        {% if errors.documents %}
-          <span class="govuk-error-message">
-            <span class="govuk-visually-hidden">Error:</span> {{ errors.documents }}
-          </span>
-        {% endif %}
 
         <button type="button" class="govuk-button govuk-button--secondary" data-module="govuk-button" data-add-document-type>
           Add document

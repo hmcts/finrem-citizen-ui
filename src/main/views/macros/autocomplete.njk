@@ -1,19 +1,32 @@
-{% macro autocomplete(id, name, label, apiUrl="/autocomplete", eventName="autocomplete:selected", hint="", labelClass="") %}
-<div class="govuk-form-group">
-  <label class="govuk-label {{ labelClass }}" for="{{ id }}">{{ label }}</label>
-  {% if hint %}
-  <div id="{{ id }}-hint" class="govuk-hint">{{ hint }}</div>
+{% from "govuk/components/error-message/macro.njk" import govukErrorMessage %}
+
+{% macro autocomplete(id, name, label, apiUrl="/autocomplete", eventName="autocomplete:selected", hint="", labelClass="", errorMessage="") %}
+  {% set describedBy = id + "-hint" if hint else "" %}
+  {% if errorMessage %}
+    {% set describedBy = (describedBy + " " + id + "-error") | trim %}
   {% endif %}
-  <div 
-    class="finrem-autocomplete" 
-    data-autocomplete 
-    data-url="{{ apiUrl }}" 
-    data-event="{{ eventName }}"
-    data-input-id="{{ id }}"
-    data-input-name="{{ name }}"
-    {% if hint %}aria-describedby="{{ id }}-hint"{% endif %}
-  >
-    <div id="{{ id }}-container"></div>
+
+  <div class="govuk-form-group{% if errorMessage %} govuk-form-group--error{% endif %}">
+    <label class="govuk-label {{ labelClass }}" for="{{ id }}">{{ label }}</label>
+
+    {% if hint %}
+      <div id="{{ id }}-hint" class="govuk-hint">{{ hint }}</div>
+    {% endif %}
+
+    {% if errorMessage %}
+      {{ govukErrorMessage({ id: id + "-error", text: errorMessage }) }}
+    {% endif %}
+
+    <div
+      class="finrem-autocomplete"
+      data-autocomplete
+      data-url="{{ apiUrl }}"
+      data-event="{{ eventName }}"
+      data-input-id="{{ id }}"
+      data-input-name="{{ name }}"
+      {% if describedBy %}data-describedby="{{ describedBy }}"{% endif %}
+    >
+      <div id="{{ id }}-container"></div>
+    </div>
   </div>
-</div>
 {% endmacro %}

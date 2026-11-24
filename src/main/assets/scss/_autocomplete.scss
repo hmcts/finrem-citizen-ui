@@ -16,3 +16,7 @@
 .autocomplete__dropdown-arrow-down {
   display: none;
 }
+
+.govuk-form-group--error .autocomplete__input {
+  @extend .govuk-input--error;
+}
