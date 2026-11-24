@@ -15,7 +15,13 @@ import {
 
 jest.mock('axios');
 jest.mock('config', () => ({
-  get: jest.fn().mockReturnValue('http://cdam'),
+  get: jest.fn().mockImplementation((key: string) => {
+    if (key === 'documentUpload.timeoutMs') {
+      return 120000;
+    }
+
+    return 'http://cdam';
+  }),
 }));
 jest.mock('../../../../main/app/auth/service/get-service-auth-token', () => ({
   getServiceAuthToken: jest.fn().mockReturnValue('service-token'),
@@ -49,6 +55,13 @@ describe('CaseDocumentManagementClient', () => {
     (axios.create as jest.Mock).mockReturnValue(mockAxios);
 
     client = new CaseDocumentManagementClient(userDetails);
+  });
+
+  test('configures axios timeout for CDAM client', () => {
+    expect(axios.create).toHaveBeenCalledWith(expect.objectContaining({
+      baseURL: 'http://cdam',
+      timeout: 120000,
+    }));
   });
 
   test('posts documents and returns created documents', async () => {
