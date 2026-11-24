@@ -1,5 +1,6 @@
 
 export const PublicRoutes = {
+  accessibilityStatement: '/accessibility-statement',
   basePath: '/',
   callbackUrl: '/oauth2/callback',
   csrfError: '/csrf-error',
@@ -15,6 +16,10 @@ export const PublicRoutes = {
 
 export const TestRoutes = {
   injectCaseSession: '/__test/inject-case-session',
+} as const;
+
+export const TestSupportHeaders = {
+  secret: 'x-test-support-secret',
 } as const;
 
 export const PrivateRoutes = {
@@ -37,6 +42,7 @@ export const RouteNames = {
 } as const;
 
 export const ViewNames = {
+  AccessibilityStatement: 'accessibility-statement/index',
   Cookies: 'cookies',
   Dashboard: 'dashboard',
   EnterCaseNumber: 'enter-case-number',
