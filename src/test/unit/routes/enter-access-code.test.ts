@@ -9,7 +9,7 @@ import {
   FinremCaseData,
   YesOrNo,
 } from '../../../main/app/case/definition';
-import { refreshUserNfdCaseFlag } from '../../../main/functions/util/homePageUtil';
+import * as homePageUtil from '../../../main/functions/util/homePageUtil';
 import setupEnterAccessCodeRoute from '../../../main/routes/generalUpload/enter-access-code';
 
 jest.mock('../../../main/middleware', () => ({
@@ -19,10 +19,8 @@ jest.mock('../../../main/middleware', () => ({
 jest.mock('../../../main/app/case/case-api', () => ({
   triggerSystemEvent: jest.fn(),
 }));
-
-jest.mock('../../../main/functions/util/homePageUtil', () => ({
-  refreshUserNfdCaseFlag: jest.fn(),
-}));
+  
+const refreshUserNfdCaseFlagSpy = jest.spyOn(homePageUtil, 'refreshUserNfdCaseFlag');
 
 const buildMockCaseData = (
   applicantCode = 'APPCODE1',
@@ -94,7 +92,7 @@ describe('POST /enter-access-code route handler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.mocked(triggerSystemEvent).mockResolvedValue(buildMockCaseData());
-    jest.mocked(refreshUserNfdCaseFlag).mockResolvedValue(undefined);
+    refreshUserNfdCaseFlagSpy.mockResolvedValue(undefined);
   });
 
   it('redirects to enter-case-number when no caseNumber in session', async () => {
@@ -109,7 +107,7 @@ describe('POST /enter-access-code route handler', () => {
     expect(res.status).toBe(200);
     expect(res.body.locals.errors.accessCode).toBe('Enter your access code');
     expect(triggerSystemEvent).not.toHaveBeenCalled();
-    expect(refreshUserNfdCaseFlag).not.toHaveBeenCalled();
+    expect(refreshUserNfdCaseFlagSpy).not.toHaveBeenCalled();
   });
 
   it('renders with validation errors for wrong-length access code', async () => {
@@ -118,7 +116,7 @@ describe('POST /enter-access-code route handler', () => {
     expect(res.status).toBe(200);
     expect(res.body.locals.errors.accessCode).toBe('Access code must be 8 characters');
     expect(triggerSystemEvent).not.toHaveBeenCalled();
-    expect(refreshUserNfdCaseFlag).not.toHaveBeenCalled();
+    expect(refreshUserNfdCaseFlagSpy).not.toHaveBeenCalled();
   });
 
   it('redirects to enter-case-number when caseData missing from session', async () => {
@@ -127,7 +125,7 @@ describe('POST /enter-access-code route handler', () => {
     expect(res.status).toBe(302);
     expect(res.header.location).toBe('/enter-case-number');
     expect(triggerSystemEvent).not.toHaveBeenCalled();
-    expect(refreshUserNfdCaseFlag).not.toHaveBeenCalled();
+    expect(refreshUserNfdCaseFlagSpy).not.toHaveBeenCalled();
   });
 
   it('renders error when access code does not match case data', async () => {
@@ -137,7 +135,7 @@ describe('POST /enter-access-code route handler', () => {
     expect(res.status).toBe(200);
     expect(res.body.locals.errors.accessCode).toBe('Access code does not match case number');
     expect(triggerSystemEvent).not.toHaveBeenCalled();
-    expect(refreshUserNfdCaseFlag).not.toHaveBeenCalled();
+    expect(refreshUserNfdCaseFlagSpy).not.toHaveBeenCalled();
   });
 
   it('renders error when access code has already been used', async () => {
@@ -151,7 +149,7 @@ describe('POST /enter-access-code route handler', () => {
     );
     expect(res.body.locals.accessCode).toBe('APPCODE1');
     expect(triggerSystemEvent).not.toHaveBeenCalled();
-    expect(refreshUserNfdCaseFlag).not.toHaveBeenCalled();
+    expect(refreshUserNfdCaseFlagSpy).not.toHaveBeenCalled();
   });
 
   it('calls triggerSystemEvent with hyphen-stripped case id', async () => {
@@ -166,7 +164,7 @@ describe('POST /enter-access-code route handler', () => {
       EVENT_TYPE.LINK_APPLICANT_TO_CASE,
       expect.any(Object)
     );
-    expect(refreshUserNfdCaseFlag).toHaveBeenCalledTimes(1);
+    expect(refreshUserNfdCaseFlagSpy).toHaveBeenCalledTimes(1);
   });
 
   it('does not set usedAt timestamp in triggerSystemEvent payload', async () => {
@@ -226,7 +224,7 @@ describe('POST /enter-access-code route handler', () => {
     };
     expect(payload.respondentAccessCodes).toBeUndefined();
 
-    expect(refreshUserNfdCaseFlag).toHaveBeenCalledWith(
+    expect(refreshUserNfdCaseFlagSpy).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'user-1', email: 'user-1@example.com' }),
       expect.any(Object)
     );
@@ -276,7 +274,7 @@ describe('POST /enter-access-code route handler', () => {
     };
     expect(payload.applicantAccessCodes).toBeUndefined();
 
-    expect(refreshUserNfdCaseFlag).toHaveBeenCalledWith(
+    expect(refreshUserNfdCaseFlagSpy).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'user-1', email: 'user-1@example.com' }),
       expect.any(Object)
     );
@@ -300,11 +298,11 @@ describe('POST /enter-access-code route handler', () => {
       .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
     expect(res.status).toBe(200);
     expect(res.body.view).toBe('error');
-    expect(refreshUserNfdCaseFlag).not.toHaveBeenCalled();
+    expect(refreshUserNfdCaseFlagSpy).not.toHaveBeenCalled();
   });
 
   it('renders error view when refreshUserNfdCaseFlag throws', async () => {
-    jest.mocked(refreshUserNfdCaseFlag).mockRejectedValue(new Error('NFD check failed'));
+    refreshUserNfdCaseFlagSpy.mockRejectedValue(new Error('NFD check failed'));
     const caseData = buildMockCaseData();
     const res = await request(buildTestApp({ caseNumber: '1234567890123456', caseData }))
       .post('/enter-access-code').send({ accessCode: 'APPCODE1' });
