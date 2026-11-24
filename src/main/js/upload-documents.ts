@@ -24,7 +24,7 @@ function isValidFileExtension(filename: string): boolean {
 function showErrorSummary(documentType: string, inputId: string, errorMessage: string): void {
   // Remove any existing error summary
   document.querySelector('[data-client-error-summary]')?.remove();
-  
+
   // Create error summary box
   const errorSummary = document.createElement('div');
   errorSummary.className = 'govuk-error-summary';
@@ -32,7 +32,7 @@ function showErrorSummary(documentType: string, inputId: string, errorMessage: s
   errorSummary.setAttribute('role', 'alert');
   errorSummary.setAttribute('aria-labelledby', 'error-summary-title');
   errorSummary.setAttribute('tabindex', '-1');
-  
+
   errorSummary.innerHTML = `
     <h2 class="govuk-error-summary__title" id="error-summary-title">
       There is a problem
@@ -45,7 +45,7 @@ function showErrorSummary(documentType: string, inputId: string, errorMessage: s
       </ul>
     </div>
   `;
-  
+
   // Insert at the top of the main content area (before the h1)
   const mainHeading = document.querySelector('h1.govuk-heading-l');
   if (mainHeading) {
@@ -61,22 +61,22 @@ function clearErrorSummary(): void {
 function showClientError(form: HTMLFormElement, input: HTMLInputElement, errorMessage: string): void {
   const documentType = form.dataset.uploadForm;
   const inputId = input.id;
-  
+
   // Remove any existing client-side error
   form.querySelector('[data-client-error]')?.remove();
-  
+
   // Show error summary at top
   showErrorSummary(documentType || '', inputId, errorMessage);
-  
+
   // Create GOV.UK-styled inline error message
   const errorEl = document.createElement('p');
   errorEl.className = 'govuk-error-message';
   errorEl.setAttribute('data-client-error', documentType || '');
   errorEl.innerHTML = `<span class="govuk-visually-hidden">Error:</span> ${errorMessage}`;
-  
+
   // Insert error before the file input
   input.before(errorEl);
-  
+
   // Add error styling to form group and input
   const formGroup = input.closest('.govuk-form-group');
   formGroup?.classList.add('govuk-form-group--error');
@@ -86,13 +86,32 @@ function showClientError(form: HTMLFormElement, input: HTMLInputElement, errorMe
 function clearClientError(form: HTMLFormElement, input: HTMLInputElement): void {
   form.querySelector('[data-client-error]')?.remove();
   clearErrorSummary();
-  
+
   const formGroup = input.closest('.govuk-form-group');
   formGroup?.classList.remove('govuk-form-group--error');
   input.classList.remove('govuk-file-upload--error');
 }
 
+function restoreUploadScroll(): void {
+  const saved = sessionStorage.getItem('uploadScroll');
+  if (!saved) {
+    return;
+  }
+  sessionStorage.removeItem('uploadScroll');
+
+  if (document.querySelector('.govuk-error-summary')) {
+    return;
+  }
+
+  const { path, y } = JSON.parse(saved);
+  if (path === window.location.pathname) {
+    window.scrollTo(0, y);
+  }
+}
+
 export function initUploadValidation(): void {
+  restoreUploadScroll();
+
   document.querySelectorAll<HTMLFormElement>('[data-upload-form]').forEach(form => {
     const input = form.querySelector<HTMLInputElement>('input[type="file"]');
     if (!input) {
@@ -102,12 +121,12 @@ export function initUploadValidation(): void {
     // Validate on file selection
     input.addEventListener('change', () => {
       const file = input.files?.[0];
-      
+
       if (!file) {
         clearClientError(form, input);
         return;
       }
-      
+
       // Check file type first
       if (!isValidFileExtension(file.name)) {
         logger.warn(`Invalid file type: ${file.name}`);
@@ -115,7 +134,7 @@ export function initUploadValidation(): void {
         input.value = '';
         return;
       }
-      
+
       // Then check file size
       if (file.size > FILE_UPLOAD_MAX_SIZE_BYTES) {
         const fileSizeMB = Math.round(file.size / ONE_MEGABYTE_IN_BYTES);
@@ -124,7 +143,7 @@ export function initUploadValidation(): void {
         input.value = '';
         return;
       }
-      
+
       // File is valid, clear any errors
       clearClientError(form, input);
     });
@@ -132,11 +151,11 @@ export function initUploadValidation(): void {
     // Validate on form submission as a fallback
     form.addEventListener('submit', (e: Event) => {
       const file = input.files?.[0];
-      
+
       if (!file) {
         return;
       }
-      
+
       // Check file type
       if (!isValidFileExtension(file.name)) {
         e.preventDefault();
@@ -145,7 +164,7 @@ export function initUploadValidation(): void {
         input.value = '';
         return;
       }
-      
+
       // Check file size
       if (file.size > FILE_UPLOAD_MAX_SIZE_BYTES) {
         e.preventDefault();
@@ -153,7 +172,10 @@ export function initUploadValidation(): void {
         logger.warn(`File too large on submit: ${fileSizeMB}MB (max ${FILE_UPLOAD_MAX_SIZE_LABEL})`);
         showClientError(form, input, ERROR_MESSAGE_SIZE);
         input.value = '';
+        return;
       }
+
+      sessionStorage.setItem('uploadScroll', JSON.stringify({ path: window.location.pathname, y: window.scrollY }));
     });
   });
 }
@@ -162,27 +184,27 @@ export function initUploadedDocuments(): void {
   document.querySelectorAll('[data-remove-file]').forEach(button => {
     button.addEventListener('click', async (e) => {
       e.preventDefault();
-      
+
       const fileId = button.getAttribute('data-remove-file');
       const documentType = button.getAttribute('data-document-type');
-      
+
       if (!fileId || !documentType) {
         return;
       }
-      
+
       try {
         const response = await fetch(`/documents/remove/${fileId}`, {
           method: 'DELETE',
           headers: getCsrfHeaders(),
         });
-        
+
         if (!response.ok) {
           throw new Error('Failed to remove file');
         }
-        
+
         // Remove from UI
         button.closest('li')?.remove();
-        
+
         // Show "No files uploaded yet" message if list is empty
         const container = document.querySelector(`[data-uploaded-files="${documentType}"]`);
         const filesList = container?.querySelector('ul');
