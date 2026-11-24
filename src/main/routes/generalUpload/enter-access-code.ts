@@ -11,7 +11,7 @@ import {
   getLinkingEventType,
   validateAccessCodeFormat,
 } from '../../functions/util/accessCodeUtil';
-import { refreshUserNfdCaseFlag } from '../../functions/util/homePageUtil';
+import { refreshUserNfdCaseFlag,resolveIsUserRepresented } from '../../functions/util/homePageUtil';
 import { oidcMiddleware } from '../../middleware';
 
 const { Logger } = require('@hmcts/nodejs-logging');
@@ -78,6 +78,7 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       req.session.caseRole = role;
       if (user) {
         user.caseRole = role;
+        user.isRepresented = resolveIsUserRepresented(req.session);
         await refreshUserNfdCaseFlag(user, logger);
       }
 
@@ -93,7 +94,6 @@ export default function setupEnterAccessCodeRoute(app: Application): void {
       return res.render(ViewNames.Error);
     }
 
-    // TODO: Send confirmation email if this is a new account setup (DFR-5507)
     return res.redirect(RouteNames.dashboard);
   });
 }
