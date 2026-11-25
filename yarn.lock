@@ -8618,10 +8618,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-uri@npm:3.1.8":
-  version: 3.1.8
-  resolution: "fast-uri@npm:3.1.8"
-  checksum: 10/d3dfa29fd2e5fa2371833699f3f78c975b79f65e52e0ce37604db10dffb85b5b448b5075e93453272cb95fb1c6a759495164e60649ffd69e59ec43f20d44f791
+"fast-uri@npm:4.2.4":
+  version: 4.2.4
+  resolution: "fast-uri@npm:4.2.4"
+  checksum: 10/0d3d2d467509083e1028f3007c46b9466adc2d8caa5d0dc345d9d41e5555b272a5c4d4794e43a2905ba50701f1cb1e4a1bf354ca495653f09f50b9684311f685
   languageName: node
   linkType: hard
 
