@@ -141,7 +141,7 @@ export const DOCUMENT_COMBINED_PDF_FORMATS: Record<string, string> = {
   'list-of-assets': 'SupportingFinancialDocuments',
   'loan-statement': 'SupportingFinancialDocuments',
   'car-insurance-loan-statement': 'SupportingFinancialDocuments',
-  'personal-selling-site-statements': 'SupportingFinancialDocuments',
+  'personal-selling-site-statement': 'SupportingFinancialDocuments',
   'school-fees': 'SupportingFinancialDocuments',
   'self-assessment-tax-forms': 'SupportingFinancialDocuments',
   'universal-credit-statement': 'SupportingFinancialDocuments',
