@@ -6,7 +6,7 @@ const en = {
     contactUs: 'Contact us',
   },
   contact: {
-    defaultEmail: 'HMCTSFinancialRemedy@justice.gov.uk',
+    serviceEmail: 'HMCTSFinancialRemedy@justice.gov.uk',
     phoneNumber: '0300 123 5577',
     openingHours: 'Monday to Friday, 8.30am to 5pm',
     callChargesText: 'Find out about call charges (opens in new tab)',
@@ -32,5 +32,5 @@ export function generateCommonContent(language: SupportedLanguages): typeof en {
 }
 
 export function getDefaultContactEmail(language: SupportedLanguages): string {
-  return generateCommonContent(language).contact.defaultEmail;
+  return generateCommonContent(language).contact.serviceEmail;
 }

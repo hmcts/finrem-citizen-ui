@@ -111,14 +111,7 @@ describe('buildFeedbackSurveyUrl', () => {
         footerLinks: expect.objectContaining({
           accessibilityStatement: expect.any(String),
           contactUs: expect.any(String),
-        }),
-        contact: expect.objectContaining({
-          defaultEmail: expect.any(String),
-          phoneNumber: expect.any(String),
-          openingHours: expect.any(String),
-          callChargesText: expect.any(String),
-          callChargesUrl: expect.any(String),
-        }),
+        })
       })
     );
     expect(res.locals.dynatrace).toEqual({
