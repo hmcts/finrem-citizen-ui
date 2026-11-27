@@ -113,4 +113,12 @@ describe('Public Endpoints (No Authentication Required)', () => {
     expect(res.headers['content-type']).toMatch(/text\/html/i);
     expect(res.text).toContain('Accessibility statement');
   });
+
+  test('GET /contact-us returns contact us page', async () => {
+    const res = await request(app).get(PublicRoutes.contactUs);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/text\/html/i);
+    expect(res.text).toContain('Contact us');
+  });
 });

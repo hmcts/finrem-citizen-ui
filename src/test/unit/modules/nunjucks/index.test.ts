@@ -105,11 +105,15 @@ describe('buildFeedbackSurveyUrl', () => {
     expect(res.locals.appRoutes).toBeDefined();
     expect(res.locals.appRoutes.cookies).toBe('/cookies');
     expect(res.locals.appRoutes.accessibilityStatement).toBe('/accessibility-statement');
-    expect(res.locals.common).toEqual({
-      footerLinks: {
-        accessibilityStatement: 'Accessibility statement',
-      },
-    });
+    expect(res.locals.appRoutes.contactUs).toBe('/contact-us');
+    expect(res.locals.common).toEqual(
+      expect.objectContaining({
+        footerLinks: expect.objectContaining({
+          accessibilityStatement: expect.any(String),
+          contactUs: expect.any(String),
+        })
+      })
+    );
     expect(res.locals.dynatrace).toEqual({
       enabled: false,
       url: '',

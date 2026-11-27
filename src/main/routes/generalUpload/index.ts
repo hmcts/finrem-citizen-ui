@@ -12,6 +12,7 @@ import type {
 } from '../../app/document/PreviouslyUploadedDocumentClient';
 import { RouteNames } from '../../constants';
 import { FileUploadInputFieldNames } from '../../constants/file-upload';
+import { resolveContactEmail } from '../../functions/util/contactEmail';
 import { formatUploadDate } from '../../functions/util/dateUtils';
 import { extractDocumentIdFromUrl, getCaseDocumentsByRole } from '../../functions/util/documentAccess';
 import { generateRenamedFilename, getCombinedPDFFormat, getDocumentRenameFormat, getSelectedDocumentTypesForDisplay, shouldAutoRename, shouldCombineIntoPDF, toDocumentTypeKey } from '../../functions/util/documentUtil';
@@ -358,9 +359,7 @@ export default function setupGeneralUploadRoute(app: Application): void {
     delete req.session.uploadErrors;
 
 
-    const contactEmail = req.session.preservedContactEmail
-      || req.session.caseData?.consentOrderFRCEmail
-      || 'FRCexample@justice.gov.uk';
+    const contactEmail = resolveContactEmail(req);
 
     res.render(step.template, {
       data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType, documentGroups },

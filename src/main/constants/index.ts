@@ -3,6 +3,7 @@ export const PublicRoutes = {
   accessibilityStatement: '/accessibility-statement',
   basePath: '/',
   callbackUrl: '/oauth2/callback',
+  contactUs: '/contact-us',
   csrfError: '/csrf-error',
   config: '/config',
   cookies: '/cookies',
@@ -43,6 +44,7 @@ export const RouteNames = {
 
 export const ViewNames = {
   AccessibilityStatement: 'accessibility-statement/index',
+  ContactUs: 'contact-us/index',
   Cookies: 'cookies',
   Dashboard: 'dashboard',
   EnterCaseNumber: 'enter-case-number',

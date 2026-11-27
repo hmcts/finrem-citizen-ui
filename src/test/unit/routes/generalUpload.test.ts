@@ -564,7 +564,7 @@ describe('General Upload Routes', () => {
       handler(mockReq as unknown as Request, mockRes as Response);
 
       expect(mockRes.render).toHaveBeenCalledWith('generalUpload/confirmation', expect.objectContaining({
-        contactEmail: 'FRCexample@justice.gov.uk',
+        contactEmail: 'HMCTSFinancialRemedy@justice.gov.uk',
       }));
     });
 
