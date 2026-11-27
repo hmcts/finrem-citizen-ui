@@ -30,3 +30,7 @@ const contentByLanguage: Record<SupportedLanguages, typeof en> = {
 export function generateCommonContent(language: SupportedLanguages): typeof en {
   return getLocalizedContent(contentByLanguage, language);
 }
+
+export function getDefaultContactEmail(language: SupportedLanguages): string {
+  return generateCommonContent(language).contact.defaultEmail;
+}
