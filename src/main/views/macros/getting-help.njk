@@ -1,4 +1,4 @@
-{% macro gettingHelp(contactEmail) %}
+{% macro gettingHelp(contactEmail, contactDetails) %}
 
 <aside class="govuk-prototype-kit-common-templates-related-items" role="complementary">
   <h2 class="govuk-heading-s govuk-!-margin-top-9" id="subsection-title">
@@ -13,18 +13,18 @@
     <div class="govuk-details__text">
       <h3 class="govuk-heading-s">Email</h3>
       <p class="govuk-body">
-        <a href="mailto:{{ contactEmail or 'FRCexample@justice.gov.uk' }}" class="govuk-link">{{ contactEmail or 'FRCexample@justice.gov.uk' }}</a>
+        <a href="mailto:{{ contactEmail or contactDetails.defaultEmail }}" class="govuk-link">{{ contactEmail or contactDetails.defaultEmail }}</a>
       </p>
       
       <h3 class="govuk-heading-s">Telephone</h3>
       <p class="govuk-body">
-        0300 123 5577<br>
-        Monday to Friday, 8.30am to 5pm
+        {{ contactDetails.phoneNumber }}<br>
+        {{ contactDetails.openingHours }}
       </p>
       
       <p class="govuk-body">
-        <a href="https://www.gov.uk/call-charges" class="govuk-link" target="_blank" rel="noopener noreferrer">
-          Find out about call charges (opens in new tab)
+        <a href="{{ contactDetails.callChargesUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
+          {{ contactDetails.callChargesText }}
         </a>
       </p>
     </div>

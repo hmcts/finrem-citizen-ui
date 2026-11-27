@@ -66,7 +66,7 @@ describe('Task List Upload Dashboard Tests', () => {
 
   it('Should render email correctly', () => {
     const res = nunjucksEnv.render('task-list-upload-dashboard.njk', parsedData);
-    expect(res).toContain('FRCexample@justice.gov.uk');
+    expect(res).toContain('HMCTSFinancialRemedy@justice.gov.uk');
   });
 
   it('Should render telephone correctly', () => {

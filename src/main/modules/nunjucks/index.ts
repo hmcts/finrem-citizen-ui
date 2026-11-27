@@ -68,12 +68,14 @@ export const addNunjucksLocals: express.RequestHandler = (req, res, next) => {
   res.locals.appRoutes = {
     cookies: RouteNames.cookies,
     accessibilityStatement: RouteNames.accessibilityStatement,
+    contactUs: RouteNames.contactUs,
   };
   res.locals.dynatrace = {
     enabled: dynatraceEnabled,
     url: dynatraceEnabled ? config.get<string>('dynatrace.url') : '',
   };
   res.locals.common = commonContent;
+  res.locals.contact = commonContent.contact;
   next();
 };
 

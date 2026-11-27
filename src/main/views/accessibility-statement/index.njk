@@ -34,9 +34,8 @@
       <h2 class="govuk-heading-l">{{ feedbackHeading }}</h2>
       <p class="govuk-body">{{ feedbackIntro }}</p>
       <ul class="govuk-list govuk-list--bullet">
-        {% for item in feedbackItems %}
-          <li>{{ item }}</li>
-        {% endfor %}
+        <li>{{ feedbackEmailLabel }} {{ contact.defaultEmail }}</li>
+        <li>{{ feedbackCallLabel }} {{ contact.phoneNumber }}</li>
       </ul>
       <p class="govuk-body">{{ responseTime }}</p>
 

@@ -22,6 +22,6 @@ describe('Upload confirmation view contract tests', () => {
 
   it('should include back-link navigation bound to previous step and getting-help macro', () => {
     expect(confirmationTemplate).toContain('<a href="/upload/{{ previousStep }}" class="govuk-back-link');
-    expect(confirmationTemplate).toContain('{{ gettingHelp(contactEmail) }}');
+    expect(confirmationTemplate).toContain('{{ gettingHelp(contactEmail, common.contact) }}');
   });
 });

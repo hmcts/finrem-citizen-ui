@@ -5,6 +5,6 @@ import { NextFunction, Request, Response } from 'express';
  */
 export function contactEmailMiddleware(req: Request, res: Response, next: NextFunction): void {
   const caseData = req.session?.caseData;
-  res.locals.contactEmail = caseData?.consentOrderFRCEmail || 'FRCexample@justice.gov.uk';
+  res.locals.contactEmail = caseData?.consentOrderFRCEmail || 'HMCTSFinancialRemedy@justice.gov.uk';
   next();
 }

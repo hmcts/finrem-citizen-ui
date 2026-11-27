@@ -29,7 +29,8 @@ const en = {
   feedbackHeading: 'Feedback and contact information',
   feedbackIntro:
     "If you find any problems not listed on this page or think we're not meeting accessibility requirements or, you need information on this website in a different format like accessible PDF, large print, easy read, audio recording or braille, contact:",
-  feedbackItems: ['email HMCTSFinancialRemedy@justice.gov.uk', 'call 0300 123 5577'],
+  feedbackEmailLabel: 'Email:',
+  feedbackCallLabel: 'Telephone:',
   responseTime: "We'll consider your request and aim to get back to you within 10 days.",
   enforcementHeading: 'Enforcement procedure',
   enforcementParagraph1:

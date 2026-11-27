@@ -360,7 +360,7 @@ export default function setupGeneralUploadRoute(app: Application): void {
 
     const contactEmail = req.session.preservedContactEmail
       || req.session.caseData?.consentOrderFRCEmail
-      || 'FRCexample@justice.gov.uk';
+      || 'HMCTSFinancialRemedy@justice.gov.uk';
 
     res.render(step.template, {
       data: { selectedDocumentTypes, uploadedFiles: uploadedFilesByType, documentGroups },
